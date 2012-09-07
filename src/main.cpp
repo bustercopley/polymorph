@@ -74,7 +74,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     lights (ws->view.distance, ws->view.depth, 3.0, 0.5, 1.0);
     clear ();
 
-    ws->model.initialize (data, ::GetTickCount (), ws->view);
+    ws->model.initialize (data, 0, ws->view);
     ws->model.draw ();
     ::SetTimer (hwnd, IDT_TIMER, 1, nullptr);
 

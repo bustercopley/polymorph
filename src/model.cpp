@@ -94,17 +94,17 @@ void model_t::add_object (float phase)
   float y1 = view.height;
   float x2 = x1 * z2 / z1;
   float y2 = y1 * z2 / z1;
+  __m128 r = { A.r, 0.0f, 0.0f, 0.0f, };
   __m128 a = { -x2 + A.r, -y2 + A.r, -z1 - A.r, 0.0f, };
   __m128 b = { +x2 - A.r, +y2 - A.r, -z2 + A.r, 0.0f, };
   __m128 m = _mm_sub_ps (b, a);
-  __m128 rsq = _mm_set1_ps (A.r * A.r);
 loop:
   __m128 t = _mm_add_ps (a, _mm_mul_ps (m, rng.get_vector_in_box ()));
   for (unsigned k = 0; k != 6; ++ k) {
     __m128 anchor = _mm_load_ps (walls [k] [0]);
     __m128 normal = _mm_load_ps (walls [k] [1]);
-    __m128 ssq = dot (_mm_sub_ps (t, anchor), normal);
-    if (_mm_comilt_ss (ssq, rsq)) {
+    __m128 s = dot (_mm_sub_ps (t, anchor), normal);
+    if (_mm_comilt_ss (s, r)) {
       goto loop;
     }
   }

@@ -121,7 +121,7 @@ void kdtree_t::for_near (unsigned count, float r, void * data, callback_t f)
 
 void kdtree_t::for_near (float (* planes) [2] [4], float r, void * data, callback_t f)
 {
-  __m128 rsq = _mm_set1_ps (r * r);
+  __m128 r0 = { r, 0.0f, 0.0f, 0.0f, };
   __m128 zero = _mm_setzero_ps ();
   for (unsigned k = 0; k != 6; ++ k) {
     __m128 a = _mm_load_ps (planes [k] [0]);
@@ -140,8 +140,8 @@ void kdtree_t::for_near (float (* planes) [2] [4], float r, void * data, callbac
         __m128 lo = _mm_load_ps (node_lohi [i] [0]);
         __m128 hi = _mm_load_ps (node_lohi [i] [1]);
         __m128 x = _mm_or_ps (_mm_and_ps (mask, lo), _mm_andnot_ps (mask, hi));
-        __m128 dsq = dot (_mm_sub_ps (x, a), n);
-        if (_mm_comilt_ss (dsq, rsq)) {
+        __m128 d = dot (_mm_sub_ps (x, a), n);
+        if (_mm_comilt_ss (d, r0)) {
           // There's no shortcut to reject boxes here as there was for the balls.
           stack [sp ++] = 2 * i + 2;
           stack [sp ++] = 2 * i + 1;
@@ -150,8 +150,7 @@ void kdtree_t::for_near (float (* planes) [2] [4], float r, void * data, callbac
       else {
         for (unsigned n = node_begin [i]; n != node_end [i]; ++ n) {
           unsigned j = index [n];
-          if (j > k)
-            f (data, k, j);
+          f (data, k, j);
         }
       }
     }
