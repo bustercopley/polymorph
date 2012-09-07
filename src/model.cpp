@@ -46,11 +46,11 @@ void model_t::initialize (void * data, unsigned long long seed, const view_t & f
   unsigned dummy = 0;
   reallocate_aligned_arrays (walls_memory, dummy, 6, & walls);
   for (unsigned k = 0; k != 6; ++ k) {
-    __m128 anchor = _mm_load_ps (temp [k] [0]);
-    __m128 normal = _mm_load_ps (temp [k] [1]);
-    __m128 nlen = _mm_sqrt_ps (dot (normal, normal));
-    _mm_store_ps (walls [k] [0], anchor);
-    _mm_store_ps (walls [k] [1], _mm_div_ps (normal, nlen));
+    v4f anchor = load4f (temp [k] [0]);
+    v4f normal = load4f (temp [k] [1]);
+    v4f nlen = _mm_sqrt_ps (dot (normal, normal));
+    store4f (walls [k] [0], anchor);
+    store4f (walls [k] [1], normal / nlen);
   }
 
   set_capacity (usr::count);
@@ -94,28 +94,29 @@ void model_t::add_object (float phase)
   float y1 = view.height;
   float x2 = x1 * z2 / z1;
   float y2 = y1 * z2 / z1;
-  __m128 r = { A.r, 0.0f, 0.0f, 0.0f, };
-  __m128 a = { -x2 + A.r, -y2 + A.r, -z1 - A.r, 0.0f, };
-  __m128 b = { +x2 - A.r, +y2 - A.r, -z2 + A.r, 0.0f, };
-  __m128 m = _mm_sub_ps (b, a);
+  v4f r = { A.r, 0.0f, 0.0f, 0.0f, };
+  v4f a = { -x2 + A.r, -y2 + A.r, -z1 - A.r, 0.0f, };
+  v4f b = { +x2 - A.r, +y2 - A.r, -z2 + A.r, 0.0f, };
+  v4f m = b - a;
 loop:
-  __m128 t = _mm_add_ps (a, _mm_mul_ps (m, rng.get_vector_in_box ()));
+  v4f t = a + m * rng.get_vector_in_box ();
   for (unsigned k = 0; k != 6; ++ k) {
-    __m128 anchor = _mm_load_ps (walls [k] [0]);
-    __m128 normal = _mm_load_ps (walls [k] [1]);
-    __m128 s = dot (_mm_sub_ps (t, anchor), normal);
+    v4f anchor = load4f (walls [k] [0]);
+    v4f normal = load4f (walls [k] [1]);
+    v4f s = dot (t - anchor, normal);
     if (_mm_comilt_ss (s, r)) {
       goto loop;
     }
   }
-  __m128 temp = rng.get_vector_in_ball (pi);
-  __m128d ulo = _mm_cvtps_pd (temp);
-  __m128d uhi = _mm_cvtps_pd (_mm_movehl_ps (temp, temp));
-  _mm_store_pd (& u [count] [0], ulo);
-  _mm_store_pd (& u [count] [2], uhi);
-  _mm_store_ps (w [count], rng.get_vector_in_ball (0.2 * usr::temperature / A.l));
-  _mm_store_ps (x [count], t);
-  _mm_store_ps (v [count], rng.get_vector_in_ball (0.5 * usr::temperature / A.m));
+  store4f (x [count], t);
+  store4f (v [count], rng.get_vector_in_ball (0.5 * usr::temperature / A.m));
+
+  v4f temp = rng.get_vector_in_ball (pi);
+  v2d ulo = _mm_cvtps_pd (temp);
+  v2d uhi = _mm_cvtps_pd (_mm_movehl_ps (temp, temp));
+  store2d (& u [count] [0], ulo);
+  store2d (& u [count] [2], uhi);
+  store4f (w [count], rng.get_vector_in_ball (0.2 * usr::temperature / A.l));
 
   if (max_radius < A.r) max_radius = A.r;
   ++ count;

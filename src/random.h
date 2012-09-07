@@ -11,8 +11,8 @@ struct rng_t {
   void initialize (uint64_t seed);
   uint64_t get ();
   double get_double (double a, double b);
-  __m128 get_vector_in_box ();
-  __m128 get_vector_in_ball (float radius);
+  v4f get_vector_in_box ();
+  v4f get_vector_in_ball (float radius);
 private:
   uint64_t state;
   rng_t (const rng_t &) = delete;

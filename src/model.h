@@ -20,10 +20,10 @@ struct model_t {
   void wall_bounce (unsigned i, unsigned j);
 private:
   void * memory;
-  double (* u) [4];
-  float (* w) [4];
   float (* x) [4];
   float (* v) [4];
+  double (* u) [4];
+  float (* w) [4];
   unsigned * zorder_index;
   unsigned * kdtree_index;
   object_t * objects;

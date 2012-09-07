@@ -27,14 +27,14 @@ double rng_t::get_double (double a, double b)
 
 // Return a random vector uniformly distributed in
 // the interior of a sphere centre the origin.
-__m128 rng_t::get_vector_in_ball (float radius)
+v4f rng_t::get_vector_in_ball (float radius)
 {
   union {
     __m128i i128;
     uint64_t u64 [2];
   };
-  __m128 v, sq;
-  __m128 lim = { 0x1.0p62f, 0.0f, 0.0f, 0.0f, };
+  v4f v, sq;
+  v4f lim = { 0x1.0p62f, 0.0f, 0.0f, 0.0f, };
   do {
     u64 [0] = get ();
     u64 [1] = get () & 0xffffffffull;
@@ -43,13 +43,13 @@ __m128 rng_t::get_vector_in_ball (float radius)
   }
   while (_mm_comige_ss (sq, lim));
   float rs = 0x1.0p-31 * radius;
-  __m128 k = { rs, rs, rs, 0.0f, };
-  return _mm_mul_ps (k, v);
+  v4f k = { rs, rs, rs, 0.0f, };
+  return k * v;
 }
 
 // Return a random vector uniformly distributed in
 // the box [0,1)^3.
-__m128 rng_t::get_vector_in_box ()
+v4f rng_t::get_vector_in_box ()
 {
   union {
     __m128i i128;
@@ -57,7 +57,7 @@ __m128 rng_t::get_vector_in_box ()
   };
   u64 [0] = get () & 0x7fffffff7fffffffull;
   u64 [1] = get () & 0x7fffffffull;
-  __m128 v = _mm_cvtepi32_ps (i128);
-  __m128 k = { 0x1.0p-31f, 0x1.0p-31f, 0x1.0p-31f, 0.0f };
-  return _mm_mul_ps (k, v);
+  v4f v = _mm_cvtepi32_ps (i128);
+  v4f k = { 0x1.0p-31f, 0x1.0p-31f, 0x1.0p-31f, 0.0f };
+  return k * v;
 }
