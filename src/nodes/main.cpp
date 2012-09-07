@@ -1,4 +1,4 @@
-#include "rotation_system.h"
+#include "system.h"
 #include "make_system.h"
 #include "show_system.h"
 
@@ -16,7 +16,7 @@ namespace {
 
 int main (int argc, char * argv []) {
   // Lay out data fields for the descriptions of three kinds of
-  // spherical tiling (see "rotation_system.h")
+  // spherical tiling (see "system.h")
 
   system_t <3, 3> tetrahedral;
   system_t <3, 4> octahedral;

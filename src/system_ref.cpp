@@ -1,5 +1,5 @@
 #include "system_ref.h"
-#include "nodes/rotation_system.h"
+#include "nodes/system.h"
 #include "object.h"
 #include "graphics.h"
 #include "vector.h"

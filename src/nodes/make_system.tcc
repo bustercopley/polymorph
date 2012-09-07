@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-#include "rotation_system.h"
+#include "system.h"
 #include "rotor.h"
 #include "triangle.h"
 

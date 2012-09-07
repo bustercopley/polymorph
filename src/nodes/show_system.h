@@ -3,7 +3,7 @@
 #ifndef show_system_h
 #define show_system_h
 
-#include "rotation_system.h"
+#include "system.h"
 #include <iosfwd>
 
 // 'show_system' produces a human-readable representation of the

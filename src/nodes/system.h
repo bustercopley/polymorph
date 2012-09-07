@@ -1,7 +1,7 @@
 // -*- C++ -*-
 
-#ifndef rotation_system_h
-#define rotation_system_h
+#ifndef system_h
+#define system_h
 
 // 'make_system' works by magic. It isn't wise to look directly into it.
 
