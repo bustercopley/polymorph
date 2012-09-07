@@ -22,10 +22,8 @@ private:
   void * memory;
   double (* u) [4];
   float (* w) [4];
-  float (* wd) [4];
   float (* x) [4];
   float (* v) [4];
-  float (* vd) [4];
   unsigned * zorder_index;
   unsigned * kdtree_index;
   object_t * objects;

@@ -5,8 +5,7 @@
 #include "maths.h"
 
 void bounce (unsigned ix, unsigned iy, object_t * objects,
-             const float (* x) [4], const float (* v) [4], float (* vd) [4],
-             const float (* w) [4], float (* wd) [4])
+             const float (* x) [4], float (* v) [4], float (* w) [4])
 {
   object_t & A = objects [ix];
   object_t & B = objects [iy];
@@ -47,17 +46,16 @@ void bounce (unsigned ix, unsigned iy, object_t * objects,
 
       real mu [4];
       _mm_store_ps (mu, _mm_div_ps (_mm_mul_ps (lambda, r), divisors));
-      _mm_store_ps (vd [ix], _mm_sub_ps (_mm_load_ps (vd [ix]), _mm_mul_ps (_mm_set1_ps (mu [0]), u)));
-      _mm_store_ps (vd [iy], _mm_add_ps (_mm_load_ps (vd [iy]), _mm_mul_ps (_mm_set1_ps (mu [1]), u)));
-      _mm_store_ps (wd [ix], _mm_sub_ps (_mm_load_ps (wd [ix]), _mm_mul_ps (_mm_set1_ps (mu [2]), dxu)));
-      _mm_store_ps (wd [iy], _mm_sub_ps (_mm_load_ps (wd [iy]), _mm_mul_ps (_mm_set1_ps (mu [3]), dxu)));
+      _mm_store_ps (v [ix], _mm_sub_ps (_mm_load_ps (v [ix]), _mm_mul_ps (_mm_set1_ps (mu [0]), u)));
+      _mm_store_ps (v [iy], _mm_add_ps (_mm_load_ps (v [iy]), _mm_mul_ps (_mm_set1_ps (mu [1]), u)));
+      _mm_store_ps (w [ix], _mm_sub_ps (_mm_load_ps (w [ix]), _mm_mul_ps (_mm_set1_ps (mu [2]), dxu)));
+      _mm_store_ps (w [iy], _mm_sub_ps (_mm_load_ps (w [iy]), _mm_mul_ps (_mm_set1_ps (mu [3]), dxu)));
     }
   }
 }
 
 void bounce (const float (& plane) [2] [4], unsigned ix, object_t * objects,
-             const float (* x) [4], const float (* v) [4], float (* vd) [4],
-             const float (* w) [4], float (* wd) [4])
+             const float (* x) [4], float (* v) [4], float (* w) [4])
 {
   __m128 anchor = _mm_load_ps (plane [0]);
   __m128 normal = _mm_load_ps (plane [1]);
@@ -80,8 +78,8 @@ void bounce (const float (& plane) [2] [4], unsigned ix, object_t * objects,
       float vF_sq = _mm_cvtss_f32 (dot (vF, vF));
       float kvF_sq = kf * kf * vF_sq;
       float lambda = 2 * (vN_sq + kf * vF_sq) / ((vN_sq + kvF_sq) / A.m + (A.r * A.r) * kvF_sq / A.l);
-      _mm_store_ps (vd [ix], _mm_sub_ps (_mm_load_ps (vd [ix]), _mm_mul_ps (_mm_set1_ps (lambda / A.m), uneg)));
-      _mm_store_ps (wd [ix], _mm_add_ps (_mm_load_ps (wd [ix]), _mm_mul_ps (_mm_set1_ps (lambda * A.r / A.l), cross (normal, uneg))));
+      _mm_store_ps (v [ix], _mm_sub_ps (_mm_load_ps (v [ix]), _mm_mul_ps (_mm_set1_ps (lambda / A.m), uneg)));
+      _mm_store_ps (w [ix], _mm_add_ps (_mm_load_ps (w [ix]), _mm_mul_ps (_mm_set1_ps (lambda * A.r / A.l), cross (normal, uneg))));
     }
   }
 }

@@ -134,12 +134,12 @@ void wall_bounce_callback (void * data, unsigned i, unsigned j)
 
 void model_t::ball_bounce (unsigned i, unsigned j)
 {
-  ::bounce (i, j, objects, x, v, vd, w, wd);
+  ::bounce (i, j, objects, x, v, w);
 }
 
 void model_t::wall_bounce (unsigned i, unsigned j)
 {
-  ::bounce (walls [i], j, objects, x, v, vd, w, wd);
+  ::bounce (walls [i], j, objects, x, v, w);
 }
 
 inline void add_aligned_arrays (float (* a) [4], float (* b) [4], unsigned count)

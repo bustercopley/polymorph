@@ -45,7 +45,7 @@ inline __m128 cross (const __m128 x, const __m128 y)
   __m128 xw = _mm_mul_ps (x, w);  // x0y1 x1y2 x2y0 x3y3
   __m128 zy = _mm_mul_ps (z, y);  // x1y0 x2y1 x0y2 x3y3
   __m128 r1 = _mm_sub_ps (xw, zy);
-  __m128 r = _mm_shuffle_ps (r1, r1, SHUFFLE (2, 0, 1, 3));
+  __m128 r = _mm_shuffle_ps (r1, r1, SHUFFLE (1, 2, 0, 3));
   return r;
 }
 
