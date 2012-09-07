@@ -69,8 +69,7 @@ model_t::~model_t ()
 void model_t::set_capacity (unsigned new_capacity)
 {
   reallocate_aligned_arrays (memory, capacity, new_capacity,
-                             & x, & v, & vd,
-                             & u, & w, & wd,
+                             & x, & v, & u, & w,
                              & zorder_index, & kdtree_index,
                              & objects);
 }
@@ -142,22 +141,6 @@ void model_t::wall_bounce (unsigned i, unsigned j)
   ::bounce (walls [i], j, objects, x, v, w);
 }
 
-inline void add_aligned_arrays (float (* a) [4], float (* b) [4], unsigned count)
-{
-  for (unsigned n = 0; n != (count + 1) >> 1; ++ n) {
-    // Read and write two 128-bit float registers (one full cache line) at a time.
-    // Can operate the on padding at the end of the arrays.
-    __m128 xa0 = _mm_load_ps (a [n << 1]);
-    __m128 xa1 = _mm_load_ps (a [(n << 1) | 1]);
-    __m128 xb0 = _mm_load_ps (b [n << 1]);
-    __m128 xb1 = _mm_load_ps (b [(n << 1) | 1]);
-    __m128 xa10 = _mm_add_ps (xa0, xb0);
-    __m128 xa11 = _mm_add_ps (xa1, xb1);
-    _mm_store_ps (a [n << 1], xa10);
-    _mm_store_ps (a [(n << 1) | 1], xa11);
-  }
-}
-
 void model_t::proceed (real dt)
 {
   animation_time += dt;
@@ -170,15 +153,10 @@ void model_t::proceed (real dt)
   unsigned d = 1 + static_cast <unsigned> (t / TN);
   real s = t + T - d * TN;
 
-  zero_memory (vd, count * sizeof * vd);
-  zero_memory (wd, count * sizeof * wd);
-
   kdtree.compute (kdtree_index, x, count);
   kdtree.for_near (count, 2 * max_radius, this, ball_bounce_callback);
   kdtree.for_near (walls, max_radius, this, wall_bounce_callback);
 
-  add_aligned_arrays (v, vd, count);
-  add_aligned_arrays (w, wd, count);
   advance_linear (x, v, count, dt);
   advance_angular (u, w, count, dt);
 
