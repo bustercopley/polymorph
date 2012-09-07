@@ -141,17 +141,17 @@ void model_t::wall_bounce (unsigned i, unsigned j)
   ::bounce (walls [i], j, objects, x, v, w);
 }
 
-void model_t::proceed (real dt)
+void model_t::proceed (float dt)
 {
   animation_time += dt;
   if (usr::cycle_duration <= animation_time)
     animation_time -= usr::cycle_duration;
 
-  real T = usr::cycle_duration;
-  real TN = T / count;
-  real t = animation_time;
+  float T = usr::cycle_duration;
+  float TN = T / count;
+  float t = animation_time;
   unsigned d = 1 + static_cast <unsigned> (t / TN);
-  real s = t + T - d * TN;
+  float s = t + T - d * TN;
 
   kdtree.compute (kdtree_index, x, count);
   kdtree.for_near (count, 2 * max_radius, this, ball_bounce_callback);

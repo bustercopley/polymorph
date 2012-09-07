@@ -3,8 +3,6 @@
 #ifndef rotation_system_h
 #define rotation_system_h
 
-#include "../real.h"
-
 // 'make_system' works by magic. It isn't wise to look directly into it.
 
 //   N, p, q, r:
@@ -33,10 +31,10 @@ struct system_t {
   unsigned char y [2 * N]; // Indices of the Z- and X-nodes around each Y-node.
   unsigned char z [2 * N]; // Indices of the X- and Y-nodes around each Z-node.
   unsigned char s [N / p] [4]; // Indices of the X-nodes around each X-node.
-  real u [N / p] [3]; // Co-ordinates of the X-nodes.
-  real v [N / q] [3]; // Co-ordinates of the Y-nodes.
-  real w [N / r] [3]; // Co-ordinates of the Z-nodes.
-  real g [8] [3]; // Coefficients of u, v, w for convex uniform polyhedra.
+  float u [N / p] [3]; // Co-ordinates of the X-nodes.
+  float v [N / q] [3]; // Co-ordinates of the Y-nodes.
+  float w [N / r] [3]; // Co-ordinates of the Z-nodes.
+  float g [8] [3]; // Coefficients of u, v, w for convex uniform polyhedra.
 };
 
 /*

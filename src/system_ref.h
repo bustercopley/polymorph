@@ -3,8 +3,6 @@
 #ifndef system_ref_h
 #define system_ref_h
 
-#include "real.h"
-
 struct object_t;
 
 enum system_select_t {
@@ -19,9 +17,9 @@ struct system_ref_t {
   unsigned N, p, q, r;
   unsigned char const * x, * y, * z;
   unsigned char const (* s) [4];
-  real const (* u) [3], (* v) [3], (* w) [3];
-  real const (* g) [3];
-  real (* au) [3], (* bv) [3], (* cw) [3];
+  float const (* u) [3], (* v) [3], (* w) [3];
+  float const (* g) [3];
+  float (* au) [3], (* bv) [3], (* cw) [3];
   int lists_start;
 };
 
@@ -38,7 +36,7 @@ private:
   // <235> (N = 60): nI = N/p + N/q + N/r = 30 + 20 + 12 = 62
   // nT + nO + nI = 102;
 
-  real scratch [102] [3];
+  float scratch [102] [3];
 };
 
 #endif

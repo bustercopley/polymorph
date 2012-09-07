@@ -30,20 +30,20 @@ namespace {
   }
 }
 
-long double snub_variance (const real (* u) [3], const real (* v) [3], const real (* w) [3],
-                           const real (& k7) [3], unsigned Np, const unsigned char * x, const unsigned char (* s) [4]) {
+long double snub_variance (const float (* u) [3], const float (* v) [3], const float (* w) [3],
+                           const float (& k7) [3], unsigned Np, const unsigned char * x, const unsigned char (* s) [4]) {
   variance Var;
 
   for (unsigned n = 0; n != Np; ++ n) {
-    const real (& Xn) [3] = u [n];
-    const real (& Y0) [3] = v [x [4 * n + 0]];
-    const real (& Z0) [3] = w [x [4 * n + 1]];
-    const real (& Y1) [3] = v [x [4 * n + 2]];
-    const real (& Z1) [3] = w [x [4 * n + 3]];
-    const real (& X0) [3] = u [s [n] [0]];
-    const real (& X1) [3] = u [s [n] [1]];
-    const real (& X2) [3] = u [s [n] [2]];
-    const real (& X3) [3] = u [s [n] [3]];
+    const float (& Xn) [3] = u [n];
+    const float (& Y0) [3] = v [x [4 * n + 0]];
+    const float (& Z0) [3] = w [x [4 * n + 1]];
+    const float (& Y1) [3] = v [x [4 * n + 2]];
+    const float (& Z1) [3] = w [x [4 * n + 3]];
+    const float (& X0) [3] = u [s [n] [0]];
+    const float (& X1) [3] = u [s [n] [1]];
+    const float (& X2) [3] = u [s [n] [2]];
+    const float (& X3) [3] = u [s [n] [3]];
 
     long double alpha = k7 [0];
     long double beta  = k7 [1];

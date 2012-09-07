@@ -15,7 +15,7 @@ namespace {
 
   inline std::ostream &
   show_vectors (std::ostream & stream,
-                unsigned Np, const real (* x) [3], char name) {
+                unsigned Np, const float (* x) [3], char name) {
     stream << std::fixed;
     stream.precision (12);
 
@@ -69,8 +69,8 @@ show_system (std::ostream & stream,
              unsigned N, unsigned p, unsigned q, unsigned r,
              const unsigned char * x, const unsigned char * y, const unsigned char * z,
              const unsigned char (* s) [4],
-             const real (* u) [3], const real (* v) [3], const real (* w) [3],
-             const real (& k) [8] [3]) {
+             const float (* u) [3], const float (* v) [3], const float (* w) [3],
+             const float (& k) [8] [3]) {
   stream << std::fixed << std::setprecision (12);
 
   // Write the rotation system in tabular format.

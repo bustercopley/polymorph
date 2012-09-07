@@ -16,8 +16,8 @@ show_system (std::ostream & stream,
              unsigned N, unsigned p, unsigned q, unsigned r,
              const unsigned char * x, const unsigned char * y, const unsigned char * z,
              const unsigned char (* s) [4],
-             const real (* u) [3], const real (* v) [3], const real (* w) [3],
-             const real (& k) [8] [3]);
+             const float (* u) [3], const float (* v) [3], const float (* w) [3],
+             const float (& k) [8] [3]);
 
 // Set things up so that the syntax 'stream << s', where s is a
 // rotation system, results in the correct call to 'show_system'.

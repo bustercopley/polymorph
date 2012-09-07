@@ -3,8 +3,6 @@
 #ifndef bump_h
 #define bump_h
 
-#include "real.h"
-
 //  r ^                        r = bump (t)
 //    |
 // v1 +--------------XXXXXX----------------
@@ -16,10 +14,10 @@
 //        t0        t1    t2        t3      t
 
 struct bump_t {
-  real v0, v1, t0, t1, t2, t3;
+  float v0, v1, t0, t1, t2, t3;
 
-  real operator () (real t) const {
-    real r;
+  float operator () (float t) const {
+    float r;
     if (t < t0 || t3 < t) {
       r = 0;
     }
@@ -27,7 +25,7 @@ struct bump_t {
       r = 1;
     }
     else {
-      real s;
+      float s;
       if (t < t2) {
         s = (t - t0) / (t1 - t0);
       }

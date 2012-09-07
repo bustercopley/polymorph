@@ -7,12 +7,12 @@
 
 void
 system_ref_t::paint (object_t const & object) const {
-  real const (& A) [3] = g [object.locus_begin];
-  real const (& B) [3] = g [object.locus_end];
+  float const (& A) [3] = g [object.locus_begin];
+  float const (& B) [3] = g [object.locus_end];
 
-  real alpha = object.generator_position;
-  real one_minus_alpha = 1 - alpha;
-  real abc [3], generator [3];
+  float alpha = object.generator_position;
+  float one_minus_alpha = 1 - alpha;
+  float abc [3], generator [3];
 
   abc [0] = one_minus_alpha * A [0] + alpha * B [0];
   abc [1] = one_minus_alpha * A [1] + alpha * B [1];
@@ -22,22 +22,22 @@ system_ref_t::paint (object_t const & object) const {
   generator [1] = abc [0] * u [0] [1] + abc [1] * v [0] [1] + abc [2] * w [0] [1];
   generator [2] = abc [0] * u [0] [2] + abc [1] * v [0] [2] + abc [2] * w [0] [2];
 
-  real adjust (std::pow (generator [0] * generator [0] +
+  float adjust (std::pow (generator [0] * generator [0] +
                          generator [1] * generator [1] +
-                         generator [2] * generator [2], real (- 0.5)));
+                         generator [2] * generator [2], float (- 0.5)));
 
   for (unsigned n = 0; n != N / p; ++ n) {
-    real a = abc [0] * adjust;
+    float a = abc [0] * adjust;
     scalar_multiply (a, u [n], au [n]);
   }
 
   for (unsigned n = 0; n != N / q; ++ n) {
-    real b = abc [1] * adjust;
+    float b = abc [1] * adjust;
     scalar_multiply (b, v [n], bv [n]);
   }
 
   for (unsigned n = 0; n != N / r; ++ n) {
-    real c = abc [2] * adjust;
+    float c = abc [2] * adjust;
     scalar_multiply (c, w [n], cw [n]);
   }
 
@@ -72,7 +72,7 @@ void system_ref_t::save_display_lists (int list) {
       chirality = 0;
     }
 
-    real const (& abc) [3] = g [generator];
+    float const (& abc) [3] = g [generator];
 
     for (unsigned n = 0; n != N / p; ++ n) scalar_multiply (abc [0], u [n], au [n]);
     for (unsigned n = 0; n != N / q; ++ n) scalar_multiply (abc [1], v [n], bv [n]);
@@ -113,7 +113,7 @@ system_ref_t const * system_repository_t::ref (system_select_t select) const {
 }
 
 template <unsigned q, unsigned r>
-void initialize_system (system_ref_t & system_ref, const system_t <q, r> & system, real (* scratch) [3]) {
+void initialize_system (system_ref_t & system_ref, const system_t <q, r> & system, float (* scratch) [3]) {
   enum { p = 2 };
   system_ref.p = p;
   system_ref.q = q;

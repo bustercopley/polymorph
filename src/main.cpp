@@ -90,7 +90,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         ::SwapBuffers (ws->hdc);
         LARGE_INTEGER performance_count;
         ::QueryPerformanceCounter (& performance_count);
-        real dt = ws->rate * (performance_count.QuadPart - ws->last_performance_count.QuadPart);
+        float dt = ws->rate * (performance_count.QuadPart - ws->last_performance_count.QuadPart);
         ws->last_performance_count = performance_count;
         ws->model.proceed (dt < usr::max_frame_time ? dt : usr::max_frame_time);
         clear ();

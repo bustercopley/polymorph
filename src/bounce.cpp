@@ -44,7 +44,7 @@ void bounce (unsigned ix, unsigned iy, object_t * objects,
       __m128 hh = _mm_hadd_ps (ha, ha);
       __m128 lambda = _mm_div_ps (top, hh);
 
-      real mu [4];
+      float mu [4];
       _mm_store_ps (mu, _mm_div_ps (_mm_mul_ps (lambda, r), divisors));
       _mm_store_ps (v [ix], _mm_sub_ps (_mm_load_ps (v [ix]), _mm_mul_ps (_mm_set1_ps (mu [0]), u)));
       _mm_store_ps (v [iy], _mm_add_ps (_mm_load_ps (v [iy]), _mm_mul_ps (_mm_set1_ps (mu [1]), u)));

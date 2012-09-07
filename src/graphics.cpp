@@ -18,7 +18,7 @@ void end_list () {
   glEndList ();
 }
 
-void lights (real distance, real depth, real lnear, real lfar, real dnear) {
+void lights (float distance, float depth, float lnear, float lfar, float dnear) {
   glMatrixMode (GL_MODELVIEW);
   glLoadIdentity ();
 
@@ -36,7 +36,7 @@ void lights (real distance, real depth, real lnear, real lfar, real dnear) {
   glLightfv (GL_LIGHT0, GL_DIFFUSE, lights [2]);
   glLightfv (GL_LIGHT0, GL_SPECULAR, lights [3]);
 
-  real dfar = dnear + depth;
+  float dfar = dnear + depth;
 
   glLightf (GL_LIGHT0, GL_CONSTANT_ATTENUATION, ((dfar / lnear) - (dnear / lfar)) / (dfar - dnear));
   glLightf (GL_LIGHT0, GL_LINEAR_ATTENUATION, ((1 / lfar) - (1 / lnear)) / (dfar - dnear));
@@ -88,7 +88,7 @@ void clear () {
 
 namespace {
   inline void
-  point (const real (& au) [3], const real (& bv) [3], const real (& cw) [3]) {
+  point (const float (& au) [3], const float (& bv) [3], const float (& cw) [3]) {
     // Send a vertex `p' to the graphics library. `p' is the sum of `au', `bv' and `cw'.
 
     // The vector `au' is the product of a scalar `a' and a vector 'u', and so on.
@@ -99,26 +99,26 @@ namespace {
     // `a', `b' and `c' have been chosen so that `p' lies on the unit sphere.
     // Certain values of the co-ordinates `a', `b', `c' pick out vertices of
     // uniform polyhedra: see "nodes/make_system.tcc" for details.
-    GLreal p [3];
+    GLfloat p [3];
     add (au, bv, cw, p);
-    glVertex3rv (p);
+    glVertex3fv (p);
   }
 }
 
 void
 paint_kpgons (unsigned k, unsigned Np, unsigned p,
-              const unsigned char * x, const real (* u) [3],
-              const real (* au) [3], const real (* bv) [3], const real (* cw) [3]) {
+              const unsigned char * x, const float (* u) [3],
+              const float (* au) [3], const float (* bv) [3], const float (* cw) [3]) {
   if (k == 1) {
     for (unsigned n = 0; n != Np; ++ n) {
       glBegin (GL_POLYGON);
-      glNormal3rv (u [n]);
-      const real (& v) [3] = bv [x [n * (2 * p) + 0]];
-      const real (& w) [3] = cw [x [n * (2 * p) + (2 * p) - 1]];
+      glNormal3fv (u [n]);
+      const float (& v) [3] = bv [x [n * (2 * p) + 0]];
+      const float (& w) [3] = cw [x [n * (2 * p) + (2 * p) - 1]];
       point (au [n], v, w);
       for (unsigned k0 = 1; k0 != p; ++ k0) {
-        const real (& v) [3] = bv [x [n * (2 * p) + (2 * k0) + 0]];
-        const real (& w) [3] = cw [x [n * (2 * p) + (2 * k0) - 1]];
+        const float (& v) [3] = bv [x [n * (2 * p) + (2 * k0) + 0]];
+        const float (& w) [3] = cw [x [n * (2 * p) + (2 * k0) - 1]];
         point (au [n], v, w);
       }
       glEnd ();
@@ -127,10 +127,10 @@ paint_kpgons (unsigned k, unsigned Np, unsigned p,
   else if (k == 2) {
     for (unsigned n = 0; n != Np; ++ n) {
       glBegin (GL_POLYGON);
-      glNormal3rv (u [n]);
-      const real (* w) [3] = & cw [x [n * (2 * p) + 2 * p - 1]];
+      glNormal3fv (u [n]);
+      const float (* w) [3] = & cw [x [n * (2 * p) + 2 * p - 1]];
       for (unsigned k0 = 0; k0 != p; ++ k0) {
-        const real (* v) [3] = & bv [x [n * (2 * p) + (2 * k0) + 0]];
+        const float (* v) [3] = & bv [x [n * (2 * p) + (2 * k0) + 0]];
         point (au [n], * v, * w);
         w = & cw [x [n * (2 * p) + (2 * k0) + 1]];
         point (au [n], * v, * w);
@@ -143,11 +143,11 @@ paint_kpgons (unsigned k, unsigned Np, unsigned p,
 void
 paint_snub_pgons (int chirality, unsigned Np, unsigned p,
                   const unsigned char * x,
-                  const real (* u) [3],
-                  const real (* au) [3], const real (* bv) [3], const real (* cw) [3]) {
+                  const float (* u) [3],
+                  const float (* au) [3], const float (* bv) [3], const float (* cw) [3]) {
   for (unsigned n = 0; n != Np; ++ n) {
     glBegin (GL_POLYGON);
-    glNormal3rv (u [n]);
+    glNormal3fv (u [n]);
     if (chirality == 1) {
       // By considering the p black tiles around each p-node,
       // obtain N/p p-gonal (or degenerate) faces.
@@ -174,44 +174,44 @@ void
 paint_snub_triangle_pairs (int chirality, unsigned Np,
                            const unsigned char * x,
                            const unsigned char (* s) [4],
-                           const real (* au) [3], const real (* bv) [3], const real (* cw) [3]) {
+                           const float (* au) [3], const float (* bv) [3], const float (* cw) [3]) {
   for (unsigned n = 0; n != Np; ++ n) {          //        X1        //
-    const real (& x0) [3] = au [n];              //       /  \       //
-    const real (& y0) [3] = bv [x [4 * n + 0]];  //      Z0--Y0      //
-    const real (& z0) [3] = cw [x [4 * n + 1]];  //     /|\  /|\     //
-    const real (& y1) [3] = bv [x [4 * n + 2]];  //   X4 | X0 | X2   //
-    const real (& z1) [3] = cw [x [4 * n + 3]];  //     \|/  \|/     //
-    real a [3], b [3], c [3], d [3];             //      Y1--Z1      //
+    const float (& x0) [3] = au [n];             //       /  \       //
+    const float (& y0) [3] = bv [x [4 * n + 0]]; //      Z0--Y0      //
+    const float (& z0) [3] = cw [x [4 * n + 1]]; //     /|\  /|\     //
+    const float (& y1) [3] = bv [x [4 * n + 2]]; //   X4 | X0 | X2   //
+    const float (& z1) [3] = cw [x [4 * n + 3]]; //     \|/  \|/     //
+    float a [3], b [3], c [3], d [3];            //      Y1--Z1      //
                                                  //       \  /       //
     if (chirality == 1) {                        //        X3        //
-      const real (& x2) [3] = au [s [n] [1]];
-      const real (& x4) [3] = au [s [n] [3]];    //                               ^           //
+      const float (& x2) [3] = au [s [n] [1]];
+      const float (& x4) [3] = au [s [n] [3]];   //                               ^           //
       add (x2, y1, z0, a);                       //                              / \          //
       add (x0, y1, z1, b);                       //                             / A \         //
       add (x0, y0, z0, c);                       //        +-----+             +-----+        //
       add (x4, y0, z1, d);                       //       /|\ C /|\            |\   /|        //
     }                                            //      / | \ / | \           | \ / |        //
     else {                                       //     < A|  x  |D >          |B x C|        //
-      const real (& x1) [3] = au [s [n] [0]];    //      \ | / \ | /           | / \ |        //
-      const real (& x3) [3] = au [s [n] [2]];    //       \|/ B \|/            |/   \|        //
+      const float (& x1) [3] = au [s [n] [0]];   //      \ | / \ | /           | / \ |        //
+      const float (& x3) [3] = au [s [n] [2]];   //       \|/ B \|/            |/   \|        //
       add (x1, y0, z0, a);                       //        +-----+             +-----+        //
       add (x0, y1, z0, b);                       //                             \ D /         //
       add (x0, y0, z1, c);                       //                              \ /          //
       add (x3, y1, z1, d);                       //                               v           //
     }                                            //                                           //
                                                  //      chirality=1          chirality=-1    //
-    real n0 [3], n1 [3];
+    float n0 [3], n1 [3];
     add (a, b, c, n0);
     add (d, c, b, n1);
     glBegin (GL_TRIANGLES);
-    glNormal3rv (n0);
-    glVertex3rv (a);
-    glVertex3rv (b);
-    glVertex3rv (c);
-    glNormal3rv (n1);
-    glVertex3rv (d);
-    glVertex3rv (c);
-    glVertex3rv (b);
+    glNormal3fv (n0);
+    glVertex3fv (a);
+    glVertex3fv (b);
+    glVertex3fv (c);
+    glNormal3fv (n1);
+    glVertex3fv (d);
+    glVertex3fv (c);
+    glVertex3fv (b);
     glEnd ();
   }
 }
@@ -221,13 +221,13 @@ paint (const object_t & object, const float (& f) [16])
 {
   GLfloat rgb [3] [4]; // [ambient, diffuse, specular] [R, G, B, A]
 
-  real h = object.hue;
-  real s = object.saturation;
-  real v = object.intensity;
+  float h = object.hue;
+  float s = object.saturation;
+  float v = object.intensity;
 
   for (unsigned k = 0; k != 3; ++ k)
   {
-    real i = h < 2.0 ? 1.0 : h < 3.0 ? 3.0 - h : h < 5.0 ? 0.0 : h - 5.0;
+    float i = h < 2.0 ? 1.0 : h < 3.0 ? 3.0 - h : h < 5.0 ? 0.0 : h - 5.0;
     rgb [0] [k] = 0.01f;                  // ambient
     rgb [1] [k] = v * (s + i * (1 - s));  // diffuse
     rgb [2] [k] = 0.3f + 0.7f * v;        // specular
@@ -239,7 +239,7 @@ paint (const object_t & object, const float (& f) [16])
   rgb [2] [3] = 1.0f;
 
   glMatrixMode (GL_MODELVIEW);
-  glLoadMatrixr (f);
+  glLoadMatrixf (f);
   glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT, rgb [0]);
   glMaterialfv (GL_FRONT_AND_BACK, GL_DIFFUSE, rgb [1]);
   glMaterialfv (GL_FRONT_AND_BACK, GL_SPECULAR, rgb [2]);
