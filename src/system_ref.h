@@ -3,27 +3,31 @@
 #ifndef system_ref_h
 #define system_ref_h
 
+#include <cstdint>
+
 struct object_t;
 
-enum system_select_t {
+enum system_select_t
+{
   tetrahedral, octahedral, icosahedral,
   hexahedral = octahedral,
   dodecahedral = icosahedral
 };
 
-struct system_ref_t {
+struct system_ref_t
+{
   void paint (object_t const & object) const;
   void save_display_lists (int list);
   unsigned N, p, q, r;
-  unsigned char const * x, * y, * z;
-  unsigned char const (* s) [4];
-  float const (* u) [3], (* v) [3], (* w) [3];
+  uint8_t const * P, * Q, * R, * X, * Y, * Z, * s;
+  float const (* x) [3], (* y) [3], (* z) [3];
   float const (* g) [3];
-  float (* au) [3], (* bv) [3], (* cw) [3];
+  float (* ax) [3], (* by) [3], (* cz) [3];
   int lists_start;
 };
 
-struct system_repository_t {
+struct system_repository_t
+{
   system_ref_t const * ref (system_select_t system_select) const;
   void initialize (void * data);
 private:

@@ -3,19 +3,11 @@
 #ifndef system_h
 #define system_h
 
+#include <cstdint>
+
 // 'make_system' works by magic. It isn't wise to look directly into it.
 
-//   N, p, q, r:
-//     The spherical triangle XYZ with angles A=pi/p, B=pi/q, C=pi/r
-//     is the basis of an N-tile tesselation of the unit 2-sphere.
-//   x, y, z each point to the start of storage for 2*N numbers.
-//   s points to the start of storage for N/p arrays of 4 numbers.
-//   u, v, w point to the start of storage for N/p, N/q, N/r vectors, respectively.
-//   g refers to an array of 8 vectors.
-//
-// Post-conditions:
-//   x, y, z contain the combinatorial map (see below).
-//   s contains derived combinatorial data for the snubs (see below).
+//   P, Q, R, A, B, C contain the combinatorial map (see below).
 //   u, v, w contain the rectagular co-ordinates of the nodes (see below).
 //   g specify the 8 points of interest on the Moebius triangle (see below).
 
@@ -26,15 +18,18 @@ struct system_t {
     N = 2 * p*q*r / (q*r + r*p + p*q - p*q*r)
   };
 
-  // There are 2N Moebius triangles in the spherical tiling (N black, N white).
-  unsigned char x [2 * N]; // Indices of the Y- and Z-nodes around each X-node.
-  unsigned char y [2 * N]; // Indices of the Z- and X-nodes around each Y-node.
-  unsigned char z [2 * N]; // Indices of the X- and Y-nodes around each Z-node.
-  unsigned char s [N / p] [4]; // Indices of the X-nodes around each X-node.
-  float u [N / p] [3]; // Co-ordinates of the X-nodes.
-  float v [N / q] [3]; // Co-ordinates of the Y-nodes.
-  float w [N / r] [3]; // Co-ordinates of the Z-nodes.
+  float x [N / p] [3]; // Co-ordinates of the X-nodes.
+  float y [N / q] [3]; // Co-ordinates of the Y-nodes.
+  float z [N / r] [3]; // Co-ordinates of the Z-nodes.
   float g [8] [3]; // Coefficients of u, v, w for convex uniform polyhedra.
+
+  uint8_t P [N / p] [p]; // The p triangles around each X-node.
+  uint8_t Q [N / q] [q]; // The q triangles around each Y-node.
+  uint8_t R [N / r] [r]; // The r triangles around each Z-node.
+  uint8_t X [N]; // The X-node in each triangle.
+  uint8_t Y [N]; // The Y-node in each triangle.
+  uint8_t Z [N]; // The Z-node in each triangle.
+  uint8_t s [N / p] [4]; // The four X-nodes around each X-node.
 };
 
 /*

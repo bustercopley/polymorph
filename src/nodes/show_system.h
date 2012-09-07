@@ -14,8 +14,8 @@
 std::ostream &
 show_system (std::ostream & stream,
              unsigned N, unsigned p, unsigned q, unsigned r,
-             const unsigned char * x, const unsigned char * y, const unsigned char * z,
-             const unsigned char (* s) [4],
+             const uint8_t * x, const uint8_t * y, const uint8_t * z,
+             const uint8_t (* s) [4],
              const float (* u) [3], const float (* v) [3], const float (* w) [3],
              const float (& k) [8] [3]);
 
@@ -34,6 +34,7 @@ inline Stream & operator << (Stream & stream, const system_t <q, r> & s) {
   enum {
     p = 2
   };
+  return stream;
   return show_system (stream, s.N, p, q, r, s.x, s.y, s.z, s.s, s.u, s.v, s.w, s.g);
 }
 

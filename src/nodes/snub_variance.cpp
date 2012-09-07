@@ -1,13 +1,16 @@
 #include "snub_variance.h"
 
-namespace {
-  struct variance {
+namespace
+{
+  struct variance
+  {
     // This algorithm from TAOCP by Donald E. Knuth, citing B.P. Welford;
     // see `http://en.wikipedia.org/wiki/Algorithms_for_calculating_variance'.
 
     variance () : n (0), mean (0), S (0) { }
 
-    variance & operator << (long double x) {
+    variance & operator << (long double x)
+    {
       ++ n;
       long double delta = x - mean;
       mean += delta / n;
@@ -15,7 +18,8 @@ namespace {
       return * this;
     }
 
-    long double operator () () {
+    long double operator () ()
+    {
       return S / (n - 1);
     }
 
@@ -25,13 +29,15 @@ namespace {
     long double S;
   };
 
-  inline long double dot (const long double (& u) [3], const long double (& v) [3]) {
+  inline long double dot (const long double (& u) [3], const long double (& v) [3])
+  {
     return u [0] * v [0] + u [1] * v [1] + u [2] * v [2];
   }
 }
 
 long double snub_variance (const float (* u) [3], const float (* v) [3], const float (* w) [3],
-                           const float (& k7) [3], unsigned Np, const unsigned char * x, const unsigned char (* s) [4]) {
+                           const float (& g7) [3], unsigned Np, const uint8_t * x, const uint8_t (* s) [4])
+{
   variance Var;
 
   for (unsigned n = 0; n != Np; ++ n) {
@@ -45,9 +51,9 @@ long double snub_variance (const float (* u) [3], const float (* v) [3], const f
     const float (& X2) [3] = u [s [n] [2]];
     const float (& X3) [3] = u [s [n] [3]];
 
-    long double alpha = k7 [0];
-    long double beta  = k7 [1];
-    long double gamma = k7 [2];
+    long double alpha = g7 [0];
+    long double beta  = g7 [1];
+    long double gamma = g7 [2];
 
     long double P [3], Q [3], R [3], S [3], T [3], U [3], V [3], W [3];
 

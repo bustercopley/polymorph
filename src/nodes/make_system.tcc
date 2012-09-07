@@ -6,32 +6,38 @@
 
 static const double pi = 0x1.921fb54442d18P1;
 
+// Copy an array element-wise.
+template <typename T, typename U, unsigned N>
+void copy (const T (& from) [N], U * to)
+{
+  for (unsigned n = 0; n != N; ++ n)
+    to [n] = from [n];
+}
+
 // Copy a two-dimensional array element-wise.
 template <typename T, typename U, unsigned N, unsigned K>
-void copy (const T (& from) [N] [K], U (* to) [K]) {
+void copy (const T (& from) [N] [K], U (* to) [K])
+{
   for (unsigned n = 0; n != N; ++ n)
     for (unsigned k = 0; k != K; ++ k)
       to [n] [k] = from [n] [k];
 }
 
 // Put the combinatorial information into the required form.
-template <unsigned N, unsigned Np>
-void transfer (const unsigned (& P) [N], const unsigned (& P0) [Np],
-               const unsigned (& Qx) [N], const unsigned (& Rx) [N],
-               unsigned char (& x) [2 * N]) {
-  enum { p = N / Np };
+template <unsigned N, unsigned Np, unsigned p>
+void transfer (const unsigned (& P) [N], const unsigned (& P0) [Np], uint8_t (& out) [Np] [p])
+{
   for (unsigned k = 0; k != Np; ++ k) {
-    unsigned n = P0 [k];
-    for (unsigned i = 0; i != p; ++ i) {
-      x [2 * (k * p + i) + 0] = Qx [n];
-      x [2 * (k * p + i) + 1] = Rx [n];
-      n = n [P];
+    out [k] [0] = P0 [k];
+    for (unsigned i = 1; i != p; ++ i) {
+      out [k] [i] = out [k] [i - 1] [P];
     }
   }
 }
 
 template <unsigned q, unsigned r>
-void make_system (system_t <q, r> & s) {
+void make_system (system_t <q, r> & s)
+{
   static const unsigned p = 2,
     N = 2 * p*q*r / (q*r + r*p + p*q - p*q*r),
     Np = N / p, Nq = N / q, Nr = N / r;
@@ -39,10 +45,10 @@ void make_system (system_t <q, r> & s) {
   rotor_t X_rotate (2 * pi / p);
   rotor_t Y_rotate (2 * pi / q);
 
-  long double u [Np] [3], v [Nq] [3], w [Nr] [3]; // Node co-ordinates.
+  long double x [Np] [3], y [Nq] [3], z [Nr] [3]; // Node co-ordinates.
   long double g [8] [3]; // Polyhedron vertices as linear combinations of nodes.
 
-  triangle (pi / p, pi / q, pi / r, u [0], v [0], w [0], g);
+  triangle (pi / p, pi / q, pi / r, x [0], y [0], z [0], g);
 
   unsigned P [N], Q [N], R [N];        // Permutation taking black triangles around nodes.
   unsigned Px [N], Qx [N], Rx [N];     // The P-, Q- or R-node contained in each triangle.
@@ -61,10 +67,10 @@ void make_system (system_t <q, r> & s) {
   }
 
   // We know the co-ordinates of the P- and R-nodes around Q-node 0.
-  Y_rotate.about (v [0]);
+  Y_rotate.about (y [0]);
   for (unsigned k = 1; k != q; ++ k) {
-    Y_rotate (u [P0 [k - 1]], u [P0 [k]]);
-    Y_rotate (w [R0 [k - 1]], w [R0 [k]]);
+    Y_rotate (x [P0 [k - 1]], x [P0 [k]]);
+    Y_rotate (z [R0 [k - 1]], z [R0 [k]]);
   }
 
   unsigned n0 = 0, p_node = q, r_node = q;
@@ -81,8 +87,8 @@ void make_system (system_t <q, r> & s) {
     // with nodes which are already known (from earlier Q-nodes)
     // and which are new.
 
-    X_rotate.about (u [Px [n0]]);
-    X_rotate (v [Qx [n0]], v [Qx [m0]]);
+    X_rotate.about (x [Px [n0]]);
+    X_rotate (y [Qx [n0]], y [Qx [m0]]);
 
     // Work out the consequences of identifying the two P-nodes.
     // This is where the magic happens.
@@ -129,28 +135,30 @@ void make_system (system_t <q, r> & s) {
     // are identified with nodes that are already labelled, so we can give
     // new labels to the remaining nodes and compute their vectors.
 
-    Y_rotate.about (v [Qx [m0]]);
+    Y_rotate.about (y [Qx [m0]]);
     for (unsigned n = m0 + 1; n != m0 + q; ++ n) {
       if (Px [n] == Np) {
         P0 [p_node] = n;
         Px [n] = p_node ++;
-        Y_rotate (u [Px [n - 1]], u [Px [n]]);
+        Y_rotate (x [Px [n - 1]], x [Px [n]]);
       }
       if (Rx [n] == Nr) {
         R0 [r_node] = n;
         Rx [n] = r_node ++;
-        Y_rotate (w [Rx [n - 1]], w [Rx [n]]);
+        Y_rotate (z [Rx [n - 1]], z [Rx [n]]);
       }
     }
   }
 
-  transfer (P, P0, Qx, Rx, s.x);
-  transfer (Q, Q0, Rx, Px, s.y);
-  transfer (R, R0, Px, Qx, s.z);
-
-  copy (u, s.u);
-  copy (v, s.v);
-  copy (w, s.w);
+  transfer (P, P0, s.P);
+  transfer (Q, Q0, s.Q);
+  transfer (R, R0, s.R);
+  copy (Px, s.X);
+  copy (Qx, s.Y);
+  copy (Rx, s.Z);
+  copy (x, s.x);
+  copy (y, s.y);
+  copy (z, s.z);
   copy (g, s.g);
 
   //        X0
@@ -170,4 +178,5 @@ void make_system (system_t <q, r> & s) {
     s.s [n] [2] = Px [b [R]];
     s.s [n] [3] = Px [a [Q]];
   }
+
 }

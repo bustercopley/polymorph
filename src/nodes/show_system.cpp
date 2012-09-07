@@ -49,7 +49,7 @@ namespace {
 
   inline void
   put_aspect (std::vector <std::string> & lines, unsigned column,
-              unsigned Np, unsigned p, const unsigned char * x) {
+              unsigned Np, unsigned p, const uint8_t * x) {
     for (unsigned k = 0; k != Np; ++ k) {
       lines [k * p + p - 1].replace (column + 1, 13, "_____________", 13);
       putat (lines [k * p], column + 4, k);
@@ -67,8 +67,8 @@ namespace {
 std::ostream &
 show_system (std::ostream & stream,
              unsigned N, unsigned p, unsigned q, unsigned r,
-             const unsigned char * x, const unsigned char * y, const unsigned char * z,
-             const unsigned char (* s) [4],
+             const uint8_t * x, const uint8_t * y, const uint8_t * z,
+             const uint8_t (* s) [4],
              const float (* u) [3], const float (* v) [3], const float (* w) [3],
              const float (& k) [8] [3]) {
   stream << std::fixed << std::setprecision (12);

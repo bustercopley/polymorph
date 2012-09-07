@@ -1,4 +1,5 @@
 #include <GL/gl.h>
+#include <cstdint>
 #include "graphics.h"
 #include "object.h"
 #include "system_ref.h"
@@ -6,19 +7,23 @@
 #include "vector.h"
 #include "maths.h"
 
-int get_lists_start (unsigned n) {
+int get_lists_start (unsigned n)
+{
   return glGenLists (n);
 }
 
-void begin_list (int n) {
+void begin_list (int n)
+{
   glNewList (n, GL_COMPILE);
 }
 
-void end_list () {
+void end_list ()
+{
   glEndList ();
 }
 
-void lights (float distance, float depth, float lnear, float lfar, float dnear) {
+void lights (float distance, float depth, float lnear, float lfar, float dnear)
+{
   glMatrixMode (GL_MODELVIEW);
   glLoadIdentity ();
 
@@ -30,26 +35,21 @@ void lights (float distance, float depth, float lnear, float lfar, float dnear) 
   };
 
   lights [0] [2] = -distance + dnear;
-
   glLightfv (GL_LIGHT0, GL_POSITION, lights [0]);
   glLightfv (GL_LIGHT0, GL_AMBIENT, lights [1]);
   glLightfv (GL_LIGHT0, GL_DIFFUSE, lights [2]);
   glLightfv (GL_LIGHT0, GL_SPECULAR, lights [3]);
-
   float dfar = dnear + depth;
-
   glLightf (GL_LIGHT0, GL_CONSTANT_ATTENUATION, ((dfar / lnear) - (dnear / lfar)) / (dfar - dnear));
   glLightf (GL_LIGHT0, GL_LINEAR_ATTENUATION, ((1 / lfar) - (1 / lnear)) / (dfar - dnear));
 
   GLfloat fog_color[4]= { 0.0f, 0.0f, 0.0f, 1.0f, };
-
   glFogi (GL_FOG_MODE, GL_LINEAR);
   glFogfv (GL_FOG_COLOR, fog_color);
   glFogf (GL_FOG_DENSITY, 0.05);
   glHint (GL_FOG_HINT, GL_NICEST);
   glFogf (GL_FOG_START, -distance);
   glFogf (GL_FOG_END, -(distance + depth));
-
   glEnable (GL_FOG);
 
   glEnable (GL_LIGHTING);
@@ -82,16 +82,18 @@ void box (const view_t & view)
   glFrustum (-x1, x1, -y1, y1, z1 + 0.05f, z2);
 }
 
-void clear () {
+void clear ()
+{
   glClear (GL_COLOR_BUFFER_BIT);
 }
 
-namespace {
-  inline void
-  point (const float (& au) [3], const float (& bv) [3], const float (& cw) [3]) {
-    // Send a vertex `p' to the graphics library. `p' is the sum of `au', `bv' and `cw'.
+namespace
+{
+  inline void point (const float (& ax) [3], const float (& by) [3], const float (& cz) [3])
+  {
+    // Send a vertex `p' to the graphics library. `p' is the sum of `ax', `by' and `cz'.
 
-    // The vector `au' is the product of a scalar `a' and a vector 'u', and so on.
+    // The vector `ax' is the product of a scalar `a' and a vector 'u', and so on.
     // In other words, `a', `b', `c' are the co-ordinates of `p' in the co-ordinate
     // system defined by the basis (`u', `v', `w').
 
@@ -100,26 +102,28 @@ namespace {
     // Certain values of the co-ordinates `a', `b', `c' pick out vertices of
     // uniform polyhedra: see "nodes/make_system.tcc" for details.
     GLfloat p [3];
-    add (au, bv, cw, p);
+    add (ax, by, cz, p);
     glVertex3fv (p);
   }
 }
 
-void
-paint_kpgons (unsigned k, unsigned Np, unsigned p,
-              const unsigned char * x, const float (* u) [3],
-              const float (* au) [3], const float (* bv) [3], const float (* cw) [3]) {
+void paint_kpgons (unsigned k, unsigned Np, unsigned p,
+                   const uint8_t * P,
+                   const uint8_t * Y, const uint8_t * Z,
+                   const float (* x) [3],
+                   const float (* ax) [3], const float (* by) [3], const float (* cz) [3])
+{
   if (k == 1) {
     for (unsigned n = 0; n != Np; ++ n) {
       glBegin (GL_POLYGON);
-      glNormal3fv (u [n]);
-      const float (& v) [3] = bv [x [n * (2 * p) + 0]];
-      const float (& w) [3] = cw [x [n * (2 * p) + (2 * p) - 1]];
-      point (au [n], v, w);
+      glNormal3fv (x [n]);
+      const float (& y) [3] = by [Y [P [n * p + 0]]];
+      const float (& z) [3] = cz [Z [P [n * p + p - 1]]];
+      point (ax [n], y, z);
       for (unsigned k0 = 1; k0 != p; ++ k0) {
-        const float (& v) [3] = bv [x [n * (2 * p) + (2 * k0) + 0]];
-        const float (& w) [3] = cw [x [n * (2 * p) + (2 * k0) - 1]];
-        point (au [n], v, w);
+        const float (& y) [3] = by [Y [P [n * p + k0]]];
+        const float (& z) [3] = cz [Z [P [n * p + k0 - 1]]];
+        point (ax [n], y, z);
       }
       glEnd ();
     }
@@ -127,13 +131,13 @@ paint_kpgons (unsigned k, unsigned Np, unsigned p,
   else if (k == 2) {
     for (unsigned n = 0; n != Np; ++ n) {
       glBegin (GL_POLYGON);
-      glNormal3fv (u [n]);
-      const float (* w) [3] = & cw [x [n * (2 * p) + 2 * p - 1]];
+      glNormal3fv (x [n]);
+      const float (* w) [3] = & cz [Z [P [n * p + p - 1]]];
       for (unsigned k0 = 0; k0 != p; ++ k0) {
-        const float (* v) [3] = & bv [x [n * (2 * p) + (2 * k0) + 0]];
-        point (au [n], * v, * w);
-        w = & cw [x [n * (2 * p) + (2 * k0) + 1]];
-        point (au [n], * v, * w);
+        const float (* v) [3] = & by [Y [P [n * p + k0]]];
+        point (ax [n], * v, * w);
+        w = & cz [Z [P [n * p + k0]]];
+        point (ax [n], * v, * w);
       }
       glEnd ();
     }
@@ -142,9 +146,11 @@ paint_kpgons (unsigned k, unsigned Np, unsigned p,
 
 void
 paint_snub_pgons (int chirality, unsigned Np, unsigned p,
-                  const unsigned char * x,
+                  const uint8_t * P,
+                  const uint8_t * Y, const uint8_t * Z,
                   const float (* u) [3],
-                  const float (* au) [3], const float (* bv) [3], const float (* cw) [3]) {
+                  const float (* ax) [3], const float (* by) [3], const float (* cz) [3])
+{
   for (unsigned n = 0; n != Np; ++ n) {
     glBegin (GL_POLYGON);
     glNormal3fv (u [n]);
@@ -152,19 +158,19 @@ paint_snub_pgons (int chirality, unsigned Np, unsigned p,
       // By considering the p black tiles around each p-node,
       // obtain N/p p-gonal (or degenerate) faces.
       for (unsigned k = 0; k != p; ++ k)
-        point (au [n],
-               bv [x [2 * n * p + 2 * k]],
-               cw [x [2 * n * p + 2 * k + 1]]);
+        point (ax [n],
+               by [Y [P [n * p + k]]],
+               cz [Z [P [n * p + k]]]);
     }
     else {
       // The same, but with the white tiles.
-      point (au [n],
-             bv [x [2 * n * p]],
-             cw [x [2 * n * p + 2 * p - 1]]);
+      point (ax [n],
+             by [Y [P [n * p + 0]]],
+             cz [Z [P [n * p + p - 1]]]);
       for (unsigned k = 1; k != p; ++ k)
-        point (au [n],
-               bv [x [2 * n * p + 2 * k]],
-               cw [x [2 * n * p + 2 * k - 1]]);
+        point (ax [n],
+               by [Y [P [n * p + k]]],
+               cz [Z [P [n * p + k - 1]]]);
     }
     glEnd ();
   }
@@ -172,34 +178,35 @@ paint_snub_pgons (int chirality, unsigned Np, unsigned p,
 
 void
 paint_snub_triangle_pairs (int chirality, unsigned Np,
-                           const unsigned char * x,
-                           const unsigned char (* s) [4],
-                           const float (* au) [3], const float (* bv) [3], const float (* cw) [3]) {
-  for (unsigned n = 0; n != Np; ++ n) {          //        X1        //
-    const float (& x0) [3] = au [n];             //       /  \       //
-    const float (& y0) [3] = bv [x [4 * n + 0]]; //      Z0--Y0      //
-    const float (& z0) [3] = cw [x [4 * n + 1]]; //     /|\  /|\     //
-    const float (& y1) [3] = bv [x [4 * n + 2]]; //   X4 | X0 | X2   //
-    const float (& z1) [3] = cw [x [4 * n + 3]]; //     \|/  \|/     //
-    float a [3], b [3], c [3], d [3];            //      Y1--Z1      //
-                                                 //       \  /       //
-    if (chirality == 1) {                        //        X3        //
-      const float (& x2) [3] = au [s [n] [1]];
-      const float (& x4) [3] = au [s [n] [3]];   //                               ^           //
-      add (x2, y1, z0, a);                       //                              / \          //
-      add (x0, y1, z1, b);                       //                             / A \         //
-      add (x0, y0, z0, c);                       //        +-----+             +-----+        //
-      add (x4, y0, z1, d);                       //       /|\ C /|\            |\   /|        //
-    }                                            //      / | \ / | \           | \ / |        //
-    else {                                       //     < A|  x  |D >          |B x C|        //
-      const float (& x1) [3] = au [s [n] [0]];   //      \ | / \ | /           | / \ |        //
-      const float (& x3) [3] = au [s [n] [2]];   //       \|/ B \|/            |/   \|        //
-      add (x1, y0, z0, a);                       //        +-----+             +-----+        //
-      add (x0, y1, z0, b);                       //                             \ D /         //
-      add (x0, y0, z1, c);                       //                              \ /          //
-      add (x3, y1, z1, d);                       //                               v           //
-    }                                            //                                           //
-                                                 //      chirality=1          chirality=-1    //
+                           const uint8_t * P, const uint8_t * s,
+                           const uint8_t * Y, const uint8_t * Z,
+                           const float (* ax) [3], const float (* by) [3], const float (* cz) [3])
+{
+  for (unsigned n = 0; n != Np; ++ n) {               //        X1        //
+    const float (& x0) [3] = ax [n];                  //       /  \       //
+    const float (& y0) [3] = by [Y [P [2 * n + 0]]];  //      Z0--Y0      //
+    const float (& z0) [3] = cz [Z [P [2 * n + 0]]];  //     /|\  /|\     //
+    const float (& y1) [3] = by [Y [P [2 * n + 1]]];  //   X4 | X0 | X2   //
+    const float (& z1) [3] = cz [Z [P [2 * n + 1]]];  //     \|/  \|/     //
+    float a [3], b [3], c [3], d [3];                 //      Y1--Z1      //
+                                                      //       \  /       //
+    if (chirality == 1) {                             //        X3        //
+      const float (& x2) [3] = ax [s [4 * n + 1]];
+      const float (& x4) [3] = ax [s [4 * n + 3]];    //                               ^           //
+      add (x2, y1, z0, a);                            //                              / \          //
+      add (x0, y1, z1, b);                            //                             / A \         //
+      add (x0, y0, z0, c);                            //        +-----+             +-----+        //
+      add (x4, y0, z1, d);                            //       /|\ C /|\            |\   /|        //
+    }                                                 //      / | \ / | \           | \ / |        //
+    else {                                            //     < A|  x  |D >          |B x C|        //
+      const float (& x1) [3] = ax [s [4 * n + 0]];    //      \ | / \ | /           | / \ |        //
+      const float (& x3) [3] = ax [s [4 * n + 2]];    //       \|/ B \|/            |/   \|        //
+      add (x1, y0, z0, a);                            //        +-----+             +-----+        //
+      add (x0, y1, z0, b);                            //                             \ D /         //
+      add (x0, y0, z1, c);                            //                              \ /          //
+      add (x3, y1, z1, d);                            //                               v           //
+    }                                                 //                                           //
+
     float n0 [3], n1 [3];
     add (a, b, c, n0);
     add (d, c, b, n1);
