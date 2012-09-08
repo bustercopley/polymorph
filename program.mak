@@ -17,6 +17,7 @@ ldlibs=$($(program)_LDLIBS) $(LDLIBS)
 
 define compile
 .obj/$(program)-%.o: $(source_prefix)%.cpp | .obj
+	$(CXX) $(cppflags) $(cxxflags) $$< -S -o $$(@:.o=.s) -fverbose-asm
 	$(CXX) $(cppflags) $(cxxflags) $(DEPFLAGS) $$< -c -o $$@
 .obj/$(program)-%.o: $(source_prefix)%.c | .obj
 	$(CC) $(cppflags) $(cflags) $(DEPFLAGS) $$< -c -o $$@

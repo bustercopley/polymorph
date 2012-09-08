@@ -3,6 +3,7 @@
 #ifndef graphics_h
 #define graphics_h
 
+#include <cstdint>
 #include "frustum.h"
 
 struct object_t;
@@ -20,18 +21,18 @@ void clear ();
 void paint_kpgons (unsigned k, unsigned Np, unsigned p,
                    const uint8_t * P,
                    const uint8_t * Y, const uint8_t * Z,
-                   const float (* x) [3],
-                   const float (* ax) [3], const float (* by) [3], const float (* cz) [3]);
+                   const float (* x) [4],
+                   const float (* ax) [4], const float (* by) [4], const float (* cz) [4]);
 
 void paint_snub_pgons (int chirality, unsigned Np, unsigned p,
                        const uint8_t * P,
                        const uint8_t * Y, const uint8_t * Z,
-                       const float (* x) [3],
-                       const float (* ax) [3], const float (* by) [3], const float (* cz) [3]);
+                       const float (* x) [4],
+                       const float (* ax) [4], const float (* by) [4], const float (* cz) [4]);
 
 void paint_snub_triangle_pairs (int chirality, unsigned Np,
                                 const uint8_t * P, const uint8_t * s,
                                 const uint8_t * Y, const uint8_t * Z,
-                                const float (* ax) [3], const float (* by) [3], const float (* cz) [3]);
+                                const float (* ax) [4], const float (* by) [4], const float (* cz) [4]);
 
 #endif

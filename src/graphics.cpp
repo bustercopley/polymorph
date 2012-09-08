@@ -5,7 +5,6 @@
 #include "system_ref.h"
 #include "frustum.h"
 #include "vector.h"
-#include "maths.h"
 
 int get_lists_start (unsigned n)
 {
@@ -29,9 +28,9 @@ void lights (float distance, float depth, float lnear, float lfar, float dnear)
 
   GLfloat lights [5] [4] = {
     { 0.00f, 0.00f, 0.00f, 1.00f, }, // Position.
-    { 0.42f, 0.42f, 0.42f, 0.00f, }, // Ambient intensity.
-    { 0.80f, 0.80f, 0.80f, 0.00f, }, // Diffuse intensity.
-    { 0.40f, 0.40f, 0.40f, 0.00f, }, // Specular intensity.
+    { 0.82f, 0.82f, 0.82f, 0.00f, }, // Ambient intensity.
+    { 1.00f, 1.00f, 1.00f, 0.00f, }, // Diffuse intensity.
+    { 1.00f, 1.00f, 1.00f, 0.00f, }, // Specular intensity.
   };
 
   lights [0] [2] = -distance + dnear;
@@ -39,9 +38,16 @@ void lights (float distance, float depth, float lnear, float lfar, float dnear)
   glLightfv (GL_LIGHT0, GL_AMBIENT, lights [1]);
   glLightfv (GL_LIGHT0, GL_DIFFUSE, lights [2]);
   glLightfv (GL_LIGHT0, GL_SPECULAR, lights [3]);
-  float dfar = dnear + depth;
-  glLightf (GL_LIGHT0, GL_CONSTANT_ATTENUATION, ((dfar / lnear) - (dnear / lfar)) / (dfar - dnear));
-  glLightf (GL_LIGHT0, GL_LINEAR_ATTENUATION, ((1 / lfar) - (1 / lnear)) / (dfar - dnear));
+
+  v4f dd = { dnear + distance, dnear, 1.0f, 1.0f, };
+  v4f ll = { lnear, lfar, lfar, lnear, };
+  v4f dl = dd / ll;
+  v4f hs = _mm_hsub_ps (dl, dd);
+  float t [4];
+  store4f (t, hs / broadcast3 (hs));
+
+  glLightf (GL_LIGHT0, GL_CONSTANT_ATTENUATION, t [0]);
+  glLightf (GL_LIGHT0, GL_LINEAR_ATTENUATION, t [1]);
 
   GLfloat fog_color[4]= { 0.0f, 0.0f, 0.0f, 1.0f, };
   glFogi (GL_FOG_MODE, GL_LINEAR);
@@ -70,16 +76,24 @@ void screen (int width, int height)
 
 void box (const view_t & view)
 {
-  float x1 = view.width / 2;
-  float y1 = view.height / 2;
-  float z1 = view.distance;
-  float z2 = view.distance + view.depth;
+  v4f v = _mm_loadu_ps (& view.distance); // z1 zd w h
+  v4f k = { 0.5f, 0.5f, 0.5f, 0.5f, };
+  v4f s0 = k * _mm_movehl_ps (v, v);      // x1 y1 x1 y1
+  v4f s1 = _mm_hadd_ps (v, v);            // z2 * z2 *
+  v2d xp = _mm_cvtps_pd (s0);
+  v2d neg = { -0.0, -0.0, };
+  v2d xm = _mm_xor_pd (xp, neg);
+  v2d z = _mm_cvtps_pd (_mm_unpacklo_ps (v, s1));
+  double t [6];
+  store2d (& t [0], xm);
+  store2d (& t [2], xp);
+  store2d (& t [4], z);
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
   // glFrustum's z arguments are specified as positive distances,
   // but the z co-ordinate of a point inside the viewing frustum
   // is negative (in eye co-ordinates).
-  glFrustum (-x1, x1, -y1, y1, z1 + 0.05f, z2);
+  glFrustum (t [0], t [2], t [1], t [3], t [4] - 0.05, t [5]);
 }
 
 void clear ()
@@ -89,7 +103,7 @@ void clear ()
 
 namespace
 {
-  inline void point (const float (& ax) [3], const float (& by) [3], const float (& cz) [3])
+  inline void point (v4f ax, v4f by, v4f cz)
   {
     // Send a vertex `p' to the graphics library. `p' is the sum of `ax', `by' and `cz'.
 
@@ -101,8 +115,8 @@ namespace
     // `a', `b' and `c' have been chosen so that `p' lies on the unit sphere.
     // Certain values of the co-ordinates `a', `b', `c' pick out vertices of
     // uniform polyhedra: see "nodes/make_system.tcc" for details.
-    GLfloat p [3];
-    add (ax, by, cz, p);
+    GLfloat p [4];
+    store4f (p, ax + by + cz);
     glVertex3fv (p);
   }
 }
@@ -110,20 +124,21 @@ namespace
 void paint_kpgons (unsigned k, unsigned Np, unsigned p,
                    const uint8_t * P,
                    const uint8_t * Y, const uint8_t * Z,
-                   const float (* x) [3],
-                   const float (* ax) [3], const float (* by) [3], const float (* cz) [3])
+                   const float (* x) [4],
+                   const float (* ax) [4], const float (* by) [4], const float (* cz) [4])
 {
   if (k == 1) {
     for (unsigned n = 0; n != Np; ++ n) {
       glBegin (GL_POLYGON);
       glNormal3fv (x [n]);
-      const float (& y) [3] = by [Y [P [n * p + 0]]];
-      const float (& z) [3] = cz [Z [P [n * p + p - 1]]];
-      point (ax [n], y, z);
+      v4f x = load4f (ax [n]);
+      v4f y = load4f (by [Y [P [n * p + 0]]]);
+      v4f z = load4f (cz [Z [P [n * p + p - 1]]]);
+      point (x, y, z);
       for (unsigned k0 = 1; k0 != p; ++ k0) {
-        const float (& y) [3] = by [Y [P [n * p + k0]]];
-        const float (& z) [3] = cz [Z [P [n * p + k0 - 1]]];
-        point (ax [n], y, z);
+        v4f y = load4f (by [Y [P [n * p + k0]]]);
+        v4f z = load4f (cz [Z [P [n * p + k0 - 1]]]);
+        point (x, y, z);
       }
       glEnd ();
     }
@@ -132,12 +147,13 @@ void paint_kpgons (unsigned k, unsigned Np, unsigned p,
     for (unsigned n = 0; n != Np; ++ n) {
       glBegin (GL_POLYGON);
       glNormal3fv (x [n]);
-      const float (* w) [3] = & cz [Z [P [n * p + p - 1]]];
+      v4f x = load4f (ax [n]);
+      v4f z = load4f (cz [Z [P [n * p + p - 1]]]);
       for (unsigned k0 = 0; k0 != p; ++ k0) {
-        const float (* v) [3] = & by [Y [P [n * p + k0]]];
-        point (ax [n], * v, * w);
-        w = & cz [Z [P [n * p + k0]]];
-        point (ax [n], * v, * w);
+        v4f y = load4f (by [Y [P [n * p + k0]]]);
+        point (x, y, z);
+        z = load4f (cz [Z [P [n * p + k0]]]);
+        point (x, y, z);
       }
       glEnd ();
     }
@@ -148,29 +164,30 @@ void
 paint_snub_pgons (int chirality, unsigned Np, unsigned p,
                   const uint8_t * P,
                   const uint8_t * Y, const uint8_t * Z,
-                  const float (* u) [3],
-                  const float (* ax) [3], const float (* by) [3], const float (* cz) [3])
+                  const float (* u) [4],
+                  const float (* ax) [4], const float (* by) [4], const float (* cz) [4])
 {
   for (unsigned n = 0; n != Np; ++ n) {
     glBegin (GL_POLYGON);
     glNormal3fv (u [n]);
+    v4f x = load4f (ax [n]);
     if (chirality == 1) {
       // By considering the p black tiles around each p-node,
-      // obtain N/p p-gonal (or degenerate) faces.
+      // obtain N/p p-gonal faces.
       for (unsigned k = 0; k != p; ++ k)
-        point (ax [n],
-               by [Y [P [n * p + k]]],
-               cz [Z [P [n * p + k]]]);
+        point (x,
+               load4f (by [Y [P [n * p + k]]]),
+               load4f (cz [Z [P [n * p + k]]]));
     }
     else {
       // The same, but with the white tiles.
-      point (ax [n],
-             by [Y [P [n * p + 0]]],
-             cz [Z [P [n * p + p - 1]]]);
+      point (x,
+             load4f (by [Y [P [n * p + 0]]]),
+             load4f (cz [Z [P [n * p + p - 1]]]));
       for (unsigned k = 1; k != p; ++ k)
-        point (ax [n],
-               by [Y [P [n * p + k]]],
-               cz [Z [P [n * p + k - 1]]]);
+        point (x,
+               load4f (by [Y [P [n * p + k]]]),
+               load4f (cz [Z [P [n * p + k - 1]]]));
     }
     glEnd ();
   }
@@ -180,45 +197,50 @@ void
 paint_snub_triangle_pairs (int chirality, unsigned Np,
                            const uint8_t * P, const uint8_t * s,
                            const uint8_t * Y, const uint8_t * Z,
-                           const float (* ax) [3], const float (* by) [3], const float (* cz) [3])
+                           const float (* ax) [4], const float (* by) [4], const float (* cz) [4])
 {
   for (unsigned n = 0; n != Np; ++ n) {               //        X1        //
-    const float (& x0) [3] = ax [n];                  //       /  \       //
-    const float (& y0) [3] = by [Y [P [2 * n + 0]]];  //      Z0--Y0      //
-    const float (& z0) [3] = cz [Z [P [2 * n + 0]]];  //     /|\  /|\     //
-    const float (& y1) [3] = by [Y [P [2 * n + 1]]];  //   X4 | X0 | X2   //
-    const float (& z1) [3] = cz [Z [P [2 * n + 1]]];  //     \|/  \|/     //
-    float a [3], b [3], c [3], d [3];                 //      Y1--Z1      //
+    v4f a, b, c, d;                                   //       /  \       //
+    v4f x0 = load4f (ax [n]);                         //      Z0--Y0      //
+    v4f y0 = load4f (by [Y [P [2 * n + 0]]]);         //     /|\  /|\     //
+    v4f z0 = load4f (cz [Z [P [2 * n + 0]]]);         //   X4 | X0 | X2   //
+    v4f y1 = load4f (by [Y [P [2 * n + 1]]]);         //     \|/  \|/     //
+    v4f z1 = load4f (cz [Z [P [2 * n + 1]]]);         //      Y1--Z1      //
                                                       //       \  /       //
     if (chirality == 1) {                             //        X3        //
-      const float (& x2) [3] = ax [s [4 * n + 1]];
-      const float (& x4) [3] = ax [s [4 * n + 3]];    //                               ^           //
-      add (x2, y1, z0, a);                            //                              / \          //
-      add (x0, y1, z1, b);                            //                             / A \         //
-      add (x0, y0, z0, c);                            //        +-----+             +-----+        //
-      add (x4, y0, z1, d);                            //       /|\ C /|\            |\   /|        //
+      v4f x2 = load4f (ax [s [4 * n + 1]]);
+      v4f x4 = load4f (ax [s [4 * n + 3]]);           //                               ^           //
+      a = x2 + y1 + z0;                               //                              / \          //
+      b = x0 + y1 + z1;                               //                             / A \         //
+      c = x0 + y0 + z0;                               //        +-----+             +-----+        //
+      d = x4 + y0 + z1;                               //       /|\ C /|\            |\   /|        //
     }                                                 //      / | \ / | \           | \ / |        //
     else {                                            //     < A|  x  |D >          |B x C|        //
-      const float (& x1) [3] = ax [s [4 * n + 0]];    //      \ | / \ | /           | / \ |        //
-      const float (& x3) [3] = ax [s [4 * n + 2]];    //       \|/ B \|/            |/   \|        //
-      add (x1, y0, z0, a);                            //        +-----+             +-----+        //
-      add (x0, y1, z0, b);                            //                             \ D /         //
-      add (x0, y0, z1, c);                            //                              \ /          //
-      add (x3, y1, z1, d);                            //                               v           //
+      v4f x1 = load4f (ax [s [4 * n + 0]]);           //      \ | / \ | /           | / \ |        //
+      v4f x3 = load4f (ax [s [4 * n + 2]]);           //       \|/ B \|/            |/   \|        //
+      a = x1 + y0 + z0;                               //        +-----+             +-----+        //
+      b = x0 + y1 + z0;                               //                             \ D /         //
+      c = x0 + y0 + z1;                               //                              \ /          //
+      d = x3 + y1 + z1;                               //                               v           //
     }                                                 //                                           //
 
-    float n0 [3], n1 [3];
-    add (a, b, c, n0);
-    add (d, c, b, n1);
+    float out [8] [4];
+    store4f (out [0], a + b + c); // The normal for triangle ABC.
+    store4f (out [1], d + c + b); // The normal for triangle DCB.
+    store4f (out [2], a);
+    store4f (out [3], b);
+    store4f (out [4], c);
+    store4f (out [5], d);
+
     glBegin (GL_TRIANGLES);
-    glNormal3fv (n0);
-    glVertex3fv (a);
-    glVertex3fv (b);
-    glVertex3fv (c);
-    glNormal3fv (n1);
-    glVertex3fv (d);
-    glVertex3fv (c);
-    glVertex3fv (b);
+    glNormal3fv (out [0]);
+    glVertex3fv (out [2]);
+    glVertex3fv (out [3]);
+    glVertex3fv (out [4]);
+    glNormal3fv (out [1]);
+    glVertex3fv (out [5]);
+    glVertex3fv (out [4]);
+    glVertex3fv (out [3]);
     glEnd ();
   }
 }

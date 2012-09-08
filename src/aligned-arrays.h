@@ -46,13 +46,13 @@ namespace internal
     return pad (count * sizeof (T)) + bytes_needed (count, p ...);
   }
 
-  inline void replace (unsigned, unsigned, void *)
+  inline void replace (void *, unsigned, unsigned)
   {
     // Base case for recursion.
   }
 
   template <typename T, typename ... P>
-  inline void replace (unsigned new_length, unsigned old_length, void * base, T ** x, P ... p)
+  inline void replace (void * base, unsigned old_length, unsigned new_length, T ** x, P ... p)
   {
     base = align_up (base);
     if (old_length) {
@@ -60,7 +60,7 @@ namespace internal
     }
     * x = reinterpret_cast <T *> (base);
     base = reinterpret_cast <void *> (* x + new_length);
-    replace (new_length, old_length, base, p ...);
+    replace (base, old_length, new_length, p ...);
   }
 }
 
@@ -74,7 +74,7 @@ inline bool reallocate_aligned_arrays (void * & memory, unsigned & length, unsig
       return false;
     }
     void * base = new_memory;
-    internal::replace (new_length, length, base, p ...);
+    internal::replace (base, length, new_length, p ...);
     deallocate (memory);
     memory = new_memory;
     length = new_length;

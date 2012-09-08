@@ -5,6 +5,10 @@
 
 void * allocate_internal (unsigned n);
 void deallocate (void * p);
-void copy_memory (void * dst, void * src, unsigned n);
+
+inline void copy_memory (void * dst, void * src, unsigned n)
+{
+  __builtin_memcpy (dst, src, n);
+}
 
 #endif

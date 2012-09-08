@@ -2,7 +2,6 @@
 #include "object.h"
 #include "vector.h"
 #include "config.h"
-#include "maths.h"
 
 void bounce (unsigned ix, unsigned iy, object_t * objects,
              const float (* x) [4], float (* v) [4], float (* w) [4])
@@ -42,44 +41,50 @@ void bounce (unsigned ix, unsigned iy, object_t * objects,
       v4f quotients = urdxu / divisors;
       v4f ha = _mm_hadd_ps (quotients, quotients);
       v4f hh = _mm_hadd_ps (ha, ha);
-      v4f lambda = top / hh;
-
-      float mu [4];
-      store4f (mu, lambda * r / divisors);
-      store4f (v [ix], load4f (v [ix]) - _mm_set1_ps (mu [0]) * u);
-      store4f (v [iy], load4f (v [iy]) + _mm_set1_ps (mu [1]) * u);
-      store4f (w [ix], load4f (w [ix]) - _mm_set1_ps (mu [2]) * dxu);
-      store4f (w [iy], load4f (w [iy]) - _mm_set1_ps (mu [3]) * dxu);
+      v4f munu = (top * r) / (hh * divisors);
+      v4f muA, muB, nuA, nuB;
+      UNPACK4 (munu, muA, muB, nuA, nuB);
+      store4f (v [ix], load4f (v [ix]) - muA * u);
+      store4f (v [iy], load4f (v [iy]) + muB * u);
+      store4f (w [ix], load4f (w [ix]) - nuA * dxu);
+      store4f (w [iy], load4f (w [iy]) - nuB * dxu);
     }
   }
 }
+
 
 void bounce (const float (& plane) [2] [4], unsigned ix, object_t * objects,
              const float (* x) [4], float (* v) [4], float (* w) [4])
 {
+  object_t & A = objects [ix];
   v4f anchor = load4f (plane [0]);
   v4f normal = load4f (plane [1]);
-  v4f zero = _mm_setzero_ps ();
-  object_t & A = objects [ix];
-  v4f r = _mm_set1_ps (A.r);
   v4f s = dot (load4f (x [ix]) - anchor, normal);
+  v4f r = _mm_set1_ps (A.r);
   if (_mm_comilt_ss (s, r)) { // Sphere penetrates plane?
-    v4f vv = load4f (v [ix]);
-    v4f vn = dot (vv, normal);
+    v4f vn = dot (load4f (v [ix]), normal);
+    v4f zero = _mm_setzero_ps ();
     if (_mm_comilt_ss (vn, zero)) { // Sphere approaches plane?
-      v4f ww = load4f (w [ix]);
       // vN is the normal component of v. (The normal is a unit vector).
       // vF is the tangential contact velocity, composed of glide and spin.
       v4f vN = vn * normal;
-      v4f vF = vv - vN - r * cross (ww, normal);
-      float kf = usr::walls_friction;
-      v4f uneg = vN + _mm_set1_ps (kf) * vF;
-      float vN_sq = _mm_cvtss_f32 (vn * vn);
-      float vF_sq = _mm_cvtss_f32 (dot (vF, vF));
-      float kvF_sq = kf * kf * vF_sq;
-      float lambda = 2 * (vN_sq + kf * vF_sq) / ((vN_sq + kvF_sq) / A.m + (A.r * A.r) * kvF_sq / A.l);
-      store4f (v [ix], load4f (v [ix]) - _mm_set1_ps (lambda / A.m) * uneg);
-      store4f (w [ix], load4f (w [ix]) + _mm_set1_ps (lambda * A.r / A.l) * cross (normal, uneg));
+      v4f rn = r * normal;
+      v4f vF = load4f (v [ix]) - vN - cross (load4f (w [ix]), rn);
+      v4f kf = _mm_set1_ps (usr::walls_friction);
+      v4f uneg = vN + kf * vF;
+      v4f vN_sq = vn * vn;
+      v4f vF_sq = dot (vF, vF);
+      v4f kvF_sq = kf * (kf * vF_sq);
+      v4f ml = { A.m, A.l, A.m, A.l, };
+      v4f mix = _mm_unpacklo_ps (vN_sq + kvF_sq, (r * r) * kvF_sq) / ml;
+      v4f munu = (vN_sq + kf * vF_sq) / (ml * _mm_hadd_ps (mix, mix));
+      munu += munu;
+      munu = _mm_unpacklo_ps (munu, munu);
+      v4f mu = _mm_movelh_ps (munu, munu);
+      v4f nu = _mm_movehl_ps (munu, munu);
+      store4f (v [ix], load4f (v [ix]) - mu * uneg);
+      store4f (w [ix], load4f (w [ix]) + nu * cross (rn, uneg));
     }
   }
 }
+

@@ -1,6 +1,6 @@
 #include "random.h"
-#include "maths.h"
 #include "vector.h"
+#include "compiler.h"
 
 // The algorithm is D1(A1r), aka Ranq1, from Numerical Recipes.
 
@@ -11,6 +11,7 @@ void rng_t::initialize (uint64_t seed)
   state = get ();
 }
 
+NOINLINE
 uint64_t rng_t::get ()
 {
   state ^= state >> 21;

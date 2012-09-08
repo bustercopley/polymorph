@@ -4,8 +4,8 @@
 #include "cmdline.h"
 #include "graphics.h"
 #include "config.h"
-#include "maths.h"
 #include "memory.h"
+#include "vector.h"
 
 #define IDT_TIMER 1
 
@@ -30,11 +30,22 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     const CREATESTRUCT * cs = reinterpret_cast <CREATESTRUCT *> (lParam);
     window_struct_t * ws = reinterpret_cast <window_struct_t *> (cs->lpCreateParams);
     ::SetWindowLongPtr (hwnd, GWLP_USERDATA, reinterpret_cast <LONG_PTR> (ws));
+    ::GetCursorPos (& ws->initial_cursor_position);
     ws->width = cs->cx;
     ws->height = cs->cy;
+#if 0
     float td = usr::tank_distance, tz = usr::tank_depth, th = usr::tank_height;
     ws->view = { td, tz, (th * ws->width) / ws->height, th, };
-    ::GetCursorPos (& ws->initial_cursor_position);
+#else
+    // Save a few instructions.
+    typedef int v4i __attribute__ ((vector_size (16)));
+    v4i wi = { cs->cy, cs->cy, cs->cx, cs->cy, };
+    v4f hw = _mm_cvtepi32_ps ((__m128i) wi);
+    v4f hh = _mm_movelh_ps (hw, hw);
+    v4f ratio = hw / hh;
+    v4f v = { usr::tank_distance, usr::tank_depth, usr::tank_height, usr::tank_height, };
+    _mm_storeu_ps (& ws->view.distance, _mm_mul_ps (v, ratio));
+#endif
 
     void * data (0);
     if (HRSRC data_found = ::FindResource (0, MAKEINTRESOURCE (256), MAKEINTRESOURCE (256)))

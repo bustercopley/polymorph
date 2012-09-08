@@ -10,7 +10,7 @@ namespace usr {
   static const unsigned count = 400;          // Number of balls.
 
   // Physical properties.
-  static const float mass = 35.0f;            // Mass of a ball.
+  static const float mass = 20.0f;            // Mass of a ball.
 
   // Initial conditions.
   static const float temperature = 212;       // Average kinetic energy.

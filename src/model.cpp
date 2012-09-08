@@ -9,7 +9,6 @@
 #include "partition.h"
 #include "graphics.h"
 #include "config.h"
-#include "maths.h"
 #include "memory.h"
 #include "aligned-arrays.h"
 
@@ -27,6 +26,7 @@ void model_t::initialize (void * data, unsigned long long seed, const view_t & f
   max_radius = 0;
   animation_time = usr::cycle_duration;
   view = frustum;
+
   float z1 = -view.distance;
   float z2 = -view.distance - view.depth;
   float x1 = view.width / 2;
@@ -111,7 +111,7 @@ loop:
   store4f (x [count], t);
   store4f (v [count], rng.get_vector_in_ball (0.5 * usr::temperature / A.m));
 
-  v4f temp = rng.get_vector_in_ball (pi);
+  v4f temp = rng.get_vector_in_ball (0x1.921fb4P1); // pi
   v2d ulo = _mm_cvtps_pd (temp);
   v2d uhi = _mm_cvtps_pd (_mm_movehl_ps (temp, temp));
   store2d (& u [count] [0], ulo);

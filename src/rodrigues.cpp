@@ -1,6 +1,6 @@
 #include "rodrigues.h"
-#include "maths.h"
 #include "vector.h"
+#include <cmath>
 
 // See `problem.tex' for terminology and notation, and `problem.tex',
 // `script.mathomatic' and `script.maxima' for derivations.
@@ -111,7 +111,7 @@ void advance_angular (double (* u) [4], float (* w) [4], unsigned count, float d
     rk4 (u [n], w [n], dt);
     double xsq = _mm_cvtsd_f64 (dot (u [n], u [n]));
     if (xsq > 10.0) {
-      double m = 1.0 - 2 * pi / std::sqrt (xsq);
+      double m = 1.0 - 2 * 0x1.921fb54442d18P1 / std::sqrt (xsq); // pi
       VECTOR u [n] [i] *= m;
     }
   }
