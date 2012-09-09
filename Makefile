@@ -13,7 +13,7 @@ nodes_OBJECTS=main.o show_system.o snub_variance.o triangle.o rotor.o
 
 polymorph_FILENAME=polymorph.scr
 polymorph_CPPFLAGS=#-Itinyscheme
-polymorph_CFLAGS=-pedantic-errors -Wall -Wextra -msse4.1 -mfpmath=sse -Ofast -fno-reciprocal-math
+polymorph_CFLAGS=-pedantic-errors -Wall -Wextra -msse4.1 -mfpmath=sse -Ofast
 polymorph_CXXFLAGS=-fno-exceptions -fno-rtti
 polymorph_LDFLAGS=-mwindows -s
 polymorph_LDLIBS=-lopengl32
@@ -40,6 +40,6 @@ resources-res.o: data polymorph.scr.manifest resources.rc
 	windres resources.rc resources-res.o
 
 data: nodes.exe
-	.\\$(nodes_FILENAME) data> NUL
+	.\\$(nodes_FILENAME) data
 
 include program.mak

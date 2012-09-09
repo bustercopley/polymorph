@@ -9,55 +9,56 @@
 
 // Helper functions for 'show_system'.
 
-namespace {
+namespace
+{
   // 'show_vectors' writes out co-ordinates for a third of
   // the vectors of a rotation system.
 
   inline std::ostream &
   show_vectors (std::ostream & stream,
-                unsigned Np, const float (* x) [3], char name) {
+                unsigned Np, const float (* x) [3], char name)
+  {
     stream << std::fixed;
     stream.precision (12);
 
     stream << name << " [" << Np << "] = {\n";
 
     for (unsigned n = 0; n != Np; ++ n) {
-      stream << "  {" <<
-        std::setw (15) << x [n] [0] << ", " <<
-        std::setw (15) << x [n] [1] << ", " <<
-        std::setw (15) << x [n] [2] << ", },\n";
+      stream << "  {"
+             << std::setw (15) << x [n] [0] << ", "
+             << std::setw (15) << x [n] [1] << ", "
+             << std::setw (15) << x [n] [2] << ", },\n";
     }
 
     return stream << "};\n";
   }
 
-  // 'putat' puts the decimal representation of 'n' into 's'
-  // in such a way that the units digit is in column 'pos'.
-
-  inline void
-  putat (std::string & s, unsigned pos, unsigned n) {
-    do {
-      s [pos] = '0' + char (n % 10);
-      -- pos;
-      n /= 10;
+  inline std::ostream &
+  show_permutation (std::ostream & stream,
+                    unsigned N, unsigned p, const uint8_t * P, char name)
+  {
+    stream << name << ':';
+    for (unsigned n = 0; n != N / p; ++ n) {
+      stream << " (" << int (P [n * p]);
+      for (unsigned k = 1; k != p; ++ k) {
+        stream << ' ' << int (P [n * p + k]);
+      }
+      stream << ')';
     }
-    while (n);
+    return stream << '\n';
   }
 
-  // 'put_aspect' formats a third of the combinatorial map
-  // data from a rotation system at a column.
-
-  inline void
-  put_aspect (std::vector <std::string> & lines, unsigned column,
-              unsigned Np, unsigned p, const uint8_t * x) {
-    for (unsigned k = 0; k != Np; ++ k) {
-      lines [k * p + p - 1].replace (column + 1, 13, "_____________", 13);
-      putat (lines [k * p], column + 4, k);
-
-      for (unsigned d = 0; d != 2 * p; ++ d) {
-        putat (lines [k*p + d/2], column + (d%2 ? 12 : 8), int (x [2*k*p + d]));
-      }
+  inline std::ostream &
+  show_triangles (std::ostream & stream,
+                  unsigned N, const uint8_t * X, const uint8_t * Y, const uint8_t * Z)
+  {
+    for (unsigned n = 0; n != N; ++ n) {
+      stream << std::setw (2) << n << ": ("
+             << std::setw (2) << int (X [n]) << ", "
+             << std::setw (2) << int (Y [n]) << ", "
+             << std::setw (2) << int (Z [n]) << ")\n";
     }
+    return stream;
   }
 }
 
@@ -67,49 +68,39 @@ namespace {
 std::ostream &
 show_system (std::ostream & stream,
              unsigned N, unsigned p, unsigned q, unsigned r,
-             const uint8_t * x, const uint8_t * y, const uint8_t * z,
+             const uint8_t * P, const uint8_t * Q, const uint8_t * R,
+             const uint8_t * X, const uint8_t * Y, const uint8_t * Z,
              const uint8_t (* s) [4],
-             const float (* u) [3], const float (* v) [3], const float (* w) [3],
-             const float (& k) [8] [3]) {
-  stream << std::fixed << std::setprecision (12);
+             const float (* x) [3], const float (* y) [3], const float (* z) [3],
+             const float (& g) [8] [3])
+{
+  stream << "Rotation system <" << p << ", " << q << ", " << r << ">.\n";
 
-  // Write the rotation system in tabular format.
-  // This is the primary combinatorial information.
+  // Write the three permutations in disjoint cycle notation.
+  stream << "\nPermutations of triangles:\n";
+  show_permutation (stream, N, p, P, 'P');
+  show_permutation (stream, N, q, Q, 'Q');
+  show_permutation (stream, N, r, R, 'R');
 
-  stream << '<' << p << ' ' << q << ' ' << r << "> (N = " << N << ")\n" <<
-    "+-------------+-------------+-------------+\n"
-    "|   X   y   z |   Y   z   x |   Z   x   y |\n"
-    "+-------------+-------------+-------------+\n";
+  // Write the three nodes in each triangle.
+  stream << "\nX-, Y- and Z-nodes of triangles:\n";
+  show_triangles (stream, N, X, Y, Z);
 
-  std::vector <std::string> lines (N);
-  for (unsigned n = 0; n != N; ++ n) {
-    lines [n] = "|             |             |             |\n";
-  };
-
-  put_aspect (lines, 0, N / p, p, x);
-  put_aspect (lines, 14, N / q, q, y);
-  put_aspect (lines, 28, N / r, r, z);
-
-  std::copy (lines.begin (), lines.end (), std::ostream_iterator <std::string> (stream));
-
-  // Secondary combinatorial data, derived from the
-  // information in the first table.
-
-  stream << "\nSecondary combinatorial data.\n";
+  // Write the X nodes surrounding each X node.
+  stream << "\nSecondary combinatorial data:\n";
   for (unsigned n = 0; n != N / p; ++ n) {
     stream << std::setw (2) << n << ":"
-           << std::setw (3) << int(s [n] [0])
-           << std::setw (3) << int(s [n] [1])
-           << std::setw (3) << int(s [n] [2])
-           << std::setw (3) << int(s [n] [3]) << "\n";
+           << std::setw (3) << int (s [n] [0])
+           << std::setw (3) << int (s [n] [1])
+           << std::setw (3) << int (s [n] [2])
+           << std::setw (3) << int (s [n] [3]) << "\n";
   }
 
   // The nodes, in rectangular cartesian co-ordinates.
-
   stream << "\nVectors.\n";
-  show_vectors (stream, N / p, u, 'u');
-  show_vectors (stream, N / q, v, 'v');
-  show_vectors (stream, N / r, w, 'w');
+  show_vectors (stream, N / p, x, 'x');
+  show_vectors (stream, N / q, y, 'y');
+  show_vectors (stream, N / r, z, 'z');
 
   // Let a point P in a Moebius triangle be replicated in each of the
   // tiles of the Moebius triangulation. For certain points P, the set
@@ -125,13 +116,13 @@ show_system (std::ostream & stream,
   stream << "\nPoints.\n";
   for (unsigned n = 0; n != 8; ++ n) {
     stream << std::setw (2) << n << ": { "
-           << std::setw (15) << k [n] [0] << ", "
-           << std::setw (15) << k [n] [1] << ", "
-           << std::setw (15) << k [n] [2] << " },\n";
+           << std::setw (15) << g [n] [0] << ", "
+           << std::setw (15) << g [n] [1] << ", "
+           << std::setw (15) << g [n] [2] << " },\n";
   }
 
   if (p == 2 && q == 3) {
-    long double V = snub_variance (u, v, w, k [7], N / 2, x, s);
+    long double V = snub_variance (P, Y, Z, x, y, z, g [7], N, p, s);
     return stream << "The snubs are equilateral up to variance "
                   << std::scientific << std::setprecision (20) << V << ".\n";
   }

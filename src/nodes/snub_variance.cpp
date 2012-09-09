@@ -35,52 +35,54 @@ namespace
   }
 }
 
-long double snub_variance (const float (* u) [3], const float (* v) [3], const float (* w) [3],
-                           const float (& g7) [3], unsigned Np, const uint8_t * x, const uint8_t (* s) [4])
+long double snub_variance (const uint8_t * P, const uint8_t * Y, const uint8_t * Z,
+                           const float (* x) [3], const float (* y) [3], const float (* z) [3],
+                           const float (& g7) [3], unsigned N, unsigned p,
+                           const uint8_t (* s) [4])
 {
   variance Var;
 
-  for (unsigned n = 0; n != Np; ++ n) {
-    const float (& Xn) [3] = u [n];
-    const float (& Y0) [3] = v [x [4 * n + 0]];
-    const float (& Z0) [3] = w [x [4 * n + 1]];
-    const float (& Y1) [3] = v [x [4 * n + 2]];
-    const float (& Z1) [3] = w [x [4 * n + 3]];
-    const float (& X0) [3] = u [s [n] [0]];
-    const float (& X1) [3] = u [s [n] [1]];
-    const float (& X2) [3] = u [s [n] [2]];
-    const float (& X3) [3] = u [s [n] [3]];
+  for (unsigned n = 0; n != N / p; ++ n) {
+    const float (& Xn) [3] = x [n];
+    const float (& Y0) [3] = y [Y [P [p * n + 0]]];
+    const float (& Z0) [3] = z [Z [P [p * n + 0]]];
+    const float (& Y1) [3] = y [Y [P [p * n + 1]]];
+    const float (& Z1) [3] = z [Z [P [p * n + 1]]];
+    const float (& X0) [3] = x [s [n] [0]];
+    const float (& X1) [3] = x [s [n] [1]];
+    const float (& X2) [3] = x [s [n] [2]];
+    const float (& X3) [3] = x [s [n] [3]];
 
     long double alpha = g7 [0];
     long double beta  = g7 [1];
     long double gamma = g7 [2];
 
-    long double P [3], Q [3], R [3], S [3], T [3], U [3], V [3], W [3];
+    long double A [3], B [3], C [3], D [3], E [3], F [3], G [3], H [3];
 
     for (unsigned i = 0; i != 3; ++ i) {
-      P [i] = alpha * X0 [i] + beta * Y0 [i] + gamma * Z0 [i];
-      Q [i] = alpha * Xn [i] + beta * Y1 [i] + gamma * Z0 [i];
-      R [i] = alpha * Xn [i] + beta * Y0 [i] + gamma * Z1 [i];
-      S [i] = alpha * X2 [i] + beta * Y1 [i] + gamma * Z1 [i];
-      T [i] = alpha * X1 [i] + beta * Y1 [i] + gamma * Z0 [i];
-      U [i] = alpha * Xn [i] + beta * Y1 [i] + gamma * Z1 [i];
-      V [i] = alpha * Xn [i] + beta * Y0 [i] + gamma * Z0 [i];
-      W [i] = alpha * X3 [i] + beta * Y0 [i] + gamma * Z1 [i];
+      A [i] = alpha * X0 [i] + beta * Y0 [i] + gamma * Z0 [i];
+      B [i] = alpha * Xn [i] + beta * Y1 [i] + gamma * Z0 [i];
+      C [i] = alpha * Xn [i] + beta * Y0 [i] + gamma * Z1 [i];
+      D [i] = alpha * X2 [i] + beta * Y1 [i] + gamma * Z1 [i];
+      E [i] = alpha * X1 [i] + beta * Y1 [i] + gamma * Z0 [i];
+      F [i] = alpha * Xn [i] + beta * Y1 [i] + gamma * Z1 [i];
+      G [i] = alpha * Xn [i] + beta * Y0 [i] + gamma * Z0 [i];
+      H [i] = alpha * X3 [i] + beta * Y0 [i] + gamma * Z1 [i];
     }
 
-    long double QP = dot (Q, P);
-    long double PR = dot (P, R);
-    long double RQ = dot (R, Q);
-    long double QS = dot (Q, S);
-    long double SR = dot (S, R);
+    long double BA = dot (B, A);
+    long double AC = dot (A, C);
+    long double CB = dot (C, B);
+    long double BD = dot (B, D);
+    long double DC = dot (D, C);
 
-    long double UT = dot (U, T);
-    long double TV = dot (T, V);
-    long double VU = dot (V, U);
-    long double UW = dot (U, W);
-    long double WV = dot (W, V);
+    long double FE = dot (F, E);
+    long double EG = dot (E, G);
+    long double GF = dot (G, F);
+    long double FH = dot (F, H);
+    long double HG = dot (H, G);
 
-    Var << QP << PR << RQ << QS << SR << UT << TV << VU << UW << WV;
+    Var << BA << AC << CB << BD << DC << FE << EG << GF << FH << HG;
   }
 
   return Var ();

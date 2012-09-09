@@ -14,10 +14,11 @@
 std::ostream &
 show_system (std::ostream & stream,
              unsigned N, unsigned p, unsigned q, unsigned r,
-             const uint8_t * x, const uint8_t * y, const uint8_t * z,
+             const uint8_t * P, const uint8_t * Q, const uint8_t * R,
+             const uint8_t * X, const uint8_t * Y, const uint8_t * Z,
              const uint8_t (* s) [4],
-             const float (* u) [3], const float (* v) [3], const float (* w) [3],
-             const float (& k) [8] [3]);
+             const float (* x) [3], const float (* y) [3], const float (* z) [3],
+             const float (& g) [8] [3]);
 
 // Set things up so that the syntax 'stream << s', where s is a
 // rotation system, results in the correct call to 'show_system'.
@@ -34,8 +35,7 @@ inline Stream & operator << (Stream & stream, const system_t <q, r> & s) {
   enum {
     p = 2
   };
-  return stream;
-  return show_system (stream, s.N, p, q, r, s.x, s.y, s.z, s.s, s.u, s.v, s.w, s.g);
+  return show_system (stream, s.N, p, q, r, * s.P, * s.Q, * s.R, s.X, s.Y, s.Z, s.s, s.x, s.y, s.z, s.g);
 }
 
 #endif

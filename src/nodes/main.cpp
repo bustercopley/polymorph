@@ -1,11 +1,10 @@
 #include "system.h"
 #include "make_system.h"
-// #include "show_system.h"
+#include "show_system.h"
 
 #include <ostream>
 #include <fstream>
 #include <iostream>
-
 namespace {
   template <typename Stream, typename T>
   inline Stream & write_system (Stream & stream, const T & x) {
@@ -30,9 +29,9 @@ int main (int argc, char * argv []) {
 
   // Output a human-readable summary (see "show_system.h").
 
-  // std::cout << tetrahedral << '\n';
-  // std::cout << octahedral << '\n';
-  // std::cout << icosahedral << '\n';
+  std::cout << tetrahedral << '\n'
+            << octahedral << '\n'
+            << icosahedral << '\n';
 
   // Dump the descriptions to a file.
 
