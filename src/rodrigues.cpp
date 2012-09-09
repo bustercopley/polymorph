@@ -24,110 +24,17 @@
 // exact value correctly rounded toward zero, and is the maximum over
 // 600000 equally spaced sample arguments x^2.
 
-// Helpers for `advance'.
+// Helpers for `compute' and `advance_angular'.
 namespace
 {
-  // h(x^2)=(1-((x/2)*cot(x/2)))/x^2
-  // Range [0, +0x1.18bc4418cafe2P-2] ((pi/6)^2)
-  // Remes error +-0x1.d6715eac092e5P-50, max ulp error +-119.
-  inline double h_reduced (double xsq)
-  {
-    return (+0x1.55555555555caP-4 +
-            (+0x1.6c16c16ac8123P-10 +
-             (+0x1.1566b082f0c0dP-15 +
-              (+0x1.bbcb57ee3f61fP-21 +
-               (+0x1.6cf48215f69b3P-26) * xsq) * xsq) * xsq) * xsq);
-  }
+  // f(s)=sin1(sqrt(s)), where sin1(x)=sin(x)/x.
+  // g(s)=cos2(sqrt(s)), where cos2(x)=(1-cos(x))/x^2.
 
-  void tangent (const double (& u) [4], const float (& w) [4], double (& udot) [4])
-  {
-    double g, h;
-    v2d xsqv = dot (u, u);
-    v2d lim = { 0x1.18bc4418cafe2P-2, 0x1.18bc4418cafe2P-2, };
-    if (_mm_comigt_sd (xsqv, lim)) {
-      double xxsq [2]; // x xsq
-      _mm_store_pd (xxsq, _mm_sqrt_sd (xsqv, xsqv));
-      double halfx = 0.5 * xxsq [0];
-      double halfpi = 0x1.921fb54442d18P0;
-      g = halfx * std::tan (halfpi - halfx);
-      h = (1 - g) / xxsq [1];
-    }
-    else {
-      double xsq = _mm_cvtsd_f64 (xsqv);
-      h = h_reduced (xsq);
-      g = 1 - xsq * h; // Using the degree-4 Remes h, the max ulp error in g is +-1.
-    }
-    v4f u0 = _mm_cvtpd_ps (_mm_load_pd (& u [0]));
-    v4f u1 = _mm_cvtpd_ps (_mm_load_pd (& u [2]));
-    float uw = _mm_cvtss_f32 (dot (_mm_movelh_ps (u0, u1), load4f (w)));
-    double ch = uw * h;
-    VECTOR_ijk udot [i] = ch * u [i] + g * w [i] - (u [j] * w [k] - u [k] * w [j]) / 2;
-  }
-
-  extern inline void rk4 (double (& u) [4], const float (& w) [4], float dt)
-  {
-    double t [4], A [4], B [4], C [4], D [4];
-    tangent (u, w, A);
-    VECTOR t [i] = u [i] + 0.5 * dt * A [i];
-    tangent (t, w, B);
-    VECTOR t [i] = u [i] + 0.5 * dt * B [i];
-    tangent (t, w, C);
-    VECTOR t [i] = u [i] + dt * C [i];
-    tangent (t, w, D);
-    VECTOR u [i] += (dt / 6) * (A [i] + 2 * (B [i] + C [i]) + D [i]);
-  }
-
-  // It would probably be overkill to use the following degree-5 approximation for h.
-  // Remes error +-0x1.a38da78a2d608P-59, max ulp error +-1.
-  // double c [5 + 1] = {
-  //   +0x1.5555555555555P-4,
-  //   +0x1.6c16c16c17986P-10,
-  //   +0x1.1566abbb9b596P-15,
-  //   +0x1.bbd78a875d2c8P-21,
-  //   +0x1.6699bf709a016P-26,
-  //   +0x1.28a24352ce94dP-31,
-  // };
-}
-
-void advance_linear (float (* x) [4], const float (* v) [4], unsigned count, float dt)
-{
-  // This can operate on padding at the end of the arrays.
-  v4f xdt = _mm_set1_ps (dt);
-  for (unsigned n = 0; n != (count + 1) >> 1; ++ n) {
-    v4f xx0 = load4f (x [n << 1]);
-    v4f xx1 = load4f (x [(n << 1) | 1]);
-    v4f xv0 = load4f (v [n << 1]);
-    v4f xv1 = load4f (v [(n << 1) | 1]);
-    v4f xx10 = xx0 + xv0 * xdt;
-    v4f xx11 = xx1 + xv1 * xdt;
-    store4f (x [n << 1], xx10);
-    store4f (x [(n << 1) | 1], xx11);
-  }
-}
-
-void advance_angular (double (* u) [4], float (* w) [4], unsigned count, float dt)
-{
-  for (unsigned n = 0; n != count; ++ n) {
-    rk4 (u [n], w [n], dt);
-    double xsq = _mm_cvtsd_f64 (dot (u [n], u [n]));
-    if (xsq > 10.0) {
-      double m = 1.0 - 2 * 0x1.921fb54442d18P1 / std::sqrt (xsq); // pi
-      VECTOR u [n] [i] *= m;
-    }
-  }
-}
-
-// Helpers for `compute'.
-namespace
-{
-  // f(x) = (sin(sqrt(x)))/sqrt(x)
-  // g(x) = (1-cos(sqrt(x)))/x
-
-  // Evaluate two polynomials at x by Estrin's method. Requires SSE3 (for haddps).
   // Range [0, 2.467401] ((pi/2)^2).
   // Argument 1 xsq 1 xsq, result sin1(x) cos2(x) sin1(x) cos2(x).
-  extern inline v4f fg_reduced (const v4f x1)
+  inline v4f fg_reduced (const v4f x1)
   {
+    // Evaluate two polynomials at x by Estrin's method. Requires SSE3 (for haddps).
     // f: Remes error +-0x1.950328P-21, max ulp error +-7.
     // g: Remes error +-0x1.4711d2P-24, max ulp error +-2.
     v4f f = { +0x1.ffffe6P-1f, -0x1.55502cP-3f, +0x1.1068aaP-7f, -0x1.847be2P-13f, };
@@ -144,17 +51,17 @@ namespace
   // Evaluate f and g at xsq.
   // Range [0, 22.206610] ((3pi/2)^2).
   // Argument xsq xsq * *, result sin1(x) cos2(x) * *.
-  extern inline v4f fg (const v4f xsq)
+  inline v4f fg (const v4f xsq)
   {
     v4f lim = { +0x1.3bd3ccP1f, 0.0f, 0.0f, 0.0f, }; // (pi/2)^2
     v4f k1 = { 1.0f, 1.0f, 0.0f, 0.0f, };
     if (_mm_comile_ss (xsq, lim)) {
-      // Quadrant 0.
+      // Quadrant 1.
       v4f x1 = _mm_unpacklo_ps (k1, xsq);    // 1 x^2 1 x^2
       return fg_reduced (x1);                   // sin1(x) cos2(x) sin1(x) cos2(x)
     }
     else {
-      // Quadrants 1 and 2.
+      // Quadrants 2 and 3.
       // Use rsqrt and mul to approximate the square root.
       v4f rx = _mm_rsqrt_ss (xsq);           // x^-1 x^2 * *
       v4f xx1 = _mm_unpacklo_ps (xsq, k1);   // x^2 1 * *
@@ -175,13 +82,113 @@ namespace
       return _mm_rcp_ps (xx) * sc2;          // sin1(x) cos2(x) * *
     }
   }
+
+  // g(s) = g0(sqrt(s)) where g0(x)=(x/2)cot(x/2).
+  // h(s) = h0(sqrt(s)) where h0(x)=(1-w(x))/x^2.
+
+  // Range [0, (pi/2)^2].
+  // Argument 1 s 1 s, result h(s) h(s) h(s) h(s).
+  inline v4f h_reduced (const v4f s1)
+  {
+    // Evaluate polynomial at s by Estrin's method. Requires SSE3 (for haddps).
+    // Remes error +-0x1.e7b99eP-28, max ulp error +-7.
+    v4f h = { +0x1.555552P-4f, +0x1.6c1cd6P-10f, +0x1.13e3e4P-15f, +0x1.f88a10P-21f, };
+    v4f s2 = s1 * s1;              // 1 s^2 1 s^2
+    v4f h1 = h * s1;               // h0 h1s h2 h3s
+    v4f h2 = _mm_hadd_ps (h1, h1); // h0+h1s h2+h3s h0+h1s h2+h3s
+    v4f h3 = h2 * s2;              // h0+h1s h2s^2+h3s^3 h0+h1s h2s^2+h3s^3
+    v4f hh = _mm_hadd_ps (h3, h3); // h(s) h(s) h(s) h(s)
+    return hh;
+  }
+
+  inline v4f tangent (v4f u, v4f w)
+  {
+    v4f xsq = dot (u, u);
+    v4f lim = { +0x1.3bd3ccP1f, 0.0f, 0.0f, 0.0f, }; // (pi/2)^2 0 0 0
+    v4f g, h;
+    // Evaluate g and h at xsq (range [0, (2pi)^2)).
+    if (_mm_comile_ss (xsq, lim)) {
+      // Quadrant 1.
+      v4f k1 = { 1.0f, 1.0f, 1.0f, 1.0f, };
+      v4f x1 = _mm_unpacklo_ps (k1, xsq);    // 1 x^2 1 x^2
+      h = h_reduced (x1);
+      g = k1 - xsq * h;
+    }
+    else {
+      // Quadrants 2, 3 and 4.
+      v4f khalf = { 0.5f, 0.5f, 0.5f, 0.5f, };
+      v4f rx = khalf * _mm_sqrt_ps (xsq);    // x/2 x/2 x/2 x/2
+      // Call fg_reduced on (1/2)(pi-sqrt(xsq))^2.
+      v4f kpi = { +0x1.921fb4P0f, 0.0f, 0.0f, 0.0f, }; // pi/2
+      v4f px1 = rx - kpi;                    // x/2-pi/2 * * *
+      v4f px2 = px1 * px1;                   // (pi/2-x/2)^2 * * *
+      v4f k1 = { 1.0f, 1.0f, 1.0f, 1.0f, };
+      v4f px3 = _mm_unpacklo_ps (k1, px2);   // 1 (pi/2-x/2)^2 * *
+      v4f px4 = _mm_movelh_ps (px3, px3);    // 1 (pi/2-x/2)^2 1 (pi/2-x/2)^2
+      v4f fg = fg_reduced (px4);             // sin(pi/2-x/2)/(pi/2-x/2) [1-cos(pi/2-x/2)]/(pi/2-x/2)^2 * *
+      // Recover sin(x) and cos(x) from the result.
+      v4f px5 = _mm_unpacklo_ps (px1, px2);  // x/2-pi/2 (pi/2-x/2)^2 * *
+      v4f sc1 = px5 * fg;                    // -cos(x/2) 1+sin(x/2) * *
+      v4f k02 = { 0.0f, 1.0f, 0.0f, 0.0f, };
+      v4f cs1 = k02 - sc1;                   // cos(x/2) sin(x/2) * *
+      v4f cs2 = _mm_unpacklo_ps (cs1, cs1);  // cos(x/2) cos(x/2) sin(x/2) sin(x/2)
+      v4f c = _mm_movelh_ps (cs2, cs2);
+      v4f s = _mm_movehl_ps (cs2, cs2);
+      g = rx * c / s;
+      h = (k1 - g) / xsq;
+    }
+    v4f khalf = { 0.5f, 0.5f, 0.5f, 0.5f, };
+    return dot (u, w) * h * u + g * w - khalf * cross (u, w);
+  }
+
+  inline v4f rk4 (v4f u, v4f w, v4f dt)
+  {
+    v4f khalf = { 0.5f, 0.5f, 0.5f, 0.5f, };
+    v4f A = tangent (u, w);
+    v4f B = tangent (u + khalf * dt * A, w);
+    v4f C = tangent (u + khalf * dt * B, w);
+    v4f D = tangent (u + dt * C, w);
+    v4f ksixth = { 0x1.555554P-3f, 0x1.555554P-3f, 0x1.555554P-3f, 0x1.555554P-3f, };
+    return u + ksixth * dt * (A + (B + C) + (B + C) + D);
+  }
 }
 
-void compute (float (& f) [16], const float (& x) [4], const double (& u) [4], float r)
+void advance_linear (float (* x) [4], const float (* v) [4], unsigned count, float dt)
 {
-  v4f u01 = _mm_cvtpd_ps (_mm_loadu_pd (& u [0]));
-  v4f u23 = _mm_cvtpd_ps (_mm_loadu_pd (& u [2]));
-  v4f u4 = _mm_movelh_ps (u01, u23); // u0 u1 u2 0
+  // Load 32 bytes (one cache line) of data at a time.
+  // This can operate on padding at the end of the arrays.
+  v4f xdt = _mm_set1_ps (dt);
+  for (unsigned n = 0; n != (count + 1) >> 1; ++ n) {
+    v4f xx0 = load4f (x [n << 1]);
+    v4f xx1 = load4f (x [(n << 1) | 1]);
+    v4f xv0 = load4f (v [n << 1]);
+    v4f xv1 = load4f (v [(n << 1) | 1]);
+    v4f xx10 = xx0 + xv0 * xdt;
+    v4f xx11 = xx1 + xv1 * xdt;
+    store4f (x [n << 1], xx10);
+    store4f (x [(n << 1) | 1], xx11);
+  }
+}
+
+void advance_angular (float (* u) [4], float (* w) [4], unsigned count, float dt)
+{
+  v4f kdt = _mm_set1_ps (dt);
+  for (unsigned n = 0; n != count; ++ n) {
+    v4f u1 = rk4 (load4f (u [n]), load4f (w [n]), kdt);
+    v4f xsq = dot (u1, u1);
+    v4f klim1 = { 10.0f, }; //+0x1.634e46P4f, 0.0f, 0.0f, 0.0f, }; // (3pi/2)^2
+    if (_mm_comigt_ss (xsq, klim1)) {
+      v4f k1 = { 1.0f, 1.0f, 1.0f, 1.0f, };
+      v4f k2pi = { 0x1.921fb4P2f, 0x1.921fb4P2f, 0x1.921fb4P2f, 0x1.921fb4P2f, };
+      u1 *= k1 - k2pi / _mm_sqrt_ps (xsq);
+    }
+    store4f (u [n], u1);
+  }
+}
+
+void compute (float (& f) [16], const float (& x) [4], const float (& u) [4], float r)
+{
+  v4f u4 = load4f (u);               // u0 u1 u2 0
   v4f usq = u4 * u4;                 // u0^2 u1^2 u2^2 0
   v4f uha = _mm_hadd_ps (usq, usq);
   v4f xsq = _mm_hadd_ps (uha, uha);  // x^2 x^2 x^2 x^2 (x = length of u)
@@ -198,8 +205,7 @@ void compute (float (& f) [16], const float (& x) [4], const double (& u) [4], f
   v4f add = symm + skew;                       // a0 a1 a2 0
   v4f usql = _mm_movelh_ps (usq, usq);         // u0^2 u1^2 u0^2 u1^2
   v4f usqd = _mm_moveldup_ps (usq);            // u0^2 u0^2 u2^2 u2^2
-  v4f rbusqld = rb * (usql + usqd);
-  v4f diag = rr - rbusqld;                     // * d2 d1 d0
+  v4f diag = rr - rb * (usql + usqd);          // * d2 d1 d0
   v4f aslo = _mm_movelh_ps (add, sub);         // a0 a1 s0 s1
   v4f ashi = _mm_unpackhi_ps (add, sub);       // a2 s2 0 0
   v4f ashj = _mm_movelh_ps (ashi, ashi);       // a2 s2 a2 s2

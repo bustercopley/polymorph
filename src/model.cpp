@@ -11,6 +11,7 @@
 #include "config.h"
 #include "memory.h"
 #include "aligned-arrays.h"
+#include "vector.h"
 
 #include <type_traits>
 static_assert (std::is_trivial <object_t>::value, "non-trivial type object_t will be allocated in raw memory");
@@ -20,19 +21,21 @@ void model_t::initialize (void * data, unsigned long long seed, const view_t & f
   repository.initialize (data);
   rng.initialize (seed);
   memory = nullptr;
-  walls_memory = nullptr;
   count = 0;
   capacity = 0;
   max_radius = 0;
   animation_time = usr::cycle_duration;
   view = frustum;
 
+  // Calculate wall planes to exactly fill the front of the viewing frustum.
   float z1 = -view.distance;
   float z2 = -view.distance - view.depth;
   float x1 = view.width / 2;
   float y1 = view.height / 2;
   float x2 = x1 * z2 / z1;
   float y2 = y1 * z2 / z1;
+  // Now push the front wall back a little (avoids visual artifacts on some machines).
+  z1 -= 0.1f;
 
   const float temp [6] [2] [4] = {
     { { 0.0f, 0.0f, z1, 0.0f, }, { 0.0f, 0.0f, -1.0f, 0.0f, }, },
@@ -43,8 +46,6 @@ void model_t::initialize (void * data, unsigned long long seed, const view_t & f
     { { 0.0f,   y1, z1, 0.0f, }, { 0.0f, z2 - z1, y1 - y2, 0.0f, }, },
   };
 
-  unsigned dummy = 0;
-  reallocate_aligned_arrays (walls_memory, dummy, 6, & walls);
   for (unsigned k = 0; k != 6; ++ k) {
     v4f anchor = load4f (temp [k] [0]);
     v4f normal = load4f (temp [k] [1]);
@@ -63,7 +64,6 @@ void model_t::initialize (void * data, unsigned long long seed, const view_t & f
 model_t::~model_t ()
 {
   deallocate (memory);
-  deallocate (walls_memory);
 }
 
 void model_t::set_capacity (unsigned new_capacity)
@@ -90,8 +90,8 @@ void model_t::add_object (float phase)
 
   float z1 = view.distance;
   float z2 = view.distance + view.depth;
-  float x1 = view.width;
-  float y1 = view.height;
+  float x1 = view.width / 2;
+  float y1 = view.height / 2;
   float x2 = x1 * z2 / z1;
   float y2 = y1 * z2 / z1;
   v4f r = { A.r, 0.0f, 0.0f, 0.0f, };
@@ -109,14 +109,9 @@ loop:
     }
   }
   store4f (x [count], t);
-  store4f (v [count], rng.get_vector_in_ball (0.5 * usr::temperature / A.m));
-
-  v4f temp = rng.get_vector_in_ball (0x1.921fb4P1); // pi
-  v2d ulo = _mm_cvtps_pd (temp);
-  v2d uhi = _mm_cvtps_pd (_mm_movehl_ps (temp, temp));
-  store2d (& u [count] [0], ulo);
-  store2d (& u [count] [2], uhi);
-  store4f (w [count], rng.get_vector_in_ball (0.2 * usr::temperature / A.l));
+  store4f (v [count], rng.get_vector_in_ball (0.5f * usr::temperature / A.m));
+  store4f (u [count], rng.get_vector_in_ball (0x1.921fb4P1)); // pi
+  store4f (w [count], rng.get_vector_in_ball (0.2f * usr::temperature / A.l));
 
   if (max_radius < A.r) max_radius = A.r;
   ++ count;

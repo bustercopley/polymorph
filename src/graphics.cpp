@@ -85,15 +85,15 @@ void box (const view_t & view)
   v2d xm = _mm_xor_pd (xp, neg);
   v2d z = _mm_cvtps_pd (_mm_unpacklo_ps (v, s1));
   double t [6];
-  store2d (& t [0], xm);
-  store2d (& t [2], xp);
-  store2d (& t [4], z);
+  _mm_store_pd (& t [0], xm);
+  _mm_store_pd (& t [2], xp);
+  _mm_store_pd (& t [4], z);
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
   // glFrustum's z arguments are specified as positive distances,
   // but the z co-ordinate of a point inside the viewing frustum
   // is negative (in eye co-ordinates).
-  glFrustum (t [0], t [2], t [1], t [3], t [4] - 0.05, t [5]);
+  glFrustum (t [0], t [2], t [1], t [3], t [4], t [5]);
 }
 
 void clear ()
@@ -107,11 +107,11 @@ namespace
   {
     // Send a vertex `p' to the graphics library. `p' is the sum of `ax', `by' and `cz'.
 
-    // The vector `ax' is the product of a scalar `a' and a vector 'u', and so on.
+    // The vector `ax' is the product of a scalar `a' and a vector 'x', and so on.
     // In other words, `a', `b', `c' are the co-ordinates of `p' in the co-ordinate
-    // system defined by the basis (`u', `v', `w').
+    // system defined by the basis (`x', `y', `z').
 
-    // `u', `v' and `w' are nodes of a Moebius triangle in the spherical tiling.
+    // `x', `y' and `z' are nodes of a Moebius triangle in the spherical tiling.
     // `a', `b' and `c' have been chosen so that `p' lies on the unit sphere.
     // Certain values of the co-ordinates `a', `b', `c' pick out vertices of
     // uniform polyhedra: see "nodes/make_system.tcc" for details.

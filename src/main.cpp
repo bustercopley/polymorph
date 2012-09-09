@@ -213,7 +213,6 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE, LPSTR lpszCmdLine, int)
   if (! ::RegisterClass (& wc)) return 10;
   window_struct_t ws;
   ws.mode = mode;
-
                                                 //   HWND CreateWindowEx
   HWND hwnd = ::CreateWindowEx (ex_style,       //     (DWORD dwExStyle,
         usr::window_class_name,                 //      LPCTSTR lpClassName,

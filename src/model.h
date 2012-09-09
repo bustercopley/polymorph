@@ -19,17 +19,16 @@ struct model_t {
   void ball_bounce (unsigned i, unsigned j);
   void wall_bounce (unsigned i, unsigned j);
 private:
+  float walls [6] [2] [4];
+
   void * memory;
   float (* x) [4];
   float (* v) [4];
-  double (* u) [4];
+  float (* u) [4];
   float (* w) [4];
   unsigned * zorder_index;
   unsigned * kdtree_index;
   object_t * objects;
-
-  void * walls_memory;
-  float (* walls) [2] [4];
 
   float max_radius;
   float animation_time;

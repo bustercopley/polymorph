@@ -36,7 +36,7 @@ namespace usr {
 
   // Simulation speed.
   static const float simulation_rate = 1.0f;  // Rate of time.
-  static const float max_frame_time = 0.55f;
+  static const float max_frame_time = 0.15f;
 
   // Program name.
   static const char * const window_name = "Convex uniform polyhedra";
