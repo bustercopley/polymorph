@@ -3,7 +3,7 @@
 #include "object.h"
 #include "graphics.h"
 #include "vector.h"
-#include "aligned-arrays.h"
+#include "memory.h"
 #include "compiler.h"
 
 void system_ref_t::paint (object_t const & object) const
