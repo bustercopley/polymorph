@@ -122,7 +122,7 @@ show_system (std::ostream & stream,
   }
 
   if (p == 2 && q == 3) {
-    long double V = snub_variance (P, Y, Z, x, y, z, g [7], N, p, s);
+    double V = double (snub_variance (P, Y, Z, x, y, z, g [7], N, p, s));
     return stream << "The snubs are equilateral up to variance "
                   << std::scientific << std::setprecision (20) << V << ".\n";
   }

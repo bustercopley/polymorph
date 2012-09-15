@@ -12,6 +12,7 @@
 #include "memory.h"
 #include "aligned-arrays.h"
 #include "vector.h"
+#include "compiler.h"
 
 #include <type_traits>
 static_assert (std::is_trivial <object_t>::value, "non-trivial type object_t will be allocated in raw memory");
@@ -37,7 +38,7 @@ void model_t::initialize (void * data, unsigned long long seed, const view_t & f
   // Now push the front wall back a little (avoids visual artifacts on some machines).
   z1 -= 0.1f;
 
-  const float temp [6] [2] [4] = {
+  const float temp [6] [2] [4] ALIGNED16 = {
     { { 0.0f, 0.0f, z1, 0.0f, }, { 0.0f, 0.0f, -1.0f, 0.0f, }, },
     { { 0.0f, 0.0f, z2, 0.0f, }, { 0.0f, 0.0f,  1.0f, 0.0f, }, },
     { {  -x1, 0.0f, z1, 0.0f, }, { z1 - z2, 0.0f, x1 - x2, 0.0f, }, },

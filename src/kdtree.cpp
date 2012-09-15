@@ -4,6 +4,7 @@
 #include "memory.h"
 #include "aligned-arrays.h"
 #include "vector.h"
+#include "compiler.h"
 #include <limits>
 
 namespace
@@ -64,7 +65,7 @@ void kdtree_t::compute (unsigned * new_index, const float (* new_x) [4], unsigne
       partition (index, x, begin, middle, end, dim);
       v4f lo = load4f (node_lohi [i] [0]);
       v4f hi = load4f (node_lohi [i] [1]);
-      float temp [2] [4];
+      float temp [2] [4] ALIGNED16;
       store4f (temp [0], lo);
       store4f (temp [1], hi);
       temp [0] [dim] = x [index [middle]] [dim];
@@ -100,7 +101,7 @@ void kdtree_t::for_near (unsigned count, float r, void * data, callback_t f)
         v4f nneg = _mm_and_ps (_mm_cmpge_ps (mx, zero), mx);
         v4f dsq = dot (nneg, nneg);
         if (_mm_comilt_ss (dsq, rsq)) {
-          float temp [4];
+          float temp [4] ALIGNED16;
           store4f (temp, dsq);
           unsigned dim = node_dimension (i);
           float mid = node_lohi [2 * i + 1] [1] [dim];

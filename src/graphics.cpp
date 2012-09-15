@@ -5,6 +5,7 @@
 #include "system_ref.h"
 #include "frustum.h"
 #include "vector.h"
+#include "compiler.h"
 
 int get_lists_start (unsigned n)
 {
@@ -84,7 +85,7 @@ void box (const view_t & view)
   v2d neg = { -0.0, -0.0, };
   v2d xm = _mm_xor_pd (xp, neg);
   v2d z = _mm_cvtps_pd (_mm_unpacklo_ps (v, s1));
-  double t [6];
+  double t [6] ALIGNED16;
   _mm_store_pd (& t [0], xm);
   _mm_store_pd (& t [2], xp);
   _mm_store_pd (& t [4], z);
@@ -115,7 +116,7 @@ namespace
     // `a', `b' and `c' have been chosen so that `p' lies on the unit sphere.
     // Certain values of the co-ordinates `a', `b', `c' pick out vertices of
     // uniform polyhedra: see "nodes/make_system.tcc" for details.
-    GLfloat p [4];
+    GLfloat p [4] ALIGNED16;
     store4f (p, ax + by + cz);
     glVertex3fv (p);
   }
@@ -224,7 +225,7 @@ paint_snub_triangle_pairs (int chirality, unsigned Np,
       d = x3 + y1 + z1;                               //                               v           //
     }                                                 //                                           //
 
-    float out [8] [4];
+    float out [8] [4] ALIGNED16;
     store4f (out [0], a + b + c); // The normal for triangle ABC.
     store4f (out [1], d + c + b); // The normal for triangle DCB.
     store4f (out [2], a);

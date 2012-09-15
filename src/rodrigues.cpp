@@ -1,5 +1,6 @@
 #include "rodrigues.h"
 #include "vector.h"
+#include "compiler.h"
 #include <cmath>
 
 // See `problem.tex' for terminology and notation, and `problem.tex',
@@ -193,7 +194,7 @@ void compute (float (& f) [16], const float (& x) [4], const float (& u) [4], fl
   v4f uha = _mm_hadd_ps (usq, usq);
   v4f xsq = _mm_hadd_ps (uha, uha);  // x^2 x^2 x^2 x^2 (x = length of u)
   v4f rr = _mm_set1_ps (r);
-  float rab [4];
+  float rab [4] ALIGNED16;
   store4f (rab, rr * fg (xsq));
   v4f ra = _mm_set1_ps (rab [0]);
   v4f rb = _mm_set1_ps (rab [1]);
