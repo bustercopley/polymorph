@@ -210,7 +210,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE, LPSTR lpszCmdLine, int)
   wc.lpszMenuName = 0;                            //     LPCTSTR lpszMenuName;
   wc.lpszClassName = usr::window_class_name;      //     LPCTSTR lpszClassName;
                                                   //   } WNDCLASS;
-  if (! ::RegisterClass (& wc)) return 10;
+  if (! ::RegisterClass (& wc)) return 1;
   window_struct_t ws;
   ws.mode = mode;
                                                 //   HWND CreateWindowEx
@@ -227,7 +227,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE, LPSTR lpszCmdLine, int)
         hInstance,                              //      HINSTANCE hInstance,
         & ws);                                  //      LPVOID lpParam);
 
-  if (! hwnd) return 14;
+  if (! hwnd) return 1;
   // Enter the main loop.
   MSG msg;
   BOOL bRet;

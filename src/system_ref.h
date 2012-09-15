@@ -30,11 +30,11 @@ struct system_repository_t
 {
   system_repository_t () : memory (nullptr) { }
   ~system_repository_t ();
-  system_ref_t const * ref (system_select_t system_select) const;
+  system_ref_t const * ref (system_select_t select) const { return & refs [select]; }
   void initialize (void * data);
 private:
   void * memory;
-  system_ref_t T, O, I;
+  system_ref_t refs [3];
   int lists_start;
 };
 

@@ -19,7 +19,6 @@ void system_ref_t::paint (object_t const & object) const
   abc *= _mm_rsqrt_ps (dot (t, t));
   UNPACK3 (abc, a, b, c);
 
-  // This depends on ax, by and cz being located consecutively.
   for (unsigned n = 0; n != N / p; ++ n) store4f (ax [n], a * load4f (x [n]));
   for (unsigned n = 0; n != N / q; ++ n) store4f (by [n], b * load4f (y [n]));
   for (unsigned n = 0; n != N / r; ++ n) store4f (cz [n], c * load4f (z [n]));
@@ -81,22 +80,6 @@ void system_ref_t::save_display_lists (int list)
   }
 }
 
-system_ref_t const * system_repository_t::ref (system_select_t select) const
-{
-  if (select == tetrahedral) {
-    return & T;
-  }
-  else if (select == octahedral) {
-    return & O;
-  }
-  else if (select == icosahedral) {
-    return & I;
-  }
-  else {
-    return 0;
-  }
-}
-
 namespace
 {
   // Copy a two-dimensional array element-wise.
@@ -144,17 +127,17 @@ void system_repository_t::initialize (void * data)
   system_t <3, 4> const & o (* reinterpret_cast <system_t <3, 4> const *> (& t + 1));
   system_t <3, 5> const & i (* reinterpret_cast <system_t <3, 5> const *> (& o + 1));
 
-  memory = allocate_internal (228 * 4 * sizeof (float) + 32);
+  memory = allocate_internal (((62 + 26 + 14) * 2 + 3 * 8) * 4 * sizeof (float) + 32);
   auto out = (float (*) [4]) ((((std::intptr_t) (memory)) + 31) & -32);
 
-  initialize_system (out, T, t);
-  initialize_system (out, O, o);
-  initialize_system (out, I, i);
+  initialize_system (out, refs [0], t);
+  initialize_system (out, refs [1], o);
+  initialize_system (out, refs [2], i);
 
   lists_start = get_lists_start (27); // error handling?
-  T.save_display_lists (lists_start + 0 * 9);
-  O.save_display_lists (lists_start + 1 * 9);
-  I.save_display_lists (lists_start + 2 * 9);
+  refs [0].save_display_lists (lists_start + 0 * 9);
+  refs [1].save_display_lists (lists_start + 1 * 9);
+  refs [2].save_display_lists (lists_start + 2 * 9);
 }
 
 system_repository_t:: ~system_repository_t ()
