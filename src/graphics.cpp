@@ -44,7 +44,7 @@ void lights (float distance, float depth, float lnear, float lfar, float dnear)
   v4f ll = { lnear, lfar, lfar, lnear, };
   v4f dl = dd / ll;
   v4f hs = _mm_hsub_ps (dl, dd);
-  float t [4];
+  float t [4] ALIGNED16;
   store4f (t, hs / broadcast2 (hs));
 
   glLightf (GL_LIGHT0, GL_CONSTANT_ATTENUATION, t [0]);

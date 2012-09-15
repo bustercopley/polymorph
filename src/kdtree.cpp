@@ -26,6 +26,19 @@ namespace
     while (t >>= 1) ++ m; // Now m is floor(log_2(i + 1)).
     return m % 3;
   }
+
+  inline v4f dim_mask (unsigned dim)
+  {
+    static const union {
+      std::uint32_t u32 [4];
+      float f32 [4];
+    } masks [3] = {
+      { { 0xffffffff, 0, 0, 0, }, },
+      { { 0, 0xffffffff, 0, 0, }, },
+      { { 0, 0, 0xffffffff, 0, }, },
+    };
+    return _mm_load_ps (masks [dim].f32);
+  }
 }
 
 kdtree_t::~kdtree_t ()
@@ -65,13 +78,11 @@ void kdtree_t::compute (unsigned * new_index, const float (* new_x) [4], unsigne
       partition (index, x, begin, middle, end, dim);
       v4f lo = load4f (node_lohi [i] [0]);
       v4f hi = load4f (node_lohi [i] [1]);
-      float temp [2] [4] ALIGNED16;
-      store4f (temp [0], lo);
-      store4f (temp [1], hi);
-      temp [0] [dim] = x [index [middle]] [dim];
-      temp [1] [dim] = x [index [middle]] [dim];
-      v4f mid_lo = load4f (temp [0]);
-      v4f mid_hi = load4f (temp [1]);
+      v4f mid = load4f (x [index [middle]]);
+      v4f dm = dim_mask (dim);
+      v4f md = _mm_and_ps (dm, mid);
+      v4f mid_lo = _mm_or_ps (md, _mm_andnot_ps (dm, lo));
+      v4f mid_hi = _mm_or_ps (md, _mm_andnot_ps (dm, hi));
       SETNODE (2 * i + 1, lo, mid_hi, begin, middle);
       SETNODE (2 * i + 2, mid_lo, hi, middle, end);
       stack [sp ++] = 2 * i + 2;
@@ -112,8 +123,9 @@ void kdtree_t::for_near (unsigned count, float r, void * data, callback_t f)
       else {
         for (unsigned n = node_begin [i]; n != node_end [i]; ++ n) {
           unsigned j = index [n];
-          if (j > k)
+          if (j > k) {
             f (data, k, j);
+          }
         }
       }
     }

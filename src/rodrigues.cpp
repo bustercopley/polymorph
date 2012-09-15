@@ -194,10 +194,9 @@ void compute (float (& f) [16], const float (& x) [4], const float (& u) [4], fl
   v4f uha = _mm_hadd_ps (usq, usq);
   v4f xsq = _mm_hadd_ps (uha, uha);  // x^2 x^2 x^2 x^2 (x = length of u)
   v4f rr = _mm_set1_ps (r);
-  float rab [4] ALIGNED16;
-  store4f (rab, rr * fg (xsq));
-  v4f ra = _mm_set1_ps (rab [0]);
-  v4f rb = _mm_set1_ps (rab [1]);
+  v4f rab = rr * fg (xsq);
+  v4f ra = broadcast0 (rab);
+  v4f rb = broadcast1 (rab);
   v4f skew = ra * u4;
   v4f u1 = _mm_shuffle_ps (u4, u4, SHUFFLE (1, 2, 0, 3)); // u1 u2 u0 u3
   v4f u2 = _mm_shuffle_ps (u4, u4, SHUFFLE (2, 0, 1, 3)); // u2 u0 u1 u3

@@ -11,6 +11,14 @@ typedef __m128 v4f;
 typedef __m128d v2d;
 
 #define SHUFFLE(a, b, c, d) ((a) | ((b) << 2) | ((c) << 4) | ((d) << 6))
+#define UNPACK2(a,a0,a1)               \
+do {                                   \
+  v4f _t = (a);                        \
+  v4f _t0 = _mm_unpacklo_ps (_t, _t);  \
+  v4f _t1 = _mm_unpackhi_ps (_t, _t);  \
+  (a0) = _mm_movelh_ps (_t0, _t0);     \
+  (a1) = _mm_movehl_ps (_t0, _t0);     \
+} while (0)
 #define UNPACK3(a,a0,a1,a2)            \
 do {                                   \
   v4f _t = (a);                        \
@@ -33,10 +41,10 @@ do {                                   \
 
 inline v4f load4f (const float * a) { return _mm_load_ps (a); }
 inline void store4f (float * a, v4f v) { _mm_store_ps (a, v); }
-inline v4f broadcast0 (v4f x) { v4f t = _mm_unpacklo_ps (x, x); return _mm_movelh_ps (t, t); }
-inline v4f broadcast1 (v4f x) { v4f t = _mm_unpacklo_ps (x, x); return _mm_movehl_ps (t, t); }
-inline v4f broadcast2 (v4f x) { v4f t = _mm_unpackhi_ps (x, x); return _mm_movelh_ps (t, t); }
-inline v4f broadcast3 (v4f x) { v4f t = _mm_unpackhi_ps (x, x); return _mm_movehl_ps (t, t); }
+inline v4f broadcast0 (v4f x) { return _mm_shuffle_ps (x, x, SHUFFLE (0, 0, 0, 0)); }
+inline v4f broadcast1 (v4f x) { return _mm_shuffle_ps (x, x, SHUFFLE (1, 1, 1, 1)); }
+inline v4f broadcast2 (v4f x) { return _mm_shuffle_ps (x, x, SHUFFLE (2, 2, 2, 2)); }
+inline v4f broadcast3 (v4f x) { return _mm_shuffle_ps (x, x, SHUFFLE (3, 3, 3, 3)); }
 
 inline v4f dot (v4f u, v4f v)
 {
