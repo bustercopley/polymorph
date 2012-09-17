@@ -6,6 +6,7 @@
 #include "config.h"
 #include "memory.h"
 #include "vector.h"
+#include <cstdint>
 
 #define IDT_TIMER 1
 
@@ -14,7 +15,6 @@ struct window_struct_t
   model_t model;
   HDC hdc;
   HGLRC hglrc;
-  LARGE_INTEGER last_performance_count;
   POINT initial_cursor_position;
   view_t view;
   float rate;
@@ -33,62 +33,6 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     ::GetCursorPos (& ws->initial_cursor_position);
     ws->width = cs->cx;
     ws->height = cs->cy;
-#if 0
-    float td = usr::tank_distance, tz = usr::tank_depth, th = usr::tank_height;
-    ws->view = { td, tz, (th * ws->width) / ws->height, th, };
-#else
-    // Save a few instructions.
-    typedef int v4i __attribute__ ((vector_size (16)));
-    v4i wi = { cs->cy, cs->cy, cs->cx, cs->cy, };
-    v4f hw = _mm_cvtepi32_ps ((__m128i) wi);
-    v4f hh = _mm_movelh_ps (hw, hw);
-    v4f ratio = hw / hh;
-    v4f v = { usr::tank_distance, usr::tank_depth, usr::tank_height, usr::tank_height, };
-    _mm_storeu_ps (& ws->view.distance, _mm_mul_ps (v, ratio));
-#endif
-
-    void * data (0);
-    if (HRSRC data_found = ::FindResource (0, MAKEINTRESOURCE (256), MAKEINTRESOURCE (256)))
-      if (HGLOBAL data_loaded = ::LoadResource (0, data_found))
-        if (LPVOID data_locked = ::LockResource (data_loaded))
-          data = data_locked;
-    if (! data) return -1;
-
-    LARGE_INTEGER performance_frequency;
-    ::QueryPerformanceFrequency (& performance_frequency);
-    ws->rate = usr::simulation_rate / performance_frequency.QuadPart;
-    ::QueryPerformanceCounter (& ws->last_performance_count);
-
-    ws->hdc = ::GetDC (hwnd);
-    if (! ws->hdc) return -1;
-
-    PIXELFORMATDESCRIPTOR pfd;
-    ::ZeroMemory (& pfd, sizeof pfd);
-    pfd.nSize = sizeof pfd;
-    pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
-    int npf = ::ChoosePixelFormat (ws->hdc, & pfd);
-    ::SetPixelFormat (ws->hdc, npf, & pfd);
-    ws->hglrc = ::wglCreateContext (ws->hdc);
-    if (! ws->hglrc) return -1;
-    if (! ::wglMakeCurrent (ws->hdc, ws->hglrc)) {
-      ::wglDeleteContext (ws->hglrc);
-      return -1;
-    }
-
-    typedef BOOL (WINAPI * fp_t) (int);
-    if (fp_t wglSwapIntervalEXT = reinterpret_cast <fp_t> (::wglGetProcAddress ("wglSwapIntervalEXT"))) {
-      wglSwapIntervalEXT (1);
-    }
-
-    screen (ws->width, ws->height);
-    box (ws->view);
-    lights (ws->view.distance, ws->view.depth, 3.0, 0.5, 1.0);
-    clear ();
-
-    ws->model.initialize (data, ::GetTickCount (), ws->view);
-    ws->model.draw ();
-    ::SetTimer (hwnd, IDT_TIMER, 1, nullptr);
-
     return 0;
   }
   else if (window_struct_t * ws = reinterpret_cast <window_struct_t *> (::GetWindowLongPtr (hwnd, GWLP_USERDATA))) {
@@ -98,14 +42,10 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
       break;
     case WM_TIMER:
       {
-        ::SwapBuffers (ws->hdc);
-        LARGE_INTEGER performance_count;
-        ::QueryPerformanceCounter (& performance_count);
-        float dt = ws->rate * (performance_count.QuadPart - ws->last_performance_count.QuadPart);
-        ws->last_performance_count = performance_count;
-        ws->model.proceed (dt < usr::max_frame_time ? dt : usr::max_frame_time);
+        ws->model.proceed ();
         clear ();
         ws->model.draw ();
+        ::SwapBuffers (ws->hdc);
       }
       break;
 
@@ -228,6 +168,58 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE, LPSTR lpszCmdLine, int)
         & ws);                                  //      LPVOID lpParam);
 
   if (! hwnd) return 1;
+
+  ws.hdc = ::GetDC (hwnd);
+  if (! ws.hdc) return -1;
+
+  PIXELFORMATDESCRIPTOR pfd;
+  ::ZeroMemory (& pfd, sizeof pfd);
+  pfd.nSize = sizeof pfd;
+  pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
+  int npf = ::ChoosePixelFormat (ws.hdc, & pfd);
+  ::SetPixelFormat (ws.hdc, npf, & pfd);
+  ws.hglrc = ::wglCreateContext (ws.hdc);
+  if (! ws.hglrc) return -1;
+  if (! ::wglMakeCurrent (ws.hdc, ws.hglrc)) {
+    ::wglDeleteContext (ws.hglrc);
+    return -1;
+  }
+
+  typedef BOOL (WINAPI * fp_t) (int);
+  if (fp_t wglSwapIntervalEXT = reinterpret_cast <fp_t> (::wglGetProcAddress ("wglSwapIntervalEXT"))) {
+    wglSwapIntervalEXT (1);
+  }
+
+#if 0
+  float td = usr::tank_distance, tz = usr::tank_depth, th = usr::tank_height;
+  ws.view = { td, tz, (th * ws.width) / ws.height, th, };
+#else
+  typedef std::int32_t v4i __attribute__ ((vector_size (16)));
+  v4i wi = { ws.height, ws.height, ws.width, ws.height, };
+  v4f hw = _mm_cvtepi32_ps ((__m128i) wi);
+  v4f hh = _mm_movelh_ps (hw, hw);
+  v4f ratio = hw / hh;
+  v4f v = { usr::tank_distance, usr::tank_depth, usr::tank_height, usr::tank_height, };
+  _mm_storeu_ps (& ws.view.distance, _mm_mul_ps (v, ratio));
+#endif
+
+  void * data (0);
+  if (HRSRC data_found = ::FindResource (0, MAKEINTRESOURCE (256), MAKEINTRESOURCE (256)))
+    if (HGLOBAL data_loaded = ::LoadResource (0, data_found))
+      if (LPVOID data_locked = ::LockResource (data_loaded))
+        data = data_locked;
+  if (! data) return -1;
+
+  LARGE_INTEGER pc;
+  ::QueryPerformanceCounter (& pc);
+  ws.model.initialize (data, pc.QuadPart, ws.view);
+
+  screen (ws.width, ws.height);
+  box (ws.view);
+  lights (ws.view.distance, ws.view.depth, 3.0, 0.5, 1.0);
+
+  ::SetTimer (hwnd, IDT_TIMER, 1, nullptr);
+
   // Enter the main loop.
   MSG msg;
   BOOL bRet;

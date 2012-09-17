@@ -5,11 +5,12 @@
 #include "aligned-arrays.h"
 #include "vector.h"
 #include "compiler.h"
+#include <cstdint>
 #include <limits>
 
 namespace
 {
-  unsigned nodes_required (unsigned point_count)
+  inline unsigned nodes_required (unsigned point_count)
   {
     // http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
     unsigned m = 2;
@@ -18,7 +19,7 @@ namespace
     return m - 1;
   }
 
-  unsigned node_dimension (unsigned i)
+  inline unsigned node_dimension (unsigned i)
   {
     // http://graphics.stanford.edu/~seander/bithacks.html#IntegerLogObvious
     unsigned m = 0;

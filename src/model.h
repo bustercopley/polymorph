@@ -12,7 +12,7 @@
 struct model_t {
   ~model_t ();
   void initialize (void * data, uint64_t seed, const view_t & frustum);
-  void proceed (float dt);
+  void proceed ();
   void draw ();
   void set_capacity (unsigned new_capacity);
   void add_object (float phase);

@@ -13,7 +13,7 @@ nodes_OBJECTS=main.o show_system.o snub_variance.o triangle.o rotor.o
 
 polymorph_FILENAME=polymorph.scr
 polymorph_CPPFLAGS=#-Itinyscheme
-polymorph_CFLAGS=-pedantic-errors -Wall -Wextra -mstackrealign -msse3 -mfpmath=sse -Ofast
+polymorph_CFLAGS=-pedantic-errors -Wall -Wextra -mstackrealign -msse4.2 -mfpmath=sse -Ofast
 polymorph_CXXFLAGS=-fno-exceptions -fno-rtti
 polymorph_LDFLAGS=-mwindows -s
 polymorph_LDLIBS=-lopengl32

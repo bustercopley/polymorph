@@ -29,9 +29,9 @@ void lights (float distance, float depth, float lnear, float lfar, float dnear)
 
   GLfloat lights [5] [4] = {
     { 0.00f, 0.00f, 0.00f, 1.00f, }, // Position.
-    { 0.82f, 0.82f, 0.82f, 0.00f, }, // Ambient intensity.
-    { 1.00f, 1.00f, 1.00f, 0.00f, }, // Diffuse intensity.
-    { 1.00f, 1.00f, 1.00f, 0.00f, }, // Specular intensity.
+    { 0.42f, 0.42f, 0.42f, 0.00f, }, // Ambient intensity.
+    { 0.90f, 0.90f, 0.90f, 0.00f, }, // Diffuse intensity.
+    { 0.70f, 0.70f, 0.70f, 0.00f, }, // Specular intensity.
   };
 
   lights [0] [2] = -distance + dnear;
@@ -40,15 +40,20 @@ void lights (float distance, float depth, float lnear, float lfar, float dnear)
   glLightfv (GL_LIGHT0, GL_DIFFUSE, lights [2]);
   glLightfv (GL_LIGHT0, GL_SPECULAR, lights [3]);
 
-  v4f dd = { dnear + distance, dnear, 1.0f, 1.0f, };
+#if 0
+  float dfar = dnear + depth;
+  glLightf (GL_LIGHT0, GL_CONSTANT_ATTENUATION, ((dfar / lnear) - (dnear / lfar)) / (dfar - dnear));
+  glLightf (GL_LIGHT0, GL_LINEAR_ATTENUATION, ((1 / lfar) - (1 / lnear)) / (dfar - dnear));
+#else
+  v4f dd = { dnear + depth, dnear, 1.0f, 1.0f, };
   v4f ll = { lnear, lfar, lfar, lnear, };
   v4f dl = dd / ll;
   v4f hs = _mm_hsub_ps (dl, dd);
   float t [4] ALIGNED16;
   store4f (t, hs / broadcast2 (hs));
-
   glLightf (GL_LIGHT0, GL_CONSTANT_ATTENUATION, t [0]);
   glLightf (GL_LIGHT0, GL_LINEAR_ATTENUATION, t [1]);
+#endif
 
   GLfloat fog_color[4]= { 0.0f, 0.0f, 0.0f, 1.0f, };
   glFogi (GL_FOG_MODE, GL_LINEAR);

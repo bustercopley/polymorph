@@ -35,8 +35,7 @@ namespace usr {
   static const bump_t saturation_bump = { 1.00f, 0.00f, 0.50f, 0.65f, 5.50f, 6.50f, };
 
   // Simulation speed.
-  static const float simulation_rate = 1.0f;  // Rate of time.
-  static const float max_frame_time = 0.15f;
+  static const float frame_time = 1.0f / 60;
 
   // Program name.
   static const char * const window_name = "Convex uniform polyhedra";

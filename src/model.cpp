@@ -138,9 +138,9 @@ void model_t::wall_bounce (unsigned i, unsigned j)
   ::bounce (walls [i], j, objects, x, v, w);
 }
 
-void model_t::proceed (float dt)
+void model_t::proceed ()
 {
-  animation_time += dt;
+  animation_time += usr::frame_time;
   if (usr::cycle_duration <= animation_time)
     animation_time -= usr::cycle_duration;
 
@@ -154,8 +154,8 @@ void model_t::proceed (float dt)
   kdtree.for_near (count, 2 * max_radius, this, ball_bounce_callback);
   kdtree.for_near (walls, max_radius, this, wall_bounce_callback);
 
-  advance_linear (x, v, count, dt);
-  advance_angular (u, w, count, dt);
+  advance_linear (x, v, count, usr::frame_time);
+  advance_angular (u, w, count, usr::frame_time);
 
   for (unsigned n = 0; n != count; ++ n) {
     objects [(d + n) % count].update_appearance (s - n * TN, rng);
