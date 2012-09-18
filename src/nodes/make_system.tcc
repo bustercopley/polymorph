@@ -4,7 +4,7 @@
 #include "rotor.h"
 #include "triangle.h"
 
-static const double pi = 0x1.921fb54442d18P1;
+static const long double pi = 0x1.921fb54442d18469P1;
 
 // Copy an array element-wise.
 template <typename T, typename U, unsigned N>

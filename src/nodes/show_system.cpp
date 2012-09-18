@@ -19,15 +19,15 @@ namespace
                 unsigned Np, const float (* x) [3], char name)
   {
     stream << std::fixed;
-    stream.precision (12);
+    stream.precision (16);
 
     stream << name << " [" << Np << "] = {\n";
 
     for (unsigned n = 0; n != Np; ++ n) {
       stream << "  {"
-             << std::setw (15) << x [n] [0] << ", "
-             << std::setw (15) << x [n] [1] << ", "
-             << std::setw (15) << x [n] [2] << ", },\n";
+             << std::setw (20) << x [n] [0] << ", "
+             << std::setw (20) << x [n] [1] << ", "
+             << std::setw (20) << x [n] [2] << ", },\n";
     }
 
     return stream << "};\n";
@@ -116,15 +116,15 @@ show_system (std::ostream & stream,
   stream << "\nPoints.\n";
   for (unsigned n = 0; n != 8; ++ n) {
     stream << std::setw (2) << n << ": { "
-           << std::setw (15) << g [n] [0] << ", "
-           << std::setw (15) << g [n] [1] << ", "
-           << std::setw (15) << g [n] [2] << " },\n";
+           << std::setw (20) << g [n] [0] << ", "
+           << std::setw (20) << g [n] [1] << ", "
+           << std::setw (20) << g [n] [2] << " },\n";
   }
 
   if (p == 2 && q == 3) {
     double V = double (snub_variance (P, Y, Z, x, y, z, g [7], N, p, s));
     return stream << "The snubs are equilateral up to variance "
-                  << std::scientific << std::setprecision (20) << V << ".\n";
+                  << std::scientific << std::setprecision (16) << V << ".\n";
   }
   else {
     return stream << "Wrong configuration - can't check that the snubs are equilateral.\n";
