@@ -19,6 +19,7 @@ struct model_t {
   void ball_bounce (unsigned i, unsigned j);
   void wall_bounce (unsigned i, unsigned j);
 private:
+  view_t view;
   float walls [6] [2] [4];
 
   void * memory;
@@ -38,7 +39,6 @@ private:
   system_repository_t repository;
   rng_t rng;
   kdtree_t kdtree;
-  view_t view;
 };
 
 #endif

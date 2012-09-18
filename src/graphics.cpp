@@ -82,7 +82,7 @@ void screen (int width, int height)
 
 void box (const view_t & view)
 {
-  v4f v = _mm_loadu_ps (& view.distance); // z1 zd w h
+  v4f v = load4f (& view.distance); // z1 zd w h
   v4f k = { 0.5f, 0.5f, 0.5f, 0.5f, };
   v4f s0 = k * _mm_movehl_ps (v, v);      // x1 y1 x1 y1
   v4f s1 = _mm_hadd_ps (v, v);            // z2 * z2 *

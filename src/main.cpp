@@ -6,18 +6,18 @@
 #include "config.h"
 #include "memory.h"
 #include "vector.h"
+#include "compiler.h"
 #include <cstdint>
 
 #define IDT_TIMER 1
 
 struct window_struct_t
 {
+  view_t view;
   model_t model;
   HDC hdc;
   HGLRC hglrc;
   POINT initial_cursor_position;
-  view_t view;
-  float rate;
   int width, height;
   run_mode_t mode;
 };
@@ -151,7 +151,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE, LPSTR lpszCmdLine, int)
   wc.lpszClassName = usr::window_class_name;      //     LPCTSTR lpszClassName;
                                                   //   } WNDCLASS;
   if (! ::RegisterClass (& wc)) return 1;
-  window_struct_t ws;
+  window_struct_t ws ALIGNED16;
   ws.mode = mode;
                                                 //   HWND CreateWindowEx
   HWND hwnd = ::CreateWindowEx (ex_style,       //     (DWORD dwExStyle,
@@ -200,7 +200,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE, LPSTR lpszCmdLine, int)
   v4f hh = _mm_movelh_ps (hw, hw);
   v4f ratio = hw / hh;
   v4f v = { usr::tank_distance, usr::tank_depth, usr::tank_height, usr::tank_height, };
-  _mm_storeu_ps (& ws.view.distance, _mm_mul_ps (v, ratio));
+  store4f (& ws.view.distance, _mm_mul_ps (v, ratio));
 #endif
 
   void * data (0);
