@@ -6,10 +6,26 @@
 #include "config.h"
 #include "memory.h"
 #include "vector.h"
+#include "glprocs.h"
 #include "compiler.h"
 #include <cstdint>
 
 #define IDT_TIMER 1
+
+// Is x one of the space-separated strings in xs?
+template <typename ConstIterator>
+bool in (const ConstIterator x, ConstIterator xs)
+{
+  while (* xs)
+  {
+    ConstIterator t (x);
+    while (* t && * t == * xs) { ++ xs; ++ t; }
+    if (! * t && (! * xs || * xs == ' ')) return true;
+    while (* xs && * xs != ' ') ++ xs;
+    if (* xs) ++ xs;
+  }
+  return false;
+}
 
 struct window_struct_t
 {
@@ -112,7 +128,45 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE, LPSTR lpszCmdLine, int)
     return 0;
   }
 
-  // Register the window class and create the screen saver window.
+  // Dummy rendering context to get the address of wglChoosePixelFormatARB.
+  {
+    const char * name = "PolymorphTemp";
+    WNDCLASS wc;
+    ::ZeroMemory (& wc, sizeof wc);
+    wc.hInstance = hInstance;
+    wc.lpfnWndProc = & ::DefWindowProc;
+    wc.lpszClassName = name;
+    ATOM atom = ::RegisterClass (& wc);
+    if (! atom) return 1;
+    HWND wnd = ::CreateWindowEx (0, MAKEINTATOM (atom), name, 0,
+                                 CW_USEDEFAULT, 0, CW_USEDEFAULT, 0,
+                                 0, 0, hInstance, 0);
+    if (! wnd) return 1;
+    HDC dc = ::GetDC (wnd);
+    PIXELFORMATDESCRIPTOR pfd;
+    ::ZeroMemory (& pfd, sizeof pfd);
+    pfd.nSize = sizeof pfd;
+    pfd.dwFlags = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW;
+    int pf = ::ChoosePixelFormat (dc, & pfd);
+    if (! pf) return 1;
+    if (! ::SetPixelFormat (dc, pf, 0)) return 1;
+    HGLRC rc = ::wglCreateContext (dc);
+    if (! rc) return 1;
+    if (! ::wglMakeCurrent (dc, rc)) return 1;
+    PFNWGLGETEXTENSIONSSTRINGARBPROC wglGetExtensionsStringARB;
+    GLPROC (PFNWGLGETEXTENSIONSSTRINGARBPROC, wglGetExtensionsStringARB);
+    if (! wglGetExtensionsStringARB) return 1;
+    if (! in ("WGL_ARB_pixel_format", wglGetExtensionsStringARB (dc))) return 1;
+    GLPROC (PFNWGLCHOOSEPIXELFORMATARBPROC, wglChoosePixelFormatARB);
+    if (! wglChoosePixelFormatARB) return 1;
+    ::wglMakeCurrent (dc, 0);
+    ::wglDeleteContext (rc);
+    ::ReleaseDC (wnd, dc);
+    ::DestroyWindow (wnd);
+    ::UnregisterClass (MAKEINTATOM (atom), hInstance);
+  }
+
+  // Create the screen saver window.
 
   DWORD style;
   DWORD ex_style;
@@ -138,24 +192,19 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE, LPSTR lpszCmdLine, int)
     ex_style = ((mode == fullscreen) ? WS_EX_TOPMOST : 0);
   }
 
-  WNDCLASS wc;                                    //   typedef struct {
-  wc.style = 0       ;                            //     UINT style;
-  wc.lpfnWndProc = WndProc;                       //     WNDPROC lpfnWndProc;
-  wc.cbClsExtra = 0;                              //     int cbClsExtra;
-  wc.cbWndExtra = 8;                              //     int cbWndExtra;
-  wc.hInstance = hInstance;                       //     HINSTANCE hInstance;
-  wc.hIcon = 0;                                   //     HICON hIcon;
-  wc.hCursor = ::LoadCursor (0, IDC_ARROW);       //     HCURSOR hCursor;
-  wc.hbrBackground = 0;                           //     HBRUSH hbrBackground;
-  wc.lpszMenuName = 0;                            //     LPCTSTR lpszMenuName;
-  wc.lpszClassName = usr::window_class_name;      //     LPCTSTR lpszClassName;
-                                                  //   } WNDCLASS;
-  if (! ::RegisterClass (& wc)) return 1;
+  WNDCLASS wc;
+  ::ZeroMemory (& wc, sizeof wc);
+  wc.lpfnWndProc = & WndProc;
+  wc.cbWndExtra = 8;
+  wc.hInstance = hInstance;
+  wc.lpszClassName = usr::window_class_name;
+  ATOM atom = ::RegisterClass (& wc);
+  if (! atom) return 1;
   window_struct_t ws ALIGNED16;
   ws.mode = mode;
                                                 //   HWND CreateWindowEx
   HWND hwnd = ::CreateWindowEx (ex_style,       //     (DWORD dwExStyle,
-        usr::window_class_name,                 //      LPCTSTR lpClassName,
+        MAKEINTATOM (atom),                     //      LPCTSTR lpClassName,
         usr::window_name,                       //      LPCTSTR lpWindowName,
         style,                                  //      DWORD dwStyle,
         left,                                   //      int x,
@@ -170,25 +219,36 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE, LPSTR lpszCmdLine, int)
   if (! hwnd) return 1;
 
   ws.hdc = ::GetDC (hwnd);
-  if (! ws.hdc) return -1;
+  if (! ws.hdc) return 1;
 
-  PIXELFORMATDESCRIPTOR pfd;
-  ::ZeroMemory (& pfd, sizeof pfd);
-  pfd.nSize = sizeof pfd;
-  pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
-  int npf = ::ChoosePixelFormat (ws.hdc, & pfd);
-  ::SetPixelFormat (ws.hdc, npf, & pfd);
+  int ilist [] = {
+    WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
+    WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
+    WGL_DOUBLE_BUFFER_ARB, GL_TRUE,
+    WGL_ACCELERATION_ARB, WGL_FULL_ACCELERATION_ARB,
+    WGL_SWAP_METHOD_ARB, WGL_SWAP_EXCHANGE_ARB,
+    WGL_COLOR_BITS_ARB, 32,
+    WGL_SAMPLE_BUFFERS_ARB, GL_TRUE,
+    WGL_SAMPLES_ARB, 16,
+    0, 0,
+  };
+
+  float flist [] = { 0, 0, };
+  enum { pfcountmax = 256 };
+  UINT pfcount;
+  int pfs [pfcountmax];
+  bool status = wglChoosePixelFormatARB (ws.hdc, ilist, flist, pfcountmax, pfs, & pfcount);
+  if (! (status && pfcount && pfcount < pfcountmax)) return 1;
+  if (! ::SetPixelFormat (ws.hdc, pfs [0], 0)) return 1;
   ws.hglrc = ::wglCreateContext (ws.hdc);
-  if (! ws.hglrc) return -1;
+  if (! ws.hglrc) return 1;
   if (! ::wglMakeCurrent (ws.hdc, ws.hglrc)) {
     ::wglDeleteContext (ws.hglrc);
-    return -1;
+    return 1;
   }
 
-  typedef BOOL (WINAPI * fp_t) (int);
-  if (fp_t wglSwapIntervalEXT = reinterpret_cast <fp_t> (::wglGetProcAddress ("wglSwapIntervalEXT"))) {
-    wglSwapIntervalEXT (1);
-  }
+  if (! glprocs ()) return 1;
+  wglSwapIntervalEXT (1);
 
 #if 0
   float td = usr::tank_distance, tz = usr::tank_depth, th = usr::tank_height;
@@ -208,7 +268,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE, LPSTR lpszCmdLine, int)
     if (HGLOBAL data_loaded = ::LoadResource (0, data_found))
       if (LPVOID data_locked = ::LockResource (data_loaded))
         data = data_locked;
-  if (! data) return -1;
+  if (! data) return 1;
 
   LARGE_INTEGER pc;
   ::QueryPerformanceCounter (& pc);
