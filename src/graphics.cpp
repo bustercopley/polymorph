@@ -1,11 +1,11 @@
 #include <GL/gl.h>
-#include <cstdint>
 #include "graphics.h"
 #include "object.h"
 #include "system_ref.h"
 #include "frustum.h"
 #include "vector.h"
 #include "compiler.h"
+#include <cstdint>
 
 int get_lists_start (unsigned n)
 {
@@ -128,8 +128,8 @@ namespace
 }
 
 void paint_kpgons (unsigned k, unsigned Np, unsigned p,
-                   const uint8_t * P,
-                   const uint8_t * Y, const uint8_t * Z,
+                   const std::uint8_t * P,
+                   const std::uint8_t * Y, const std::uint8_t * Z,
                    const float (* x) [4],
                    const float (* ax) [4], const float (* by) [4], const float (* cz) [4])
 {
@@ -168,8 +168,8 @@ void paint_kpgons (unsigned k, unsigned Np, unsigned p,
 
 void
 paint_snub_pgons (int chirality, unsigned Np, unsigned p,
-                  const uint8_t * P,
-                  const uint8_t * Y, const uint8_t * Z,
+                  const std::uint8_t * P,
+                  const std::uint8_t * Y, const std::uint8_t * Z,
                   const float (* u) [4],
                   const float (* ax) [4], const float (* by) [4], const float (* cz) [4])
 {
@@ -201,8 +201,8 @@ paint_snub_pgons (int chirality, unsigned Np, unsigned p,
 
 void
 paint_snub_triangle_pairs (int chirality, unsigned Np,
-                           const uint8_t * P, const uint8_t * s,
-                           const uint8_t * Y, const uint8_t * Z,
+                           const std::uint8_t * P, const std::uint8_t * s,
+                           const std::uint8_t * Y, const std::uint8_t * Z,
                            const float (* ax) [4], const float (* by) [4], const float (* cz) [4])
 {
   for (unsigned n = 0; n != Np; ++ n) {               //        X1        //
