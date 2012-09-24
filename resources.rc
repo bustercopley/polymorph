@@ -36,6 +36,13 @@ BEGIN
     END
 END
 
-256 256 data
-257   ICON    "icosahedron.ico"
+256 256  "data"
+257 ICON "icosahedron.ico"
+258 258  "src/vertex-shader.glsl"
+259 259  "src/shared-geometry-shader.glsl"
+260 260  "src/geometry-shader.glsl"
+261 261  "src/snub-geometry-shader.glsl"
+262 262  "src/antisnub-geometry-shader.glsl"
+263 263  "src/fragment-shader.glsl"
+
 CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "polymorph.scr.manifest"
