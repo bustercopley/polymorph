@@ -19,10 +19,9 @@ namespace usr {
   static const float tank_distance = 90.0f;   // Distancia del ojo a la pantalla.
   static const float tank_depth = 60.0f;      // Tank depth in simulation units.
   static const float tank_height = 24.0f;     // Height of screen / tank front.
-  static const float margin = 0.1f;
 
-  static const float walls_friction = 0.010f;
-  static const float balls_friction = 0.060f;
+  static const float walls_friction = 0.075f;
+  static const float balls_friction = 0.075f;
 
   // Animation timings.
   static const float morph_start = 0.50f;
@@ -31,8 +30,10 @@ namespace usr {
 
   // Colour functions.
   // { low_value, high_value, attack_begin, attack_end, decay_begin, decay_end }
-  static const bump_t intensity_bump = { 0.10f, 1.00f, 0.35f, 0.50f, 4.50f, 6.00f, };
-  static const bump_t saturation_bump = { 1.00f, 0.00f, 0.50f, 0.65f, 5.50f, 6.50f, };
+  static const bump_t value_bump = { 0.15f, 1.0f, 0.35f, 0.50f, 4.50f, 6.00f, };
+  static const bump_t saturation_bump = { 0.00f, 1.00f, 0.50f, 0.65f, 5.50f, 6.50f, };
+  static const float ambient_material [4] = { 0.01f, 0.01f, 0.01f, 1.0f, };
+  static const float specular_material [4] = { 0.8f, 0.8f, 0.8f, 0.0f, };
 
   // Simulation speed.
   static const float frame_time = 1.0f / 60;

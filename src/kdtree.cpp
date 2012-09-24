@@ -38,7 +38,7 @@ namespace
       { { 0, 0xffffffff, 0, 0, }, },
       { { 0, 0, 0xffffffff, 0, }, },
     };
-    return _mm_load_ps (masks [dim].f32);
+    return load4f (masks [dim].f32);
   }
 }
 

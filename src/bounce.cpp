@@ -1,5 +1,5 @@
 #include "bounce.h"
-#include "object.h"
+#include "model.h"
 #include "vector.h"
 #include "config.h"
 

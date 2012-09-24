@@ -29,7 +29,6 @@ bool in (const ConstIterator x, ConstIterator xs)
 
 struct window_struct_t
 {
-  view_t view;
   model_t model;
   HDC hdc;
   HGLRC hglrc;
@@ -58,10 +57,10 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
       break;
     case WM_TIMER:
       {
+        ::SwapBuffers (ws->hdc);
         ws->model.proceed ();
         clear ();
         ws->model.draw ();
-        ::SwapBuffers (ws->hdc);
       }
       break;
 
@@ -153,10 +152,6 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE, LPSTR lpszCmdLine, int)
     HGLRC rc = ::wglCreateContext (dc);
     if (! rc) return 1;
     if (! ::wglMakeCurrent (dc, rc)) return 1;
-    PFNWGLGETEXTENSIONSSTRINGARBPROC wglGetExtensionsStringARB;
-    GLPROC (PFNWGLGETEXTENSIONSSTRINGARBPROC, wglGetExtensionsStringARB);
-    if (! wglGetExtensionsStringARB) return 1;
-    if (! in ("WGL_ARB_pixel_format", wglGetExtensionsStringARB (dc))) return 1;
     GLPROC (PFNWGLCHOOSEPIXELFORMATARBPROC, wglChoosePixelFormatARB);
     if (! wglChoosePixelFormatARB) return 1;
     ::wglMakeCurrent (dc, 0);
@@ -187,7 +182,6 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE, LPSTR lpszCmdLine, int)
     top = ::GetSystemMetrics (SM_YVIRTUALSCREEN);
     width = ::GetSystemMetrics (SM_CXVIRTUALSCREEN);
     height = ::GetSystemMetrics (SM_CYVIRTUALSCREEN);
-
     style = WS_POPUP | WS_VISIBLE;
     ex_style = ((mode == fullscreen) ? WS_EX_TOPMOST : 0);
   }
@@ -228,8 +222,8 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE, LPSTR lpszCmdLine, int)
     WGL_ACCELERATION_ARB, WGL_FULL_ACCELERATION_ARB,
     WGL_SWAP_METHOD_ARB, WGL_SWAP_EXCHANGE_ARB,
     WGL_COLOR_BITS_ARB, 32,
-    WGL_SAMPLE_BUFFERS_ARB, GL_TRUE,
-    WGL_SAMPLES_ARB, 16,
+    WGL_SAMPLE_BUFFERS_ARB, GL_FALSE,
+    //WGL_SAMPLES_ARB, 1,
     0, 0,
   };
 
@@ -248,37 +242,15 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE, LPSTR lpszCmdLine, int)
   }
 
   if (! glprocs ()) return 1;
-  wglSwapIntervalEXT (1);
-
-#if 0
-  float td = usr::tank_distance, tz = usr::tank_depth, th = usr::tank_height;
-  ws.view = { td, tz, (th * ws.width) / ws.height, th, };
-#else
-  typedef std::int32_t v4i __attribute__ ((vector_size (16)));
-  v4i wi = { ws.height, ws.height, ws.width, ws.height, };
-  v4f hw = _mm_cvtepi32_ps ((__m128i) wi);
-  v4f hh = _mm_movelh_ps (hw, hw);
-  v4f ratio = hw / hh;
-  v4f v = { usr::tank_distance, usr::tank_depth, usr::tank_height, usr::tank_height, };
-  store4f (& ws.view.distance, _mm_mul_ps (v, ratio));
-#endif
-
-  void * data (0);
-  if (HRSRC data_found = ::FindResource (0, MAKEINTRESOURCE (256), MAKEINTRESOURCE (256)))
-    if (HGLOBAL data_loaded = ::LoadResource (0, data_found))
-      if (LPVOID data_locked = ::LockResource (data_loaded))
-        data = data_locked;
-  if (! data) return 1;
 
   LARGE_INTEGER pc;
   ::QueryPerformanceCounter (& pc);
-  ws.model.initialize (data, pc.QuadPart, ws.view);
 
-  screen (ws.width, ws.height);
-  box (ws.view);
-  lights (ws.view.distance, ws.view.depth, 3.0, 0.5, 1.0);
+  if (! ws.model.initialize (pc.QuadPart, ws.width, ws.height)) {
+    return 1;
+  }
 
-  ::SetTimer (hwnd, IDT_TIMER, 1, nullptr);
+  ::SetTimer (hwnd, IDT_TIMER, 10, nullptr);
 
   // Enter the main loop.
   MSG msg;

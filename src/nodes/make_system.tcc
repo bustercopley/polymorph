@@ -23,18 +23,6 @@ void copy (const T (& from) [N] [K], U (* to) [K])
       to [n] [k] = from [n] [k];
 }
 
-// Put the combinatorial information into the required form.
-template <unsigned N, unsigned Np, unsigned p>
-void transfer (const unsigned (& P) [N], const unsigned (& P0) [Np], uint8_t (& out) [Np] [p])
-{
-  for (unsigned k = 0; k != Np; ++ k) {
-    out [k] [0] = P0 [k];
-    for (unsigned i = 1; i != p; ++ i) {
-      out [k] [i] = out [k] [i - 1] [P];
-    }
-  }
-}
-
 template <unsigned q, unsigned r>
 void make_system (system_t <q, r> & s)
 {
@@ -52,7 +40,7 @@ void make_system (system_t <q, r> & s)
 
   unsigned P [N], Q [N], R [N];        // Permutation taking black triangles around nodes.
   unsigned Px [N], Qx [N], Rx [N];     // The P-, Q- or R-node contained in each triangle.
-  unsigned P0 [Np], Q0 [Nq], R0 [Nr];  // One of the triangles around each node.
+  unsigned P0 [Np], R0 [Nr];           // One of the triangles around each node.
 
   for (unsigned n = 0; n != N; ++ n) {
     n [P] = N;
@@ -62,7 +50,6 @@ void make_system (system_t <q, r> & s)
     Qx [n] = n / q;
     Rx [n] = n < q ? n : Nr;
     if (n < Np) P0 [n] = n < q ? n : N;
-    if (n < Nq) Q0 [n] = n * q;
     if (n < Nr) R0 [n] = n < q ? n : N;
   }
 
@@ -150,9 +137,9 @@ void make_system (system_t <q, r> & s)
     }
   }
 
-  transfer (P, P0, s.P);
-  transfer (Q, Q0, s.Q);
-  transfer (R, R0, s.R);
+  copy (P, s.P);
+  copy (Q, s.Q);
+  copy (R, s.R);
   copy (Px, s.X);
   copy (Qx, s.Y);
   copy (Rx, s.Z);
@@ -160,23 +147,4 @@ void make_system (system_t <q, r> & s)
   copy (y, s.y);
   copy (z, s.z);
   copy (g, s.g);
-
-  //        X0
-  //       /  \      // Here we wish to associate X0, X1, X2, X3 with Xn.
-  //      Z0--Y0     //
-  //     /|\  /|\    //
-  //   X1 | Xn | X3
-  //     \|/  \|/
-  //      Y1--Z1
-  //       \  /
-  //        X2
-
-  for (unsigned n = 0; n != Np; ++ n) {
-    unsigned a = P0 [n], b = a [P];
-    s.s [n] [0] = Px [a [R]];
-    s.s [n] [1] = Px [b [Q]];
-    s.s [n] [2] = Px [b [R]];
-    s.s [n] [3] = Px [a [Q]];
-  }
-
 }

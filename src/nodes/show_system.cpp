@@ -34,31 +34,14 @@ namespace
   }
 
   inline std::ostream &
-  show_permutation (std::ostream & stream,
-                    unsigned N, unsigned p, const uint8_t * P, char name)
+  show_array (std::ostream & stream,
+              unsigned N, const uint8_t * P, char name)
   {
     stream << name << ':';
-    for (unsigned n = 0; n != N / p; ++ n) {
-      stream << " (" << int (P [n * p]);
-      for (unsigned k = 1; k != p; ++ k) {
-        stream << ' ' << int (P [n * p + k]);
-      }
-      stream << ')';
+    for (unsigned n = 0; n != N; ++ n) {
+      stream << ' ' << int (P [n]);
     }
     return stream << '\n';
-  }
-
-  inline std::ostream &
-  show_triangles (std::ostream & stream,
-                  unsigned N, const uint8_t * X, const uint8_t * Y, const uint8_t * Z)
-  {
-    for (unsigned n = 0; n != N; ++ n) {
-      stream << std::setw (2) << n << ": ("
-             << std::setw (2) << int (X [n]) << ", "
-             << std::setw (2) << int (Y [n]) << ", "
-             << std::setw (2) << int (Z [n]) << ")\n";
-    }
-    return stream;
   }
 }
 
@@ -70,7 +53,6 @@ show_system (std::ostream & stream,
              unsigned N, unsigned p, unsigned q, unsigned r,
              const uint8_t * P, const uint8_t * Q, const uint8_t * R,
              const uint8_t * X, const uint8_t * Y, const uint8_t * Z,
-             const uint8_t (* s) [4],
              const float (* x) [3], const float (* y) [3], const float (* z) [3],
              const float (& g) [8] [3])
 {
@@ -78,23 +60,15 @@ show_system (std::ostream & stream,
 
   // Write the three permutations in disjoint cycle notation.
   stream << "\nPermutations of triangles:\n";
-  show_permutation (stream, N, p, P, 'P');
-  show_permutation (stream, N, q, Q, 'Q');
-  show_permutation (stream, N, r, R, 'R');
+  show_array (stream, N, P, 'P');
+  show_array (stream, N, Q, 'Q');
+  show_array (stream, N, R, 'R');
 
   // Write the three nodes in each triangle.
   stream << "\nX-, Y- and Z-nodes of triangles:\n";
-  show_triangles (stream, N, X, Y, Z);
-
-  // Write the X nodes surrounding each X node.
-  stream << "\nSecondary combinatorial data:\n";
-  for (unsigned n = 0; n != N / p; ++ n) {
-    stream << std::setw (2) << n << ":"
-           << std::setw (3) << int (s [n] [0])
-           << std::setw (3) << int (s [n] [1])
-           << std::setw (3) << int (s [n] [2])
-           << std::setw (3) << int (s [n] [3]) << "\n";
-  }
+  show_array (stream, N, X, 'X');
+  show_array (stream, N, Y, 'Y');
+  show_array (stream, N, Z, 'Z');
 
   // The nodes, in rectangular cartesian co-ordinates.
   stream << "\nVectors.\n";
@@ -122,7 +96,7 @@ show_system (std::ostream & stream,
   }
 
   if (p == 2 && q == 3) {
-    double V = double (snub_variance (P, Y, Z, x, y, z, g [7], N, p, s));
+    double V = double (snub_variance (P, Q, R, X, Y, Z, x, y, z, g [7], N));
     return stream << "The snubs are equilateral up to variance "
                   << std::scientific << std::setprecision (16) << V << ".\n";
   }

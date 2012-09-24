@@ -3,42 +3,60 @@
 #ifndef model_h
 #define model_h
 
-#include "system_ref.h"
-#include "frustum.h"
+#include "systems.h"
 #include "random.h"
 #include "kdtree.h"
-#include "object.h"
+#include "graphics.h"
+#include "vector.h"
+
+struct object_t
+{
+  float r, m, l;
+  float hue, value, saturation;
+  float generator_position;
+  unsigned locus_begin, locus_end;
+  system_select_t system_select;
+  unsigned program_select;
+};
 
 struct model_t {
   ~model_t ();
-  void initialize (void * data, uint64_t seed, const view_t & frustum);
+  model_t () : memory (nullptr), capacity (0) { }
+
+  bool initialize (uint64_t seed, int width, int height);
   void proceed ();
   void draw ();
   void set_capacity (unsigned new_capacity);
-  void add_object (float phase);
+  void add_object (float phase, v4f frustum);
   void ball_bounce (unsigned i, unsigned j);
   void wall_bounce (unsigned i, unsigned j);
 private:
-  view_t view;
   float walls [6] [2] [4];
+  float masks [6] [2] [4];
+  float abc [system_count] [8] [4];
+  float xyz [system_count] [3] [4];
+
+  float max_radius;
+  float animation_time;
 
   void * memory;
+  unsigned capacity;
+  unsigned count;
+
+  object_t * objects;
+  unsigned * zorder_index;
+  unsigned * kdtree_index;
   float (* x) [4];
   float (* v) [4];
   float (* u) [4];
   float (* w) [4];
-  unsigned * zorder_index;
-  unsigned * kdtree_index;
-  object_t * objects;
 
-  float max_radius;
-  float animation_time;
-  unsigned count;
-  unsigned capacity;
+  unsigned primitive_count [system_count];
+  std::uint32_t vao_ids [system_count];
 
-  system_repository_t repository;
-  rng_t rng;
+  program_t programs [3];
   kdtree_t kdtree;
+  rng_t rng;
 };
 
 #endif

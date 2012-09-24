@@ -41,6 +41,7 @@ do {                                   \
 
 inline v4f load4f (const float * a) { return _mm_load_ps (a); }
 inline void store4f (float * a, v4f v) { _mm_store_ps (a, v); }
+inline void move4f (float * dst, float * src) { store4f (dst, load4f (src)); }
 inline v4f broadcast0 (v4f x) { return _mm_shuffle_ps (x, x, SHUFFLE (0, 0, 0, 0)); }
 inline v4f broadcast1 (v4f x) { return _mm_shuffle_ps (x, x, SHUFFLE (1, 1, 1, 1)); }
 inline v4f broadcast2 (v4f x) { return _mm_shuffle_ps (x, x, SHUFFLE (2, 2, 2, 2)); }
@@ -64,6 +65,11 @@ inline v4f cross (const v4f a, const v4f b)
   v4f r1 = a * d - b * c;          // a0b1-b0a1 a1b2-b1a2 a2b0-b2a0 0
   v4f r = _mm_shuffle_ps (r1, r1, SHUFFLE (1, 2, 0, 3));
   return r;
+}
+
+inline v4f normalize (v4f v)
+{
+  return v / _mm_sqrt_ps (dot (v, v));
 }
 
 #endif

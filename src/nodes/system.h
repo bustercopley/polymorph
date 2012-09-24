@@ -23,13 +23,12 @@ struct system_t {
   float z [N / r] [3]; // Co-ordinates of the Z-nodes.
   float g [8] [3]; // Coefficients of u, v, w for convex uniform polyhedra.
 
-  uint8_t P [N / p] [p]; // The p triangles around each X-node.
-  uint8_t Q [N / q] [q]; // The q triangles around each Y-node.
-  uint8_t R [N / r] [r]; // The r triangles around each Z-node.
+  uint8_t P [N]; // Permutation of cycle-structure p^(N/p), taking triangles around X-nodes.
+  uint8_t Q [N];
+  uint8_t R [N];
   uint8_t X [N]; // The X-node in each triangle.
   uint8_t Y [N]; // The Y-node in each triangle.
   uint8_t Z [N]; // The Z-node in each triangle.
-  uint8_t s [N / p] [4]; // The four X-nodes around each X-node.
 };
 
 /*

@@ -3,35 +3,36 @@
 #ifndef graphics_h
 #define graphics_h
 
-#include "frustum.h"
-#include "object.h"
+#include "vector.h"
 #include <cstdint>
 
-void paint (const object_t & object, const float (& f) [16]);
-int get_lists_start (unsigned n);
-void begin_list (int n);
-void end_list ();
-
-void screen (int width, int height);
-void box (const view_t & view);
-void lights (float znear, float depth, float lnear, float lfar, float dnear);
 void clear ();
 
-void paint_kpgons (unsigned k, unsigned Np, unsigned p,
-                   const std::uint8_t * P,
-                   const std::uint8_t * Y, const std::uint8_t * Z,
-                   const float (* x) [4],
-                   const float (* ax) [4], const float (* by) [4], const float (* cz) [4]);
+unsigned data_to_vao_id (unsigned N, float (* vertices) [4], std::uint8_t (* indices) [6]);
 
-void paint_snub_pgons (int chirality, unsigned Np, unsigned p,
-                       const std::uint8_t * P,
-                       const std::uint8_t * Y, const std::uint8_t * Z,
-                       const float (* x) [4],
-                       const float (* ax) [4], const float (* by) [4], const float (* cz) [4]);
+namespace uniforms
+{
+  enum index_t {
+    p, l, g, m, r, a, d, s, fogm, fogd, count
+  };
+  extern const char * names [];
+}
 
-void paint_snub_triangle_pairs (int chirality, unsigned Np,
-                                const std::uint8_t * P, const std::uint8_t * s,
-                                const std::uint8_t * Y, const std::uint8_t * Z,
-                                const float (* ax) [4], const float (* by) [4], const float (* cz) [4]);
+struct program_t
+{
+  std::uint32_t id;
+  std::uint32_t uniform_locations [uniforms::count];
+  bool initialize (v4f view, unsigned gshader_resource_id);
+};
+
+bool initialize_programs (program_t (& programs) [3], v4f view);
+
+void paint (float radius,
+            const float (& modelview_matrix) [16],
+            const float (& rgb0) [4],
+            const float (& abc0) [4],
+            unsigned N,
+            unsigned vao_id,
+            const program_t & program);
 
 #endif

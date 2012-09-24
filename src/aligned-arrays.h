@@ -55,7 +55,7 @@ namespace internal
   inline void replace (void * base, unsigned old_length, unsigned new_length, T ** x, P ... p)
   {
     base = align_up (base);
-    if (old_length) {
+    if (old_length && * x) {
       copy_memory (base, * x, old_length * (sizeof ** x));
     }
     * x = reinterpret_cast <T *> (base);
