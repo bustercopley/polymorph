@@ -163,7 +163,7 @@ void model_t::proceed ()
 
   // Use insertion sort on the assumption that the z-order
   // hasn't changed much since the last frame.
-  insertion_sort (zorder_index, x, 0, count - 1);
+  insertion_sort (zorder_index, x, 0, count);
 }
 
 void model_t::draw ()
