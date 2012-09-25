@@ -20,7 +20,7 @@ polymorph_LDLIBS=-lopengl32
 polymorph_EXTRA_OBJECTS=.obj/resources-res.o #.obj/tinyscheme-scheme.o
 polymorph_SOURCE_PREFIX=src/
 polymorph_OBJECTS=\
-bounce.o cmdline.o glprocs.o graphics.o kdtree.o main.o markov.o \
+cmdline.o glprocs.o graphics.o kdtree.o main.o markov.o \
 memory.o model.o partition.o random.o rodrigues.o systems.o
 tinyscheme_SOURCE_PREFIX=tinyscheme/
 tinyscheme_CPPFLAGS=-DSTANDALONE=0 -DUSE_NO_FEATURES=1 -DUSE_STRLWR=0

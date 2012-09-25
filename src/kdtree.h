@@ -3,14 +3,17 @@
 #ifndef kdtree_h
 #define kdtree_h
 
+struct object_t;
+
 struct kdtree_t
 {
   kdtree_t () : memory (nullptr), node_count (0) { }
   ~kdtree_t ();
   void compute (unsigned * index, const float (* x) [4], unsigned count);
-  typedef void (* callback_t) (void * data, unsigned i, unsigned j);
-  void for_near (unsigned count, float r, void * data, callback_t f);
-  void for_near (float (* planes) [2] [4], float r, void * data, callback_t f);
+  void bounce (unsigned count, float max_radius,
+               object_t * objects,
+               float (* v) [4], float (* w) [4],
+               float (* planes) [2] [4]);
 private:
   unsigned * index;
   const float (* x) [4];

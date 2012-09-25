@@ -28,8 +28,6 @@ struct model_t {
   void draw ();
   void set_capacity (unsigned new_capacity);
   void add_object (float phase, v4f frustum);
-  void ball_bounce (unsigned i, unsigned j);
-  void wall_bounce (unsigned i, unsigned j);
 private:
   float walls [6] [2] [4];
   float masks [6] [2] [4];

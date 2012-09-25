@@ -28,12 +28,14 @@ namespace usr {
   static const float morph_finish = 4.50f;
   static const float cycle_duration = 17.05f;
 
-  // Colour functions.
-  // { low_value, high_value, attack_begin, attack_end, decay_begin, decay_end }
-  static const bump_t value_bump = { 0.15f, 1.0f, 0.35f, 0.50f, 4.50f, 6.00f, };
-  static const bump_t saturation_bump = { 0.00f, 1.00f, 0.50f, 0.65f, 5.50f, 6.50f, };
+  // Lighting parameters.
   static const float ambient_material [4] = { 0.01f, 0.01f, 0.01f, 1.0f, };
-  static const float specular_material [4] = { 0.8f, 0.8f, 0.8f, 0.0f, };
+  static const float specular_material [4] = { 1.0f, 1.0f, 1.0f, 0.0f, };
+
+  // Graphs of diffuse material lighting parameters against time (smoothstep, see bump.h).
+  // { low_value, high_value, attack_begin, attack_end, decay_begin, decay_end }
+  static const bump_t value_bump = { 0.25f, 1.25f, 0.35f, 0.50f, 4.50f, 6.00f, };
+  static const bump_t saturation_bump = { 0.00f, 1.00f, 0.50f, 0.65f, 5.50f, 6.50f, };
 
   // Simulation speed.
   static const float frame_time = 1.0f / 60;

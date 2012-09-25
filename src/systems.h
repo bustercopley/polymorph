@@ -5,8 +5,7 @@
 
 #include <cstdint>
 
-enum system_select_t
-{
+enum system_select_t {
   tetrahedral, octahedral, icosahedral,
   system_count,
   hexahedral = octahedral,

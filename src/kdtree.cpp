@@ -3,6 +3,8 @@
 #include "partition.h"
 #include "memory.h"
 #include "aligned-arrays.h"
+#include "config.h"
+#include "model.h"
 #include "vector.h"
 #include "compiler.h"
 #include <cstdint>
@@ -92,7 +94,10 @@ void kdtree_t::compute (unsigned * new_index, const float (* new_x) [4], unsigne
   }
 }
 
-void kdtree_t::for_near (unsigned count, float r, void * data, callback_t f)
+void kdtree_t::bounce (unsigned count, float r,
+                       object_t * objects,
+                       float (* v) [4], float (* w) [4],
+                       float (* planes) [2] [4])
 {
   v4f rsq = _mm_set1_ps (r * r);
   for (unsigned k = 0; k != count; ++ k) {
@@ -125,16 +130,56 @@ void kdtree_t::for_near (unsigned count, float r, void * data, callback_t f)
         for (unsigned n = node_begin [i]; n != node_end [i]; ++ n) {
           unsigned j = index [n];
           if (j > k) {
-            f (data, k, j);
+            const object_t & A = objects [k];
+            const object_t & B = objects [j];
+            v4f s = { A.r + B.r, 0.0f, 0.0f, 0.0f, };
+            v4f ssq = s * s;
+            v4f dx = load4f (x [j]) - load4f (x [k]);
+            v4f dxsq = dot (dx, dx);
+            if (_mm_comilt_ss (dxsq, ssq)) { // Spheres interpenetrate?
+              v4f dv = load4f (v [j]) - load4f (v [k]);
+              v4f dxdv = dot (dx, dv);
+              v4f zero = _mm_setzero_ps ();
+              if (_mm_comilt_ss (dxdv, zero)) { // Spheres approach?
+                v4f dxlen = _mm_sqrt_ps (dxsq);
+                v4f dxn = dx / dxlen;
+                v4f rw = _mm_set1_ps (A.r) * load4f (w [k])
+                       + _mm_set1_ps (B.r) * load4f (w [j]);
+                v4f unn = dx * dxdv / dxsq;
+                v4f rub = cross (rw, dxn) + unn - dv;
+                v4f kf = _mm_set1_ps (usr::balls_friction);
+                v4f u = kf * rub - unn;
+
+                // Now take the nonzero multiplier lambda such that the
+                // impulse lambda*u is consistent with conservation of
+                // energy and momentum.
+                // (Lambda is implicit now. See "problem.tex".)
+
+                v4f dxu = cross (dxn, u);
+                v4f km2 = { -2.0f, -2.0f, -2.0f, -2.0f, };
+                v4f top = km2 * (dot (u, dv) - dot (dxu, rw));
+                v4f uu = dot (u, u);
+                v4f r = { 1.0f, 1.0f, A.r, B.r, };
+                v4f rdxu = (r * r) * dot (dxu, dxu);
+                v4f urdxu = _mm_movehl_ps (rdxu, uu);
+                v4f divisors = { A.m, B.m, A.l, B.l, };
+                v4f quotients = urdxu / divisors;
+                v4f ha = _mm_hadd_ps (quotients, quotients);
+                v4f hh = _mm_hadd_ps (ha, ha);
+                v4f munu = (top * r) / (hh * divisors);
+                v4f muA, muB, nuA, nuB;
+                UNPACK4 (munu, muA, muB, nuA, nuB);
+                store4f (v [k], load4f (v [k]) - muA * u);
+                store4f (v [j], load4f (v [j]) + muB * u);
+                store4f (w [k], load4f (w [k]) - nuA * dxu);
+                store4f (w [j], load4f (w [j]) - nuB * dxu); // sic
+              }
+            }
           }
         }
       }
     }
   }
-}
-
-void kdtree_t::for_near (float (* planes) [2] [4], float r, void * data, callback_t f)
-{
   v4f r0 = _mm_set1_ps (r);
   v4f zero = _mm_setzero_ps ();
   for (unsigned k = 0; k != 6; ++ k) {
@@ -164,7 +209,36 @@ void kdtree_t::for_near (float (* planes) [2] [4], float r, void * data, callbac
       else {
         for (unsigned n = begin; n != end; ++ n) {
           unsigned j = index [n];
-          f (data, k, j);
+          object_t & A = objects [j];
+          v4f anchor = load4f (planes [k] [0]);
+          v4f normal = load4f (planes [k] [1]);
+          v4f s = dot (load4f (x [j]) - anchor, normal);
+          v4f r = _mm_set1_ps (A.r);
+          if (_mm_comilt_ss (s, r)) { // Sphere penetrates plane?
+            v4f vn = dot (load4f (v [j]), normal);
+            v4f zero = _mm_setzero_ps ();
+            if (_mm_comilt_ss (vn, zero)) { // Sphere approaches plane?
+              // vN is the normal component of v. (The normal is a unit vector).
+              // vF is the tangential contact velocity, composed of glide and spin.
+              v4f vN = vn * normal;
+              v4f rn = r * normal;
+              v4f vF = load4f (v [j]) - vN - cross (load4f (w [j]), rn);
+              v4f kf = _mm_set1_ps (usr::walls_friction);
+              v4f uneg = vN + kf * vF;
+              v4f vN_sq = vn * vn;
+              v4f vF_sq = dot (vF, vF);
+              v4f kvF_sq = kf * (kf * vF_sq);
+              v4f ml = { A.m, A.l, A.m, A.l, };
+              v4f wtf = _mm_unpacklo_ps (vN_sq + kvF_sq, (r * r) * kvF_sq) / ml;
+              v4f munu = (vN_sq + kf * vF_sq) / (ml * _mm_hadd_ps (wtf, wtf));
+              munu += munu;
+              munu = _mm_unpacklo_ps (munu, munu);
+              v4f mu = _mm_movelh_ps (munu, munu);
+              v4f nu = _mm_movehl_ps (munu, munu);
+              store4f (v [j], load4f (v [j]) - mu * uneg);
+              store4f (w [j], load4f (w [j]) + nu * cross (rn, uneg));
+            }
+          }
         }
       }
     }

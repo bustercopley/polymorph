@@ -3,7 +3,6 @@
 #include "model.h"
 #include "random.h"
 #include "rodrigues.h"
-#include "bounce.h"
 #include "markov.h"
 #include "random.h"
 #include "partition.h"
@@ -115,7 +114,7 @@ void model_t::add_object (float phase, v4f view)
   }
 
   object_t & A = objects [count];
-  A.r = rng.get_double (2.0, 2.0);
+  A.r = rng.get_double (1.67f, 1.67f);
   if (max_radius < A.r) max_radius = A.r;
   A.m = usr::mass * A.r * A.r;
   A.l = 0.4f * A.m * A.r * A.r;
@@ -156,31 +155,10 @@ void model_t::add_object (float phase, v4f view)
   ++ count;
 }
 
-void ball_bounce_callback (void * data, unsigned i, unsigned j)
-{
-  reinterpret_cast <model_t *> (data)->ball_bounce (i, j);
-}
-
-void wall_bounce_callback (void * data, unsigned i, unsigned j)
-{
-  reinterpret_cast <model_t *> (data)->wall_bounce (i, j);
-}
-
-void model_t::ball_bounce (unsigned i, unsigned j)
-{
-  ::bounce (i, j, objects, x, v, w);
-}
-
-void model_t::wall_bounce (unsigned i, unsigned j)
-{
-  ::bounce (walls [i], j, objects, x, v, w);
-}
-
 void model_t::proceed ()
 {
   kdtree.compute (kdtree_index, x, count);
-  kdtree.for_near (count, 2 * max_radius, this, ball_bounce_callback);
-  kdtree.for_near (walls, max_radius, this, wall_bounce_callback);
+  kdtree.bounce (count, 2 * max_radius, objects, v, w, walls);
 
   advance_linear (x, v, count, usr::frame_time);
   advance_angular (u, w, count, usr::frame_time);
