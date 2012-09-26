@@ -30,10 +30,9 @@ Stream & operator << (Stream & stream, const system_t <q, r> & s);
 // Implementation.
 
 template <typename Stream, unsigned q, unsigned r>
-inline Stream & operator << (Stream & stream, const system_t <q, r> & s) {
-  enum {
-    p = 2
-  };
+inline Stream & operator << (Stream & stream, const system_t <q, r> & s)
+{
+  enum { p = 2 };
   return show_system (stream, s.N, p, q, r, s.P, s.Q, s.R, s.X, s.Y, s.Z, s.x, s.y, s.z, s.g);
 }
 

@@ -5,15 +5,18 @@
 #include <ostream>
 #include <fstream>
 #include <iostream>
-namespace {
+namespace
+{
   template <typename Stream, typename T>
-  inline Stream & write_system (Stream & stream, const T & x) {
+  inline Stream & write_system (Stream & stream, const T & x)
+  {
     stream.write (reinterpret_cast <const char *> (& x), sizeof x);
     return stream;
   }
 }
 
-int main (int argc, char * argv []) {
+int main (int argc, char * argv [])
+{
   // Lay out data fields for the descriptions of three kinds of
   // spherical tiling (see "system.h")
 

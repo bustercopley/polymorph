@@ -12,7 +12,8 @@
 //   g specify the 8 points of interest on the Moebius triangle (see below).
 
 template <unsigned q, unsigned r>
-struct system_t {
+struct system_t
+{
   enum {
     p = 2,
     N = 2 * p*q*r / (q*r + r*p + p*q - p*q*r)
@@ -23,12 +24,12 @@ struct system_t {
   float z [N / r] [3]; // Co-ordinates of the Z-nodes.
   float g [8] [3]; // Coefficients of u, v, w for convex uniform polyhedra.
 
-  uint8_t P [N]; // Permutation of cycle-structure p^(N/p), taking triangles around X-nodes.
-  uint8_t Q [N];
-  uint8_t R [N];
-  uint8_t X [N]; // The X-node in each triangle.
-  uint8_t Y [N]; // The Y-node in each triangle.
-  uint8_t Z [N]; // The Z-node in each triangle.
+  uint8_t P [N]; // Permutation of cycle structure q^(N/q), taking triangles around X nodes.
+  uint8_t Q [N]; // Permutation of cycle structure q^(N/q), taking triangles around Y nodes.
+  uint8_t R [N]; // Permutation of cycle structure r^(N/r), taking triangles around Z nodes.
+  uint8_t X [N]; // The X node in each triangle.
+  uint8_t Y [N]; // The Y node in each triangle.
+  uint8_t Z [N]; // The Z node in each triangle.
 };
 
 /*
@@ -43,49 +44,30 @@ to the angle subtended by the arc at the origin.
 
 A 'spherical triangle' is a figure on the sphere consisting of three pairwise
 non-antipodal points on the sphere and the three minor great circular arcs
-between them. The area of a spherical triangle is equal to the 'spherical excess'
-of the sum of the three angles over two right angles.
+between them. The area of a spherical triangle is equal to the 'spherical excess',
+the excess of the sum of the three angles over two right angles.
 
-p, q and r specify a Moebius triangle XYZ: the angles are A=pi/p, B=pi/q and C=pi/r.
-We can tile the sphere once with 2N copies of this triangle, N black and N white.
-(That's what makes it a Moebius triangle.) Each black triangle is the image of XYZ
-under a direct isometry (a rotation). The white triangles are the images under
-indirect isometries (reflections). Working out N from p, q and r is exercise 16.5
-in Groups and Geometry (Neumann, Stoy, Thompson); consider the area of each of
-three lunes in which XYZ is contained, as a proportion of the area of the sphere.
+If a triple (p, q, r) specifies a Moebius triangle ABC (with angles A=pi/p, B=pi/q,
+C=pi/r) then we can tile the sphere once with 2N copies of this triangle, N black
+and N white. (That's what makes it a Moebius triangle.) Each black tile is the image
+of ABC under a direct isometry (a rotation). The white triangles are the images under
+indirect isometries (reflections). Working out N from p, q and r is exercise 16.5 in
+Groups and Geometry (Neumann, Stoy, Thompson); consider the area of each of three
+lunes in which XYZ is contained, as a proportion of the area of the sphere.
+Our combinatorial map is based on this tiling. Call its faces (tiles) 'regions',
+its edges 'arcs' and its vertices 'nodes' to avoid confusion with the faces, edges
+and vertice of the polyhedra discussed elsewhere. Each node is an image of one of
+X, Y, Z under the rotations and reflections described above, and in consonance
+therewith we speak of X nodes, Y nodes and Z nodes. There are:
+  N/p X nodes, X [n] (0 <= X [n] < N/p for 0 <= n < N) (each contained in 2p regions),
+  N/q Y nodes, Y [n] (0 <= Y [n] < N/q for 0 <= n < N), and
+  N/r Z nodes, Z [n] (0 <= Z [n] < N/r for 0 <= n < N).
+The coordinates of the nodes go into the arrays x, y and z.
 
-Our combinatorial map is based on the graph of this tiling. We'll call the
-vertices nodes, the edges arcs and the faces regions, like the Americans do,
-because we talk elsewhere of the vertices, edges and faces of the polyhedra we
-draw. The nodes are images of X, Y and Z, and we speak of X nodes, Y nodes
-and Z nodes. Similarly there are six kinds of dart, YZ, ZX, XY, ZY, XZ and YX
-(a dart is half an arc) and two kinds of region, XYZ (black) and ZYX (white).
-
-There are N/p X nodes, X_n (0 <= n < N/p) (because each is contained in 2p regions),
-N/q Y nodes, Y_n (0 <= n < N/q) and N/r Z nodes, Z_n (0 <= n < N/r). Each X node
-is surrounded by 2p darts, each Y node by 2q and each Z node by 2r, making for 6N
-darts, that is, 3N arcs, which makes sense, because that's enough to make all N
-triangular regions of one colour.
-
-Let d_k (0 <= k < 2p) be the darts surrounding a node X_n in anticlockwise
-order, so that XY darts (k even) and XZ darts (k odd) alternate. If dart d_k is
-from X_n to Y_m or Z_m, then x [2np + k] = m. In other words the Y and Z nodes
-neighbouring X_n are, in anticlockwise order,
-
-  Y_(x [2np + 0]), Z_(x [2np + 1]); Y_(x [2np + 2]), Z_(x [2np + 3]); ...
-  ... ; Y_(x [2np + 2p - 2]), Z_(x [2np + 2p - 1]).
-
-// An alternative scheme is as follows. Label the darts whose first node is an X
-// node d_k (0 <= k < 2N), where for 0 <= n < N/p, the darts d_k (2np <= k < 2np+2p)
-// surround node X_n in that order. Do the same for the darts e_k around Y
-// nodes and f_k around Z nodes. Then: if darts d_i and e_j or f_j are two darts
-// of the same arc, then x [i] = j.
-
-That explains x, y and z. For the snub polyhedra we need to know each X node's four
-neighbouring X nodes in the correct order. These are easily derived from x, y and z.
-They are returned in s.
-
-Rectangular cartesian co-ordinates for all of the nodes are put into u, v and w.
+P, Q and R represent permutations of the set of triangles in the spherical tiling:
+triangle n [P] (respectively n [Q], n [R]) is the triangle that comes after
+triangle n in the cyclic anticlockwise order of the triangles sharing triangle
+n's X (respectively Y, Z) node. (Recall that n [P] = * (n + P) = * (P + n) = P [n].)
 
 The g are co-ordinates, in a non-rectangular system, for a point P. The three vectors
 0X, 0Y and 0Z, where XYZ is a Moebius triangle tile, form the basis for the system.
