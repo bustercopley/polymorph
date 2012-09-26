@@ -1,7 +1,7 @@
 // -*- C++ -*-
 #ifndef print_h
 #define print_h
-#ifndef ENABLE_PRINT
+#ifdef ENABLE_PRINT
 #define PRINT_ENABLED 1
 #include <cstdlib>
 #include <iostream>
@@ -57,12 +57,12 @@ inline void pexit ()
 #else
 #define PRINT_ENABLED 0
 template <typename T, unsigned N>
-inline void print (const char *, T (&) [N]);
-inline void print (const char *);
-inline void print (const char *, double);
-inline void print (const char *, __m128);
-inline void xassert (const char *, bool);
-inline void pexit ();
+inline void print (const char *, T (&) [N]) { }
+inline void print (const char *) { }
+inline void print (const char *, double) { }
+inline void print (const char *, __m128) { }
+inline void xassert (const char *, bool) { }
+inline void pexit () { }
 #define passert(condition)
 #define pprint(term)
 #endif
