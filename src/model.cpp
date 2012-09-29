@@ -33,9 +33,6 @@ bool model_t::initialize (unsigned long long seed, int width, int height)
 
   if (! initialize_programs (programs, view)) return false;
 
-  max_radius = 0;
-  animation_time = usr::cycle_duration;
-
   // Calculate wall planes to exactly fill the front of the viewing frustum.
   float t [4];
   store4f (t, view);
@@ -66,10 +63,14 @@ bool model_t::initialize (unsigned long long seed, int width, int height)
 
   count = 0;
   set_capacity (usr::count);
+  max_radius = 0.0f;
   for (unsigned n = 0; n != usr::count; ++ n) add_object (static_cast <float> (n) / usr::count, view);
   for (unsigned n = 0; n != count; ++ n) zorder_index [n] = n;
   for (unsigned n = 0; n != count; ++ n) kdtree_index [n] = n;
   quicksort (zorder_index, x, count);
+
+  animation_time_lo = 0.0f;
+  animation_time_hi = 0;
 
   initialize_systems (abc, xyz, primitive_count, vao_ids);
 
@@ -165,13 +166,22 @@ void model_t::proceed ()
 
   const float T = usr::cycle_duration;
   const float TN = T / count;
-  animation_time = std::fmod (animation_time + usr::frame_time, T);
-  float s = T + std::fmod (animation_time, TN);
-  unsigned d = static_cast <unsigned> (animation_time / TN);
+  animation_time_lo += usr::frame_time;
+  while (animation_time_lo >= TN) {
+    animation_time_lo -= TN;
+    ++ animation_time_hi;
+  }
+  if (animation_time_hi == count) {
+    animation_time_hi -= count;
+  }
 
+  unsigned k = animation_time_hi;
   for (unsigned n = 0; n != count; ++ n) {
-    object_t & A = objects [(d + n) % count];
-    float t = s - n * TN;
+    object_t & A = objects [n];
+    float t = k * TN + animation_time_lo;
+    if (! k) k = count;
+    -- k;
+
     A.value = usr::value_bump (t);
     A.saturation = usr::saturation_bump (t);
 

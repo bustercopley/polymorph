@@ -19,28 +19,27 @@ struct object_t
   unsigned program_select;
 };
 
-struct model_t {
+struct model_t
+{
   ~model_t ();
   model_t () : memory (nullptr), capacity (0) { }
 
   bool initialize (uint64_t seed, int width, int height);
   void proceed ();
   void draw ();
+private:
   void set_capacity (unsigned new_capacity);
   void add_object (float phase, v4f frustum);
-private:
+
   float walls [6] [2] [4];
   float masks [6] [2] [4];
   float abc [system_count] [8] [4];
   float xyz [system_count] [3] [4];
 
   float max_radius;
-  float animation_time;
+  float animation_time_lo;
 
   void * memory;
-  unsigned capacity;
-  unsigned count;
-
   object_t * objects;
   unsigned * zorder_index;
   unsigned * kdtree_index;
@@ -49,6 +48,9 @@ private:
   float (* u) [4];
   float (* w) [4];
 
+  unsigned capacity;
+  unsigned count;
+  unsigned animation_time_hi;
   unsigned primitive_count [system_count];
   std::uint32_t vao_ids [system_count];
 
