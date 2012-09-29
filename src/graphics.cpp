@@ -7,6 +7,8 @@
 #include "compiler.h"
 #include "aligned-arrays.h"
 #include <cstdint>
+
+#define ENABLE_PRINT
 #include "print.h"
 
 const char * uniforms::names [uniforms::count] = {
@@ -135,7 +137,7 @@ bool program_t::initialize (v4f view, unsigned gshader2)
   glUniform3fv (uniform_locations [uniforms::s], 1, usr::specular_material);
   glUniform3fv (uniform_locations [uniforms::a], 1, usr::ambient_material);
   glUniform1f (uniform_locations [uniforms::fogm], -1.0f / zd);
-  glUniform1f (uniform_locations [uniforms::fogd], z1 + zd / 4);
+  glUniform1f (uniform_locations [uniforms::fogd], z1);
 
   glUseProgram (0);
 
