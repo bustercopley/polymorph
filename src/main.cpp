@@ -57,10 +57,10 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
       break;
     case WM_TIMER:
       {
-        ::SwapBuffers (ws->hdc);
         ws->model.proceed ();
         clear ();
         ws->model.draw ();
+        ::SwapBuffers (ws->hdc);
       }
       break;
 

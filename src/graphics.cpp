@@ -121,7 +121,7 @@ bool program_t::initialize (v4f view, unsigned gshader2)
   float h = t [3];
 
   float projection_matrix [16] = {
-    -2*z0/w,  0,       0,           0,
+   -2*z0/w,   0,       0,           0,
     0,       -2*z0/h,  0,           0,
     0,        0,      (z0+z1)/zd,  -1,
     0,        0,      -2*z0*z1/zd,  0,

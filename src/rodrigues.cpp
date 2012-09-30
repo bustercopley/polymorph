@@ -1,7 +1,6 @@
 #include "rodrigues.h"
 #include "vector.h"
 #include "compiler.h"
-#include <cmath>
 
 // See `problem.tex' for terminology and notation, and `problem.tex',
 // `script.mathomatic' and `script.maxima' for derivations.

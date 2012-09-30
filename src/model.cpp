@@ -12,7 +12,6 @@
 #include "aligned-arrays.h"
 #include "vector.h"
 #include "compiler.h"
-#include <cmath>
 
 bool model_t::initialize (unsigned long long seed, int width, int height)
 {
@@ -72,25 +71,11 @@ bool model_t::initialize (unsigned long long seed, int width, int height)
   animation_time_lo = 0.0f;
   animation_time_hi = 0;
 
+  bumps.initialize (0.25f, 1.25f, 0.35f, 0.50f, 4.50f, 6.00f,
+                    0.00f, 1.00f, 0.50f, 0.65f, 5.50f, 6.50f);
+  step.initialize (usr::morph_start, usr::morph_finish);
+
   initialize_systems (abc, xyz, primitive_count, vao_ids);
-
-  union {
-    std::uint32_t u32 [3] [4];
-    v4f f32 [3];
-  } tmask = {
-    {
-      { 0xffffffff, 0, 0, 0, },
-      { 0, 0xffffffff, 0, 0, },
-      { 0, 0, 0xffffffff, 0, },
-    }
-  };
-
-  for (unsigned i = 0; i != 3; ++ i) {
-    store4f (masks [2 * i] [0], tmask.f32 [i]);
-    store4f (masks [2 * i + 1] [0], tmask.f32 [i]);
-    store4f (masks [2 - i] [1], tmask.f32 [i]);
-    store4f (masks [5 - i] [1], tmask.f32 [i]);
-  }
 
   return true;
 }
@@ -161,12 +146,14 @@ void model_t::proceed ()
   kdtree.compute (kdtree_index, x, count);
   kdtree.bounce (count, 2 * max_radius, objects, v, w, walls);
 
-  advance_linear (x, v, count, usr::frame_time);
-  advance_angular (u, w, count, usr::frame_time);
-
   const float T = usr::cycle_duration;
+  const float dt = usr::frame_time;
+
+  advance_linear (x, v, count, dt);
+  advance_angular (u, w, count, dt);
+
+  animation_time_lo += dt;
   const float TN = T / count;
-  animation_time_lo += usr::frame_time;
   while (animation_time_lo >= TN) {
     animation_time_lo -= TN;
     ++ animation_time_hi;
@@ -182,36 +169,23 @@ void model_t::proceed ()
     if (! k) k = count;
     -- k;
 
-    A.value = usr::value_bump (t);
-    A.saturation = usr::saturation_bump (t);
+    float temp [4];
+    store4f (temp, bumps (t));
+    A.value = temp [0];
+    A.saturation = temp [1];
 
-    // Adjust `locus_begin', `locus_end' and `generator_position',
-    // the parameters used in the function `paint_polyhedron'
-    // in "graphics.cpp" to locate a point on the Moebius triangle.
-
-    const float T0 = usr::morph_start;
-    const float T1 = usr::morph_finish;
-
-    if (t < T0) {
-      if (A.generator_position) {
-        A.generator_position = 0.0f;
-        // We must perform a Markov transition.
-        unsigned next = markov (rng, A.locus_end, A.locus_begin);
-        A.locus_begin = A.locus_end;
-        A.locus_end = next;
-        A.program_select =
-          A.locus_begin == 7 ? A.program_select :
-          A.locus_end == 7 ? (rng.get () & 1) + 1 :
-          0;
-      }
+    if (t < step.T [0] && A.generator_position) {
+      // We must perform a Markov transition.
+      unsigned next = markov (rng, A.locus_end, A.locus_begin);
+      A.locus_begin = A.locus_end;
+      A.locus_end = next;
+      // Choose the shader program (ordinary, snub or antisnub).
+      A.program_select =
+        A.locus_begin == 7 ? A.program_select :
+        A.locus_end == 7 ? (rng.get () & 1) + 1 :
+        0;
     }
-    else if (t < T1) {
-      float s = (t - T0) / (T1 - T0);
-      A.generator_position = s * s * (3 - 2 * s);
-    }
-    else {
-      A.generator_position = 1.0f;
-    }
+    A.generator_position = step (t);
   }
 
   // Use insertion sort on the assumption that the z-order
@@ -219,19 +193,33 @@ void model_t::proceed ()
   insertion_sort (zorder_index, x, 0, count);
 }
 
-inline v4f hsv_to_rgb0 (float h, float s, float v, float (& masks) [6] [2] [4])
+namespace
 {
-
-  v4f ss = _mm_set1_ps (s);
-  v4f vv = _mm_set1_ps (v);
-  v4f cc = vv * ss;
-  v4f mm = vv - cc;
-  v4f xx = cc * _mm_set1_ps (std::abs (std::fmod (h, 2.0f) - 1.0f));
-  unsigned ih = static_cast <unsigned> (h);
-  v4f cmask = load4f (masks [ih] [0]);
-  v4f xmask = load4f (masks [ih] [1]);
-
-  return mm + _mm_or_ps (_mm_and_ps (cc, cmask), _mm_and_ps (xx, xmask));
+  inline v4f hsv_to_rgb0 (float h, float s, float v)
+  {
+    const v4f num [] ALIGNED16 = {
+      { 0.0f, 0.0f, 0.0f, 0.0f, },
+      { 1.0f, 1.0f, 1.0f, 0.0f, },
+      { 2.0f, 2.0f, 2.0f, 0.0f, },
+      { 3.0f, 3.0f, 3.0f, 0.0f, },
+      { 4.0f, 4.0f, 4.0f, 0.0f, },
+      { 5.0f, 5.0f, 5.0f, 0.0f, },
+      { 6.0f, 6.0f, 6.0f, 0.0f, },
+    };
+    v4f theta = { h, h + 4.0f, h + 2.0f, 0.0f, };
+    theta -= _mm_and_ps (_mm_cmpge_ps (theta, num [6]), num [6]);
+    v4f v4 = _mm_set1_ps (v);
+    v4f s4 = _mm_set1_ps (s);
+    v4f lt2 = _mm_cmplt_ps (theta, num [2]);
+    v4f lt3 = _mm_cmplt_ps (theta, num [3]);
+    v4f lt5 = _mm_cmplt_ps (theta, num [5]);
+    v4f m23 = _mm_andnot_ps (lt2, lt3);
+    v4f f_lt2 = _mm_and_ps (lt2, num [1]);
+    v4f f_m23 = _mm_and_ps (m23, num [3] - theta);
+    v4f f_ge5 = _mm_andnot_ps (lt5, theta - num [5]);
+    v4f f = _mm_or_ps (_mm_or_ps (f_lt2, f_m23), f_ge5);
+    return v4 * (num [1] - s4) + v4 * s4 * f;
+  }
 }
 
 void model_t::draw ()
@@ -245,7 +233,7 @@ void model_t::draw ()
     compute (f, x [nz], u [nz]);
 
     const object_t & object = objects [nz];
-    store4f (rgb0, hsv_to_rgb0 (object.hue, object.saturation, object.value, masks));
+    store4f (rgb0, hsv_to_rgb0 (object.hue, object.saturation, object.value));
 
     unsigned sselect = object.system_select;
     {
