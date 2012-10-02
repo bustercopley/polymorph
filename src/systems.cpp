@@ -25,6 +25,7 @@ namespace
     return result;
   }
 
+  NOINLINE
   void assign (float (* out) [4], const float (* from) [3], unsigned count)
   {
      for (unsigned n = 0; n != count; ++ n) {
@@ -35,6 +36,7 @@ namespace
     }
   }
 
+  NOINLINE
   unsigned make_vao (float (* vertices) [4], std::uint8_t (* indices) [6],
                      unsigned p, unsigned q, unsigned r,
                      const float (* x) [3], const float (* y) [3], const float (* z) [3],
