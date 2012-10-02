@@ -30,6 +30,7 @@ PFNGLENABLEVERTEXATTRIBARRAYPROC glEnableVertexAttribArray = nullptr;
 PFNGLDISABLEVERTEXATTRIBARRAYPROC glDisableVertexAttribArray = nullptr;
 PFNGLBINDATTRIBLOCATIONPROC glBindAttribLocation = nullptr;
 PFNGLGETATTRIBLOCATIONPROC glGetAttribLocation = nullptr;
+PFNGLBLENDEQUATIONPROC glBlendEquation = nullptr;
 
 #define VALIDGLPROC(type, name) if (! (GLPROC (type, name))) return false;
 
@@ -64,6 +65,7 @@ bool glprocs ()
   VALIDGLPROC (PFNGLDISABLEVERTEXATTRIBARRAYPROC, glDisableVertexAttribArray);
   VALIDGLPROC (PFNGLBINDATTRIBLOCATIONPROC, glBindAttribLocation);
   VALIDGLPROC (PFNGLGETATTRIBLOCATIONPROC, glGetAttribLocation);
+  VALIDGLPROC (PFNGLBLENDEQUATIONPROC, glBlendEquation);
 
   return true;
 }

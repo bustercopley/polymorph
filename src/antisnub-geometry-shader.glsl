@@ -16,9 +16,9 @@ void main ()
 
   vec3 t = normalize (cross (v - u, w - u));
 
-  vec4 cy = color (xs [4]);
-  vec4 cz = color (xs [5]);
-  vec4 ct = color (t);
+  vec3 cy = color (xs [4]);
+  vec3 cz = color (xs [5]);
+  vec3 ct = color (t);
 
   mat4 pm = p * m;
 

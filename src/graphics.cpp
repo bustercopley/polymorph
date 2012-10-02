@@ -12,7 +12,7 @@
 #include "print.h"
 
 const char * uniforms::names [uniforms::count] = {
-  "p", "l", "g", "m", "r", "a", "d", "s", "fogm", "fogd"
+  "p", "l", "g", "m", "r", "d", "s", "fogm", "fogd"
 };
 
 namespace
@@ -111,6 +111,9 @@ bool program_t::initialize (v4f view, unsigned gshader2)
   glDisable (GL_DEPTH_TEST);
   glEnable (GL_CULL_FACE);
   glCullFace (GL_BACK);
+  glEnable (GL_BLEND);
+  glBlendEquation (GL_FUNC_ADD);
+  glBlendFunc (GL_DST_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   float t [4];
   store4f (t, view);
@@ -124,7 +127,7 @@ bool program_t::initialize (v4f view, unsigned gshader2)
    -2*z0/w,   0,       0,           0,
     0,       -2*z0/h,  0,           0,
     0,        0,      (z0+z1)/zd,  -1,
-    0,        0,      -2*z0*z1/zd,  0,
+    0,        0,     -2*z0*z1/zd,   0,
   };
 
   float light_position [] [3] = {
@@ -135,7 +138,6 @@ bool program_t::initialize (v4f view, unsigned gshader2)
   glUniformMatrix4fv (uniform_locations [uniforms::p], 1, GL_FALSE, projection_matrix);
   glUniform3fv (uniform_locations [uniforms::l], 1, & light_position [0] [0]);
   glUniform3fv (uniform_locations [uniforms::s], 1, usr::specular_material);
-  glUniform3fv (uniform_locations [uniforms::a], 1, usr::ambient_material);
   glUniform1f (uniform_locations [uniforms::fogm], -1.0f / zd);
   glUniform1f (uniform_locations [uniforms::fogd], z1);
 

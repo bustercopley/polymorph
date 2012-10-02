@@ -42,6 +42,7 @@ extern PFNGLENABLEVERTEXATTRIBARRAYPROC glEnableVertexAttribArray;
 extern PFNGLDISABLEVERTEXATTRIBARRAYPROC glDisableVertexAttribArray;
 extern PFNGLGETATTRIBLOCATIONPROC glGetAttribLocation;
 extern PFNGLBINDATTRIBLOCATIONPROC glBindAttribLocation;
+extern PFNGLBLENDEQUATIONPROC glBlendEquation;
 
 #endif
 

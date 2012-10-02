@@ -13,7 +13,7 @@ unsigned data_to_vao_id (unsigned N, float (* vertices) [4], std::uint8_t (* ind
 namespace uniforms
 {
   enum index_t {
-    p, l, g, m, r, a, d, s, fogm, fogd, count
+    p, l, g, m, r, d, s, fogm, fogd, count
   };
   extern const char * names [];
 }

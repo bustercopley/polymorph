@@ -7,7 +7,6 @@ uniform mat4 p;
 uniform mat4 m;
 uniform vec3 g;
 uniform vec3 l;
-uniform vec3 a;
 uniform vec3 d;
 uniform vec3 s;
 uniform float r;
@@ -15,55 +14,48 @@ uniform float fogm;
 uniform float fogd;
 
 in vec3 xs [6];
-out vec4 gc;
+out flat vec3 gc;
 out vec3 ed;
 
-vec4 color (vec3 x)
+vec3 color (vec3 x)
 {
   vec3 normal = (m * vec4 (x, 0.0)).xyz;
   vec3 position = (m * vec4 (r * x, 1.0)).xyz;
   vec3 ld = normalize (position - l);
   vec3 dc = d * max (0.0, -dot (ld, normal));
   vec3 sc = s * pow (max (0.0, -dot (normalize (position), reflect (ld, normal))), 40);
-  return vec4 (a + (dc + sc) * fogm * (position [2] - fogd), 0.0);
+  return (dc + sc) * fogm * (position [2] - fogd);
 }
 
-void segment (vec4 A, vec4 V, vec4 W, vec4 c)
+void vertex (vec4 X, vec3 c, vec3 e)
 {
   gc = c;
-  ed = vec3 (1.0, 1.0, 1.0);
-  gl_Position = A;
+  ed = e;
+  gl_Position = X;
   EmitVertex ();
+}
 
-  gc = c;
-  ed = vec3 (0.0, 1.0, 1.0);
-  gl_Position = V;
-  EmitVertex ();
-
-  gc = c;
-  ed = vec3 (0.0, 1.0, 1.0);
-  gl_Position = W;
-  EmitVertex ();
-
+void segment (vec4 A, vec4 V, vec4 W, vec3 c)
+{
+  vertex (A, c, vec3 (1.0, 1.0, 1.0));
+  vertex (V, c, vec3 (0.0, 1.0, 1.0));
+  vertex (W, c, vec3 (0.0, 1.0, 1.0));
   EndPrimitive ();
 }
 
-void triangle (vec4 U, vec4 V, vec4 W, vec4 c)
+void segment (vec4 T, vec4 A, vec4 V, vec4 W, vec3 c)
 {
-  gc = c;
-  ed = vec3 (3.0, 0.0, 0.0);
-  gl_Position = W;
-  EmitVertex ();
+  vertex (V, c, vec3 (0.0, 1.0, 1.0));
+  vertex (T, c, vec3 (0.0, 1.0, 1.0));
+  vertex (A, c, vec3 (1.0, 1.0, 1.0));
+  vertex (W, c, vec3 (0.0, 1.0, 1.0));
+  EndPrimitive ();
+}
 
-  gc = c;
-  ed = vec3 (0.0, 3.0, 0.0);
-  gl_Position = V;
-  EmitVertex ();
-
-  gc = c;
-  ed = vec3 (0.0, 0.0, 3.0);
-  gl_Position = U;
-  EmitVertex ();
-
+void triangle (vec4 U, vec4 V, vec4 W, vec3 c)
+{
+  vertex (W, c, vec3 (3.0, 0.0, 0.0));
+  vertex (V, c, vec3 (0.0, 3.0, 0.0));
+  vertex (U, c, vec3 (0.0, 0.0, 3.0));
   EndPrimitive ();
 }

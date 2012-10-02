@@ -1,28 +1,5 @@
 // -*- C++ -*-
-void segment (vec4 T, vec4 A, vec4 V, vec4 W, vec4 c)
-{
-  gc = c;
-  ed = vec3 (0.0, 1.0, 1.0);
-  gl_Position = V;
-  EmitVertex ();
 
-  gc = c;
-  ed = vec3 (0.0, 1.0, 1.0);
-  gl_Position = T;
-  EmitVertex ();
-
-  gc = c;
-  ed = vec3 (1.0, 1.0, 1.0);
-  gl_Position = A;
-  EmitVertex ();
-
-  gc = c;
-  ed = vec3 (0.0, 1.0, 1.0);
-  gl_Position = W;
-  EmitVertex ();
-
-  EndPrimitive ();
-}
 void main ()
 {
   vec3 rg = r * g;
@@ -43,9 +20,9 @@ void main ()
   vec4 B = pm * vec4 (dot (xs [4], t) * xs [4], 1.0);
   vec4 C = pm * vec4 (dot (xs [2], t) * xs [2], 1.0);
 
-  vec4 cp = color (xs [0]);
-  vec4 cq = color (xs [4]);
-  vec4 cr = color (xs [2]);
+  vec3 cp = color (xs [0]);
+  vec3 cq = color (xs [4]);
+  vec3 cr = color (xs [2]);
 
   segment (T, A, V, W, cp);
   segment (T, B, W, U, cq);
