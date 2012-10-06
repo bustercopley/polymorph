@@ -1,4 +1,4 @@
-PROGRAMS=nodes polymorph #tinyscheme
+PROGRAMS=nodes polymorph tinyscheme
 SHELL=cmd
 CC=gcc
 CXX=g++
@@ -12,19 +12,19 @@ nodes_SOURCE_PREFIX=src/nodes/
 nodes_OBJECTS=main.o show_system.o snub_variance.o triangle.o rotor.o
 
 polymorph_FILENAME=polymorph.scr
-polymorph_CPPFLAGS=#-Itinyscheme
+polymorph_CPPFLAGS=-Itinyscheme
 polymorph_CFLAGS=-mstackrealign -msse4.2 -mfpmath=sse -Ofast
 polymorph_CXXFLAGS=-fno-exceptions -fno-rtti
 polymorph_LDFLAGS=-mwindows -s
 polymorph_LDLIBS=-lopengl32
-polymorph_EXTRA_OBJECTS=.obj/resources-res.o #.obj/tinyscheme-scheme.o
+polymorph_EXTRA_OBJECTS=.obj/resources-res.o .obj/tinyscheme-scheme.o
 polymorph_SOURCE_PREFIX=src/
 polymorph_OBJECTS=\
 cmdline.o glprocs.o graphics.o kdtree.o main.o markov.o \
 memory.o model.o partition.o random.o rodrigues.o systems.o
 tinyscheme_SOURCE_PREFIX=tinyscheme/
-tinyscheme_CPPFLAGS=-DSTANDALONE=0 -DUSE_NO_FEATURES=1 -DUSE_STRLWR=0
-tinyscheme_CFLAGS=-Os -Wall -Wextra -Wno-switch -Wno-unused-parameter
+tinyscheme_CPPFLAGS=-include src/tinyscheme.h
+tinyscheme_CFLAGS=-Ofast -Wall -Wextra -Wno-switch -Wno-unused-parameter
 tinyscheme_OBJECTS=scheme.o
 
 EXTRA_CLEAN=data .obj/resources-res.o
