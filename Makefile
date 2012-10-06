@@ -23,7 +23,7 @@ polymorph_OBJECTS=\
 cmdline.o glprocs.o graphics.o kdtree.o main.o markov.o \
 memory.o model.o partition.o random.o rodrigues.o systems.o
 tinyscheme_SOURCE_PREFIX=tinyscheme/
-tinyscheme_CPPFLAGS=-include src/tinyscheme.h
+tinyscheme_CPPFLAGS=-include src/tinyscheme-config.h
 tinyscheme_CFLAGS=-Ofast -Wall -Wextra -Wno-switch -Wno-unused-parameter
 tinyscheme_OBJECTS=scheme.o
 

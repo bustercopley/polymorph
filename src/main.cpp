@@ -8,7 +8,7 @@
 #include "vector.h"
 #include "glprocs.h"
 #include "compiler.h"
-#include "tinyscheme.h"
+#include "tinyscheme-config.h"
 #include <scheme-private.h>
 #include <scheme.h>
 #include <cstdint>
