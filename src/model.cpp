@@ -158,7 +158,7 @@ void model_t::proceed ()
     animation_time_lo -= TN;
     ++ animation_time_hi;
   }
-  if (animation_time_hi == count) {
+  if (animation_time_hi >= count) {
     animation_time_hi -= count;
   }
 
