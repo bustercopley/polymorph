@@ -30,6 +30,7 @@
 #include <limits.h>
 #include <float.h>
 #include <ctype.h>
+#include <stddef.h>
 
 #if USE_STRCASECMP
 #include <strings.h>
@@ -746,8 +747,8 @@ static int alloc_cellseg(scheme *sc, int n)
     i = ++sc->last_cell_seg;
     sc->alloc_seg[i] = cp;
     /* adjust in TYPE_BITS-bit boundary */
-    if (((unsigned long) cp) % adj != 0) {
-      cp = (char *) (adj * ((unsigned long) cp / adj + 1));
+    if (((size_t) cp) % adj != 0) {
+      cp = (char *) (adj * ((size_t) cp / adj + 1));
     }
     /* insert new segment in address order */
     newp = (pointer) cp;
@@ -1314,6 +1315,7 @@ static pointer mk_atom(scheme *sc, char *q)
 static pointer mk_sharp_const(scheme *sc, char *name)
 {
   long x;
+  unsigned long ux;
   char tmp[STRBUFFSIZE];
 
   if (!strcmp(name, "t"))
@@ -1322,14 +1324,16 @@ static pointer mk_sharp_const(scheme *sc, char *name)
     return (sc->F);
   else if (*name == 'o') {      /* #o (octal) */
     snprintf(tmp, STRBUFFSIZE, "0%s", name + 1);
-    sscanf(tmp, "%lo", &x);
+    sscanf(tmp, "%lo", &ux);
+    x = (long) ux;
     return (mk_integer(sc, x));
   } else if (*name == 'd') {    /* #d (decimal) */
     sscanf(name + 1, "%ld", &x);
     return (mk_integer(sc, x));
   } else if (*name == 'x') {    /* #x (hex) */
     snprintf(tmp, STRBUFFSIZE, "0x%s", name + 1);
-    sscanf(tmp, "%lx", &x);
+    sscanf(tmp, "%lx", &ux);
+    x = (long) ux;
     return (mk_integer(sc, x));
   } else if (*name == 'b') {    /* #b (binary) */
     x = binary_decode(name + 1);
@@ -1345,9 +1349,9 @@ static pointer mk_sharp_const(scheme *sc, char *name)
     } else if (stricmp(name + 1, "tab") == 0) {
       c = '\t';
     } else if (name[1] == 'x' && name[2] != 0) {
-      int c1 = 0;
+      unsigned int c1 = 0;
       if (sscanf(name + 2, "%x", &c1) == 1 && c1 < UCHAR_MAX) {
-        c = c1;
+           c = (int) c1;
       } else {
         return sc->NIL;
       }
