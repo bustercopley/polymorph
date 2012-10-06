@@ -1,7 +1,7 @@
 #include "mswin.h"
 #include "memory.h"
 
-void * allocate_internal (unsigned n)
+void * allocate_internal (std::size_t n)
 {
   if (! n) return nullptr;
   return ::HeapAlloc (::GetProcessHeap (), 0, n);

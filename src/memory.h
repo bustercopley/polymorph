@@ -3,10 +3,12 @@
 #ifndef memory_h
 #define memory_h
 
-void * allocate_internal (unsigned n);
+#include <cstddef>
+
+void * allocate_internal (std::size_t n);
 void deallocate (void * p);
 
-inline void copy_memory (void * dst, void * src, unsigned n)
+inline void copy_memory (void * dst, void * src, std::size_t n)
 {
   __builtin_memcpy (dst, src, n);
 }
