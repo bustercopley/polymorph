@@ -29,7 +29,7 @@ bool initialize_programs (program_t (& programs) [3], v4f view);
 
 void paint (float radius,
             const float (& modelview_matrix) [16],
-            const float (& rgb0) [4],
+            const float (& rgba) [4],
             const float (& abc0) [4],
             unsigned N,
             unsigned vao_id,

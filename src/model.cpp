@@ -100,7 +100,7 @@ void model_t::add_object (float phase, v4f view)
   }
 
   object_t & A = objects [count];
-  A.r = rng.get_double (1.67f, 1.67f);
+  A.r = 1.0f;
   if (max_radius < A.r) max_radius = A.r;
   A.m = usr::mass * A.r * A.r;
   A.l = 0.4f * A.m * A.r * A.r;
@@ -195,37 +195,62 @@ void model_t::proceed ()
 
 namespace
 {
-  inline v4f hsv_to_rgb0 (float h, float s, float v)
+  inline v4f hsva_to_rgba (float hue, float saturation, float value, float alpha)
   {
-    const v4f num [] ALIGNED16 = {
-      { 0.0f, 0.0f, 0.0f, 0.0f, },
-      { 1.0f, 1.0f, 1.0f, 0.0f, },
-      { 2.0f, 2.0f, 2.0f, 0.0f, },
-      { 3.0f, 3.0f, 3.0f, 0.0f, },
-      { 4.0f, 4.0f, 4.0f, 0.0f, },
-      { 5.0f, 5.0f, 5.0f, 0.0f, },
-      { 6.0f, 6.0f, 6.0f, 0.0f, },
-    };
-    v4f theta = { h, h + 4.0f, h + 2.0f, 0.0f, };
-    theta -= _mm_and_ps (_mm_cmpge_ps (theta, num [6]), num [6]);
-    v4f v4 = _mm_set1_ps (v);
-    v4f s4 = _mm_set1_ps (s);
-    v4f lt2 = _mm_cmplt_ps (theta, num [2]);
-    v4f lt3 = _mm_cmplt_ps (theta, num [3]);
-    v4f lt5 = _mm_cmplt_ps (theta, num [5]);
+    const v4f num1 = { 1.0f, 1.0f, 1.0f, 1.0f, };
+    const v4f num2 = { 2.0f, 2.0f, 2.0f, 2.0f, };
+    const v4f num3 = { 3.0f, 3.0f, 3.0f, 3.0f, };
+    const v4f num5 = { 5.0f, 5.0f, 5.0f, 5.0f, };
+    const v4f num6 = { 6.0f, 6.0f, 6.0f, 6.0f, };
+
+    // Use offsets (0,4,2,*) to get [magenta, red, yellow, green, cyan, blue, magenta).
+    const v4f offsets = { 0.0f, 4.0f, 2.0f, 0.0f, };
+    v4f theta = _mm_set1_ps (hue) + offsets;
+
+    // Reduce each component of theta modulo 6.0f.
+    theta -= _mm_and_ps (_mm_cmpge_ps (theta, num6), num6);
+
+    // Apply a function to each component of theta:
+
+    // f[i] ^
+    //      |
+    //    1 +XXXXXXXX---+---+---+---X--
+    //      |        X             X
+    //      |         X           X
+    //      |          X         X
+    //    0 +---+---+---XXXXXXXXX---+--> theta[i]
+    //      0   1   2   3   4   5   6
+
+    // f [i] = 1 if theta [i] < 2,
+    // f [i] = 3 - theta [i] if 2 <= theta [i] < 3,
+    // f [i] = theta [i] - 5 if 5 <= theta [i],
+    // f [i] = 0 otherwise.
+
+    // The value of f [3] is unused.
+
+    v4f lt2 = _mm_cmplt_ps (theta, num2);
+    v4f lt3 = _mm_cmplt_ps (theta, num3);
     v4f m23 = _mm_andnot_ps (lt2, lt3);
-    v4f f_lt2 = _mm_and_ps (lt2, num [1]);
-    v4f f_m23 = _mm_and_ps (m23, num [3] - theta);
-    v4f f_ge5 = _mm_andnot_ps (lt5, theta - num [5]);
-    v4f f = _mm_or_ps (_mm_or_ps (f_lt2, f_m23), f_ge5);
-    return v4 * (num [1] - s4) + v4 * s4 * f;
+    v4f ge5 = _mm_cmpge_ps (theta, num5);
+
+    v4f term1 = _mm_and_ps (lt2, num1);
+    v4f term2 = _mm_and_ps (m23, num3 - theta);
+    v4f term3 = _mm_and_ps (ge5, theta - num5);
+
+    v4f f = _mm_or_ps (_mm_or_ps (term1, term2), term3);
+
+    v4f va = { value, value, value, alpha, };
+    v4f s0 = { saturation, saturation, saturation, 0.0f, };
+    v4f chroma = va * s0;     // x x x 0
+    v4f base = va - chroma;   // y y y a
+    return base + chroma * f; // r g b a
   }
 }
 
 void model_t::draw ()
 {
   float f [16] ALIGNED16;
-  float rgb0 [4] ALIGNED16;
+  float rgba [4] ALIGNED16;
   float abc0 [4] ALIGNED16;
 
   for (unsigned n = 0; n != count; ++ n) {
@@ -233,7 +258,7 @@ void model_t::draw ()
     compute (f, x [nz], u [nz]);
 
     const object_t & object = objects [nz];
-    store4f (rgb0, hsv_to_rgb0 (object.hue, object.saturation, object.value));
+    store4f (rgba, hsva_to_rgba (object.hue, object.saturation, object.value, 0.85f));
 
     unsigned sselect = object.system_select;
     {
@@ -248,7 +273,7 @@ void model_t::draw ()
       store4f (abc0, g * _mm_rsqrt_ps (dot (t, t)));
     }
 
-    paint (object.r, f, rgb0, abc0,
+    paint (object.r, f, rgba, abc0,
            primitive_count [sselect], vao_ids [sselect],
            programs [object.program_select]);
   }
