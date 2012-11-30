@@ -21,7 +21,7 @@ bool in (const ConstIterator x, ConstIterator xs)
 {
   while (* xs)
   {
-    ConstIterator t (x);
+    ConstIterator t = x;
     while (* t && * t == * xs) { ++ xs; ++ t; }
     if (! * t && (! * xs || * xs == ' ')) return true;
     while (* xs && * xs != ' ') ++ xs;
@@ -73,7 +73,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
     case WM_MOUSEMOVE:
       if (ws->mode == fullscreen) {
-        // Compare the current mouse position with the one stored in the window long.
+        // Compare the current mouse position with the one stored in the window struct.
         POINT current { LOWORD (lParam), HIWORD (lParam) };
         ::ClientToScreen (hwnd, & current);
         SHORT dx = current.x - ws->initial_cursor_position.x;
@@ -155,8 +155,8 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE, LPSTR lpszCmdLine, int)
     HGLRC rc = ::wglCreateContext (dc);
     if (! rc) return 1;
     if (! ::wglMakeCurrent (dc, rc)) return 1;
-    GLPROC (PFNWGLCHOOSEPIXELFORMATARBPROC, wglChoosePixelFormatARB);
-    if (! wglChoosePixelFormatARB) return 1;
+    // Get all needed gl function pointers while we're here.
+    if (! glprocs ()) return 1;
     ::wglMakeCurrent (dc, 0);
     ::wglDeleteContext (rc);
     ::ReleaseDC (wnd, dc);
@@ -225,8 +225,8 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE, LPSTR lpszCmdLine, int)
     WGL_ACCELERATION_ARB, WGL_FULL_ACCELERATION_ARB,
     WGL_SWAP_METHOD_ARB, WGL_SWAP_EXCHANGE_ARB,
     WGL_COLOR_BITS_ARB, 32,
-    WGL_SAMPLE_BUFFERS_ARB, GL_FALSE,
-    //WGL_SAMPLES_ARB, 1,
+    WGL_SAMPLE_BUFFERS_ARB, GL_TRUE,
+    WGL_SAMPLES_ARB, 5,
     0, 0,
   };
 
@@ -243,8 +243,6 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE, LPSTR lpszCmdLine, int)
     ::wglDeleteContext (ws.hglrc);
     return 1;
   }
-
-  if (! glprocs ()) return 1;
 
   LARGE_INTEGER pc;
   ::QueryPerformanceCounter (& pc);
