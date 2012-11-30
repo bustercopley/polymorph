@@ -8,7 +8,7 @@ namespace usr {
   static const unsigned count = 400;          // Number of balls.
 
   // Physical properties.
-  static const float mass = 20.0f;            // Mass of a ball.
+  static const float mass = 80.0f;            // Mass of a ball.
 
   // Initial conditions.
   static const float temperature = 212;       // Average kinetic energy.
@@ -16,7 +16,7 @@ namespace usr {
   // Container characteristics.
   static const float tank_distance = 90.0f;   // Distancia del ojo a la pantalla.
   static const float tank_depth = 60.0f;      // Tank depth in simulation units.
-  static const float tank_height = 24.0f;     // Height of screen / tank front.
+  static const float tank_height = 20.0f;     // Height of screen / tank front.
 
   static const float walls_friction = 0.075f;
   static const float balls_friction = 0.075f;
@@ -31,7 +31,7 @@ namespace usr {
 
   // Lighting parameters.
   static const float ambient_material [4] = { 0.01f, 0.01f, 0.01f, 1.0f, };
-  static const float specular_material [4] = { 1.0f, 1.0f, 1.0f, 0.0f, };
+  static const float specular_material [4] = { 0.3f, 0.3f, 0.3f, 0.0f, };
 
   // Program name.
   static const char * const window_name = "Convex uniform polyhedra";
