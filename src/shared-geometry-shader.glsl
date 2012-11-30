@@ -7,7 +7,7 @@ uniform mat4 p;
 uniform mat4 m;
 uniform vec3 g;
 uniform vec3 l;
-uniform vec3 d;
+uniform vec4 d;
 uniform vec3 s;
 uniform float r;
 uniform float fogm;
@@ -22,8 +22,8 @@ vec3 color (vec3 x)
   vec3 normal = (m * vec4 (x, 0.0)).xyz;
   vec3 position = (m * vec4 (r * x, 1.0)).xyz;
   vec3 ld = normalize (position - l);
-  vec3 dc = d * max (0.0, -dot (ld, normal));
-  vec3 sc = s * pow (max (0.0, -dot (normalize (position), reflect (ld, normal))), 40);
+  vec3 dc = vec3 (d) * max (0.0, -dot (ld, normal));
+  vec3 sc = s * pow (max (0.0, -dot (normalize (position), reflect (ld, normal))), 10);
   return (dc + sc) * fogm * (position [2] - fogd);
 }
 
