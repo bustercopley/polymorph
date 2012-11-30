@@ -5,24 +5,27 @@
 // See `problem.tex' for terminology and notation, and `problem.tex',
 // `script.mathomatic' and `script.maxima' for derivations.
 
-// `advance' updates the linear and angular position x and u for
-// inertial motion with constant linear velocity v and angular
-// velocity w over the time increment dt. It uses a single step
-// of the classical fourth order Runge-Kutta method to integrate
-// the differential equation from `problem.tex'.
+// `advance_linear' and `advance_angular' update the linear and the
+// angular position, x and u, for inertial motion with constant linear
+// velocity v and angular velocity w over the time increment dt.
+// It uses a single step of the classical fourth order Runge-Kutta
+// method to integrate the differential equation from `problem.tex'.
 
 // `compute' updates the OpenGL matrix from the linear and angular
 // position vectors x and u. It is implemented using SSE3 intrinsics.
 
-// Approximations: the polynomials minimizing the maximum absolute error
-// according to the Chebychev equioscillation theorem were calculated
-// by the Remes algorithm at excess precision, for the functions
+// Approximations: for the functions
 //   f(x^2)=sin(x)/x,
 //   g(x^2)=(1-cos(x))/x^2,
-//   h(x^2)=(1-((x/2)*cot(x/2)))/x^2.
-// The quoted max ulp error quoted is the absolute difference from the
-// exact value correctly rounded toward zero, and is the maximum over
-// 600000 equally spaced sample arguments x^2.
+//   h(x^2)=(1-((x/2)*cot(x/2)))/x^2,
+// the minimax polynomials (whose maximum absolute error over the
+// specified range is minimal among polynomials of the same degree,
+// according to the Chebychev equioscillation theorem) were calculated
+// at excess precision by the Remes algorithm.
+
+// The max ulp error quoted is the absolute difference from the exact
+// value correctly rounded toward zero, and is the maximum over 600000
+// equally spaced sample arguments x^2.
 
 // Helpers for `compute' and `advance_angular'.
 namespace
@@ -58,7 +61,7 @@ namespace
     if (_mm_comile_ss (xsq, lim)) {
       // Quadrant 1.
       v4f x1 = _mm_unpacklo_ps (k1, xsq);    // 1 x^2 1 x^2
-      return fg_reduced (x1);                   // sin1(x) cos2(x) sin1(x) cos2(x)
+      return fg_reduced (x1);                // sin1(x) cos2(x) sin1(x) cos2(x)
     }
     else {
       // Quadrants 2 and 3.
@@ -129,8 +132,8 @@ namespace
       // Recover sin(x) and cos(x) from the result.
       v4f px5 = _mm_unpacklo_ps (px1, px2);  // x/2-pi/2 (pi/2-x/2)^2 * *
       v4f sc1 = px5 * fg;                    // -cos(x/2) 1+sin(x/2) * *
-      v4f k02 = { 0.0f, 1.0f, 0.0f, 0.0f, };
-      v4f cs1 = k02 - sc1;                   // cos(x/2) sin(x/2) * *
+      v4f k01 = { 0.0f, 1.0f, 0.0f, 0.0f, };
+      v4f cs1 = k01 - sc1;                   // cos(x/2) sin(x/2) * *
       v4f cs2 = _mm_unpacklo_ps (cs1, cs1);  // cos(x/2) cos(x/2) sin(x/2) sin(x/2)
       v4f c = _mm_movelh_ps (cs2, cs2);
       v4f s = _mm_movehl_ps (cs2, cs2);
