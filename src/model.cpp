@@ -71,8 +71,8 @@ bool model_t::initialize (unsigned long long seed, int width, int height)
   animation_time_lo = 0.0f;
   animation_time_hi = 0;
 
-  bumps.initialize (0.25f, 1.25f, 0.35f, 0.50f, 4.50f, 6.00f,
-                    0.00f, 1.00f, 0.50f, 0.65f, 5.50f, 6.50f);
+  bumps.initialize (0.25f, 1.25f, 0.35f, 0.50f, 4.50f, 6.00f,  // HSV value bump.
+                    0.00f, 1.00f, 0.50f, 0.65f, 5.50f, 6.50f); // HSV saturation bump.
   step.initialize (usr::morph_start, usr::morph_finish);
 
   initialize_systems (abc, xyz, primitive_count, vao_ids);

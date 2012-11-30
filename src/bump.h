@@ -18,9 +18,14 @@
 
 struct step_t
 {
+  // Object computes the function f(t), where
+  //   f(t) = 0 for t < start,
+  //   f(t) = 1 for t > finish,
+  // and the value smoothsteps from 0 to 1 for t in between.
   float c [4], T [4];
   void initialize (float start, float finish)
   {
+    // Precompute the four coefficents of the cubic polynomial for the smoothstep region.
     v4f temp = {
       start * start * (3.0f * finish - start),
       -6.0f * start * finish,
@@ -31,12 +36,14 @@ struct step_t
     store4f (c, temp / (dt * dt * dt));
     T [0] = start;
     T [1] = finish;
-    T [2] = 0.0f;
-    T [3] = 0.0f;
+    T [2] = 0.0f; // unused
+    T [3] = 0.0f; // unused
   }
 
   float operator () (float t)
   {
+    // Evaluate the polynomial by Estrin's method.
+    // Mask in 0, 1 or the value according to the region to which t belongs.
     static const float inf = std::numeric_limits <float>::infinity ();
     v4f c4 = load4f (c);
     v4f one = { 1.0f, 1.0f, 1.0f, 1.0f, };
@@ -56,11 +63,14 @@ struct step_t
 
 struct bumps_t
 {
+  // Object computes two independent "bump" functions (see graph above).
   float S0 [4], T0 [4], U0 [4], V0 [4], c [4] [4];
 
   void initialize (float v00, float v01, float t00, float t01, float t02, float t03,
                    float v10, float v11, float t10, float t11, float t12, float t13)
   {
+    // Precompute the coefficients of four cubic polynomials in t, giving
+    // the two smoothstep regions of the each of the two bump functions.
     v4f S = { t00, t02, t10, t12, };
     v4f T = { t01, t03, t11, t13, };
     v4f U = { v00, 0.0f, v10, 0.0f, };
@@ -82,6 +92,9 @@ struct bumps_t
   // Returns {f,g,f,g}, where f = bump0 (t), g = bump1 (t).
   v4f operator () (float t)
   {
+    // Compute all four polynomials by Estrin's method, and mask
+    // and combine the values according to the region of the graph
+    // to which t belongs.
     v4f s = { t, t, t, t, };
     v4f S = load4f (S0);
     v4f T = load4f (T0);
