@@ -87,7 +87,7 @@ namespace
   }
 
   // g(s) = g0(sqrt(s)) where g0(x)=(x/2)cot(x/2).
-  // h(s) = h0(sqrt(s)) where h0(x)=(1-w(x))/x^2.
+  // h(s) = h0(sqrt(s)) where h0(x)=(1-g(x))/x^2.
 
   // Range [0, (pi/2)^2].
   // Argument 1 s 1 s, result h(s) h(s) h(s) h(s).
@@ -131,7 +131,7 @@ namespace
       v4f fg = fg_reduced (px4);             // sin(pi/2-x/2)/(pi/2-x/2) [1-cos(pi/2-x/2)]/(pi/2-x/2)^2 * *
       // Recover sin(x) and cos(x) from the result.
       v4f px5 = _mm_unpacklo_ps (px1, px2);  // x/2-pi/2 (pi/2-x/2)^2 * *
-      v4f sc1 = px5 * fg;                    // -cos(x/2) 1+sin(x/2) * *
+      v4f sc1 = px5 * fg;                    // -cos(x/2) 1-sin(x/2) * *
       v4f k01 = { 0.0f, 1.0f, 0.0f, 0.0f, };
       v4f cs1 = k01 - sc1;                   // cos(x/2) sin(x/2) * *
       v4f cs2 = _mm_unpacklo_ps (cs1, cs1);  // cos(x/2) cos(x/2) sin(x/2) sin(x/2)
@@ -179,7 +179,7 @@ void advance_angular (float (* u) [4], float (* w) [4], unsigned count, float dt
   for (unsigned n = 0; n != count; ++ n) {
     v4f u1 = rk4 (load4f (u [n]), load4f (w [n]), kdt);
     v4f xsq = dot (u1, u1);
-    v4f klim1 = { 10.0f, }; //+0x1.634e46P4f, 0.0f, 0.0f, 0.0f, }; // (3pi/2)^2
+    v4f klim1 = { +0x1.634e46P4f, 0.0f, 0.0f, 0.0f, }; // (3pi/2)^2
     if (_mm_comigt_ss (xsq, klim1)) {
       v4f k1 = { 1.0f, 1.0f, 1.0f, 1.0f, };
       v4f k2pi = { 0x1.921fb4P2f, 0x1.921fb4P2f, 0x1.921fb4P2f, 0x1.921fb4P2f, };
