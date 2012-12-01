@@ -29,14 +29,14 @@ tinyscheme_OBJECTS=scheme.o
 
 EXTRA_CLEAN=data .obj/resources-res.o
 
-.PHONY: all test shaders
+.PHONY: all test
 
 all: $(polymorph_FILENAME)
 
 test: all
 	$(polymorph_FILENAME) -x
 
-shaders: \
+SHADER_SOURCES=\
 src/vertex-shader.glsl \
 src/shared-geometry-shader.glsl \
 src/geometry-shader.glsl \
@@ -44,7 +44,7 @@ src/snub-geometry-shader.glsl \
 src/antisnub-geometry-shader.glsl \
 src/fragment-shader.glsl
 
-.obj/resources-res.o: data shaders polymorph.scr.manifest resources.rc | .obj
+.obj/resources-res.o: data $(SHADER_SOURCES) polymorph.scr.manifest resources.rc | .obj
 	windres resources.rc .obj/resources-res.o
 
 data: nodes.exe
