@@ -9,12 +9,12 @@ float amplify (float d)
 {
   d = -1.0 + 120 * d;
   d = clamp (d, 0, 1);
-  d = (4.0/3) * (1 - exp2 (-2 * d * d));
+  d = exp2 (-2 * d * d) - 0.25;
   return d;
 }
 
 void main ()
 {
   float d = min (min (ed [0], ed [1]), ed [2]);
-  c = vec4 (amplify (d) * gc, 0.85);
+  c = vec4 (amplify (d) * gc, 0.80);
 }
