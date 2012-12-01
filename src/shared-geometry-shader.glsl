@@ -1,7 +1,7 @@
 // -*- C++ -*-
 #version 420
 layout (triangles_adjacency) in;
-layout (triangle_strip, max_vertices = 12) out;
+layout (triangle_strip, max_vertices = 18) out;
 
 uniform mat4 p;
 uniform mat4 m;
@@ -37,18 +37,22 @@ void vertex (vec4 X, vec3 c, vec3 e)
 
 void segment (vec4 T, vec4 A, vec4 V, vec4 W, vec3 c, float h, float k)
 {
-  vertex (V, c, vec3 (0, k, 1));
-  vertex (T, c, vec3 (0, 0, 1));
-  vertex (A, c, vec3 (h, k, 1));
-  vertex (W, c, vec3 (h, 0, 1));
+  vertex (V, c, vec3 (0, 1, 1));
+  vertex (T, c, vec3 (0, 1, 1));
+  vertex (A, c, vec3 (h, 1, 1));
+  EndPrimitive ();
+
+  vertex (T, c, vec3 (0, 1, 1));
+  vertex (W, c, vec3 (0, 1, 1));
+  vertex (A, c, vec3 (k, 1, 1));
   EndPrimitive ();
 }
 
 void segment (vec4 A, vec4 V, vec4 W, vec3 c, float h)
 {
-  vertex (A, c, vec3 (h, h, h));
-  vertex (V, c, vec3 (0, 0, 0));
-  vertex (W, c, vec3 (0, 0, 0));
+  vertex (A, c, vec3 (h, 1, 1));
+  vertex (V, c, vec3 (0, 1, 1));
+  vertex (W, c, vec3 (0, 1, 1));
   EndPrimitive ();
 }
 
