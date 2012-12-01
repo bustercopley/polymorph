@@ -15,7 +15,7 @@ uniform float fogd;
 
 in vec3 xs [6];
 out flat vec3 gc;
-out vec3 ed;
+out smooth vec3 ed;
 
 vec3 color (vec3 x)
 {
@@ -35,27 +35,27 @@ void vertex (vec4 X, vec3 c, vec3 e)
   EmitVertex ();
 }
 
-void segment (vec4 A, vec4 V, vec4 W, vec3 c)
+void segment (vec4 T, vec4 A, vec4 V, vec4 W, vec3 c, float h, float k)
 {
-  vertex (A, c, vec3 (1.0, 1.0, 1.0));
-  vertex (V, c, vec3 (0.0, 1.0, 1.0));
-  vertex (W, c, vec3 (0.0, 1.0, 1.0));
+  vertex (V, c, vec3 (0, k, 1));
+  vertex (T, c, vec3 (0, 0, 1));
+  vertex (A, c, vec3 (h, k, 1));
+  vertex (W, c, vec3 (h, 0, 1));
   EndPrimitive ();
 }
 
-void segment (vec4 T, vec4 A, vec4 V, vec4 W, vec3 c)
+void segment (vec4 A, vec4 V, vec4 W, vec3 c, float h)
 {
-  vertex (V, c, vec3 (0.0, 1.0, 1.0));
-  vertex (T, c, vec3 (0.0, 1.0, 1.0));
-  vertex (A, c, vec3 (1.0, 1.0, 1.0));
-  vertex (W, c, vec3 (0.0, 1.0, 1.0));
+  vertex (A, c, vec3 (h, h, h));
+  vertex (V, c, vec3 (0, 0, 0));
+  vertex (W, c, vec3 (0, 0, 0));
   EndPrimitive ();
 }
 
-void triangle (vec4 U, vec4 V, vec4 W, vec3 c)
+void triangle (vec4 U, vec4 V, vec4 W, vec3 c, float hx, float hy, float hz)
 {
-  vertex (W, c, vec3 (3.0, 0.0, 0.0));
-  vertex (V, c, vec3 (0.0, 3.0, 0.0));
-  vertex (U, c, vec3 (0.0, 0.0, 3.0));
+  vertex (W, c, vec3 (hz, 0.0, 0.0));
+  vertex (V, c, vec3 (0.0, hy, 0.0));
+  vertex (U, c, vec3 (0.0, 0.0, hx));
   EndPrimitive ();
 }
