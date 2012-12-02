@@ -35,19 +35,6 @@ void vertex (vec4 X, vec3 c, vec3 e)
   EmitVertex ();
 }
 
-void segment (vec4 T, vec4 A, vec4 V, vec4 W, vec3 c, float h, float k)
-{
-  vertex (V, c, vec3 (0, 1, 1));
-  vertex (T, c, vec3 (0, 1, 1));
-  vertex (A, c, vec3 (h, 1, 1));
-  EndPrimitive ();
-
-  vertex (T, c, vec3 (0, 1, 1));
-  vertex (W, c, vec3 (0, 1, 1));
-  vertex (A, c, vec3 (k, 1, 1));
-  EndPrimitive ();
-}
-
 void segment (vec4 A, vec4 V, vec4 W, vec3 c, float h)
 {
   vertex (A, c, vec3 (h, 1, 1));
@@ -58,8 +45,8 @@ void segment (vec4 A, vec4 V, vec4 W, vec3 c, float h)
 
 void triangle (vec4 U, vec4 V, vec4 W, vec3 c, float hx, float hy, float hz)
 {
-  vertex (W, c, vec3 (hz, 0.0, 0.0));
+  vertex (U, c, vec3 (hx, 0.0, 0.0));
   vertex (V, c, vec3 (0.0, hy, 0.0));
-  vertex (U, c, vec3 (0.0, 0.0, hx));
+  vertex (W, c, vec3 (0.0, 0.0, hz));
   EndPrimitive ();
 }

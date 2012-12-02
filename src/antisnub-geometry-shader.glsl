@@ -21,29 +21,39 @@ void main ()
   vec3 cz = color (xs [5]);
   vec3 ct = color (t);
 
-  mat4 pm = p * m;
+  vec3 P = w - v;
+  vec3 Q = u - w;
+  vec3 R = v - u;
+  float PP = dot (P, P);
+  float QQ = dot (Q, Q);
+  float RR = dot (R, R);
+  float rPP = 1 / PP;
+  float rQQ = 1 / QQ;
+  float rRR = 1 / RR;
+  float QR = dot (Q, R);
+  float RP = dot (R, P);
+  float PQ = dot (P, Q);
+  float hx = sqrt (RR - RP * RP * rPP);
+  float hy = sqrt (PP - PQ * PQ * rQQ);
+  float hz = sqrt (QQ - QR * QR * rRR);
 
   vec3 b = dot (xs [4], u) * xs [4];
   vec3 c = dot (xs [5], u) * xs [5];
+  vec3 bu = u - b;
+  vec3 cv = v - c;
+  float tu = dot (bu, Q);
+  float tv= dot (cv, R);
+  float h = sqrt (dot (bu, bu) - tu * tu * rQQ);
+  float k = sqrt (dot (cv, cv) - tv * tv * rRR);
 
-  vec3 mx = 0.5 * (v + w);
-  vec3 my = 0.5 * (w + u);
-  vec3 mz = 0.5 * (u + v);
-
-  float h = length (b - my);
-  float k = length (c - mz);
-
-  float hx = length (u - mx);
-  float hy = length (v - my);
-  float hz = length (w - mz);
-
+  mat4 pm = p * m;
   vec4 U = pm * vec4 (u, 1.0);
   vec4 V = pm * vec4 (v, 1.0);
   vec4 W = pm * vec4 (w, 1.0);
   vec4 B = pm * vec4 (b, 1.0);
   vec4 C = pm * vec4 (c, 1.0);
 
-  triangle (U, W, V, ct, hx, hy, hz);
+  triangle (U, V, W, ct, hx, hy, hz);
   segment (B, U, W, cy, h);
   segment (C, V, U, cz, k);
 }

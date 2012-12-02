@@ -42,7 +42,10 @@ void main ()
   vec3 cq = color (xs [4]);
   vec3 cr = color (xs [2]);
 
-  segment (T, A, V, W, cp, hx, kx);
-  segment (T, B, W, U, cq, hy, ky);
-  segment (T, C, U, V, cr, hz, kz);
+  segment (A, V, T, cp, hx);
+  segment (A, T, W, cp, kx);
+  segment (B, W, T, cq, hy);
+  segment (B, T, U, cq, ky);
+  segment (C, U, T, cr, hz);
+  segment (C, T, V, cr, kz);
 }
