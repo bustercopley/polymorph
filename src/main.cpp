@@ -194,6 +194,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE, LPSTR lpszCmdLine, int)
   wc.lpfnWndProc = & WndProc;
   wc.cbWndExtra = 8;
   wc.hInstance = hInstance;
+  wc.hIcon = ::LoadIcon (hInstance, MAKEINTRESOURCE (257));
   wc.lpszClassName = usr::window_class_name;
   ATOM atom = ::RegisterClass (& wc);
   if (! atom) return 1;
