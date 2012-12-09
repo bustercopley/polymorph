@@ -1,5 +1,7 @@
 // -*- C++ -*-
 
+float sq (float x) { return x * x; }
+
 void main ()
 {
   vec3 rg = r * g;
@@ -16,18 +18,54 @@ void main ()
   vec3 b = dot (xs [4], t) * xs [4];
   vec3 c = dot (xs [2], t) * xs [2];
 
-  vec3 mx = t + 0.5 * (x1 - x0);
-  vec3 my = t + 0.5 * (y1 - y0);
-  vec3 mz = t + 0.5 * (z1 - z0);
+  vec3 ta = a - t;
+  vec3 tb = b - t;
+  vec3 tc = c - t;
 
-  float hx = length (my - a);
-  float kx = length (mz - a);
+  vec3 tu = x1 - x0;
+  vec3 tv = y1 - y0;
+  vec3 tw = z1 - z0;
 
-  float hy = length (mz - b);
-  float ky = length (mx - b);
+  float aa = dot (ta, ta);
+  float bb = dot (tb, tb);
+  float cc = dot (tc, tc);
 
-  float hz = length (mx - c);
-  float kz = length (my - c);
+  float uu = dot (tu, tu);
+  float vv = dot (tv, tv);
+  float ww = dot (tw, tw);
+
+  float av = sq (dot (ta, tv));
+  float aw = sq (dot (ta, tw));
+
+  float bu = sq (dot (tb, tu));
+  float bw = sq (dot (tb, tw));
+
+  float cu = sq (dot (tc, tu));
+  float cv = sq (dot (tc, tv));
+
+  float vw = sq (dot (tv, tw));
+  float wu = sq (dot (tw, tu));
+  float uv = sq (dot (tu, tv));
+
+  float ru = 1 / uu;
+  float rv = 1 / vv;
+  float rw = 1 / ww;
+
+  float hx = sqrt (aa - av * rv);
+  float hy = sqrt (bb - bw * rw);
+  float hz = sqrt (cc - cu * ru);
+
+  float kx = sqrt (aa - aw * rw);
+  float ky = sqrt (bb - bu * ru);
+  float kz = sqrt (cc - cv * rv);
+
+  float h1x = sqrt (ww - vw * rv);
+  float h1y = sqrt (uu - wu * rw);
+  float h1z = sqrt (vv - uv * ru);
+
+  float k1x = sqrt (vv - vw * rw);
+  float k1y = sqrt (ww - wu * ru);
+  float k1z = sqrt (uu - uv * rv);
 
   mat4 pm = p * m;
   vec4 T = pm * vec4 (t, 1.0);
@@ -42,10 +80,10 @@ void main ()
   vec3 cq = color (xs [4]);
   vec3 cr = color (xs [2]);
 
-  segment (A, V, T, cp, hx);
-  segment (A, T, W, cp, kx);
-  segment (B, W, T, cq, hy);
-  segment (B, T, U, cq, ky);
-  segment (C, U, T, cr, hz);
-  segment (C, T, V, cr, kz);
+  segment (A, V, T, cp, hx, kx, k1x);
+  segment (A, T, W, cp, kx, hx, h1x);
+  segment (B, W, T, cq, hy, ky, k1y);
+  segment (B, T, U, cq, ky, hy, h1y);
+  segment (C, U, T, cr, hz, kz, k1z);
+  segment (C, T, V, cr, kz, hz, h1z);
 }

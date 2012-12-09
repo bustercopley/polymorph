@@ -40,7 +40,7 @@ void main ()
   vec3 bu = u - b;
   vec3 cv = v - c;
   float tu = dot (bu, Q);
-  float tv= dot (cv, R);
+  float tv = dot (cv, R);
   float h = sqrt (dot (bu, bu) - tu * tu * rQQ);
   float k = sqrt (dot (cv, cv) - tv * tv * rRR);
 

@@ -35,6 +35,14 @@ void vertex (vec4 X, vec3 c, vec3 e)
   EmitVertex ();
 }
 
+void segment (vec4 A, vec4 V, vec4 W, vec3 c, float h, float k, float l)
+{
+  vertex (A, c, vec3 (h, k, k));
+  vertex (V, c, vec3 (0, 0, l));
+  vertex (W, c, vec3 (0, l, 0));
+  EndPrimitive ();
+}
+
 void segment (vec4 A, vec4 V, vec4 W, vec3 c, float h)
 {
   vertex (A, c, vec3 (h, 1, 1));
