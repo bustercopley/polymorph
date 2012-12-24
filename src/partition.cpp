@@ -51,8 +51,8 @@ void partition (unsigned * index, const float (* x) [4], unsigned begin, unsigne
   else if (middle >= i) j = end;
   else return;
   // Partition the chosen range [i,j) about m. Tail call.
-  if (j > i + 2) partition (index, x, i, middle, j, dim);
-  else if (j == i + 2 && less (index, x, i + 1, i, dim)) swap (index, i, i + 1);
+  if (j - i > 7) partition (index, x, i, middle, j, dim);
+  else if (j - i > 1) insertion_sort (index, x, i, j);
 }
 
 void insertion_sort (unsigned * index, const float (* x) [4], unsigned begin, unsigned end)
