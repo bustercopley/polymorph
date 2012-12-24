@@ -23,7 +23,8 @@ inline long double newton (long double c0, long double c1, long double c2, long 
 
 void triangle (long double A, long double B, long double C,
                long double (& u) [3], long double (& v) [3], long double (& w) [3],
-               long double (& g) [8] [3]) {
+               long double (& g) [8] [3])
+{
   // Some light relief from the combinatorics: spherical trigonometry!
   // A, B, C are the angles of the spherical triangle XYZ.
   // Store rectangular co-ordinates for XYZ in u, v and w.
@@ -38,8 +39,9 @@ void triangle (long double A, long double B, long double C,
   long double sinB = std::sin (B), cosB = std::cos (B);
   long double sinC = std::sin (C), cosC = std::cos (C);
 
-  // a, b, c are the arc lengths. Recall that spherical arc-length
-  // is angle subtended at the centre. Use the spherical cosine rule:
+  // a, b, c are the arc lengths Y1 Z1, Z1 X1, X1 Y1.
+  // Recall that spherical arc-length is angle subtended at the centre.
+  // Use the spherical cosine rule:
 
   long double cosa = (cosA + cosB * cosC) / (sinB  * sinC);
   long double cosb = (cosB + cosC * cosA) / (sinC  * sinA);
