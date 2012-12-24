@@ -28,7 +28,7 @@ namespace
   NOINLINE
   void assign (float (* out) [4], const float (* from) [3], unsigned count)
   {
-     for (unsigned n = 0; n != count; ++ n) {
+    for (unsigned n = 0; n != count; ++ n) {
       out [n] [0] = from [n] [0];
       out [n] [1] = from [n] [1];
       out [n] [2] = from [n] [2];
