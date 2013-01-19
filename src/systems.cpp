@@ -6,7 +6,7 @@
 #include "memory.h"
 #include "compiler.h"
 #include "aligned-arrays.h"
-#include <cassert>
+//#include <cassert>
 
 namespace
 {
@@ -40,7 +40,7 @@ namespace
   unsigned make_vao (float (* vertices) [4], std::uint8_t (* indices) [6],
                      unsigned p, unsigned q, unsigned r,
                      const float (* x) [3], const float (* y) [3], const float (* z) [3],
-                     const std::uint8_t * P, const std::uint8_t * Q, const std::uint8_t * R,
+                     const std::uint8_t * P, /* const std::uint8_t * Q, */ const std::uint8_t * R,
                      const std::uint8_t * X, const std::uint8_t * Y, const std::uint8_t * Z)
   {
     unsigned  N = 2 * p*q*r / (q*r + r*p + p*q - p*q*r);
@@ -54,7 +54,7 @@ namespace
       unsigned i = n;
       unsigned j = i [R];
       unsigned k = j [P];
-      assert (i == k [Q]);
+      //assert (i == k [Q]);
       indices [n] [0] = X [k];
       indices [n] [1] = Y [j] + N / p;
       indices [n] [2] = Z [j] + N / p + N / q;
@@ -82,7 +82,7 @@ namespace
     vao_ids [select] = make_vao (vertices, indices,
                                  2, q, r,
                                  system.x, system.y, system.z,
-                                 system.P, system.Q, system.R,
+                                 system.P, /* system.Q, */ system.R,
                                  system.X, system.Y, system.Z);
   }
 }
