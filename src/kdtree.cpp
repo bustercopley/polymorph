@@ -62,7 +62,7 @@ namespace
         v4f dxlen = _mm_sqrt_ps (dxsq);
         v4f dxn = dx / dxlen;
         v4f rw = _mm_set1_ps (A.r) * load4f (w [ix])
-        + _mm_set1_ps (B.r) * load4f (w [iy]);
+               + _mm_set1_ps (B.r) * load4f (w [iy]);
         v4f unn = dx * dxdv / dxsq;
         v4f rub = cross (rw, dxn) + unn - dv;
         v4f kf = _mm_set1_ps (usr::balls_friction);
@@ -141,8 +141,8 @@ kdtree_t::~kdtree_t ()
 
 #define SETNODE(_i, _lo, _hi, _begin, _end)  \
   do {                                       \
-    store4f (node_lohi [_i] [0], _lo);  \
-    store4f (node_lohi [_i] [1], _hi);  \
+    store4f (node_lohi [_i] [0], _lo);       \
+    store4f (node_lohi [_i] [1], _hi);       \
     node_begin [_i] = _begin;                \
     node_end [_i] = _end;                    \
   } while (false)
