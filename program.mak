@@ -33,13 +33,9 @@ $(foreach program,$(PROGRAMS),$(eval $(compile)))
 
 .PHONY: clean veryclean
 clean:
-	-rm -fv $(foreach program,$(PROGRAMS),$(objects))
-	-rm -fv $(EXTRA_CLEAN)
-
-veryclean:
 	-rm -rfv .obj
-	-rm -fv $(foreach program,$(PROGRAMS),$(name))
 	-rm -fv $(EXTRA_CLEAN)
+	-rm -fv $(foreach program,$(PROGRAMS),$(name))
 
 .DELETE_ON_ERROR:
 
