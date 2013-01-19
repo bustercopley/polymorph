@@ -8,9 +8,9 @@
 #include "vector.h"
 #include "glprocs.h"
 #include "compiler.h"
-#include "tinyscheme-config.h"
-#include <scheme-private.h>
-#include <scheme.h>
+//#include "tinyscheme-config.h"
+//#include <scheme-private.h>
+//#include <scheme.h>
 #include <cstdint>
 
 #define IDT_TIMER 1
@@ -164,7 +164,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE, LPSTR lpszCmdLine, int)
     ::UnregisterClass (MAKEINTATOM (atom), hInstance);
   }
 
-  // Create the screen saver window.
+  // Create the screensaver window.
 
   DWORD style;
   DWORD ex_style;
