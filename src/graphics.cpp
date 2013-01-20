@@ -1,8 +1,7 @@
 #include "config.h"
-#include "glprocs.h"
+#include "glinit.h"
 #include "graphics.h"
 #include "model.h"
-#include "systems.h"
 #include "vector.h"
 #include "compiler.h"
 #include "aligned-arrays.h"
@@ -115,7 +114,7 @@ bool program_t::initialize (v4f view, unsigned gshader2)
   glBlendEquation (GL_FUNC_ADD);
   glBlendFunc (GL_DST_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  float t [4];
+  float t [4] ALIGNED16;
   store4f (t, view);
   float z0 = - t [0];
   float z1 = - t [0] - t [1];

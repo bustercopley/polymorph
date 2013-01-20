@@ -1,174 +1,178 @@
+#include "config.h"
 #include "mswin.h"
+#include "glinit.h"
 #include "model.h"
 #include "random.h"
 #include "cmdline.h"
 #include "graphics.h"
-#include "config.h"
 #include "memory.h"
 #include "vector.h"
-#include "glprocs.h"
 #include "compiler.h"
-//#include "tinyscheme-config.h"
-//#include <scheme-private.h>
-//#include <scheme.h>
+#include <windowsx.h>
+// #include "tinyscheme-config.h"
+// #include <scheme-private.h>
+// #include <scheme.h>
 #include <cstdint>
 
-#define IDT_TIMER 1
-
-// Is x one of the space-separated strings in xs?
-template <typename ConstIterator>
-bool in (const ConstIterator x, ConstIterator xs)
+inline std::uint64_t qpc ()
 {
-  while (* xs)
-  {
-    ConstIterator t = x;
-    while (* t && * t == * xs) { ++ xs; ++ t; }
-    if (! * t && (! * xs || * xs == ' ')) return true;
-    while (* xs && * xs != ' ') ++ xs;
-    if (* xs) ++ xs;
-  }
-  return false;
+  LARGE_INTEGER t;
+  ::QueryPerformanceCounter (& t);
+  return t.QuadPart;
 }
 
-struct window_struct_t
+inline bool dispatch_queued_messages (MSG & msg)
 {
-  model_t model;
+  bool quit;
+  while ((quit = ::PeekMessage (& msg, nullptr, 0, 0, PM_REMOVE)) && msg.message != WM_QUIT) {
+    ::TranslateMessage (& msg);
+    ::DispatchMessage (& msg);
+  }
+  return ! quit;
+}
+
+inline int main_loop (HDC hdc, model_t & model)
+{
+  MSG msg;
+  while (dispatch_queued_messages (msg)) {
+    model.proceed ();
+    ::SwapBuffers (hdc);
+    clear ();
+    model.draw ();
+  }
+  return static_cast <int> (msg.wParam);
+}
+
+struct window_info_t
+{
   HDC hdc;
-  HGLRC hglrc;
-  POINT initial_cursor_position;
   int width, height;
-  run_mode_t mode;
 };
 
-LRESULT CALLBACK WndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-  bool close_window = false;
-  bool call_def_window_proc = false;
-  if (msg == WM_CREATE) {
-    const CREATESTRUCT * cs = reinterpret_cast <CREATESTRUCT *> (lParam);
-    window_struct_t * ws = reinterpret_cast <window_struct_t *> (cs->lpCreateParams);
-    ::SetWindowLongPtr (hwnd, GWLP_USERDATA, reinterpret_cast <LONG_PTR> (ws));
-    ::GetCursorPos (& ws->initial_cursor_position);
-    ws->width = cs->cx;
-    ws->height = cs->cy;
-    return 0;
-  }
-  else if (window_struct_t * ws = reinterpret_cast <window_struct_t *> (::GetWindowLongPtr (hwnd, GWLP_USERDATA))) {
-    switch (msg) {
-    case WM_PAINT:
-      ::ValidateRect (hwnd, nullptr);
-      break;
-    case WM_TIMER:
-      {
-        ws->model.proceed ();
-        clear ();
-        ws->model.draw ();
-        ::SwapBuffers (ws->hdc);
-      }
-      break;
-
-    case WM_SETCURSOR:
-      ::SetCursor (ws->mode == fullscreen ? nullptr : (::LoadCursor (nullptr, IDC_ARROW)));
-      break;
-
-    case WM_MOUSEMOVE:
-      if (ws->mode == fullscreen) {
-        // Compare the current mouse position with the one stored in the window struct.
-        POINT current { LOWORD (lParam), HIWORD (lParam) };
-        ::ClientToScreen (hwnd, & current);
-        SHORT dx = current.x - ws->initial_cursor_position.x;
-        SHORT dy = current.y - ws->initial_cursor_position.y;
-        close_window = dx > 10 || dy > 10 || dx * dx + dy * dy  > 100;
-      }
-      break;
-
-    case WM_KEYDOWN: case WM_LBUTTONDOWN: case WM_MBUTTONDOWN: case WM_RBUTTONDOWN:
-      close_window = ws->mode == fullscreen || ws->mode == special;
-      break;
-
-    case WM_ACTIVATE: case WM_ACTIVATEAPP: case WM_NCACTIVATE:
-      close_window = ws->mode == fullscreen && LOWORD (wParam) == WA_INACTIVE;
-      call_def_window_proc = true;
-      break;
-
-    case WM_SYSCOMMAND:
-      call_def_window_proc = (ws->mode != fullscreen || wParam != SC_SCREENSAVE) && wParam != SC_CLOSE;
-      break;
-
-    case WM_CLOSE:
-      ::DestroyWindow (hwnd);
-      break;
-
-    case WM_DESTROY:
-      ::wglMakeCurrent (nullptr, nullptr);
-      ::wglDeleteContext (ws->hglrc);
-      ::PostQuitMessage (0);
-      break;
-
-    default:
-      call_def_window_proc = true;
-      break;
-    }
-  }
-  else call_def_window_proc = true;
-
-  if (close_window) {
-    ::KillTimer (hwnd, IDT_TIMER);
-    ::PostMessage (hwnd, WM_CLOSE, 0, 0);
-  }
-  return call_def_window_proc ? ::DefWindowProc (hwnd, msg, wParam, lParam) : 0;
-}
+window_info_t * create_screensaver_window (HINSTANCE hInstance, HWND parent, run_mode_t mode);
 
 int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE, LPSTR lpszCmdLine, int)
 {
-  // Parse the command line.
-
-  HWND parent = 0;
+  HWND parent = nullptr;
   run_mode_t mode = parse_command_line (lpszCmdLine, & parent);
+
   if (mode == configure) {
     ::MessageBox (parent, usr::message, usr::message_window_name, MB_OK | MB_ICONASTERISK);
     return 0;
   }
 
-  // Dummy rendering context to get the address of wglChoosePixelFormatARB.
+  if (window_info_t * wi = create_screensaver_window (hInstance, parent, mode)) {
+    model_t model ALIGNED16;
+    if (model.initialize (qpc (), wi->width, wi->height)) {
+      return main_loop (wi->hdc, model);
+    }
+  }
+  return 1;
+}
+
+struct create_params_t
+{
+  run_mode_t mode;
+};
+
+struct window_struct_t
+{
+  window_info_t info;
+  HGLRC hglrc;
+  POINT initial_cursor_position;
+  run_mode_t mode;
+};
+
+LRESULT CALLBACK WndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+  LRESULT result = 0;
+  bool call_def_window_proc = false, close_window = false;
+
+  window_struct_t * ws = reinterpret_cast <window_struct_t *> (::GetWindowLongPtr (hwnd, GWLP_USERDATA));
+
+  switch (msg)
   {
-    const char * name = "PolymorphTemp";
-    WNDCLASS wc;
-    ::ZeroMemory (& wc, sizeof wc);
-    wc.hInstance = hInstance;
-    wc.lpfnWndProc = & ::DefWindowProc;
-    wc.lpszClassName = name;
-    ATOM atom = ::RegisterClass (& wc);
-    if (! atom) return 1;
-    HWND wnd = ::CreateWindowEx (0, MAKEINTATOM (atom), name, 0,
-                                 CW_USEDEFAULT, 0, CW_USEDEFAULT, 0,
-                                 0, 0, hInstance, 0);
-    if (! wnd) return 1;
-    HDC dc = ::GetDC (wnd);
-    PIXELFORMATDESCRIPTOR pfd;
-    ::ZeroMemory (& pfd, sizeof pfd);
-    pfd.nSize = sizeof pfd;
-    pfd.dwFlags = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW;
-    int pf = ::ChoosePixelFormat (dc, & pfd);
-    if (! pf) return 1;
-    if (! ::SetPixelFormat (dc, pf, 0)) return 1;
-    HGLRC rc = ::wglCreateContext (dc);
-    if (! rc) return 1;
-    if (! ::wglMakeCurrent (dc, rc)) return 1;
-    // Get all needed gl function pointers while we're here.
-    if (! glprocs ()) return 1;
-    ::wglMakeCurrent (dc, 0);
-    ::wglDeleteContext (rc);
-    ::ReleaseDC (wnd, dc);
-    ::DestroyWindow (wnd);
-    ::UnregisterClass (MAKEINTATOM (atom), hInstance);
+  case WM_CREATE:
+    result = -1;
+    if ((ws = reinterpret_cast <window_struct_t *> (allocate_internal (sizeof (window_struct_t))))) {
+      ::SetWindowLongPtr (hwnd, GWLP_USERDATA, reinterpret_cast <LONG_PTR> (ws));
+      CREATESTRUCT * cs = reinterpret_cast <CREATESTRUCT *> (lParam);
+      create_params_t * cp = reinterpret_cast <create_params_t *> (cs->lpCreateParams);
+      ws->mode = cp->mode;
+      ::GetCursorPos (& ws->initial_cursor_position);
+      if ((ws->info.hdc = ::GetDC (hwnd)) && ((ws->hglrc = initialize_opengl (cs->hInstance, ws->info.hdc)))) {
+        result = 0;
+      }
+    }
+    break;
+
+  case WM_WINDOWPOSCHANGED:
+    {
+      WINDOWPOS * wp = reinterpret_cast <WINDOWPOS *> (lParam);
+      ws->info.width = wp->cx;
+      ws->info.height = wp->cy;
+      break;
+    }
+
+  case WM_SETCURSOR:
+    ::SetCursor (ws->mode == fullscreen ? nullptr : (::LoadCursor (nullptr, IDC_ARROW)));
+    break;
+
+  case WM_MOUSEMOVE:
+    if (ws->mode == fullscreen) {
+      // Compare the current mouse position with the one stored in the window struct.
+      POINT current = { GET_X_LPARAM (lParam), GET_Y_LPARAM (lParam) };
+      ::ClientToScreen (hwnd, & current);
+      SHORT dx = current.x - ws->initial_cursor_position.x;
+      SHORT dy = current.y - ws->initial_cursor_position.y;
+      close_window = dx > 10 || dy > 10 || dx * dx + dy * dy  > 100;
+    }
+    break;
+
+  case WM_KEYDOWN: case WM_LBUTTONDOWN: case WM_MBUTTONDOWN: case WM_RBUTTONDOWN:
+    close_window = ws->mode == fullscreen || ws->mode == special;
+    break;
+
+  case WM_ACTIVATE: case WM_ACTIVATEAPP: case WM_NCACTIVATE:
+    close_window = ws->mode == fullscreen && LOWORD (wParam) == WA_INACTIVE;
+    call_def_window_proc = true;
+    break;
+
+  case WM_SYSCOMMAND:
+    call_def_window_proc = (ws->mode != fullscreen || wParam != SC_SCREENSAVE) && wParam != SC_CLOSE;
+    break;
+
+  case WM_DESTROY:
+    ::wglMakeCurrent (nullptr, nullptr);
+    ::wglDeleteContext (ws->hglrc);
+    ::ReleaseDC (hwnd, ws->info.hdc);
+    ::SetWindowLongPtr (hwnd, GWLP_USERDATA, 0);
+    deallocate (ws);
+    ::PostQuitMessage (0);
+    break;
+
+  default:
+    call_def_window_proc = true;
+    break;
   }
 
-  // Create the screensaver window.
+  if (close_window) {
+    ::PostMessage (hwnd, WM_CLOSE, 0, 0);
+  }
 
+  if (call_def_window_proc) {
+    result = ::DefWindowProc (hwnd, msg, wParam, lParam);
+  }
+
+  return result;
+}
+
+window_info_t * create_screensaver_window (HINSTANCE hInstance, HWND parent, run_mode_t mode)
+{
   DWORD style;
   DWORD ex_style;
   int left, top, width, height;
+  create_params_t cp = { mode };
 
   if (mode == embedded) {
     RECT rect;
@@ -192,81 +196,26 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE, LPSTR lpszCmdLine, int)
   WNDCLASS wc;
   ::ZeroMemory (& wc, sizeof wc);
   wc.lpfnWndProc = & WndProc;
-  wc.cbWndExtra = 8;
   wc.hInstance = hInstance;
   wc.hIcon = ::LoadIcon (hInstance, MAKEINTRESOURCE (257));
   wc.lpszClassName = usr::window_class_name;
-  ATOM atom = ::RegisterClass (& wc);
-  if (! atom) return 1;
-  window_struct_t ws ALIGNED16;
-  ws.mode = mode;
-                                                //   HWND CreateWindowEx
-  HWND hwnd = ::CreateWindowEx (ex_style,       //     (DWORD dwExStyle,
-        MAKEINTATOM (atom),                     //      LPCTSTR lpClassName,
-        usr::window_name,                       //      LPCTSTR lpWindowName,
-        style,                                  //      DWORD dwStyle,
-        left,                                   //      int x,
-        top,                                    //      int y,
-        width,                                  //      int nWidth,
-        height,                                 //      int nHeight,
-        parent,                                 //      HWND hWndParent,
-        0,                                      //      HMENU hMenu,
-        hInstance,                              //      HINSTANCE hInstance,
-        & ws);                                  //      LPVOID lpParam);
 
-  if (! hwnd) return 1;
-
-  ws.hdc = ::GetDC (hwnd);
-  if (! ws.hdc) return 1;
-
-  int ilist [] = {
-    WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
-    WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
-    WGL_DOUBLE_BUFFER_ARB, GL_TRUE,
-    WGL_ACCELERATION_ARB, WGL_FULL_ACCELERATION_ARB,
-    WGL_SWAP_METHOD_ARB, WGL_SWAP_EXCHANGE_ARB,
-    WGL_COLOR_BITS_ARB, 32,
-    WGL_SAMPLE_BUFFERS_ARB, GL_TRUE,
-    WGL_SAMPLES_ARB, 5,
-    0, 0,
-  };
-
-  float flist [] = { 0, 0, };
-  enum { pfcountmax = 256 };
-  UINT pfcount;
-  int pfs [pfcountmax];
-  bool status = wglChoosePixelFormatARB (ws.hdc, ilist, flist, pfcountmax, pfs, & pfcount);
-  if (! (status && pfcount && pfcount < pfcountmax)) return 1;
-  if (! ::SetPixelFormat (ws.hdc, pfs [0], 0)) return 1;
-  ws.hglrc = ::wglCreateContext (ws.hdc);
-  if (! ws.hglrc) return 1;
-  if (! ::wglMakeCurrent (ws.hdc, ws.hglrc)) {
-    ::wglDeleteContext (ws.hglrc);
-    return 1;
+  ATOM atom;
+  HWND hwnd;
+  if ((atom = ::RegisterClass (& wc)) &&               // HWND CreateWindowEx
+      (hwnd = ::CreateWindowEx (ex_style,              //   (DWORD dwExStyle,
+                                MAKEINTATOM (atom),    //    LPCTSTR lpClassName,
+                                usr::window_name,      //    LPCTSTR lpWindowName,
+                                style,                 //    DWORD dwStyle,
+                                left,                  //    int x,
+                                top,                   //    int y,
+                                width,                 //    int nWidth,
+                                height,                //    int nHeight,
+                                parent,                //    HWND hWndParent,
+                                nullptr,               //    HMENU hMenu,
+                                hInstance,             //    HINSTANCE hInstance,
+                                & cp))) {              //    LPVOID lpParam);
+    return reinterpret_cast <window_info_t *> (::GetWindowLongPtr (hwnd, GWLP_USERDATA));
   }
-
-  LARGE_INTEGER pc;
-  ::QueryPerformanceCounter (& pc);
-
-  if (! ws.model.initialize (pc.QuadPart, ws.width, ws.height)) {
-    return 1;
-  }
-
-  ::SetTimer (hwnd, IDT_TIMER, 10, nullptr);
-
-  // Enter the main loop.
-  MSG msg;
-  BOOL bRet;
-  while ((bRet = ::GetMessage (& msg, nullptr, 0, 0)) != 0) {
-    if (bRet == -1) {
-      // TODO: check error code
-      return ::GetLastError ();
-    }
-    else {
-      ::TranslateMessage (& msg);
-      ::DispatchMessage (& msg);
-    }
-  }
-
-  return (msg.message == WM_QUIT ? msg.wParam : 1);
+  return nullptr;
 }

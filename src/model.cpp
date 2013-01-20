@@ -33,7 +33,7 @@ bool model_t::initialize (unsigned long long seed, int width, int height)
   if (! initialize_programs (programs, view)) return false;
 
   // Calculate wall planes to exactly fill the front of the viewing frustum.
-  float t [4];
+  float t [4] ALIGNED16;
   store4f (t, view);
   float z1 = -t [0];
   float z2 = -t [0] - t [1];

@@ -13,14 +13,14 @@ nodes_OBJECTS=main.o show_system.o snub_variance.o triangle.o rotor.o
 
 polymorph_FILENAME=polymorph.scr
 polymorph_CPPFLAGS= #-Itinyscheme
-polymorph_CFLAGS=-mstackrealign -msse4.2 -mfpmath=sse -Ofast
+polymorph_CFLAGS=-mstackrealign -msse4.2 -mfpmath=sse -g -ggdb
 polymorph_CXXFLAGS=-fno-exceptions -fno-rtti
-polymorph_LDFLAGS=-mwindows -s
+polymorph_LDFLAGS=-mwindows
 polymorph_LDLIBS=-lopengl32
 polymorph_EXTRA_OBJECTS=.obj/resources-res.o #.obj/tinyscheme-scheme.o
 polymorph_SOURCE_PREFIX=src/
 polymorph_OBJECTS=\
-cmdline.o glprocs.o graphics.o kdtree.o main.o markov.o \
+cmdline.o glinit.o graphics.o kdtree.o main.o markov.o \
 memory.o model.o partition.o random.o rodrigues.o systems.o
 # tinyscheme_SOURCE_PREFIX=tinyscheme/
 # tinyscheme_CPPFLAGS=-include src/tinyscheme-config.h
@@ -35,6 +35,9 @@ all: $(polymorph_FILENAME)
 
 test: all
 	$(polymorph_FILENAME) -x
+
+debug: all
+	gdb --quiet --batch -ex run -ex bt full -ex quit --args $(polymorph_FILENAME) -x
 
 SHADER_SOURCES=\
 src/vertex-shader.glsl \
