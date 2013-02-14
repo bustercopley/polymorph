@@ -10,8 +10,8 @@ uniform vec3 l;
 uniform vec4 d;
 uniform vec3 s;
 uniform float r;
-uniform float fogm;
-uniform float fogd;
+uniform float f;
+uniform float e;
 
 in vec3 xs [6];
 out flat vec3 gc;
@@ -24,7 +24,7 @@ vec3 color (vec3 x)
   vec3 ld = normalize (position - l);
   vec3 dc = vec3 (d) * max (0.0, -dot (ld, normal));
   vec3 sc = s * pow (max (0.0, -dot (normalize (position), reflect (ld, normal))), 10);
-  return (dc + sc) * fogm * (position [2] - fogd);
+  return (dc + sc) * f * (position [2] - e);
 }
 
 void vertex (vec4 X, vec3 c, vec3 e)

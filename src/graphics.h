@@ -8,12 +8,12 @@
 
 void clear ();
 
-unsigned data_to_vao_id (unsigned N, float (* vertices) [4], std::uint8_t (* indices) [6]);
+unsigned make_vao (unsigned N, const float (* vertices) [4], const std::uint8_t (* indices) [6]);
 
 namespace uniforms
 {
   enum index_t {
-    p, l, g, m, r, d, s, fogm, fogd, count
+    p, l, g, m, r, d, s, f, e, count
   };
   extern const char * names [];
 }

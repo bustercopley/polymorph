@@ -13,9 +13,9 @@ nodes_OBJECTS=main.o show_system.o snub_variance.o triangle.o rotor.o
 
 polymorph_FILENAME=polymorph.scr
 polymorph_CPPFLAGS= #-Itinyscheme
-polymorph_CFLAGS=-mstackrealign -msse4.2 -mfpmath=sse -g -ggdb
+polymorph_CFLAGS=-mstackrealign -msse4.2 -mfpmath=sse -Os
 polymorph_CXXFLAGS=-fno-exceptions -fno-rtti
-polymorph_LDFLAGS=-mwindows
+polymorph_LDFLAGS=-mwindows -s
 polymorph_LDLIBS=-lopengl32
 polymorph_EXTRA_OBJECTS=.obj/resources-res.o #.obj/tinyscheme-scheme.o
 polymorph_SOURCE_PREFIX=src/

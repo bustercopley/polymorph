@@ -2,11 +2,9 @@
 #include "systems.h"
 #include "nodes/system.h"
 #include "graphics.h"
-#include "vector.h"
 #include "memory.h"
 #include "compiler.h"
 #include "aligned-arrays.h"
-//#include <cassert>
 
 namespace
 {
@@ -37,11 +35,11 @@ namespace
   }
 
   NOINLINE
-  unsigned make_vao (float (* vertices) [4], std::uint8_t (* indices) [6],
-                     unsigned p, unsigned q, unsigned r,
-                     const float (* x) [3], const float (* y) [3], const float (* z) [3],
-                     const std::uint8_t * P, /* const std::uint8_t * Q, */ const std::uint8_t * R,
-                     const std::uint8_t * X, const std::uint8_t * Y, const std::uint8_t * Z)
+  unsigned initialize_vao (float (* vertices) [4], std::uint8_t (* indices) [6],
+                           unsigned p, unsigned q, unsigned r,
+                           const float (* x) [3], const float (* y) [3], const float (* z) [3],
+                           const std::uint8_t * P, /* const std::uint8_t * Q, */ const std::uint8_t * R,
+                           const std::uint8_t * X, const std::uint8_t * Y, const std::uint8_t * Z)
   {
     unsigned  N = 2 * p*q*r / (q*r + r*p + p*q - p*q*r);
 
@@ -62,7 +60,7 @@ namespace
       indices [n] [4] = Y [i] + N / p;
       indices [n] [5] = Z [k] + N / p + N / q;
     }
-    return data_to_vao_id (N, vertices, indices);
+    return make_vao (N, vertices, indices);
   }
 
   template <unsigned q, unsigned r>
@@ -79,11 +77,11 @@ namespace
     assign (& xyz [select] [1], system.y, 1);
     assign (& xyz [select] [2], system.z, 1);
     primitive_count [select] = system.N;
-    vao_ids [select] = make_vao (vertices, indices,
-                                 2, q, r,
-                                 system.x, system.y, system.z,
-                                 system.P, /* system.Q, */ system.R,
-                                 system.X, system.Y, system.Z);
+    vao_ids [select] = initialize_vao (vertices, indices,
+                                       2, q, r,
+                                       system.x, system.y, system.z,
+                                       system.P, /* system.Q, */ system.R,
+                                       system.X, system.Y, system.Z);
   }
 }
 

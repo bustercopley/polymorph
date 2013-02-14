@@ -11,7 +11,7 @@
 #include "print.h"
 
 const char * uniforms::names [uniforms::count] = {
-  "p", "l", "g", "m", "r", "d", "s", "fogm", "fogd"
+  "p", "l", "g", "m", "r", "d", "s", "f", "e",
 };
 
 namespace
@@ -54,7 +54,9 @@ namespace
   }
 }
 
-unsigned data_to_vao_id (unsigned N, float (* vertices) [4], std::uint8_t (* indices) [6])
+static const int attribute_id = 0;
+
+unsigned make_vao (unsigned N, const float (* vertices) [4], const std::uint8_t (* indices) [6])
 {
   unsigned vao_id;
   glGenVertexArrays (1, & vao_id);
@@ -62,18 +64,24 @@ unsigned data_to_vao_id (unsigned N, float (* vertices) [4], std::uint8_t (* ind
   GLuint buffer_ids [2];
   glGenBuffers (2, buffer_ids);
   glBindBuffer (GL_ARRAY_BUFFER, buffer_ids [0]);
-  glBufferData (GL_ARRAY_BUFFER, (N + 2) * 4 * sizeof (float), vertices, GL_STATIC_DRAW);
-  glVertexAttribPointer (0, 4, GL_FLOAT, GL_FALSE, 0, 0);
-  glEnableVertexAttribArray (0);
-  glBindBuffer (GL_ARRAY_BUFFER, 0);
   glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, buffer_ids [1]);
+  glBufferData (GL_ARRAY_BUFFER, (N + 2) * 4 * sizeof (float), vertices, GL_STATIC_DRAW);
   glBufferData (GL_ELEMENT_ARRAY_BUFFER, 6 * N * sizeof (std::uint8_t), indices, GL_STATIC_DRAW);
+  glVertexAttribPointer (attribute_id, 4, GL_FLOAT, GL_FALSE, 0, 0);
+  glEnableVertexAttribArray (attribute_id);
   glBindVertexArray (0);
   return vao_id;
 }
 
 bool initialize_programs (program_t (& programs) [3], v4f view)
 {
+  glDisable (GL_DEPTH_TEST);
+  glEnable (GL_CULL_FACE);
+  glCullFace (GL_BACK);
+  glEnable (GL_BLEND);
+  glBlendEquation (GL_FUNC_ADD);
+  glBlendFunc (GL_DST_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
   return
     programs [0].initialize (view, 260) &&
     programs [1].initialize (view, 261) &&
@@ -93,7 +101,7 @@ bool program_t::initialize (v4f view, unsigned gshader2)
   glAttachShader (id, vshader_id);
   glAttachShader (id, gshader_id);
   glAttachShader (id, fshader_id);
-  glBindAttribLocation (id, 0, "x");
+  glBindAttribLocation (id, attribute_id, "x");
   glLinkProgram (id);
 
   GLint status;
@@ -106,13 +114,6 @@ bool program_t::initialize (v4f view, unsigned gshader2)
   for (unsigned k = 0; k != uniforms::count; ++ k) {
     uniform_locations [k] = glGetUniformLocation (id, uniforms::names [k]);
   }
-
-  glDisable (GL_DEPTH_TEST);
-  glEnable (GL_CULL_FACE);
-  glCullFace (GL_BACK);
-  glEnable (GL_BLEND);
-  glBlendEquation (GL_FUNC_ADD);
-  glBlendFunc (GL_DST_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   float t [4] ALIGNED16;
   store4f (t, view);
@@ -137,8 +138,8 @@ bool program_t::initialize (v4f view, unsigned gshader2)
   glUniformMatrix4fv (uniform_locations [uniforms::p], 1, GL_FALSE, projection_matrix);
   glUniform3fv (uniform_locations [uniforms::l], 1, & light_position [0] [0]);
   glUniform3fv (uniform_locations [uniforms::s], 1, usr::specular_material);
-  glUniform1f (uniform_locations [uniforms::fogm], -1.0f / zd);
-  glUniform1f (uniform_locations [uniforms::fogd], z1);
+  glUniform1f (uniform_locations [uniforms::f], -1.0f / zd);
+  glUniform1f (uniform_locations [uniforms::e], z1);
 
   glUseProgram (0);
 
