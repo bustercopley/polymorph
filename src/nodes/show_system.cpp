@@ -16,7 +16,7 @@ namespace
 
   inline std::ostream &
   show_vectors (std::ostream & stream,
-                unsigned Np, const float (* x) [3], char name)
+                unsigned Np, const float (* x) [4], char name)
   {
     stream << std::fixed;
     stream.precision (16);
@@ -51,15 +51,24 @@ namespace
 std::ostream &
 show_system (std::ostream & stream,
              unsigned N, unsigned p, unsigned q, unsigned r,
-             const uint8_t * P, const uint8_t * Q, const uint8_t * R,
-             const uint8_t * X, const uint8_t * Y, const uint8_t * Z,
-             const float (* x) [3], const float (* y) [3], const float (* z) [3],
-             const float (& g) [8] [3])
+             const float (* xyz) [4],
+             const float (& abc) [8] [4],
+             const std::uint8_t (* indices) [6])
 {
-  stream << "Rotation system <" << p << ", " << q << ", " << r << ">.\n";
+  return stream;
+
+  (void) N;
+  (void) p;
+  (void) q;
+  (void) r;
+  (void) xyz;
+  (void) abc;
+  (void) indices;
+/*
+  stream << "Rotation system <" << p << ", " << q << ", " << r << ">; N = " << N << ".\n";
 
   // Write the three permutations in disjoint cycle notation.
-  stream << "\nPermutations of triangles:\n";
+  stream << "\nTriangles with adjacency:\n";
   show_array (stream, N, P, 'P');
   show_array (stream, N, Q, 'Q');
   show_array (stream, N, R, 'R');
@@ -72,9 +81,7 @@ show_system (std::ostream & stream,
 
   // The nodes, in rectangular cartesian co-ordinates.
   stream << "\nVectors.\n";
-  show_vectors (stream, N / p, x, 'x');
-  show_vectors (stream, N / q, y, 'y');
-  show_vectors (stream, N / r, z, 'z');
+  show_vectors (stream, N + 2, xyz, 'xyz');
 
   // Let a point P in a Moebius triangle be replicated in each of the
   // tiles of the Moebius triangulation. For certain points P, the set
@@ -90,9 +97,9 @@ show_system (std::ostream & stream,
   stream << "\nPoints.\n";
   for (unsigned n = 0; n != 8; ++ n) {
     stream << std::setw (2) << n << ": { "
-           << std::setw (20) << g [n] [0] << ", "
-           << std::setw (20) << g [n] [1] << ", "
-           << std::setw (20) << g [n] [2] << " },\n";
+           << std::setw (20) << abc [n] [0] << ", "
+           << std::setw (20) << abc [n] [1] << ", "
+           << std::setw (20) << abc [n] [2] << " },\n";
   }
 
   if (p == 2 && q == 3) {
@@ -103,4 +110,5 @@ show_system (std::ostream & stream,
   else {
     return stream << "Wrong configuration - can't check that the snubs are equilateral.\n";
   }
+*/
 }

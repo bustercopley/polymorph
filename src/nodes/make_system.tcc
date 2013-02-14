@@ -33,8 +33,10 @@ void make_system (system_t <q, r> & s)
   rotor_t X_rotate (2 * pi / p);
   rotor_t Y_rotate (2 * pi / q);
 
-  long double x [Np] [3], y [Nq] [3], z [Nr] [3]; // Node co-ordinates.
-  long double g [8] [3]; // Polyhedron vertices as linear combinations of nodes.
+  long double x [Np] [4] = { { 0 } };  // Node co-ordinates.
+  long double y [Nq] [4] = { { 0 } };
+  long double z [Nr] [4] = { { 0 } };
+  long double g [8] [4] = { { 0 } }; // Polyhedron vertices as linear combinations of nodes.
 
   triangle (pi / p, pi / q, pi / r, x [0], y [0], z [0], g);
 
@@ -137,14 +139,21 @@ void make_system (system_t <q, r> & s)
     }
   }
 
-  copy (P, s.P);
-  copy (Q, s.Q);
-  copy (R, s.R);
-  copy (Px, s.X);
-  copy (Qx, s.Y);
-  copy (Rx, s.Z);
-  copy (x, s.x);
-  copy (y, s.y);
-  copy (z, s.z);
-  copy (g, s.g);
+  copy (x, s.xyz);
+  copy (y, s.xyz + N / p );
+  copy (z, s.xyz + N / p + N / q);
+  copy (g, s.abc);
+
+  for (unsigned n = 0; n != N; ++ n) {
+    unsigned i = n;
+    unsigned j = i [R];
+    unsigned k = j [P];
+
+    s.indices [n] [0] = Px [k];
+    s.indices [n] [1] = Qx [j] + N / p;
+    s.indices [n] [2] = Rx [j] + N / p + N / q;
+    s.indices [n] [3] = Px [i];
+    s.indices [n] [4] = Qx [i] + N / p;
+    s.indices [n] [5] = Rx [k] + N / p + N / q;
+  }
 }

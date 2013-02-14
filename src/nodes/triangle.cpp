@@ -22,8 +22,8 @@ inline long double newton (long double c0, long double c1, long double c2, long 
 }
 
 void triangle (long double A, long double B, long double C,
-               long double (& u) [3], long double (& v) [3], long double (& w) [3],
-               long double (& g) [8] [3])
+               long double (& u) [4], long double (& v) [4], long double (& w) [4],
+               long double (& g) [8] [4])
 {
   // Some light relief from the combinatorics: spherical trigonometry!
   // A, B, C are the angles of the spherical triangle XYZ.
@@ -132,7 +132,7 @@ void triangle (long double A, long double B, long double C,
 
   // Coefficients for a polyhedron vertex in a map region.
 
-  long double gx [8] [3] = {
+  long double gx [8] [4] = {
     { 1.0, 0.0, 0.0, },
     { 0.0, 1.0, 0.0, },
     { 0.0, 0.0, 1.0, },

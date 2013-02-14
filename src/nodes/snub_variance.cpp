@@ -29,7 +29,7 @@ namespace
     long double S;
   };
 
-  inline long double dot (const long double (& u) [3], const long double (& v) [3])
+  inline long double dot (const long double (& u) [4], const long double (& v) [4])
   {
     return u [0] * v [0] + u [1] * v [1] + u [2] * v [2];
   }
@@ -37,8 +37,8 @@ namespace
 
 long double snub_variance (const uint8_t * P, const uint8_t * Q, const uint8_t * R,
                            const uint8_t * X, const uint8_t * Y, const uint8_t * Z,
-                           const float (* x) [3], const float (* y) [3], const float (* z) [3],
-                           const float (& g7) [3], unsigned N)
+                           const float (* x) [4], const float (* y) [4], const float (* z) [4],
+                           const float (& g7) [4], unsigned N)
 {
   variance Var;
 
@@ -48,18 +48,18 @@ long double snub_variance (const uint8_t * P, const uint8_t * Q, const uint8_t *
     unsigned k = j [P];
     if (i != k [Q]) return -1.0;
 
-    const float (& X0) [3] = x [X [k]];
-    const float (& Y0) [3] = y [Y [i]];
-    const float (& Z0) [3] = z [Z [j]];
-    const float (& X1) [3] = x [X [i]];
-    const float (& Y1) [3] = y [Y [j]];
-    const float (& Z1) [3] = z [Z [k]];
+    const float (& X0) [4] = x [X [k]];
+    const float (& Y0) [4] = y [Y [i]];
+    const float (& Z0) [4] = z [Z [j]];
+    const float (& X1) [4] = x [X [i]];
+    const float (& Y1) [4] = y [Y [j]];
+    const float (& Z1) [4] = z [Z [k]];
 
     long double alpha = g7 [0];
     long double beta  = g7 [1];
     long double gamma = g7 [2];
 
-    long double U [3], V [3], W [3];
+    long double U [4], V [4], W [4];
 
     for (unsigned i = 0; i != 3; ++ i) {
       U [i] = alpha * X1 [i] + beta * Y0 [i] + gamma * Z0 [i];

@@ -14,22 +14,15 @@
 template <unsigned q, unsigned r>
 struct system_t
 {
-  enum {
+  enum
+  {
     p = 2,
     N = 2 * p*q*r / (q*r + r*p + p*q - p*q*r)
   };
 
-  float x [N / p] [3]; // Co-ordinates of the X-nodes.
-  float y [N / q] [3]; // Co-ordinates of the Y-nodes.
-  float z [N / r] [3]; // Co-ordinates of the Z-nodes.
-  float g [8] [3]; // Coefficients of u, v, w for convex uniform polyhedra.
-
-  uint8_t P [N]; // Permutation of cycle structure q^(N/q), taking triangles around X nodes.
-  uint8_t Q [N]; // Permutation of cycle structure q^(N/q), taking triangles around Y nodes.
-  uint8_t R [N]; // Permutation of cycle structure r^(N/r), taking triangles around Z nodes.
-  uint8_t X [N]; // The X node in each triangle.
-  uint8_t Y [N]; // The Y node in each triangle.
-  uint8_t Z [N]; // The Z node in each triangle.
+  float xyz [N + 2] [4];        // Co-ordinates of the X-, Y- and Z-nodes.
+  float abc [8] [4];            // Barycentric co-ordinates of uniform generators.
+  std::uint8_t indices [N] [6]; // Triangles-with-adjacency for the tiling.
 };
 
 /*
