@@ -7,8 +7,8 @@ uniform mat4 p;
 uniform mat4 m;
 uniform vec3 g;
 uniform vec3 l;
-uniform vec4 d;
 uniform vec3 s;
+uniform vec4 d;
 uniform float r;
 uniform float f;
 uniform float e;
@@ -19,12 +19,12 @@ out smooth vec3 ed;
 
 vec3 color (vec3 x)
 {
-  vec3 normal = (m * vec4 (x, 0.0)).xyz;
-  vec3 position = (m * vec4 (r * x, 1.0)).xyz;
-  vec3 ld = normalize (position - l);
-  vec3 dc = vec3 (d) * max (0.0, -dot (ld, normal));
-  vec3 sc = s * pow (max (0.0, -dot (normalize (position), reflect (ld, normal))), 10);
-  return (dc + sc) * f * (position [2] - e);
+  vec3 n = (m * vec4 (x, 0.0)).xyz;
+  vec3 p = (m * vec4 (r * x, 1.0)).xyz;
+  vec3 ld = normalize (p - l);
+  vec3 dc = vec3 (d) * max (0.0, -dot (ld, n));
+  vec3 sc = s * pow (max (0.0, -dot (normalize (p), reflect (ld, n))), 10);
+  return (dc + sc) * f * (p [2] - e);
 }
 
 void vertex (vec4 X, vec3 c, vec3 e)

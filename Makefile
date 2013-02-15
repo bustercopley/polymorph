@@ -40,12 +40,15 @@ debug: all
 	gdb --quiet --batch -ex run -ex bt full -ex quit --args $(polymorph_FILENAME) -x
 
 SHADER_SOURCES=\
-src/vertex-shader.glsl \
-src/shared-geometry-shader.glsl \
-src/geometry-shader.glsl \
-src/snub-geometry-shader.glsl \
-src/antisnub-geometry-shader.glsl \
-src/fragment-shader.glsl
+.obj/vertex-shader.glsl.mini \
+.obj/shared-geometry-shader.glsl.mini \
+.obj/geometry-shader.glsl.mini \
+.obj/snub-geometry-shader.glsl.mini \
+.obj/antisnub-geometry-shader.glsl.mini \
+.obj/fragment-shader.glsl.mini
+
+.obj/%.glsl.mini: src/%.glsl minify.pl
+	c:\\strawberry\\perl\\bin\\perl minify.pl $< $@
 
 .obj/resources-res.o: data $(SHADER_SOURCES) polymorph.scr.manifest resources.rc | .obj
 	windres resources.rc .obj/resources-res.o
