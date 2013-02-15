@@ -15,5 +15,5 @@ float amplify (float d)
 void main ()
 {
   float d = min (min (ed [0], ed [1]), ed [2]);
-  c = vec4 (amplify (d) * gc, 0.8);
+  c = vec4 (amplify (d) * gc, 1.0);
 }
