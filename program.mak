@@ -14,12 +14,15 @@ ccflags=$(CFLAGS) $(CCFLAGS) $($(program)_CFLAGS) $($(program)_CCFLAGS)
 cxxflags=$(CFLAGS) $(CXXFLAGS) $($(program)_CFLAGS) $($(program)_CXXFLAGS)
 ldflags=$($(program)_LDFLAGS) $(LDFLAGS)
 ldlibs=$($(program)_LDLIBS) $(LDLIBS)
+asmflags=-fverbose-asm
 
 define compile
-.obj/$(program)-%.o: $(source_prefix)%.cpp | .obj
-	$(CXX) $(cppflags) $(cxxflags) $(DEPFLAGS) $$< -c -o $$@
-.obj/$(program)-%.o: $(source_prefix)%.c | .obj
-	$(CC) $(cppflags) $(ccflags) $(DEPFLAGS) $$< -c -o $$@
+.obj/$(program)-%.s: $(source_prefix)%.cpp | .obj
+	$(CXX) $(cppflags) $(cxxflags) $(DEPFLAGS) $$< -S -o $$@
+.obj/$(program)-%.s: $(source_prefix)%.c | .obj
+	$(CC) $(cppflags) $(ccflags) $(DEPFLAGS) $$< -S -o $$@
+.obj/$(program)-%.o: .obj/$(program)-%.s
+	$(CXX) $(cxxflags) $$< -c -o $$@
 ifdef $(program)_FILENAME
 $(name): $(objects)
 	$(CXX) $(cflags) $(cxxflags) $(ldflags) $(objects) $(ldlibs) -o $(name)
@@ -36,6 +39,5 @@ clean:
 	-rm -rfv .obj
 	-rm -fv $(EXTRA_CLEAN) $(foreach program,$(PROGRAMS),$(name))
 
-.DELETE_ON_ERROR:
-
 -include $(foreach program,$(PROGRAMS),$(depends))
+.DELETE_ON_ERROR:

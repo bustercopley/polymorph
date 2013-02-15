@@ -50,10 +50,10 @@ SHADER_SOURCES=\
 .obj/%.glsl.mini: src/%.glsl minify.pl
 	c:\\strawberry\\perl\\bin\\perl minify.pl $< $@
 
-.obj/resources-res.o: data $(SHADER_SOURCES) polymorph.scr.manifest resources.rc | .obj
+.obj/resources-res.o: .obj/data $(SHADER_SOURCES) polymorph.scr.manifest resources.rc
 	windres resources.rc .obj/resources-res.o
 
-data: nodes.exe
-	.\\$(nodes_FILENAME) data>NUL
+.obj/data: nodes.exe | .obj
+	.\\$(nodes_FILENAME) .obj\\data>NUL
 
 include program.mak

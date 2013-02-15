@@ -36,7 +36,7 @@ BEGIN
     END
 END
 
-256 256  "data"
+256 256  ".obj/data"
 257 ICON "icosahedron.ico"
 258 258  ".obj/vertex-shader.glsl.mini"
 259 259  ".obj/shared-geometry-shader.glsl.mini"
