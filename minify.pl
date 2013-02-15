@@ -51,9 +51,9 @@ while (defined (my $line = <$in>))
 
     # Keep space only if it separates two words.
     $buffer =~ s{\B }{}g; # strip space not after a word
-    $buffer =~ s{ \B}{}g;  # strip space not before a word
+    $buffer =~ s{ \B}{}g; # strip space not before a word
 
-    while ($buffer =~ m/^((?:[a-zA-Z0-9]+ )+)([a-zA-Z0-9]+(?:=[^;]*)?);(.*)$/)
+    while ($buffer =~ m/^((?:\w+ )+)(\w+(?:=[^;]*)?);(.*)$/)
     {
       my $type = $1;
       my $vars = $2;
