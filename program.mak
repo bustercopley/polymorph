@@ -31,11 +31,10 @@ $(foreach program,$(PROGRAMS),$(eval $(compile)))
 .obj:
 	-mkdir .obj
 
-.PHONY: clean veryclean
+.PHONY: clean
 clean:
 	-rm -rfv .obj
-	-rm -fv $(EXTRA_CLEAN)
-	-rm -fv $(foreach program,$(PROGRAMS),$(name))
+	-rm -fv $(EXTRA_CLEAN) $(foreach program,$(PROGRAMS),$(name))
 
 .DELETE_ON_ERROR:
 
