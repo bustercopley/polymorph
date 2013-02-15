@@ -38,11 +38,11 @@ void main ()
   float h = sqrt (dot (bu, bu) - tu * tu * rQQ);
   float k = sqrt (dot (cv, cv) - tv * tv * rRR);
   mat4 pm = p * m;
-  vec4 U = pm * vec4 (u, 1.0);
-  vec4 V = pm * vec4 (v, 1.0);
-  vec4 W = pm * vec4 (w, 1.0);
-  vec4 B = pm * vec4 (b, 1.0);
-  vec4 C = pm * vec4 (c, 1.0);
+  vec4 U = pm * vec4 (u, 1);
+  vec4 V = pm * vec4 (v, 1);
+  vec4 W = pm * vec4 (w, 1);
+  vec4 B = pm * vec4 (b, 1);
+  vec4 C = pm * vec4 (c, 1);
   triangle (W, V, U, ct, hz, hy, hx);
   segment (B, W, U, cy, h);
   segment (C, U, V, cz, k);

@@ -11,13 +11,12 @@ my ($infile, $outfile) = @ARGV;
 open my $in, "<", $infile or die "Can't open input file \"$infile\": $!";
 open my $out, ">", $outfile or die "Can't open output file \"$outfile\": $!";
 
-my $line;
 my $buffer = "";
 my $oldtype;
 my $oldvars;
 my $bol = 1;
 
-while (defined ($line = <$in>))
+while (defined (my $line = <$in>))
 {
   $line =~ s{^\s+}{};   # trim leading space
   $line =~ s{//.*$}{};  # strip comment
@@ -51,8 +50,8 @@ while (defined ($line = <$in>))
     $buffer = "$buffer $line";
 
     # Keep space only if it separates two words.
-    $buffer =~ s{(?<![a-zA-Z0-9])\s+}{}g; # strip space not after a word
-    $buffer =~ s{\s+(?![a-zA-Z0-9])}{}g;  # strip space not before a word
+    $buffer =~ s{\B }{}g; # strip space not after a word
+    $buffer =~ s{ \B}{}g;  # strip space not before a word
 
     while ($buffer =~ m/^((?:[a-zA-Z0-9]+ )+)([a-zA-Z0-9]+(?:=[^;]*)?);(.*)$/)
     {

@@ -6,7 +6,7 @@ void main ()
   vec3 y1 = rg [1] * xs [1];
   vec3 z0 = rg [2] * xs [5];
   vec3 yz = cross (xs [0], xs [1]);
-  vec3 x1 = rg [0] * (xs [3] - 2.0 * (dot (xs [3], yz) / dot (yz, yz)) * yz);
+  vec3 x1 = rg [0] * (xs [3] - 2 * (dot (xs [3], yz) / dot (yz, yz)) * yz);
   vec3 y0 = rg [1] * xs [4];
   vec3 z1 = rg [2] * xs [2];
   vec3 u = x1 + y0 + z0;
@@ -39,11 +39,11 @@ void main ()
   float h = sqrt (dot (bu, bu) - tu * tu * rQQ);
   float k = sqrt (dot (cv, cv) - tv * tv * rRR);
   mat4 pm = p * m;
-  vec4 U = pm * vec4 (u, 1.0);
-  vec4 V = pm * vec4 (v, 1.0);
-  vec4 W = pm * vec4 (w, 1.0);
-  vec4 B = pm * vec4 (b, 1.0);
-  vec4 C = pm * vec4 (c, 1.0);
+  vec4 U = pm * vec4 (u, 1);
+  vec4 V = pm * vec4 (v, 1);
+  vec4 W = pm * vec4 (w, 1);
+  vec4 B = pm * vec4 (b, 1);
+  vec4 C = pm * vec4 (c, 1);
   triangle (U, V, W, ct, hx, hy, hz);
   segment (B, U, W, cy, h);
   segment (C, V, U, cz, k);

@@ -19,11 +19,11 @@ out smooth vec3 ed;
 
 vec3 color (vec3 x)
 {
-  vec3 n = (m * vec4 (x, 0.0)).xyz;
-  vec3 p = (m * vec4 (r * x, 1.0)).xyz;
+  vec3 n = (m * vec4 (x, 0)).xyz;
+  vec3 p = (m * vec4 (r * x, 1)).xyz;
   vec3 ld = normalize (p - l);
-  vec3 dc = vec3 (d) * max (0.0, -dot (ld, n));
-  vec3 sc = s * pow (max (0.0, -dot (normalize (p), reflect (ld, n))), 10);
+  vec3 dc = vec3 (d) * max (0, -dot (ld, n));
+  vec3 sc = s * pow (max (0, -dot (normalize (p), reflect (ld, n))), 10);
   return (dc + sc) * f * (p [2] - e);
 }
 
@@ -53,8 +53,8 @@ void segment (vec4 A, vec4 V, vec4 W, vec3 c, float h)
 
 void triangle (vec4 U, vec4 V, vec4 W, vec3 c, float hx, float hy, float hz)
 {
-  vertex (U, c, vec3 (hx, 0.0, 0.0));
-  vertex (V, c, vec3 (0.0, hy, 0.0));
-  vertex (W, c, vec3 (0.0, 0.0, hz));
+  vertex (U, c, vec3 (hx, 0, 0));
+  vertex (V, c, vec3 (0, hy, 0));
+  vertex (W, c, vec3 (0, 0, hz));
   EndPrimitive ();
 }
