@@ -5010,8 +5010,8 @@ void scheme_deinit(scheme *sc)
   }
 
 #if SHOW_ERROR_LINE
-  for (i = 0; i < sc->file_i; i++) {
-    if (sc->load_stack[sc->file_i].kind & port_file) {
+  for (i = 0; i <= sc->file_i; i++) {
+    if (sc->load_stack[i].kind & port_file) {
       fname = sc->load_stack[i].rep.stdio.filename;
       if (fname)
         sc->free(fname);
