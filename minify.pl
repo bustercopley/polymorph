@@ -41,12 +41,14 @@ while (defined (my $line = <$in>))
   else
   {
     # Shorten certain identifiers.
-    $line =~ s/\bvertex\b/vx/g;
-    $line =~ s/\bcolor\b/cr/g;
-    $line =~ s/\bsegment\b/sg/g;
-    $line =~ s/\btriangle\b/tl/g;
-    $line =~ s/\bamplify\b/af/g;
-
+    $line =~ s/\bvertex\b/I/g;
+    $line =~ s/\bcolor\b/J/g;
+    $line =~ s/\bsegment\b/K/g;
+    $line =~ s/\btriangle\b/K/g;
+    $line =~ s/\bamplify\b/L/g;
+    $line =~ s/\baspect\b/M/g;
+    $line =~ s/\bsq\b/O/g;
+    $line =~ s/\bsnub\b/o/g;
     $buffer = "$buffer $line";
 
     # Keep space only if it separates two words.
