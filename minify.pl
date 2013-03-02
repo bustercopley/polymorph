@@ -16,6 +16,20 @@ my $oldtype;
 my $oldvars;
 my $bol = 1;
 
+# Shorten certain identifiers.
+my %abbrevs = (
+  "triangle" => "I", # 9 arguments
+  "segment" => "I",  # 5 or 7 arguments
+  "amplify" => "I",  # 1 argument
+  "aspect" => "I",   # 6 arguments
+  "vertex" => "I",   # 3 arguments
+  "color" => "J",    # 1 argument
+  "snub" => "I",     # 8 arguments
+  "sq" => "K",       # 1 argument
+);
+
+%abbrevs = map { qr/\b$_\b/ => $abbrevs {$_} } keys %abbrevs;
+
 while (defined (my $line = <$in>))
 {
   $line =~ s{^\s+}{};   # trim leading space
@@ -23,7 +37,9 @@ while (defined (my $line = <$in>))
   $line =~ s{\s+$}{};   # trim trailing space
   $line =~ s{\s+}{ };   # squeeze repeated space
   next if $line eq "";  # skip blank line
+
   # Coalesce consecutive declarations that share a common type into one declaration.
+
   # Print directive on a separate line.
   if ($line =~ m/^#/)
   {
@@ -40,15 +56,8 @@ while (defined (my $line = <$in>))
   }
   else
   {
-    # Shorten certain identifiers.
-    $line =~ s/\bvertex\b/I/g;
-    $line =~ s/\bcolor\b/J/g;
-    $line =~ s/\bsegment\b/K/g;
-    $line =~ s/\btriangle\b/K/g;
-    $line =~ s/\bamplify\b/L/g;
-    $line =~ s/\baspect\b/M/g;
-    $line =~ s/\bsq\b/O/g;
-    $line =~ s/\bsnub\b/o/g;
+    s/$_/$abbrevs{$_}/ for keys %abbrevs;
+
     $buffer = "$buffer $line";
 
     # Keep space only if it separates two words.
