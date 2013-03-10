@@ -63,7 +63,8 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE, LPSTR lpszCmdLine, int)
 
   if (window_info_t * wi = create_screensaver_window (hInstance, parent, mode)) {
     model_t model ALIGNED16;
-    if (model.initialize (qpc (), wi->width, wi->height)) {
+    unsigned seed = qpc ();
+    if (model.initialize (seed, wi->width, wi->height)) {
       return main_loop (wi->hdc, model);
     }
   }

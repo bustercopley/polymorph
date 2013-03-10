@@ -5,17 +5,17 @@
 
 namespace usr {
   // Number of objects.
-  static const unsigned count = 400;          // Number of balls.
+  static const unsigned count = 200;          // Number of balls.
 
   // Physical properties.
-  static const float mass = 80.0f;            // Mass of a ball.
+  static const float mass = 100.0f;           // Mass of a ball.
 
   // Initial conditions.
   static const float temperature = 212;       // Average kinetic energy.
 
   // Container characteristics.
-  static const float tank_distance = 90.0f;   // Distancia del ojo a la pantalla.
-  static const float tank_depth = 60.0f;      // Tank depth in simulation units.
+  static const float tank_distance = 60.0f;   // Distancia del ojo a la pantalla.
+  static const float tank_depth = 12.0f;      // Tank depth in simulation units.
   static const float tank_height = 20.0f;     // Height of screen / tank front.
 
   static const float walls_friction = 0.075f;
@@ -23,8 +23,8 @@ namespace usr {
 
   // Animation timings.
   static const float morph_start = 0.50f;
-  static const float morph_finish = 4.50f;
-  static const float cycle_duration = 17.05f;
+  static const float morph_finish = 1.5f;
+  static const float cycle_duration = 3.0f;
 
   // Simulation speed.
   static const float frame_time = 1.0f / 60;

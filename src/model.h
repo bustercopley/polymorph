@@ -9,15 +9,15 @@
 #include "graphics.h"
 #include "bump.h"
 #include "vector.h"
+#include "markov.h"
 
 struct object_t
 {
   float r, m, l;
   float hue, value, saturation;
   float generator_position;
-  unsigned locus_begin, locus_end;
-  system_select_t system_select;
-  unsigned program_select;
+  unsigned starting_point;
+  polyhedron_select_t target;
 };
 
 struct model_t
@@ -30,7 +30,7 @@ struct model_t
   void draw ();
 private:
   void set_capacity (unsigned new_capacity);
-  void add_object (float phase, v4f frustum);
+  void add_object (v4f frustum, unsigned total_count);
 
   float walls [6] [2] [4] ALIGNED16;
   float abc [system_count] [8] [4] ALIGNED16;

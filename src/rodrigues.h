@@ -15,5 +15,6 @@
 void compute (float (& f) [16], const float (& x) [4], const float (& u) [4]);
 void advance_linear (float (* x) [4], const float (* v) [4], unsigned count, float dt);
 void advance_angular (float (* u) [4], float (* w) [4], unsigned count, float dt);
+void rotate (float (& u) [4], const float (& du) [3]);
 
 #endif

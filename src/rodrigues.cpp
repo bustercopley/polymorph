@@ -222,3 +222,25 @@ void compute (float (& f) [16], const float (& x) [4], const float (& u) [4])
   store4f (& f [12], load4f (x));
   f [15] = 1.0f;
 }
+
+// (u, du) \mapsto u', where e^\hat{u'} = e^\hat{u} e^\hat{du} (see doc/problem.tex).
+// Reuses the integrator above, even though it was designed with small steps in mind.
+void rotate (float (& u) [4], const float (& du) [3])
+{
+  const unsigned steps = 4;
+  v4f kdt = _mm_set1_ps (1.0f / steps);
+  v4f w = load4f (u);
+  v4f u1 = { du [0], du [1], du [2], };
+  for (unsigned i = 0; i != steps; ++ i)
+  {
+    u1 = rk4 (u1, w, kdt);
+    v4f xsq = dot (u1, u1);
+    v4f klim1 = { +0x1.634e46P4f, 0.0f, 0.0f, 0.0f, }; // (3pi/2)^2
+    if (_mm_comigt_ss (xsq, klim1)) {
+      v4f k1 = { 1.0f, 1.0f, 1.0f, 1.0f, };
+      v4f k2pi = { 0x1.921fb4P2f, 0x1.921fb4P2f, 0x1.921fb4P2f, 0x1.921fb4P2f, };
+      u1 *= k1 - k2pi / _mm_sqrt_ps (xsq);
+    }
+  }
+  store4f (u, u1);
+}
