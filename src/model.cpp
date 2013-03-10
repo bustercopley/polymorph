@@ -111,7 +111,7 @@ void model_t::add_object (float phase, v4f view)
   A.system_select = static_cast <system_select_t> (3.0f * phase);
   A.program_select = (A.locus_begin == 7 || A.locus_begin == 7) ? (rng.get () & 1) + 1 : 0;
 
-  float t0 [4];
+  float t0 [4] ALIGNED16;
   store4f (t0, view);
   float z1 = t0 [0];
   float z2 = t0 [0] + t0 [1];

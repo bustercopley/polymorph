@@ -32,7 +32,7 @@ inline void print (const char * name, double value)
 
 inline void print (const char * name, __m128 value)
 {
-  float temp [4];
+  float temp [4] ALIGNED16;
   _mm_store_ps (temp, value);
   print (name, temp);
 }
