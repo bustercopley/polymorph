@@ -3,6 +3,7 @@
 #ifndef model_h
 #define model_h
 
+#include "compiler.h"
 #include "systems.h"
 #include "random.h"
 #include "kdtree.h"
@@ -35,8 +36,8 @@ private:
   float walls [6] [2] [4] ALIGNED16;
   float abc [system_count] [8] [4] ALIGNED16;
   float xyz [system_count] [3] [4] ALIGNED16;
-  bumps_t bumps;
-  step_t step;
+  bumps_t bumps ALIGNED16;
+  step_t step ALIGNED16;
 
   float max_radius;
   float animation_time_lo;

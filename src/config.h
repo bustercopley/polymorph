@@ -3,46 +3,41 @@
 #ifndef config_h
 #define config_h
 
+#include "bump.h"
+
 namespace usr {
   // Number of objects.
-  static const unsigned count = 200;          // Number of balls.
+  extern const unsigned count;        // Number of balls.
 
-  // Physical properties.
-  static const float mass = 100.0f;           // Mass of a ball.
-
-  // Initial conditions.
-  static const float temperature = 212;       // Average kinetic energy.
+  // Physical parameters.
+  extern const float mass;            // Mass of a ball.
+  extern const float walls_friction;
+  extern const float balls_friction;
+  extern const float temperature;     // Average kinetic energy.
 
   // Container characteristics.
-  static const float tank_distance = 60.0f;   // Distancia del ojo a la pantalla.
-  static const float tank_depth = 12.0f;      // Tank depth in simulation units.
-  static const float tank_height = 20.0f;     // Height of screen / tank front.
+  extern const float tank_distance;   // Distancia del ojo a la pantalla.
+  extern const float tank_depth;      // Tank depth in simulation units.
+  extern const float tank_height;     // Height of screen / tank front.
 
-  static const float walls_friction = 0.075f;
-  static const float balls_friction = 0.075f;
-
-  // Animation timings.
-  static const float morph_start = 0.50f;
-  static const float morph_finish = 1.5f;
-  static const float cycle_duration = 3.0f;
+  // Parameters for lighting and animation timings.
+  extern const float morph_start;
+  extern const float morph_finish;
+  extern const float cycle_duration;
+  extern const bump_specifier_t hsv_v_bump;
+  extern const bump_specifier_t hsv_s_bump;
 
   // Simulation speed.
-  static const float frame_time = 1.0f / 60;
+  extern const float frame_time;
 
   // Lighting parameters.
-  static const float specular_material [4] = { 0.3f, 0.3f, 0.3f, 0.0f, };
+  extern const float specular_material [4];
 
   // Program name.
-  static const char * const window_name = "Convex uniform polyhedra";
-  static const char * const message_window_name = "Polymorph";
-  static const char * const window_class_name = "Polymorph";
-  static const char * const message =
-  "And the ratios of their numbers, motions, and "
-  "other properties, everywhere God, as far as "
-  "necessity allowed or gave consent, has exactly "
-  "perfected, and harmonised in due proportion.";
-  // "\n\nThis screensaver includes TinyScheme, developed by Dimitrios "
-  // "Souflis and licensed under the Modified BSD License. "
-  // "See \"tinyscheme/COPYING.txt\" for details.";
+  extern const char * const window_name;
+  extern const char * const message_window_name;
+  extern const char * const window_class_name;
+  extern const char * const message;
 }
 #endif
+

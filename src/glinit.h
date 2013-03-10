@@ -2,7 +2,10 @@
 #ifndef glinit_h
 #define glinit_h
 
-#include "mswin.h"
+#ifndef mswin_h
+#error Must include "mswin.h" before including "glinit.h"
+#endif
+
 #include <GL/gl.h>
 #include "glext.h"
 #include "wglext.h"

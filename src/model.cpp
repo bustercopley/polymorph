@@ -101,13 +101,9 @@ bool model_t::initialize (unsigned long long seed, int width, int height)
 
   animation_time_lo = 0.0f;
   animation_time_hi = 0;
-
-  bumps.initialize (0.15f, 0.75f, 0.25f, 0.50f, 2.00f, 2.50f,  // HSV value bump.
-                    0.00f, 1.00f, 0.25f, 0.50f, 2.00f, 2.50f); // HSV saturation bump.
+  bumps.initialize (usr::hsv_v_bump, usr::hsv_s_bump);
   step.initialize (usr::morph_start, usr::morph_finish);
-
   initialize_systems (abc, xyz, primitive_count, vao_ids);
-
   return true;
 }
 
@@ -219,11 +215,7 @@ void model_t::proceed ()
     if (! k) k = count;
     -- k;
 
-    float temp [4] ALIGNED16;
-    store4f (temp, bumps (t));
-    A.value = temp [0];
-    A.saturation = temp [1];
-
+    bumps (t, A.value, A.saturation);
     if (t < step.T [0] && A.generator_position)
     {
       // We must perform a Markov transition.

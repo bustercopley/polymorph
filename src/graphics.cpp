@@ -1,10 +1,11 @@
+#include "compiler.h"
+#include "aligned-arrays.h"
 #include "config.h"
+#include "mswin.h"
+#include "vector.h"
 #include "glinit.h"
 #include "graphics.h"
 #include "model.h"
-#include "vector.h"
-#include "compiler.h"
-#include "aligned-arrays.h"
 #include <cstdint>
 
 #define ENABLE_PRINT
