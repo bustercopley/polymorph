@@ -32,9 +32,9 @@ private:
   void set_capacity (unsigned new_capacity);
   void add_object (float phase, v4f frustum);
 
-  float walls [6] [2] [4];
-  float abc [system_count] [8] [4];
-  float xyz [system_count] [3] [4];
+  float walls [6] [2] [4] ALIGNED16;
+  float abc [system_count] [8] [4] ALIGNED16;
+  float xyz [system_count] [3] [4] ALIGNED16;
   bumps_t bumps;
   step_t step;
 

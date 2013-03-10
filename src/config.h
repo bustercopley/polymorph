@@ -30,7 +30,6 @@ namespace usr {
   static const float frame_time = 1.0f / 60;
 
   // Lighting parameters.
-  static const float ambient_material [4] = { 0.01f, 0.01f, 0.01f, 1.0f, };
   static const float specular_material [4] = { 0.3f, 0.3f, 0.3f, 0.0f, };
 
   // Program name.

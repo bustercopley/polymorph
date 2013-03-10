@@ -14,6 +14,7 @@
 //        t0        t1    t2        t3      t
 
 #include "vector.h"
+#include "compiler.h"
 #include <limits>
 
 struct step_t
@@ -22,7 +23,7 @@ struct step_t
   //   f(t) = 0 for t < start,
   //   f(t) = 1 for t > finish,
   // and the value smoothsteps from 0 to 1 for t in between.
-  float c [4], T [4];
+  float c [4], T [4] ALIGNED16;
   void initialize (float start, float finish)
   {
     // Precompute the four coefficents of the cubic polynomial for the smoothstep region.
@@ -64,7 +65,7 @@ struct step_t
 struct bumps_t
 {
   // Object computes two independent "bump" functions (see graph above).
-  float S0 [4], T0 [4], U0 [4], V0 [4], c [4] [4];
+  float S0 [4], T0 [4], U0 [4], V0 [4], c [4] [4] ALIGNED16;
 
   void initialize (float v00, float v01, float t00, float t01, float t02, float t03,
                    float v10, float v11, float t10, float t11, float t12, float t13)

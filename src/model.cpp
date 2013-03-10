@@ -169,7 +169,7 @@ void model_t::proceed ()
     if (! k) k = count;
     -- k;
 
-    float temp [4];
+    float temp [4] ALIGNED16;
     store4f (temp, bumps (t));
     A.value = temp [0];
     A.saturation = temp [1];
