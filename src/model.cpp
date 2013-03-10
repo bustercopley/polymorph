@@ -91,10 +91,12 @@ bool model_t::initialize (unsigned long long seed, int width, int height)
     store4f (walls [k] [1], normal);
   }
 
+  unsigned total_count = usr::fill_ratio * width / height;
+
   count = 0;
-  set_capacity (usr::count);
+  set_capacity (total_count);
   max_radius = 0.0f;
-  for (unsigned n = 0; n != usr::count; ++ n) add_object (view, usr::count);
+  for (unsigned n = 0; n != total_count; ++ n) add_object (view, total_count);
   for (unsigned n = 0; n != count; ++ n) zorder_index [n] = n;
   for (unsigned n = 0; n != count; ++ n) kdtree_index [n] = n;
   quicksort (zorder_index, x, count);
@@ -146,7 +148,7 @@ void model_t::add_object (v4f view, unsigned total_count)
   object_t & A = objects [count];
   A.r = 1.0f;
   if (max_radius < A.r) max_radius = A.r;
-  A.m = usr::mass * A.r * A.r;
+  A.m = usr::density * A.r * A.r;
   A.l = 0.4f * A.m * A.r * A.r;
 
   float t0 [4] ALIGNED16;

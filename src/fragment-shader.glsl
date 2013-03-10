@@ -2,12 +2,12 @@
 #version 420
 
 in flat vec3 C;
-in smooth vec3 E;
+in noperspective vec3 E;
 out vec4 c;
 
 float amplify (float d)
 {
-  d = clamp (2 - 120 * d, 0, 1);
+  d = clamp (2 - 100 * d, 0, 1);
   return (4./3) * (exp2 (-2 * d * d) - 0.25);
 }
 

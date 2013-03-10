@@ -164,7 +164,7 @@ void paint (float radius,
   glUniformMatrix4fv (program.uniform_locations [uniforms::m], 1, GL_FALSE, modelview_matrix);
   glUniform1f (program.uniform_locations [uniforms::r], radius);
   glUniform3fv (program.uniform_locations [uniforms::g], 1, abc0);
-  glUniform4fv (program.uniform_locations [uniforms::d], 1, rgba);
+  glUniform3fv (program.uniform_locations [uniforms::d], 1, rgba);
   glBindVertexArray (vao_id);
   glDrawElements (GL_TRIANGLES_ADJACENCY, N * 6, GL_UNSIGNED_BYTE, nullptr);
   glBindVertexArray (0);
