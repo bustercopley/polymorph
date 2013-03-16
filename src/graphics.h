@@ -4,6 +4,7 @@
 #define graphics_h
 
 #include "vector.h"
+#include "systems.h"
 #include <cstdint>
 
 void clear ();
@@ -27,10 +28,10 @@ struct program_t
 
 bool initialize_programs (program_t (& programs) [3], v4f view);
 
-void paint (float radius,
-            const float (& modelview_matrix) [16],
-            const float (& rgba) [4],
-            const float (& abc0) [4],
+void paint (const float r,
+            const float (& m) [16],
+            const float (& g) [4],
+            const float (& h) [4],
             unsigned N,
             unsigned vao_id,
             const program_t & program);

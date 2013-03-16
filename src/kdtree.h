@@ -12,8 +12,9 @@ struct kdtree_t
   void compute (unsigned * index, const float (* x) [4], unsigned count);
   void bounce (unsigned count, float max_radius,
                object_t * objects,
+               const float (* r),
                float (* v) [4], float (* w) [4],
-               float (* planes) [2] [4]);
+               float (* walls) [2] [4]);
 private:
   unsigned * index;
   const float (* x) [4];

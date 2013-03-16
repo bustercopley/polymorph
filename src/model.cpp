@@ -1,3 +1,5 @@
+#include "compiler.h"
+#include "memory.h"
 #include "kdtree.h"
 #include "model.h"
 #include "model.h"
@@ -8,14 +10,12 @@
 #include "partition.h"
 #include "graphics.h"
 #include "config.h"
-#include "memory.h"
 #include "aligned-arrays.h"
 #include "vector.h"
-#include "compiler.h"
+#include "hsv-to-rgb.h"
 
 // These are Father Wenninger's numbers.
-unsigned polyhedra [3] [8] =
-{
+unsigned polyhedra [3] [8] = {
  {  2,  1,  1, 11,  6,  6,  7,  4, },
  { 11,  3,  2, 13,  7,  8, 15, 17, },
  { 12,  5,  4, 14,  9, 10, 16, 18, },
@@ -96,13 +96,10 @@ bool model_t::initialize (unsigned long long seed, int width, int height)
   count = 0;
   set_capacity (total_count);
   max_radius = 0.0f;
-  for (unsigned n = 0; n != total_count; ++ n) add_object (view, total_count);
-  for (unsigned n = 0; n != count; ++ n) zorder_index [n] = n;
+  for (unsigned n = 0; n != total_count; ++ n) add_object (view);
   for (unsigned n = 0; n != count; ++ n) kdtree_index [n] = n;
-  quicksort (zorder_index, x, count);
 
-  animation_time_lo = 0.0f;
-  animation_time_hi = 0;
+  animation_time = 0.0f;
   bumps.initialize (usr::hsv_v_bump, usr::hsv_s_bump);
   step.initialize (usr::morph_start, usr::morph_finish);
   initialize_systems (abc, xyz, primitive_count, vao_ids);
@@ -134,22 +131,23 @@ model_t::~model_t ()
 void model_t::set_capacity (unsigned new_capacity)
 {
   reallocate_aligned_arrays (memory, capacity, new_capacity,
-                             & x, & v, & u, & w,
-                             & zorder_index, & kdtree_index,
+                             & r, & x, & v, & u, & w, & f, & g, & d,
+                             & kdtree_index,
                              & objects);
 }
 
-void model_t::add_object (v4f view, unsigned total_count)
+void model_t::add_object (v4f view)
 {
   if (count == capacity) {
     set_capacity (capacity ? 2 * capacity : 128);
   }
 
   object_t & A = objects [count];
-  A.r = 1.0f;
-  if (max_radius < A.r) max_radius = A.r;
-  A.m = usr::density * A.r * A.r;
-  A.l = 0.4f * A.m * A.r * A.r;
+  float R = rng.get_double (usr::min_radius, usr::max_radius);
+  r [count] = R;
+  if (max_radius < R) max_radius = R;
+  A.m = usr::density * R * R;
+  A.l = 0.4f * A.m * R * R;
 
   float t0 [4] ALIGNED16;
   store4f (t0, view);
@@ -159,9 +157,9 @@ void model_t::add_object (v4f view, unsigned total_count)
   float y1 = t0 [3] / 2;
   float x2 = x1 * z2 / z1;
   float y2 = y1 * z2 / z1;
-  v4f r = { A.r, 0.0f, 0.0f, 0.0f, };
-  v4f a = { -x2 + A.r, -y2 + A.r, -z1 - A.r, 0.0f, };
-  v4f b = { +x2 - A.r, +y2 - A.r, -z2 + A.r, 0.0f, };
+  v4f r = { R, 0.0f, 0.0f, 0.0f, };
+  v4f a = { -x2 + R, -y2 + R, -z1 - R, 0.0f, };
+  v4f b = { +x2 - R, +y2 - R, -z2 + R, 0.0f, };
   v4f m = b - a;
  loop:
   v4f t = a + m * rng.get_vector_in_box ();
@@ -178,48 +176,31 @@ void model_t::add_object (v4f view, unsigned total_count)
   store4f (u [count], rng.get_vector_in_ball (0x1.921fb4P1)); // pi
   store4f (w [count], rng.get_vector_in_ball (0.2f * usr::temperature / A.l));
 
-  A.hue = count * 6.0f / total_count;
+  std::uint64_t entropy = rng.get ();
+  A.phase = rng.get_double (0.0, 1.0);
+  A.hue = 6.0f * (1.0f - A.phase);
   A.generator_position = 0.0f;
-  A.target.system = tetrahedral; //static_cast <system_select_t> (3.0f * phase);
-  A.target.point = rng.get () & 7;
-  A.target.program = (A.target.point == 7) ? (rng.get () & 1) + 1 : 0;
+  A.target.system = static_cast <system_select_t> ((entropy >> 5) % 3);
+  A.target.point = (entropy >> 1) & 7;
+  A.target.program = (A.target.point == 7) ? (entropy & 1) + 1 : 0;
   A.starting_point = A.target.point;
   transition (rng, u [count], A.target, A.starting_point);
-
   ++ count;
 }
 
 void model_t::proceed ()
 {
-  kdtree.compute (kdtree_index, x, count);
-  kdtree.bounce (count, 2 * max_radius, objects, v, w, walls);
-
-  const float T = usr::cycle_duration;
   const float dt = usr::frame_time;
+  const float T = usr::cycle_duration;
+  animation_time += dt;
+  if (animation_time >= T) animation_time -= T;
 
-  advance_linear (x, v, count, dt);
-  advance_angular (u, w, count, dt);
-
-  animation_time_lo += dt;
-  const float TN = T / count;
-  while (animation_time_lo >= TN) {
-    animation_time_lo -= TN;
-    ++ animation_time_hi;
-  }
-  if (animation_time_hi >= count) {
-    animation_time_hi -= count;
-  }
-
-  unsigned k = animation_time_hi;
   for (unsigned n = 0; n != count; ++ n) {
     object_t & A = objects [n];
-    float t = k * TN + animation_time_lo;
-    if (! k) k = count;
-    -- k;
-
+    float t = animation_time + A.phase * T;
+    if (t >= T) t -= T;
     bumps (t, A.value, A.saturation);
-    if (t < step.T [0] && A.generator_position)
-    {
+    if (t < step.T [0] && A.generator_position) {
       // We must perform a Markov transition.
       transition (rng, u [n], A.target, A.starting_point);
       ++ polyhedron_counts [polyhedra [(int) A.target.system] [A.target.point] - 1];
@@ -227,93 +208,41 @@ void model_t::proceed ()
     A.generator_position = step (t);
   }
 
-  // Use insertion sort on the assumption that the z-order
-  // hasn't changed much since the last frame.
-  insertion_sort (zorder_index, x, 0, count);
-}
+  kdtree.compute (kdtree_index, x, count);
+  kdtree.bounce (count, 2 * max_radius, objects, r, v, w, walls);
+  advance_linear (x, v, count, dt);
+  advance_angular (u, w, count, dt);
+  compute (f, x, u, count);
 
-namespace
-{
-  inline v4f hsva_to_rgba (float hue, float saturation, float value, float alpha)
-  {
-    const v4f num1 = { 1.0f, 1.0f, 1.0f, 1.0f, };
-    const v4f num2 = { 2.0f, 2.0f, 2.0f, 2.0f, };
-    const v4f num3 = { 3.0f, 3.0f, 3.0f, 3.0f, };
-    const v4f num5 = { 5.0f, 5.0f, 5.0f, 5.0f, };
-    const v4f num6 = { 6.0f, 6.0f, 6.0f, 6.0f, };
+  for (unsigned n = 0; n != count; ++ n) {
+    object_t & object = objects [n];
+    store4f (d [n], hsv_to_rgb (object.hue, object.saturation, object.value, 0.85f));
+  }
 
-    // Use offsets (0,4,2,*) to get [magenta, red, yellow, green, cyan, blue, magenta).
-    const v4f offsets = { 0.0f, 4.0f, 2.0f, 0.0f, };
-    v4f theta = _mm_set1_ps (hue) + offsets;
-
-    // Reduce each component of theta modulo 6.0f.
-    theta -= _mm_and_ps (_mm_cmpge_ps (theta, num6), num6);
-
-    // Apply a function to each component of theta:
-
-    // f[i] ^
-    //      |
-    //    1 +XXXXXXXX---+---+---+---X--
-    //      |        X             X
-    //      |         X           X
-    //      |          X         X
-    //    0 +---+---+---XXXXXXXXX---+--> theta[i]
-    //      0   1   2   3   4   5   6
-
-    // f [i] = 1 if theta [i] < 2,
-    // f [i] = 3 - theta [i] if 2 <= theta [i] < 3,
-    // f [i] = theta [i] - 5 if 5 <= theta [i],
-    // f [i] = 0 otherwise.
-
-    // The value of f [3] is unused.
-
-    v4f lt2 = _mm_cmplt_ps (theta, num2);
-    v4f lt3 = _mm_cmplt_ps (theta, num3);
-    v4f m23 = _mm_andnot_ps (lt2, lt3);
-    v4f ge5 = _mm_cmpge_ps (theta, num5);
-
-    v4f term1 = _mm_and_ps (lt2, num1);
-    v4f term2 = _mm_and_ps (m23, num3 - theta);
-    v4f term3 = _mm_and_ps (ge5, theta - num5);
-
-    v4f f = _mm_or_ps (_mm_or_ps (term1, term2), term3);
-
-    v4f va = { value, value, value, alpha, };
-    v4f s0 = { saturation, saturation, saturation, 0.0f, };
-    v4f chroma = va * s0;     // x x x 0
-    v4f base = va - chroma;   // y y y a
-    return base + chroma * f; // r g b a
+  for (unsigned n = 0; n != count; ++ n) {
+    object_t & object = objects [n];
+    unsigned sselect = object.target.system;
+    v4f alpha = _mm_set1_ps (object.generator_position);
+    v4f one = { 1.0f, 1.0f, 1.0f, 1.0f, };
+    v4f A = load4f (abc [sselect] [object.starting_point]);
+    v4f B = load4f (abc [sselect] [object.target.point]);
+    v4f k = (one - alpha) * A + alpha * B;
+    v4f a, b, c;
+    UNPACK3 (k, a, b, c);
+    v4f t = a * load4f (xyz [sselect] [0]) + b * load4f (xyz [sselect] [1]) + c * load4f (xyz [sselect] [2]);
+    store4f (g [n], k * _mm_rsqrt_ps (dot (t, t)));
   }
 }
 
 void model_t::draw ()
 {
-  float f [16] ALIGNED16;
-  float rgba [4] ALIGNED16;
-  float abc0 [4] ALIGNED16;
-
   for (unsigned n = 0; n != count; ++ n) {
-    unsigned nz = zorder_index [n];
-    compute (f, x [nz], u [nz]);
-
-    const object_t & object = objects [nz];
-    store4f (rgba, hsva_to_rgba (object.hue, object.saturation, object.value, 0.85f));
-
-    unsigned sselect = object.target.system;
-    {
-      v4f alpha = _mm_set1_ps (object.generator_position);
-      v4f one = { 1.0f, 1.0f, 1.0f, 1.0f, };
-      v4f A = load4f (abc [sselect] [object.starting_point]);
-      v4f B = load4f (abc [sselect] [object.target.point]);
-      v4f g = (one - alpha) * A + alpha * B;
-      v4f a, b, c;
-      UNPACK3 (g, a, b, c);
-      v4f t = a * load4f (xyz [sselect] [0]) + b * load4f (xyz [sselect] [1]) + c * load4f (xyz [sselect] [2]);
-      store4f (abc0, g * _mm_rsqrt_ps (dot (t, t)));
-    }
-
-    paint (object.r, f, rgba, abc0,
-           primitive_count [sselect], vao_ids [sselect],
-           programs [object.target.program]);
+    const object_t & object = objects [n];
+    system_select_t system_select = object.target.system;
+    unsigned program_select = object.target.program;
+    paint (r [n], f [n], g [n], d [n],
+           primitive_count [system_select],
+           vao_ids [system_select],
+           programs [program_select]);
   }
 }

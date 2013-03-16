@@ -76,7 +76,8 @@ unsigned make_vao (unsigned N, const float (* vertices) [4], const std::uint8_t 
 
 bool initialize_programs (program_t (& programs) [3], v4f view)
 {
-  glDisable (GL_DEPTH_TEST);
+  glEnable (GL_DEPTH_TEST);
+  glDepthRange (1.0, 0.0);
   glEnable (GL_CULL_FACE);
   glCullFace (GL_BACK);
   glEnable (GL_BLEND);
@@ -141,7 +142,6 @@ bool program_t::initialize (v4f view, unsigned gshader2)
   glUniform3fv (uniform_locations [uniforms::s], 1, usr::specular_material);
   glUniform1f (uniform_locations [uniforms::f], -1.0f / zd);
   glUniform1f (uniform_locations [uniforms::e], z1);
-
   glUseProgram (0);
 
   return true;
@@ -149,22 +149,22 @@ bool program_t::initialize (v4f view, unsigned gshader2)
 
 void clear ()
 {
-  glClear (GL_COLOR_BUFFER_BIT);
+  glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void paint (float radius,
-            const float (& modelview_matrix) [16],
-            const float (& rgba) [4],
-            const float (& abc0) [4],
+void paint (float r,
+            const float (& m) [16],
+            const float (& g) [4],
+            const float (& d) [4],
             unsigned N,
             unsigned vao_id,
             const program_t & program)
 {
   glUseProgram (program.id);
-  glUniformMatrix4fv (program.uniform_locations [uniforms::m], 1, GL_FALSE, modelview_matrix);
-  glUniform1f (program.uniform_locations [uniforms::r], radius);
-  glUniform3fv (program.uniform_locations [uniforms::g], 1, abc0);
-  glUniform3fv (program.uniform_locations [uniforms::d], 1, rgba);
+  glUniform1f (program.uniform_locations [uniforms::r], r);
+  glUniformMatrix4fv (program.uniform_locations [uniforms::m], 1, GL_FALSE, m);
+  glUniform3fv (program.uniform_locations [uniforms::g], 1, g);
+  glUniform3fv (program.uniform_locations [uniforms::d], 1, d);
   glBindVertexArray (vao_id);
   glDrawElements (GL_TRIANGLES_ADJACENCY, N * 6, GL_UNSIGNED_BYTE, nullptr);
   glBindVertexArray (0);

@@ -7,6 +7,8 @@
 
 namespace usr {
   extern const unsigned fill_ratio;
+  extern const float min_radius;
+  extern const float max_radius;
   extern const float density;
   extern const float walls_friction;
   extern const float balls_friction;
@@ -26,5 +28,5 @@ namespace usr {
   extern const char * const window_class_name;
   extern const char * const message;
 }
-#endif
 
+#endif

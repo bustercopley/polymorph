@@ -189,38 +189,40 @@ void advance_angular (float (* u) [4], float (* w) [4], unsigned count, float dt
   }
 }
 
-void compute (float (& f) [16], const float (& x) [4], const float (& u) [4])
+void compute (float (* f) [16], const float (* x) [4], const float (* u) [4], unsigned count)
 {
-  v4f u4 = load4f (u);               // u0 u1 u2 0
-  v4f usq = u4 * u4;                 // u0^2 u1^2 u2^2 0
-  v4f uha = _mm_hadd_ps (usq, usq);
-  v4f xsq = _mm_hadd_ps (uha, uha);  // x^2 x^2 x^2 x^2 (x = length of u)
-  v4f ab = fg (xsq);
-  v4f a = broadcast0 (ab);
-  v4f b = broadcast1 (ab);
-  v4f skew = a * u4;
-  v4f u1 = _mm_shuffle_ps (u4, u4, SHUFFLE (1, 2, 0, 3)); // u1 u2 u0 u3
-  v4f u2 = _mm_shuffle_ps (u4, u4, SHUFFLE (2, 0, 1, 3)); // u2 u0 u1 u3
-  v4f symm = b * (u1 * u2);
-  v4f sub = symm - skew;                       // s0 s1 s2 0
-  v4f add = symm + skew;                       // a0 a1 a2 0
-  v4f usql = _mm_movelh_ps (usq, usq);         // u0^2 u1^2 u0^2 u1^2
-  v4f usqd = _mm_moveldup_ps (usq);            // u0^2 u0^2 u2^2 u2^2
-  v4f one = { 1.0f, 1.0f, 1.0f, 1.0f, };
-  v4f diag = one - b * (usql + usqd);          // * d2 d1 d0
-  v4f aslo = _mm_movelh_ps (add, sub);         // a0 a1 s0 s1
-  v4f ashi = _mm_unpackhi_ps (add, sub);       // a2 s2 0 0
-  v4f ashj = _mm_movelh_ps (ashi, ashi);       // a2 s2 a2 s2
-  v4f ashd = _mm_movehl_ps (diag, ashj);       // a2 s2 d1 d0
-  v4f das = _mm_shuffle_ps (ashd, sub, SHUFFLE (3, 0, 1, 3));  // d0 a2 s1 0
-  v4f sda = _mm_shuffle_ps (ashd, add, SHUFFLE (1, 2, 0, 3));  // s2 d1 a0 0
-  v4f asd = _mm_shuffle_ps (aslo, diag, SHUFFLE (1, 2, 1, 0)); // a1 s0 d2 *
-  store4f (& f [0], das);
-  store4f (& f [4], sda);
-  store4f (& f [8], asd);
-  f [11] = 0.0f;
-  store4f (& f [12], load4f (x));
-  f [15] = 1.0f;
+  for (unsigned n = 0; n != count; ++ n) {
+    v4f u4 = load4f (u [n]);           // u0 u1 u2 0
+    v4f usq = u4 * u4;                 // u0^2 u1^2 u2^2 0
+    v4f uha = _mm_hadd_ps (usq, usq);
+    v4f xsq = _mm_hadd_ps (uha, uha);  // x^2 x^2 x^2 x^2 (x = length of u)
+    v4f ab = fg (xsq);
+    v4f a = broadcast0 (ab);
+    v4f b = broadcast1 (ab);
+    v4f skew = a * u4;
+    v4f u1 = _mm_shuffle_ps (u4, u4, SHUFFLE (1, 2, 0, 3)); // u1 u2 u0 u3
+    v4f u2 = _mm_shuffle_ps (u4, u4, SHUFFLE (2, 0, 1, 3)); // u2 u0 u1 u3
+    v4f symm = b * (u1 * u2);
+    v4f sub = symm - skew;                       // s0 s1 s2 0
+    v4f add = symm + skew;                       // a0 a1 a2 0
+    v4f usql = _mm_movelh_ps (usq, usq);         // u0^2 u1^2 u0^2 u1^2
+    v4f usqd = _mm_moveldup_ps (usq);            // u0^2 u0^2 u2^2 u2^2
+    v4f one = { 1.0f, 1.0f, 1.0f, 1.0f, };
+    v4f diag = one - b * (usql + usqd);          // * d2 d1 d0
+    v4f aslo = _mm_movelh_ps (add, sub);         // a0 a1 s0 s1
+    v4f ashi = _mm_unpackhi_ps (add, sub);       // a2 s2 0 0
+    v4f ashj = _mm_movelh_ps (ashi, ashi);       // a2 s2 a2 s2
+    v4f ashd = _mm_movehl_ps (diag, ashj);       // a2 s2 d1 d0
+    v4f das = _mm_shuffle_ps (ashd, sub, SHUFFLE (3, 0, 1, 3));  // d0 a2 s1 0
+    v4f sda = _mm_shuffle_ps (ashd, add, SHUFFLE (1, 2, 0, 3));  // s2 d1 a0 0
+    v4f asd = _mm_shuffle_ps (aslo, diag, SHUFFLE (1, 2, 1, 0)); // a1 s0 d2 *
+    store4f (& f [n] [0], das);
+    store4f (& f [n] [4], sda);
+    store4f (& f [n] [8], asd);
+    f [n] [11] = 0.0f;
+    store4f (& f [n] [12], load4f (x [n]));
+    f [n] [15] = 1.0f;
+  }
 }
 
 // (u, du) \mapsto u', where e^\hat{u'} = e^\hat{u} e^\hat{du} (see doc/problem.tex).

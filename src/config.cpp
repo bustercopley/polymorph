@@ -3,14 +3,16 @@
 const unsigned usr::fill_ratio = 100;     // Number of balls per unit of screen aspect ratio.
 
 // Physical parameters.
-const float usr::density = 150.0f;        // Density of a ball.
+const float usr::min_radius = 1.0f;
+const float usr::max_radius = 1.0f;
+const float usr::density = 75.0f;         // Density of a ball.
 const float usr::walls_friction = 0.075f;
 const float usr::balls_friction = 0.075f;
 const float usr::temperature = 212;       // Average kinetic energy.
 
 // Container characteristics.
 const float usr::tank_distance = 90.0f;   // Distancia del ojo a la pantalla.
-const float usr::tank_depth = 12.0f;      // Tank depth in simulation units.
+const float usr::tank_depth = 15.0f;      // Tank depth in simulation units.
 const float usr::tank_height = 20.0f;     // Height of screen / tank front.
 
 // Parameters for lighting and animation timings.
@@ -25,13 +27,13 @@ const float usr::tank_height = 20.0f;     // Height of screen / tank front.
 // v0 +XXXX----------+----+----------XXXX-->
 //        t0        t1    t2        t3      t
 
-//                                          v0     v1     t0     t1     t2     t3
-const bump_specifier_t usr::hsv_v_bump = { 0.15f, 0.75f, 0.25f, 0.50f, 2.00f, 2.50f, };
-const bump_specifier_t usr::hsv_s_bump = { 0.00f, 1.00f, 0.25f, 0.50f, 2.00f, 2.50f };
+//                                         v0     v1     t0     t1     t2     t3
+const bump_specifier_t usr::hsv_v_bump = { 0.25f, 1.00f, 1.50f, 1.75f, 3.25f, 3.75f, };
+const bump_specifier_t usr::hsv_s_bump = { 0.00f, 0.25f, 1.50f, 1.75f, 3.25f, 3.75f, };
 
-const float usr::morph_start = 0.50f;
-const float usr::morph_finish = 1.5f;
-const float usr::cycle_duration = 3.5f;
+const float usr::morph_start = 1.75f;
+const float usr::morph_finish = 3.00f;
+const float usr::cycle_duration = 3.75f;
 
 const float usr::specular_material [4] = { 0.3f, 0.3f, 0.3f, 0.0f, };
 

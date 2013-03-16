@@ -4,6 +4,7 @@
 #define model_h
 
 #include "compiler.h"
+#include "memory.h"
 #include "systems.h"
 #include "random.h"
 #include "kdtree.h"
@@ -14,7 +15,8 @@
 
 struct object_t
 {
-  float r, m, l;
+  float m, l;
+  float phase;
   float hue, value, saturation;
   float generator_position;
   unsigned starting_point;
@@ -24,14 +26,14 @@ struct object_t
 struct model_t
 {
   ~model_t ();
-  model_t () : memory (nullptr), capacity (0) { }
+  model_t () : memory (nullptr), capacity (0) {}
 
   bool initialize (uint64_t seed, int width, int height);
   void proceed ();
   void draw ();
 private:
   void set_capacity (unsigned new_capacity);
-  void add_object (v4f frustum, unsigned total_count);
+  void add_object (v4f frustum);
 
   float walls [6] [2] [4] ALIGNED16;
   float abc [system_count] [8] [4] ALIGNED16;
@@ -40,21 +42,23 @@ private:
   step_t step ALIGNED16;
 
   float max_radius;
-  float animation_time_lo;
+  float animation_time;
 
   void * memory;
   object_t * objects;
-  unsigned * zorder_index;
   unsigned * kdtree_index;
-  float (* x) [4];
-  float (* v) [4];
-  float (* u) [4];
-  float (* w) [4];
+  float (* r);      // circumradius
+  float (* x) [4];  // position
+  float (* v) [4];  // velocity
+  float (* u) [4];  // angular position
+  float (* w) [4];  // angular velocity
+  float (* f) [16]; // modelview matrix
+  float (* g) [4];  // vertex coefficients
+  float (* d) [4];  // diffuse colour
 
   unsigned capacity;
   unsigned count;
-  unsigned animation_time_hi;
-  unsigned primitive_count [system_count];
+  unsigned primitive_count [system_count]; // = { 12, 24, 60, }
   std::uint32_t vao_ids [system_count];
 
   program_t programs [3];

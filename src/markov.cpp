@@ -4,24 +4,24 @@
 
 // The procedure below gives rise to roughly the following relative polyhedron abundancies.
 
-// 12.0 % tetrahedron
-// 11.5 % octahedron
-//  5.7 % cube
-//  7.7 % icosahedron
-//  5.1 % dodecahedron
-//  6.7 % truncated tetrahedron
-//  8.2 % truncated octahedron
-//  3.2 % truncated cube
-//  2.9 % truncated icosahedron
-//  2.9 % truncated dodecahedron
-//  8.9 % cuboctahedron
-//  5.1 % icosidodecahedron
-//  3.2 % rhombicuboctahedron
-//  2.9 % rhombicosidodecahedron
-//  4.9 % rhombitruncated cuboctahedron
-//  4.4 % rhombitruncated icosidodecahedron
-//  2.3 % snub cube
-//  2.2 % snub dodecahedron
+// 8.4 % tetrahedron
+// 8.8 % octahedron
+// 4.7 % cube
+// 7.7 % icosahedron
+// 4.5 % dodecahedron
+// 6.1 % truncated tetrahedron
+// 9.5 % truncated octahedron
+// 3.5 % truncated cube
+// 3.4 % truncated icosahedron
+// 3.4 % truncated dodecahedron
+// 7.8 % cuboctahedron
+// 4.5 % icosidodecahedron
+// 3.5 % rhombicuboctahedron
+// 3.4 % rhombicosidodecahedron
+// 7.2 % rhombitruncated cuboctahedron
+// 6.8 % rhombitruncated icosidodecahedron
+// 3.4 % snub cube
+// 3.4 % snub dodecahedron
 
 struct replacement_t
 {
@@ -30,7 +30,7 @@ struct replacement_t
   float probability;
 };
 
-const float pi = 3.141592654f;
+const float pi = 0x1.921fb4P1f;
 
 static const replacement_t replacements [] =
 {
@@ -40,10 +40,10 @@ static const replacement_t replacements [] =
   { { octahedral,  2, 0, }, { tetrahedral, 0, 0, }, { 0, 0, + pi / 2, }, 48, },
   { { octahedral,  4, 0, }, { tetrahedral, 6, 0, }, { 0, 0, + pi / 2, }, 48, },
   { { octahedral,  0, 0, }, { tetrahedral, 3, 0, }, { 0, 0, + pi / 2, }, 48, },
-  { { icosahedral, 2, 0, }, { tetrahedral, 7, 1, }, { + pi / 4, 0, 0, }, 21, },
-  { { icosahedral, 2, 0, }, { tetrahedral, 7, 2, }, { - pi / 4, 0, 0, }, 25, },
-  { { tetrahedral, 7, 1, }, { icosahedral, 2, 0, }, { - pi / 4, 0, 0, }, 84, },
-  { { tetrahedral, 7, 2, }, { icosahedral, 2, 0, }, { + pi / 4, 0, 0, }, 84, },
+  { { icosahedral, 2, 0, }, { tetrahedral, 7, 1, }, { + pi / 4, 0, 0, }, 25, },
+  { { icosahedral, 2, 0, }, { tetrahedral, 7, 2, }, { - pi / 4, 0, 0, }, 32, },
+  { { tetrahedral, 7, 1, }, { icosahedral, 2, 0, }, { - pi / 4, 0, 0, }, 72, },
+  { { tetrahedral, 7, 2, }, { icosahedral, 2, 0, }, { + pi / 4, 0, 0, }, 72, },
   { { tetrahedral, 7, 1, }, { tetrahedral, 7, 2, }, { + pi / 2, 0, 0, }, 64, },
   { { tetrahedral, 7, 2, }, { tetrahedral, 7, 1, }, { + pi / 2, 0, 0, }, 64, },
   // { { tetrahedral, 1, 0, }, { tetrahedral, 2, 0, }, { + pi / 2, 0, 0, }, 64, },
@@ -91,7 +91,7 @@ void transition (rng_t & rng, float (& u) [4], polyhedron_select_t & current, un
   do next = rng.get () & 7; /* PLEASE */
 
   // Certain transitions are not allowed:
-  while (next == starting_point || 1 & current.point ["\001\002\004\270\270\270\300\370"] >> next);
+  while (next == starting_point || 1 & current.point ["\017\027\047\271\272\274\300\370"] >> next);
 
   starting_point = current.point;
   current.point = next;
