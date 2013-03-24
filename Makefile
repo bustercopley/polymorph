@@ -12,7 +12,7 @@ nodes_SOURCE_PREFIX=src/nodes/
 nodes_OBJECTS=main.o show_system.o snub_variance.o triangle.o rotor.o
 
 polymorph_FILENAME=polymorph.scr
-polymorph_CPPFLAGS= #-Itinyscheme
+polymorph_CPPFLAGS=-DENABLE_PRINT #-Itinyscheme
 polymorph_CFLAGS=-mstackrealign -msse4.2 -mfpmath=sse -Os
 polymorph_CXXFLAGS=-fno-exceptions -fno-rtti
 polymorph_LDFLAGS=-mwindows -s
@@ -44,7 +44,6 @@ SHADER_SOURCES=\
 .obj/shared-geometry-shader.glsl.mini \
 .obj/geometry-shader.glsl.mini \
 .obj/snub-geometry-shader.glsl.mini \
-.obj/antisnub-geometry-shader.glsl.mini \
 .obj/fragment-shader.glsl.mini
 
 .obj/%.glsl.mini: src/%.glsl minify.pl

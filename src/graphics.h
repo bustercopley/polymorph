@@ -26,7 +26,7 @@ struct program_t
   bool initialize (v4f view, unsigned gshader_resource_id);
 };
 
-bool initialize_programs (program_t (& programs) [3], v4f view);
+bool initialize_programs (program_t (& programs) [2], v4f view);
 
 void paint (const float r,
             const float (& m) [16],

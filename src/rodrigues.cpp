@@ -227,7 +227,7 @@ void compute (float (* f) [16], const float (* x) [4], const float (* u) [4], un
 
 // (u, du) \mapsto u', where e^\hat{u'} = e^\hat{u} e^\hat{du} (see doc/problem.tex).
 // Reuses the integrator above, even though it was designed with small steps in mind.
-void rotate (float (& u) [4], const float (& du) [3])
+void rotate (float (& u) [4], const float * du)
 {
   const unsigned steps = 4;
   v4f kdt = _mm_set1_ps (1.0f / steps);

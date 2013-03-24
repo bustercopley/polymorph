@@ -33,7 +33,7 @@ template <typename Stream, unsigned q, unsigned r>
 inline Stream & operator << (Stream & stream, const system_t <q, r> & s)
 {
   enum { p = 2 };
-  return show_system (stream, s.N, p, q, r, s.xyz, s.abc, s.indices);
+  return show_system (stream, s.N, p, q, r, s.xyz, s.abc, s.indices [0]);
 }
 
 #endif

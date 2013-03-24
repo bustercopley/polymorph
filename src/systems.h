@@ -6,10 +6,10 @@
 #include <cstdint>
 
 enum system_select_t {
-  tetrahedral, octahedral, icosahedral,
-  system_count,
-  hexahedral = octahedral,
-  dodecahedral = icosahedral
+  tetrahedral, dual_tetrahedral,
+  octahedral, dual_octahedral,
+  icosahedral, dual_icosahedral,
+  system_count
 };
 
 void initialize_systems (float (& abc) [system_count] [8] [4],

@@ -42,7 +42,6 @@ END
 259 259  ".obj/shared-geometry-shader.glsl.mini"
 260 260  ".obj/geometry-shader.glsl.mini"
 261 261  ".obj/snub-geometry-shader.glsl.mini"
-262 262  ".obj/antisnub-geometry-shader.glsl.mini"
-263 263  ".obj/fragment-shader.glsl.mini"
+262 262  ".obj/fragment-shader.glsl.mini"
 
 CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "polymorph.scr.manifest"

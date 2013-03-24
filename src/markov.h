@@ -11,7 +11,6 @@ struct polyhedron_select_t
 {
   system_select_t system;
   unsigned point;
-  unsigned program;
 };
 
 void transition (rng_t & rng, float (& u) [4], polyhedron_select_t & current, unsigned & starting_point);

@@ -5,15 +5,15 @@ const unsigned usr::fill_ratio = 100;     // Number of balls per unit of screen 
 // Physical parameters.
 const float usr::min_radius = 1.0f;
 const float usr::max_radius = 1.0f;
-const float usr::density = 75.0f;         // Density of a ball.
+const float usr::density = 100.0f;         // Density of a ball.
 const float usr::walls_friction = 0.075f;
 const float usr::balls_friction = 0.075f;
 const float usr::temperature = 212;       // Average kinetic energy.
 
 // Container characteristics.
-const float usr::tank_distance = 90.0f;   // Distancia del ojo a la pantalla.
-const float usr::tank_depth = 15.0f;      // Tank depth in simulation units.
-const float usr::tank_height = 20.0f;     // Height of screen / tank front.
+const float usr::tank_distance = 120.0f;   // Distancia del ojo a la pantalla.
+const float usr::tank_depth = 22.0f;      // Tank depth in simulation units.
+const float usr::tank_height = 22.0f;     // Height of screen / tank front.
 
 // Parameters for lighting and animation timings.
 

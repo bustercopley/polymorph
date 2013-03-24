@@ -23,7 +23,6 @@ namespace
       return S / (n - 1);
     }
 
-  private:
     unsigned n;
     long double mean;
     long double S;
@@ -35,25 +34,21 @@ namespace
   }
 }
 
-long double snub_variance (const uint8_t * P, const uint8_t * Q, const uint8_t * R,
-                           const uint8_t * X, const uint8_t * Y, const uint8_t * Z,
-                           const float (* x) [4], const float (* y) [4], const float (* z) [4],
-                           const float (& g7) [4], unsigned N)
+std::pair <double, double>
+snub_variance (const float (* xyz) [4],
+               const std::uint8_t (* indices) [6],
+               const float (& g7) [4], unsigned N)
 {
   variance Var;
 
   for (unsigned n = 0; n != N; ++ n) {
-    unsigned i = n;
-    unsigned j = i [R];
-    unsigned k = j [P];
-    if (i != k [Q]) return -1.0;
 
-    const float (& X0) [4] = x [X [k]];
-    const float (& Y0) [4] = y [Y [i]];
-    const float (& Z0) [4] = z [Z [j]];
-    const float (& X1) [4] = x [X [i]];
-    const float (& Y1) [4] = y [Y [j]];
-    const float (& Z1) [4] = z [Z [k]];
+    const float (& X0) [4] = xyz [indices [n] [0]];
+    const float (& Y1) [4] = xyz [indices [n] [1]];
+    const float (& Z0) [4] = xyz [indices [n] [2]];
+    const float (& X1) [4] = xyz [indices [n] [3]];
+    const float (& Y0) [4] = xyz [indices [n] [4]];
+    const float (& Z1) [4] = xyz [indices [n] [5]];
 
     long double alpha = g7 [0];
     long double beta  = g7 [1];
@@ -74,5 +69,5 @@ long double snub_variance (const uint8_t * P, const uint8_t * Q, const uint8_t *
     Var << VW << WU << UV;
   }
 
-  return Var ();
+  return std::make_pair (Var.mean, Var ());
 }

@@ -55,33 +55,13 @@ show_system (std::ostream & stream,
              const float (& abc) [8] [4],
              const std::uint8_t (* indices) [6])
 {
-  return stream;
-
-  (void) N;
-  (void) p;
-  (void) q;
-  (void) r;
-  (void) xyz;
-  (void) abc;
-  (void) indices;
-/*
   stream << "Rotation system <" << p << ", " << q << ", " << r << ">; N = " << N << ".\n";
 
-  // Write the three permutations in disjoint cycle notation.
-  stream << "\nTriangles with adjacency:\n";
-  show_array (stream, N, P, 'P');
-  show_array (stream, N, Q, 'Q');
-  show_array (stream, N, R, 'R');
-
-  // Write the three nodes in each triangle.
-  stream << "\nX-, Y- and Z-nodes of triangles:\n";
-  show_array (stream, N, X, 'X');
-  show_array (stream, N, Y, 'Y');
-  show_array (stream, N, Z, 'Z');
+  // TODO: dump indices.
 
   // The nodes, in rectangular cartesian co-ordinates.
   stream << "\nVectors.\n";
-  show_vectors (stream, N + 2, xyz, 'xyz');
+  show_vectors (stream, N + 2, xyz, 'X');
 
   // Let a point P in a Moebius triangle be replicated in each of the
   // tiles of the Moebius triangulation. For certain points P, the set
@@ -102,13 +82,11 @@ show_system (std::ostream & stream,
            << std::setw (20) << abc [n] [2] << " },\n";
   }
 
-  if (p == 2 && q == 3) {
-    double V = double (snub_variance (P, Q, R, X, Y, Z, x, y, z, g [7], N));
-    return stream << "The snubs are equilateral up to variance "
-                  << std::scientific << std::setprecision (16) << V << ".\n";
-  }
-  else {
-    return stream << "Wrong configuration - can't check that the snubs are equilateral.\n";
-  }
-*/
+  auto Var = snub_variance (xyz, indices, abc [7], N);
+  return stream << "The snub triangles are of mean side "
+                << std::setprecision (4)
+                << std::fixed << std::acos (Var.first)
+                << " radians and are equilateral up to a variance of "
+                << std::scientific << std::setprecision (4)
+                << Var.second << ".\n";
 }

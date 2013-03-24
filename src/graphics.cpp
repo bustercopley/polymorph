@@ -8,7 +8,6 @@
 #include "model.h"
 #include <cstdint>
 
-#define ENABLE_PRINT
 #include "print.h"
 
 const char * uniforms::names [uniforms::count] = {
@@ -74,7 +73,7 @@ unsigned make_vao (unsigned N, const float (* vertices) [4], const std::uint8_t 
   return vao_id;
 }
 
-bool initialize_programs (program_t (& programs) [3], v4f view)
+bool initialize_programs (program_t (& programs) [2], v4f view)
 {
   glEnable (GL_DEPTH_TEST);
   glDepthRange (1.0, 0.0);
@@ -86,8 +85,7 @@ bool initialize_programs (program_t (& programs) [3], v4f view)
 
   return
     programs [0].initialize (view, 260) &&
-    programs [1].initialize (view, 261) &&
-    programs [2].initialize (view, 262);
+    programs [1].initialize (view, 261);
 }
 
 bool program_t::initialize (v4f view, unsigned gshader2)
@@ -95,7 +93,7 @@ bool program_t::initialize (v4f view, unsigned gshader2)
   id = glCreateProgram ();
   GLuint vshader_id = make_shader (GL_VERTEX_SHADER, 258, 0);
   GLuint gshader_id = make_shader (GL_GEOMETRY_SHADER, 259, gshader2);
-  GLuint fshader_id = make_shader (GL_FRAGMENT_SHADER, 263, 0);
+  GLuint fshader_id = make_shader (GL_FRAGMENT_SHADER, 262, 0);
   if (vshader_id == 0 || gshader_id == 0 || fshader_id == 0) {
     return false;
   }

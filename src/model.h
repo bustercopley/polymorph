@@ -17,7 +17,7 @@ struct object_t
 {
   float m, l;
   float phase;
-  float hue, value, saturation;
+  float hue;
   float generator_position;
   unsigned starting_point;
   polyhedron_select_t target;
@@ -33,7 +33,7 @@ struct model_t
   void draw ();
 private:
   void set_capacity (unsigned new_capacity);
-  void add_object (v4f frustum);
+  void add_object (v4f view);
 
   float walls [6] [2] [4] ALIGNED16;
   float abc [system_count] [8] [4] ALIGNED16;
@@ -61,7 +61,7 @@ private:
   unsigned primitive_count [system_count]; // = { 12, 24, 60, }
   std::uint32_t vao_ids [system_count];
 
-  program_t programs [3];
+  program_t programs [2];
   kdtree_t kdtree;
   rng_t rng;
 };

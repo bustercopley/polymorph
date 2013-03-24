@@ -21,8 +21,8 @@ int main (int argc, char * argv [])
   // spherical tiling (see "system.h")
 
   system_t <3, 3> tetrahedral;
-  system_t <3, 4> octahedral;
-  system_t <3, 5> icosahedral;
+  system_t <4, 3> octahedral;
+  system_t <5, 3> icosahedral;
 
   // Fill in the data fields (see "make_system.tcc").
 

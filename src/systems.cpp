@@ -28,7 +28,15 @@ namespace
     unsigned p = 2;
     unsigned N = 2 * p*q*r / (q*r + r*p + p*q - p*q*r);
 
-    assign (abc [select], abc_in, 8);
+    if (((unsigned) select) & 1) {
+      for (unsigned n = 0; n != 8; ++ n) {
+        v4f t = _mm_loadu_ps (abc_in [n]);
+        store4f (abc [select] [n], _mm_shuffle_ps (t, t, SHUFFLE (0, 2, 1, 3)));
+      }
+    }
+    else {
+      assign (abc [select], abc_in, 8);
+    }
     assign (& xyz [select] [0], xyz_in, 1);
     assign (& xyz [select] [1], xyz_in + N / p, 1);
     assign (& xyz [select] [2], xyz_in + N / p + N / q, 1);
@@ -45,10 +53,13 @@ void initialize_systems (float (& abc) [system_count] [8] [4],
 {
   const void * data = get_resource_data (256, nullptr);
   system_t <3, 3> const & t (* reinterpret_cast <system_t <3, 3> const *> (data));
-  system_t <3, 4> const & o (* reinterpret_cast <system_t <3, 4> const *> (& t + 1));
-  system_t <3, 5> const & i (* reinterpret_cast <system_t <3, 5> const *> (& o + 1));
+  system_t <4, 3> const & o (* reinterpret_cast <system_t <4, 3> const *> (& t + 1));
+  system_t <5, 3> const & i (* reinterpret_cast <system_t <5, 3> const *> (& o + 1));
 
-  initialize_system (abc, xyz, primitive_count, vao_ids, t.abc, t.xyz, t.indices, tetrahedral, 3, 3);
-  initialize_system (abc, xyz, primitive_count, vao_ids, o.abc, o.xyz, o.indices, octahedral, 3, 4);
-  initialize_system (abc, xyz, primitive_count, vao_ids, i.abc, i.xyz, i.indices, icosahedral, 3, 5);
+  initialize_system (abc, xyz, primitive_count, vao_ids, t.abc, t.xyz, t.indices [0], tetrahedral, 3, 3);
+  initialize_system (abc, xyz, primitive_count, vao_ids, t.abc, t.xyz, t.indices [1], dual_tetrahedral, 3, 3);
+  initialize_system (abc, xyz, primitive_count, vao_ids, o.abc, o.xyz, o.indices [0], octahedral, 4, 3);
+  initialize_system (abc, xyz, primitive_count, vao_ids, o.abc, o.xyz, o.indices [1], dual_octahedral, 4, 3);
+  initialize_system (abc, xyz, primitive_count, vao_ids, i.abc, i.xyz, i.indices [0], icosahedral, 5, 3);
+  initialize_system (abc, xyz, primitive_count, vao_ids, i.abc, i.xyz, i.indices [1], dual_icosahedral, 5, 3);
 }

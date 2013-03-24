@@ -38,7 +38,7 @@ void make_system (system_t <q, r> & s)
   long double z [Nr] [4] = { { 0 } };
   long double g [8] [4] = { { 0 } }; // Polyhedron vertices as linear combinations of nodes.
 
-  triangle (pi / p, pi / q, pi / r, x [0], y [0], z [0], g);
+  triangle (pi / p, pi / q, pi / r, x [0], y [0], z [0], g, q, r);
 
   unsigned P [N], Q [N], R [N];        // Permutation taking black triangles around nodes.
   unsigned Px [N], Qx [N], Rx [N];     // The P-, Q- or R-node contained in each triangle.
@@ -145,15 +145,28 @@ void make_system (system_t <q, r> & s)
   copy (g, s.abc);
 
   for (unsigned n = 0; n != N; ++ n) {
-    unsigned i = n;
-    unsigned j = i [R];
-    unsigned k = j [P];
+    {
+      unsigned i = n;
+      unsigned j = i [R];
+      unsigned k = j [P];
 
-    s.indices [n] [0] = Px [k];
-    s.indices [n] [1] = Qx [j] + N / p;
-    s.indices [n] [2] = Rx [j] + N / p + N / q;
-    s.indices [n] [3] = Px [i];
-    s.indices [n] [4] = Qx [i] + N / p;
-    s.indices [n] [5] = Rx [k] + N / p + N / q;
+      s.indices [0] [n] [0] = Px [j];
+      s.indices [0] [n] [1] = Qx [j] + N / p;
+      s.indices [0] [n] [2] = Rx [i] + N / p + N / q;
+      s.indices [0] [n] [3] = Px [i];
+      s.indices [0] [n] [4] = Qx [k] + N / p;
+      s.indices [0] [n] [5] = Rx [k] + N / p + N / q;
+    }
+    {
+      unsigned j = n;
+      unsigned k = j [P];
+      unsigned l = k [R];
+      s.indices [1] [n] [0] = Px [k];
+      s.indices [1] [n] [1] = Rx [j] + N / p + N / q;
+      s.indices [1] [n] [2] = Qx [k] + N / p;
+      s.indices [1] [n] [3] = Px [l];
+      s.indices [1] [n] [4] = Rx [k] + N / p + N / q;
+      s.indices [1] [n] [5] = Qx [j] + N / p;
+    }
   }
 }

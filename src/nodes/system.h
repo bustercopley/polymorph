@@ -22,7 +22,7 @@ struct system_t
 
   float xyz [N + 2] [4];        // Co-ordinates of the X-, Y- and Z-nodes.
   float abc [8] [4];            // Barycentric co-ordinates of uniform generators.
-  std::uint8_t indices [N] [6]; // Triangles-with-adjacency for the tiling.
+  std::uint8_t indices [2] [N] [6]; // Triangles-with-adjacency for the black and white tilings.
 };
 
 /*
