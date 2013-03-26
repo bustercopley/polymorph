@@ -37,9 +37,9 @@ namespace
     else {
       assign (abc [select], abc_in, 8);
     }
-    assign (& xyz [select] [0], xyz_in, 1);
-    assign (& xyz [select] [1], xyz_in + N / p, 1);
-    assign (& xyz [select] [2], xyz_in + N / p + N / q, 1);
+    assign (& xyz [select] [0], xyz_in + indices_in [0] [0], 1);
+    assign (& xyz [select] [1], xyz_in + indices_in [0] [4], 1);
+    assign (& xyz [select] [2], xyz_in + indices_in [0] [2], 1);
 
     primitive_count [select] = N;
     vao_ids [select] = make_vao (N, xyz_in, indices_in);
