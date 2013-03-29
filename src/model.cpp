@@ -51,14 +51,6 @@ const char * names [] = {
 };
 #endif
 
-//#define ENABLE_TEST_MODE
-
-#ifdef ENABLE_TEST_MODE
-#define TEST_MODE_ENABLED 1
-#else
-#define TEST_MODE_ENABLED 0
-#endif
-
 bool model_t::initialize (unsigned long long seed, int width, int height)
 {
   rng.initialize (seed);
@@ -112,102 +104,7 @@ bool model_t::initialize (unsigned long long seed, int width, int height)
   set_capacity (total_count);
   max_radius = 0.0f;
 
-  if (TEST_MODE_ENABLED) {
-    float rx = rng.get_double (-1.0, 1.0);
-    float ry = rng.get_double (-1.0, 1.0);
-    float rz = rng.get_double (-1.0, 1.0);
-    float random_rotation [3] = { rx, ry, rz, };
-
-    struct replacement_t
-    {
-      polyhedron_select_t before, after;
-      float rotation [3];
-      unsigned probability;
-    };
-
-    const float pi = 0x1.921fb4P1f;
-
-    static const replacement_t replacements [] =
-    {
-      { { tetrahedral, 0, }, { dual_tetrahedral, 0, }, { 0, 0, 0, }, 48, },
-      { { tetrahedral, 1, }, { dual_tetrahedral, 1, }, { 0, 0, 0, }, 48, },
-      { { tetrahedral, 2, }, { dual_tetrahedral, 2, }, { 0, 0, 0, }, 48, },
-      { { tetrahedral, 3, }, { dual_tetrahedral, 3, }, { 0, 0, 0, }, 48, },
-      { { tetrahedral, 4, }, { dual_tetrahedral, 4, }, { 0, 0, 0, }, 48, },
-      { { tetrahedral, 5, }, { dual_tetrahedral, 5, }, { 0, 0, 0, }, 48, },
-      { { tetrahedral, 6, }, { dual_tetrahedral, 6, }, { 0, 0, 0, }, 48, },
-      { { tetrahedral, 7, }, { dual_tetrahedral, 7, }, { 0, 0, 0, }, 48, },
-
-      { { octahedral, 0, }, { dual_octahedral, 0, }, { 0, 0, 0, }, 48, },
-      { { octahedral, 1, }, { dual_octahedral, 1, }, { 0, 0, 0, }, 48, },
-      { { octahedral, 2, }, { dual_octahedral, 2, }, { 0, 0, 0, }, 48, },
-      { { octahedral, 3, }, { dual_octahedral, 3, }, { 0, 0, 0, }, 48, },
-      { { octahedral, 4, }, { dual_octahedral, 4, }, { 0, 0, 0, }, 48, },
-      { { octahedral, 5, }, { dual_octahedral, 5, }, { 0, 0, 0, }, 48, },
-      { { octahedral, 6, }, { dual_octahedral, 6, }, { 0, 0, 0, }, 48, },
-      { { octahedral, 7, }, { dual_octahedral, 7, }, { 0, 0, 0, }, 48, },
-
-      { { icosahedral, 0, }, { dual_icosahedral, 0, }, { 0, 0, 0, }, 48, },
-      { { icosahedral, 1, }, { dual_icosahedral, 1, }, { 0, 0, 0, }, 48, },
-      { { icosahedral, 2, }, { dual_icosahedral, 2, }, { 0, 0, 0, }, 48, },
-      { { icosahedral, 3, }, { dual_icosahedral, 3, }, { 0, 0, 0, }, 48, },
-      { { icosahedral, 4, }, { dual_icosahedral, 4, }, { 0, 0, 0, }, 48, },
-      { { icosahedral, 5, }, { dual_icosahedral, 5, }, { 0, 0, 0, }, 48, },
-      { { icosahedral, 6, }, { dual_icosahedral, 6, }, { 0, 0, 0, }, 48, },
-      { { icosahedral, 7, }, { dual_icosahedral, 7, }, { 0, 0, 0, }, 48, },
-
-      { { tetrahedral, 0, }, { octahedral,  1, }, { 0, 0, 0, }, 48, },
-      { { tetrahedral, 6, }, { octahedral,  5, }, { 0, 0, 0, }, 48, },
-      { { tetrahedral, 3, }, { octahedral,  0, }, { 0, 0, 0, }, 48, },
-      { { tetrahedral, 7, }, { icosahedral, 1, }, { + pi / 4, 0, 0, }, 72, },
-      { { tetrahedral, 7, }, { dual_tetrahedral, 7, }, { +0x1.caf0fcP-2, +0x1.448542P-1, 0, }, 64, },
-    };
-
-    static const unsigned replacement_count = sizeof replacements / sizeof * replacements;
-
-    for (unsigned n = 0; n != 2 * replacement_count; ++ n) {
-      add_object (view);
-      object_t & A = objects [count - 1];
-
-      float t0 [4] ALIGNED16;
-      store4f (t0, view);
-      float z1 = t0 [0];
-      float z2 = t0 [0] + t0 [1];
-
-      x [n] [0] = -12.0f + (n / 16) * 6.0f + (n % 2) * 2.0f;
-      x [n] [1] = +8.0f - ((n % 16) / 2) * 2.0f;
-      x [n] [2] = -0.5f * (z1 + z2);
-
-      v4f zero = _mm_setzero_ps ();
-      store4f (u [n], zero);
-      store4f (v [n], zero);
-      store4f (w [n], zero);
-
-      const replacement_t & replacement = replacements [n / 2];
-      polyhedron_select_t target;
-      target = (n % 2) ? replacement.after : replacement.before;
-
-      A.hue = ((target.system & ~1) == 0 ? 1 : (target.system & ~1) == octahedral ? 3 : 5) - (target.system & 1);
-
-      if (1) {
-        w [n] [0] = +0.00;
-        w [n] [1] = +0.00;
-        w [n] [2] = +0.00;
-      }
-
-      if (0) {
-        rotate (u [n], random_rotation);
-      }
-
-      if (n % 2) rotate (u [n], replacement.rotation);
-      A.starting_point = target.point;
-      A.target = target;
-    }
-  }
-  else {
-    for (unsigned n = 0; n != total_count; ++ n) add_object (view);
-  }
-
+  for (unsigned n = 0; n != total_count; ++ n) add_object (view);
   for (unsigned n = 0; n != count; ++ n) kdtree_index [n] = n;
 
   animation_time = 0.0f;
@@ -313,7 +210,6 @@ void model_t::proceed ()
     object_t & A = objects [n];
     float t = animation_time + A.phase * T;
     if (t >= T) t -= T;
-    if (TEST_MODE_ENABLED) t = usr::hsv_v_bump.t2;
     bumps (t, saturation, value);
     store4f (d [n], hsv_to_rgb (A.hue, saturation, value, 0.85f));
     if (t < step.T [0] && A.generator_position) {
