@@ -28,7 +28,7 @@ namespace
     unsigned p = 2;
     unsigned N = 2 * p*q*r / (q*r + r*p + p*q - p*q*r);
 
-    if (((unsigned) select) & 1) {
+    if (select & 1) {
       for (unsigned n = 0; n != 8; ++ n) {
         v4f t = _mm_loadu_ps (abc_in [n]);
         store4f (abc [select] [n], _mm_shuffle_ps (t, t, SHUFFLE (0, 2, 1, 3)));

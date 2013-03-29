@@ -144,15 +144,15 @@ namespace
     return dot (u, w) * h * u + g * w - khalf * cross (u, w);
   }
 
-  inline v4f rk4 (v4f u, v4f w, v4f dt)
+  inline v4f rk4 (v4f u, v4f wdt)
   {
     v4f khalf = { 0.5f, 0.5f, 0.5f, 0.5f, };
-    v4f A = tangent (u, w);
-    v4f B = tangent (u + khalf * dt * A, w);
-    v4f C = tangent (u + khalf * dt * B, w);
-    v4f D = tangent (u + dt * C, w);
+    v4f A = tangent (u, wdt);
+    v4f B = tangent (u + khalf * A, wdt);
+    v4f C = tangent (u + khalf * B, wdt);
+    v4f D = tangent (u + C, wdt);
     v4f ksixth = { 0x1.555554P-3f, 0x1.555554P-3f, 0x1.555554P-3f, 0x1.555554P-3f, };
-    return u + ksixth * dt * (A + (B + C) + (B + C) + D);
+    return u + ksixth * (A + (B + C) + (B + C) + D);
   }
 }
 
@@ -177,7 +177,7 @@ void advance_angular (float (* u) [4], float (* w) [4], unsigned count, float dt
 {
   v4f kdt = _mm_set1_ps (dt);
   for (unsigned n = 0; n != count; ++ n) {
-    v4f u1 = rk4 (load4f (u [n]), load4f (w [n]), kdt);
+    v4f u1 = rk4 (load4f (u [n]), kdt * load4f (w [n]));
     v4f xsq = dot (u1, u1);
     v4f klim1 = { +0x1.634e46P4f, 0.0f, 0.0f, 0.0f, }; // (3pi/2)^2
     if (_mm_comigt_ss (xsq, klim1)) {
@@ -231,11 +231,11 @@ void rotate (float (& u) [4], const float * du)
 {
   const unsigned steps = 4;
   v4f kdt = _mm_set1_ps (1.0f / steps);
-  v4f w = load4f (u);
+  v4f wdt = kdt * load4f (u);
   v4f u1 = { du [0], du [1], du [2], };
   for (unsigned i = 0; i != steps; ++ i)
   {
-    u1 = rk4 (u1, w, kdt);
+    u1 = rk4 (u1, wdt);
     v4f xsq = dot (u1, u1);
     v4f klim1 = { +0x1.634e46P4f, 0.0f, 0.0f, 0.0f, }; // (3pi/2)^2
     if (_mm_comigt_ss (xsq, klim1)) {

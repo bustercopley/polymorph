@@ -5,97 +5,109 @@
 
 // The procedure below gives rise to roughly the following relative polyhedron abundancies.
 
-// 8.4 % tetrahedron
-// 8.5 % octahedron
-// 4.9 % cube
-// 7.7 % icosahedron
-// 4.5 % dodecahedron
-// 6.1 % truncated tetrahedron
-// 9.9 % truncated octahedron
-// 3.1 % truncated cube
-// 3.4 % truncated icosahedron
-// 3.4 % truncated dodecahedron
-// 7.8 % cuboctahedron
-// 4.5 % icosidodecahedron
-// 3.6 % rhombicuboctahedron
-// 3.4 % rhombicosidodecahedron
-// 7.2 % rhombitruncated cuboctahedron
-// 6.7 % rhombitruncated icosidodecahedron
-// 3.5 % snub cube
-// 3.4 % snub dodecahedron
-
-struct replacement_t
-{
-  polyhedron_select_t before, after;
-  float rotation [3];
-  unsigned probability;
-};
-
-const float pi = 0x1.921fb4P1f;
-
-static const replacement_t replacements [] =
-{
-  { { tetrahedral, 0, }, { octahedral,  1, }, { 0, 0, 0, }, 48, },
-  { { tetrahedral, 6, }, { octahedral,  5, }, { 0, 0, 0, }, 48, },
-  { { tetrahedral, 3, }, { octahedral,  0, }, { 0, 0, 0, }, 48, },
-  { { octahedral,  1, }, { tetrahedral, 0, }, { 0, 0, 0, }, 48, },
-  { { octahedral,  5, }, { tetrahedral, 6, }, { 0, 0, 0, }, 48, },
-  { { octahedral,  0, }, { tetrahedral, 3, }, { 0, 0, 0, }, 48, },
-  { { icosahedral, 1, }, { tetrahedral, 7, }, { - pi / 4, 0, 0, }, 51, },
-  { { tetrahedral, 7, }, { icosahedral, 1, }, { + pi / 4, 0, 0, }, 72, },
-  { { tetrahedral, 7, }, { dual_tetrahedral, 7, }, { pi / 2, 0, 0, }, 64, }, // snub, but not chiral
-};
-
-static const unsigned replacement_count = sizeof replacements / sizeof * replacements;
+// 8.10 % tetrahedron
+// 8.66 % octahedron
+// 4.68 % cube
+// 7.70 % icosahedron
+// 4.62 % dodecahedron
+// 5.81 % truncated tetrahedron
+// 9.55 % truncated octahedron
+// 3.48 % truncated cube
+// 3.46 % truncated icosahedron
+// 3.47 % truncated dodecahedron
+// 7.78 % cuboctahedron
+// 4.62 % icosidodecahedron
+// 3.53 % rhombicuboctahedron
+// 3.46 % rhombicosidodecahedron
+// 7.23 % rhombitruncated cuboctahedron
+// 6.93 % rhombitruncated icosidodecahedron
+// 3.44 % snub cube
+// 3.46 % snub dodecahedron
 
 inline bool operator == (const polyhedron_select_t & x, const polyhedron_select_t & y)
 {
   return x.system == y.system && x.point == y.point;
 }
 
-void transition (rng_t & rng, float (& u) [4], polyhedron_select_t & current, unsigned & starting_point)
+namespace
 {
-  // Transitions are in terms of the primary representation so mask out the dual bit for now.
-  unsigned duality = unsigned (current.system) & 1;
-  current.system = system_select_t (unsigned (current.system) & ~1);
+  const unsigned probability_max = 1 << 31;
+  const unsigned probability_mask = probability_max - 1;
+  const struct replacement_t {
+    polyhedron_select_t before, after;
+    unsigned probability;
+  } replacements [] = {
+    // The fixups in maybe_perform_replacement assume this ordering.
+    { { tetrahedral, 0, }, { octahedral,  1, }, unsigned (0.375 * probability_max), },
+    { { tetrahedral, 6, }, { octahedral,  5, }, unsigned (0.375 * probability_max), },
+    { { tetrahedral, 3, }, { octahedral,  0, }, unsigned (0.375 * probability_max), },
+    { { octahedral,  1, }, { tetrahedral, 0, }, unsigned (0.375 * probability_max), },
+    { { octahedral,  5, }, { tetrahedral, 6, }, unsigned (0.375 * probability_max), },
+    { { octahedral,  0, }, { tetrahedral, 3, }, unsigned (0.375 * probability_max), },
+    { { icosahedral, 1, }, { tetrahedral, 7, }, unsigned (0.400 * probability_max), },
+    { { tetrahedral, 7, }, { icosahedral, 1, }, unsigned (0.600 * probability_max), },
+    // The snub tetrahedron is not chiral (it is the icosahedron).
+    // Not doing this replacement makes some snub-desnub combos impossible.
+    { { tetrahedral, 7, }, { dual_tetrahedral, 7, }, probability_max / 2, },
+  };
+  const unsigned replacement_count = sizeof replacements / sizeof * replacements;
+  const float rotations [3] [4] ALIGNED16 = {
+    // Rotate about an X-node through angle pi/4.
+    { -0x1.921fb4P-1f, 0.0f, 0.0f, 0.0f, }, // I1 -> T7
+    { +0x1.921fb4P-1f, 0.0f, 0.0f, 0.0f, }, // T7 -> I1
+    // Rotate about a Z-node through angle approximately 0.2471 pi.
+    { +0x1.caf0fcP-2, +0x1.448542P-1, 0.0f, 0.0f, }, // T7 -> T7*
+  };
 
-  // If non-snub, maybe switch between dual representations. Doing this before the
-  // replacements allows a snub dodecahedron to double-desnub in two different ways.
-  if (current.point != 7) {
-    duality ^= rng.get () & 1;
-  }
-
-  for (unsigned m = 0; m != replacement_count; ++ m) {
-    const replacement_t f = replacements [m];
-    if (current == f.before && (rng.get () & 127) < f.probability) {
-      current = f.after;
-      if (m >= 6)
-      {
-        float rot [4]  ALIGNED16 = { f.rotation [0], f.rotation [1], f.rotation [2], 0.0f, };
-        if (duality) store4f (rot, - load4f (rot));
-        rotate (u, & rot [0]);
+  inline void maybe_perform_replacement (rng_t & rng, float (& u) [4], polyhedron_select_t & current, unsigned & starting_point, unsigned duality)
+  {
+    for (unsigned m = 0; m != replacement_count; ++ m) {
+      const replacement_t f = replacements [m];
+      if (current == f.before && (rng.get () & probability_mask) < f.probability) {
+        current = f.after;
+        // Fixups after the replacement: avoid backtracking transitions
+        // by updating starting_point, and maybe appply a rotation.
+        if (m < 6) {
+          // Tetrahedral <-> octahedral; if the starting polyhedron exists in both
+          // tilings, forbid backtracking to it; otherwise, no transition is forbidden.
+          // The fundamental triangles of the tetrahedral and octahedral tilings
+          // are chosen so that no rotation is needed after these replacements.
+          unsigned j = 0;
+          while (j != 3 && starting_point != replacements [m / 3 + j].before.point) ++ j;
+          starting_point = j == 3 ? current.point : replacements [m / 3 + j].after.point;
+        }
+        else {
+          // Apply a rotation in object co-ordinates.
+          v4f temp = load4f (rotations [m - 6]);
+          float rotation [4] ALIGNED16;
+          store4f (rotation, duality ? -temp : +temp);
+          rotate (u, rotation);
+          // Tetrahedral <-> icosahedral: no Markov transition is forbidden after these replacements.
+          // Tetrahedral -> dual tetrahedral: keep the starting_point we already have.
+          if (m < 8) starting_point = current.point;
+        }
+        break;
       }
-      if (f.before.system == tetrahedral && f.after.system == octahedral) {
-        if (starting_point == 0) starting_point = 1;
-        else if (starting_point == 6) starting_point = 5;
-        else if (starting_point == 3) starting_point = 0;
-        else starting_point = current.point;
-      }
-      else if (f.before.system == octahedral && f.after.system == tetrahedral) {
-        if (starting_point == 1) starting_point = 0;
-        else if (starting_point == 5) starting_point = 6;
-        else if (starting_point == 0) starting_point = 3;
-        else starting_point = current.point;
-      }
-      else if (f.before.system == tetrahedral && f.after.system == dual_tetrahedral) {
-        // keep the starting point we had before.
-      }
-      else {
-        starting_point = current.point;
-      }
-      break;
     }
   }
+}
+
+void transition (rng_t & rng, float (& u) [4], polyhedron_select_t & current, unsigned & starting_point)
+{
+  // Replacements are in terms of the primary representation so mask out the dual bit for now.
+  unsigned duality = current.system & 1;
+  current.system = system_select_t (current.system & ~1);
+  // If non-snub, maybe switch between dual representations, to permit either
+  // variety of any snub or desnub operation that follows. Not doing it now,
+  // before the replacements, makes some double-desnub combos impossible.
+  unsigned entropy = rng.get (); // Seems a shame to waste it.
+  duality ^= entropy & 1 & - (current.point != 7);
+  maybe_perform_replacement (rng, u, current, starting_point, duality);
+  // If non-snub, maybe switch between dual representations (again).
+  // Not doing this now, after the replacement, makes some double-snub combos impossible.
+  duality ^= (entropy >> 1) & 1 & - (current.point != 7);
+  // Restore the dual bit.
+  current.system = system_select_t (current.system ^ duality);
 
   // Perform a Markov transition.
   unsigned next;
@@ -106,7 +118,4 @@ void transition (rng_t & rng, float (& u) [4], polyhedron_select_t & current, un
 
   starting_point = current.point;
   current.point = next;
-
-  // Set the dual bit.
-  current.system = system_select_t (current.system ^ duality);
 }

@@ -19,12 +19,12 @@
 #ifdef PRINT_ENABLED
 // These are Father Wenninger's numbers.
 unsigned polyhedra [system_count] [8] = {
- {  2,  1,  1, 11,  6,  6,  7,  4, },
- {  2,  1,  1, 11,  6,  6,  7,  4, },
- { 11,  3,  2, 13,  7,  8, 15, 17, },
- { 11,  3,  2, 13,  7,  8, 15, 17, },
- { 12,  5,  4, 14,  9, 10, 16, 18, },
- { 12,  5,  4, 14,  9, 10, 16, 18, },
+  { 2, 1, 1, 11, 6, 6, 7, 4, },
+  { 2, 1, 1, 11, 6, 6, 7, 4, },
+  { 11, 2, 3, 13, 8, 7, 15, 17, },
+  { 11, 2, 3, 13, 8, 7, 15, 17, },
+  { 12, 4, 5, 14, 10, 9, 16, 18, },
+  { 12, 4, 5, 14, 10, 9, 16, 18, },
 };
 
 unsigned polyhedron_counts [18] = { 0 };
@@ -50,6 +50,8 @@ const char * names [] = {
   "snub dodecahedron",
 };
 #endif
+
+//#define ENABLE_TEST_MODE
 
 #ifdef ENABLE_TEST_MODE
 #define TEST_MODE_ENABLED 1
@@ -158,7 +160,7 @@ bool model_t::initialize (unsigned long long seed, int width, int height)
       { { tetrahedral, 6, }, { octahedral,  5, }, { 0, 0, 0, }, 48, },
       { { tetrahedral, 3, }, { octahedral,  0, }, { 0, 0, 0, }, 48, },
       { { tetrahedral, 7, }, { icosahedral, 1, }, { + pi / 4, 0, 0, }, 72, },
-      { { tetrahedral, 7, }, { dual_tetrahedral, 7, }, { pi / 2, 0, 0, }, 64, }, // snub, but not chiral
+      { { tetrahedral, 7, }, { dual_tetrahedral, 7, }, { +0x1.caf0fcP-2, +0x1.448542P-1, 0, }, 64, },
     };
 
     static const unsigned replacement_count = sizeof replacements / sizeof * replacements;
@@ -230,7 +232,7 @@ model_t::~model_t ()
     total_polyhedron_count += polyhedron_counts [n];
   }
 
-  std::cout << std::fixed << std::setprecision (1);
+  std::cout << std::fixed << std::setprecision (2);
   for (unsigned n = 0; n != 18; ++ n)
   {
     std::cout << std::setw (10) << (100.0 * polyhedron_counts [n] / total_polyhedron_count) << " % " << names [n] << "\n";

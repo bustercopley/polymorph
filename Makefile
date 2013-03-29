@@ -12,7 +12,7 @@ nodes_SOURCE_PREFIX=src/nodes/
 nodes_OBJECTS=main.o show_system.o snub_variance.o triangle.o rotor.o
 
 polymorph_FILENAME=polymorph.scr
-polymorph_CPPFLAGS=-DENABLE_PRINT #-Itinyscheme
+polymorph_CPPFLAGS= #-Itinyscheme
 polymorph_CFLAGS=-mstackrealign -msse4.2 -mfpmath=sse -Os
 polymorph_CXXFLAGS=-fno-exceptions -fno-rtti
 polymorph_LDFLAGS=-mwindows -s

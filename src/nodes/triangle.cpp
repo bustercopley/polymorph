@@ -119,20 +119,6 @@ void triangle (long double A, long double B, long double C,
 
   // Rectangular cartesian co-ordinates of X, Y and Z.
 
-  u [0] = 1.0;
-  u [1] = 0.0;
-  u [2] = 0.0;
-
-  v [0] = cosc;
-  v [1] = sinc;
-  v [2] = 0.0;
-
-  w [0] = cosb;
-  w [1] = sinb * cosA;
-  w [2] = sinb * sinA;
-
-  // Coefficients for a polyhedron vertex in a map region.
-
   if (q == 4 && r == 3)
   {
     v [0] = 1.0;
@@ -161,6 +147,8 @@ void triangle (long double A, long double B, long double C,
     w [1] = sinb * cosA;
     w [2] = sinb * sinA;
   }
+
+  // Coefficients for a polyhedron vertex in a map region.
 
   long double gx [8] [4] = {
     { 1.0, 0.0, 0.0, },
