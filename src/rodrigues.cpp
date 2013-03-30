@@ -144,15 +144,17 @@ namespace
     return dot (u, w) * h * u + g * w - khalf * cross (u, w);
   }
 
-  inline v4f rk4 (v4f u, v4f wdt)
+  // bch(x,y) = z, where e^\hat{x} e^\hat{y} = e^\hat{z}, for small x.
+  inline v4f bch (v4f x, v4f y)
   {
-    v4f khalf = { 0.5f, 0.5f, 0.5f, 0.5f, };
-    v4f A = tangent (u, wdt);
-    v4f B = tangent (u + khalf * A, wdt);
-    v4f C = tangent (u + khalf * B, wdt);
-    v4f D = tangent (u + C, wdt);
-    v4f ksixth = { 0x1.555554P-3f, 0x1.555554P-3f, 0x1.555554P-3f, 0x1.555554P-3f, };
-    return u + ksixth * (A + (B + C) + (B + C) + D);
+    // One step of the classical fourth-order Runge-Kutta method.
+    v4f half = { 0.5f, 0.5f, 0.5f, 0.5f, };
+    v4f A = tangent (y, x);
+    v4f B = tangent (y + half * A, x);
+    v4f C = tangent (y + half * B, x);
+    v4f D = tangent (y + C, x);
+    v4f sixth = { 0x1.555554P-3f, 0x1.555554P-3f, 0x1.555554P-3f, 0x1.555554P-3f, };
+    return y + sixth * (A + (B + C) + (B + C) + D);
   }
 }
 
@@ -160,24 +162,24 @@ void advance_linear (float (* x) [4], const float (* v) [4], unsigned count, flo
 {
   // Load 32 bytes (one cache line) of data at a time.
   // This can operate on padding at the end of the arrays.
-  v4f xdt = _mm_set1_ps (dt);
+  v4f dt0 = _mm_set1_ps (dt);
   for (unsigned n = 0; n != (count + 1) >> 1; ++ n) {
-    v4f xx0 = load4f (x [n << 1]);
-    v4f xx1 = load4f (x [(n << 1) | 1]);
-    v4f xv0 = load4f (v [n << 1]);
-    v4f xv1 = load4f (v [(n << 1) | 1]);
-    v4f xx10 = xx0 + xv0 * xdt;
-    v4f xx11 = xx1 + xv1 * xdt;
-    store4f (x [n << 1], xx10);
-    store4f (x [(n << 1) | 1], xx11);
+    v4f x0 = load4f (x [n << 1]);
+    v4f x1 = load4f (x [(n << 1) | 1]);
+    v4f v0 = load4f (v [n << 1]);
+    v4f v1 = load4f (v [(n << 1) | 1]);
+    v4f x10 = x0 + v0 * dt0;
+    v4f x11 = x1 + v1 * dt0;
+    store4f (x [n << 1], x10);
+    store4f (x [(n << 1) | 1], x11);
   }
 }
 
 void advance_angular (float (* u) [4], float (* w) [4], unsigned count, float dt)
 {
-  v4f kdt = _mm_set1_ps (dt);
+  v4f dt0 = _mm_set1_ps (dt);
   for (unsigned n = 0; n != count; ++ n) {
-    v4f u1 = rk4 (load4f (u [n]), kdt * load4f (w [n]));
+    v4f u1 = bch (dt0 * load4f (w [n]), load4f (u [n]));
     v4f xsq = dot (u1, u1);
     v4f klim1 = { +0x1.634e46P4f, 0.0f, 0.0f, 0.0f, }; // (3pi/2)^2
     if (_mm_comigt_ss (xsq, klim1)) {
@@ -225,24 +227,20 @@ void compute (float (* f) [16], const float (* x) [4], const float (* u) [4], un
   }
 }
 
-// (u, du) \mapsto u', where e^\hat{u'} = e^\hat{u} e^\hat{du} (see doc/problem.tex).
-// Reuses the integrator above, even though it was designed with small steps in mind.
-void rotate (float (& u) [4], const float * du)
+// bch(u,v) for small v (roughly, |v| <= pi/4).
+void rotate (float (& u) [4], const float (& v) [4])
 {
-  const unsigned steps = 4;
-  v4f kdt = _mm_set1_ps (1.0f / steps);
-  v4f wdt = kdt * load4f (u);
-  v4f u1 = { du [0], du [1], du [2], };
-  for (unsigned i = 0; i != steps; ++ i)
-  {
-    u1 = rk4 (u1, wdt);
-    v4f xsq = dot (u1, u1);
-    v4f klim1 = { +0x1.634e46P4f, 0.0f, 0.0f, 0.0f, }; // (3pi/2)^2
-    if (_mm_comigt_ss (xsq, klim1)) {
-      v4f k1 = { 1.0f, 1.0f, 1.0f, 1.0f, };
-      v4f k2pi = { 0x1.921fb4P2f, 0x1.921fb4P2f, 0x1.921fb4P2f, 0x1.921fb4P2f, };
-      u1 *= k1 - k2pi / _mm_sqrt_ps (xsq);
-    }
-  }
-  store4f (u, u1);
+  // The integrator is designed to compute bch(x,y) for small x; here we want bch(u,v)
+  // where only v is required to be relatively small. We make use of the formula
+  // bch(u,v) = bch(e^\hat{u}v,u), which is a corollary of Ad(e^x)=e^ad(x).
+  // Compute v1 = e^\hat{u}v using Rodrigues' formula.
+  v4f u1 = load4f (u);
+  v4f xsq = dot (u1, u1);
+  v4f ab = fg (xsq);
+  v4f a = broadcast0 (ab);
+  v4f b = broadcast1 (ab);
+  v4f v0 = load4f (v);
+  v4f v1 = v0 + a * cross (u1, v0) + b * (dot (u1, v0) * u1 - xsq * v0);
+  // To save code don't worry about u growing too large (compare advance_angular).
+  store4f (u, bch (v1, u1));
 }
