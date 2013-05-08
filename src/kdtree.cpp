@@ -214,8 +214,8 @@ void kdtree_t::bounce (unsigned count, float R,
           store4f (temp, dsq);
           unsigned dim = node_dimension (i);
           float mid = node_lohi [2 * i + 1] [1] [dim];
-          if (x [k] [dim] >= mid - R) stack [sp ++] = 2 * i + 2;
-          if (x [k] [dim] <= mid + R) stack [sp ++] = 2 * i + 1;
+          stack [sp ++] = 2 * i + 2;
+          stack [sp ++] = 2 * i + 1;
         }
       }
       else {
@@ -251,7 +251,6 @@ void kdtree_t::bounce (unsigned count, float R,
         v4f x = _mm_or_ps (_mm_and_ps (mask, lo), _mm_andnot_ps (mask, hi));
         v4f d = dot (x - a, n);
         if (_mm_comilt_ss (d, r0)) {
-          // There's no shortcut to reject boxes here as there was for the balls.
           stack [sp ++] = 2 * i + 2;
           stack [sp ++] = 2 * i + 1;
         }
