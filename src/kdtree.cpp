@@ -210,9 +210,6 @@ void kdtree_t::bounce (unsigned count, float R,
         v4f nneg = _mm_and_ps (_mm_cmpge_ps (mx, zero), mx);
         v4f dsq = dot (nneg, nneg);
         if (_mm_comilt_ss (dsq, rsq)) {
-          float temp [4] ALIGNED16;
-          store4f (temp, dsq);
-          unsigned dim = node_dimension (i);
           stack [sp ++] = 2 * i + 2;
           stack [sp ++] = 2 * i + 1;
         }
