@@ -213,7 +213,6 @@ void kdtree_t::bounce (unsigned count, float R,
           float temp [4] ALIGNED16;
           store4f (temp, dsq);
           unsigned dim = node_dimension (i);
-          float mid = node_lohi [2 * i + 1] [1] [dim];
           stack [sp ++] = 2 * i + 2;
           stack [sp ++] = 2 * i + 1;
         }
