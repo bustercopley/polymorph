@@ -56,7 +56,7 @@ while (defined (my $line = <$in>))
   }
   else
   {
-    s/$_/$abbrevs{$_}/ for keys %abbrevs;
+    $line =~ s/$_/$abbrevs{$_}/ for keys %abbrevs;
 
     $buffer = "$buffer $line";
 
