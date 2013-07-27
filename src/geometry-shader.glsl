@@ -17,13 +17,11 @@ void aspect (vec3 x, vec3 y, vec3 z, vec3 Y, vec3 Z, vec3 S)
   vec3 a = dot (S, t) * S;
   vec3 d = a - t;
   float D = dot (d, d);
-  float b = sq (dot (d, v));
-  float c = sq (dot (d, w));
-  float f = sq (dot (v, w));
   float B = dot (v, v);
   float C = dot (w, w);
-  float h = sqrt (D - b / B);
-  float k = sqrt (D - c / C);
+  float f = sq (dot (v, w));
+  float h = sqrt (D - B / 4);
+  float k = sqrt (D - C / 4);
   mat4 q = p * m;
   vec4 T = q * vec4 (t, 1);
   vec4 A = q * vec4 (a, 1);
