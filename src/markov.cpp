@@ -59,8 +59,17 @@ namespace
     { +0x1.caf0fcP-2, +0x1.448542P-1, 0.0f, 0.0f, }, // T7 -> T7*
   };
 
-  inline void maybe_perform_replacement (rng_t & rng, float (& u) [4], polyhedron_select_t & current, unsigned & starting_point, unsigned duality)
+  inline void maybe_perform_replacement (rng_t & rng, float (& u) [4], polyhedron_select_t & current, unsigned & starting_point)
   {
+    // Replacements are in terms of the primary representation so mask out the dual bit for now.
+    unsigned duality = current.system & 1;
+    current.system = system_select_t (current.system & ~1);
+    // If non-snub, maybe switch between dual representations, to permit either
+    // variety of any snub or desnub operation that follows. Not doing it now,
+    // before the replacements, makes some double-desnub combos impossible.
+    unsigned entropy = rng.get (); // Seems a shame to waste it.
+    duality ^= entropy & 1 & - (current.point != 7);
+
     for (unsigned m = 0; m != replacement_count; ++ m) {
       const replacement_t f = replacements [m];
       if (current == f.before && (rng.get () & probability_mask) < f.probability) {
@@ -89,25 +98,18 @@ namespace
         break;
       }
     }
+
+    // If non-snub, maybe switch between dual representations (again).
+    // Not doing this now, after the replacement, makes some double-snub combos impossible.
+    duality ^= (entropy >> 1) & 1 & - (current.point != 7);
+    // Restore the dual bit.
+    current.system = system_select_t (current.system ^ duality);
   }
 }
 
 void transition (rng_t & rng, float (& u) [4], polyhedron_select_t & current, unsigned & starting_point)
 {
-  // Replacements are in terms of the primary representation so mask out the dual bit for now.
-  unsigned duality = current.system & 1;
-  current.system = system_select_t (current.system & ~1);
-  // If non-snub, maybe switch between dual representations, to permit either
-  // variety of any snub or desnub operation that follows. Not doing it now,
-  // before the replacements, makes some double-desnub combos impossible.
-  unsigned entropy = rng.get (); // Seems a shame to waste it.
-  duality ^= entropy & 1 & - (current.point != 7);
-  maybe_perform_replacement (rng, u, current, starting_point, duality);
-  // If non-snub, maybe switch between dual representations (again).
-  // Not doing this now, after the replacement, makes some double-snub combos impossible.
-  duality ^= (entropy >> 1) & 1 & - (current.point != 7);
-  // Restore the dual bit.
-  current.system = system_select_t (current.system ^ duality);
+  maybe_perform_replacement (rng, u, current, starting_point);
 
   // Perform a Markov transition.
   unsigned next;
