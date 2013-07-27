@@ -10,10 +10,6 @@
 
 #include "print.h"
 
-const char * uniforms::names [uniforms::count] = {
-  "p", "l", "g", "m", "r", "d", "s", "f", "e",
-};
-
 namespace
 {
   inline void print_info_log (GLuint object,
@@ -69,7 +65,7 @@ unsigned make_vao (unsigned N, const float (* vertices) [4], const std::uint8_t 
   glBufferData (GL_ELEMENT_ARRAY_BUFFER, 6 * N * sizeof (std::uint8_t), indices, GL_STATIC_DRAW);
   glVertexAttribPointer (attribute_id, 4, GL_FLOAT, GL_FALSE, 0, 0);
   glEnableVertexAttribArray (attribute_id);
-  glBindVertexArray (0);
+  //glBindVertexArray (0);
   return vao_id;
 }
 
@@ -78,11 +74,10 @@ bool initialize_programs (program_t (& programs) [2], v4f view)
   glEnable (GL_DEPTH_TEST);
   glDepthRange (1.0, 0.0);
   glEnable (GL_CULL_FACE);
-  glCullFace (GL_BACK);
+  //glCullFace (GL_BACK);
   glEnable (GL_BLEND);
   glBlendEquation (GL_FUNC_ADD);
   glBlendFunc (GL_DST_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
   return
     programs [0].initialize (view, 260) &&
     programs [1].initialize (view, 261);
@@ -112,7 +107,8 @@ bool program_t::initialize (v4f view, unsigned gshader2)
   }
 
   for (unsigned k = 0; k != uniforms::count; ++ k) {
-    uniform_locations [k] = glGetUniformLocation (id, uniforms::names [k]);
+    const char * names = "p\0l\0g\0m\0r\0d\0s\0f\0e\0";
+    uniform_locations [k] = glGetUniformLocation (id, names + 2 * k);
   }
 
   float t [4] ALIGNED16;
@@ -140,7 +136,7 @@ bool program_t::initialize (v4f view, unsigned gshader2)
   glUniform3fv (uniform_locations [uniforms::s], 1, usr::specular_material);
   glUniform1f (uniform_locations [uniforms::f], -1.0f / zd);
   glUniform1f (uniform_locations [uniforms::e], z1);
-  glUseProgram (0);
+  //glUseProgram (0);
 
   return true;
 }
@@ -166,5 +162,5 @@ void paint (float r,
   glBindVertexArray (vao_id);
   glDrawElements (GL_TRIANGLES_ADJACENCY, N * 6, GL_UNSIGNED_BYTE, nullptr);
   glBindVertexArray (0);
-  glUseProgram (0);
+  //glUseProgram (0);
 }

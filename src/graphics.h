@@ -16,7 +16,6 @@ namespace uniforms
   enum index_t {
     p, l, g, m, r, d, s, f, e, count
   };
-  extern const char * names [];
 }
 
 struct program_t
