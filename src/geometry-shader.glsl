@@ -8,13 +8,13 @@ void segment (vec4 A, vec4 V, vec4 W, vec3 c, float h, float k, float l)
   EndPrimitive ();
 }
 
-void aspect (vec3 x, vec3 y, vec3 z, vec3 Y, vec3 Z, vec3 A)
+void aspect (vec3 x, vec3 y, vec3 z, vec3 Y, vec3 Z, vec3 S)
 {
-  vec3 e = color (A);
+  vec3 e = color (S);
   vec3 t = x + y + z;
   vec3 v = Y - y;
   vec3 w = Z - z;
-  vec3 a = dot (A, t) * A;
+  vec3 a = dot (S, t) * S;
   vec3 d = a - t;
   float D = dot (d, d);
   float b = sq (dot (d, v));
@@ -26,9 +26,9 @@ void aspect (vec3 x, vec3 y, vec3 z, vec3 Y, vec3 Z, vec3 A)
   float k = sqrt (D - c / C);
   mat4 q = p * m;
   vec4 T = q * vec4 (t, 1);
-  vec4 U = q * vec4 (a, 1);
-  segment (U, q * vec4 (x + Y + z, 1), T, e, h, k, sqrt (B - F / C));
-  segment (U, T, q * vec4 (x + y + Z, 1), e, k, h, sqrt (C - F / B));
+  vec4 A = q * vec4 (a, 1);
+  segment (A, q * vec4 (x + Y + z, 1), T, e, h, k, sqrt (B - F / C));
+  segment (A, T, q * vec4 (x + y + Z, 1), e, k, h, sqrt (C - F / B));
 }
 
 void main ()
