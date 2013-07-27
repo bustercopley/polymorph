@@ -71,7 +71,7 @@ namespace
         // Now take the nonzero multiplier lambda such that the
         // impulse lambda*u is consistent with conservation of
         // energy and momentum.
-        // (Lambda is implicit now. See "problem.tex".)
+        // (Lambda is implicit now. See "elastic.tex".)
 
         v4f dxu = cross (dxn, u);
         v4f km2 = { -2.0f, -2.0f, -2.0f, -2.0f, };
