@@ -19,16 +19,16 @@ void aspect (vec3 x, vec3 y, vec3 z, vec3 Y, vec3 Z, vec3 S)
   float D = dot (d, d);
   float b = sq (dot (d, v));
   float c = sq (dot (d, w));
+  float f = sq (dot (v, w));
   float B = dot (v, v);
   float C = dot (w, w);
-  float F = dot (v, w);
   float h = sqrt (D - b / B);
   float k = sqrt (D - c / C);
   mat4 q = p * m;
   vec4 T = q * vec4 (t, 1);
   vec4 A = q * vec4 (a, 1);
-  segment (A, q * vec4 (x + Y + z, 1), T, e, h, k, sqrt (B - F / C));
-  segment (A, T, q * vec4 (x + y + Z, 1), e, k, h, sqrt (C - F / B));
+  segment (A, q * vec4 (x + Y + z, 1), T, e, h, k, sqrt (B - f / C));
+  segment (A, T, q * vec4 (x + y + Z, 1), e, k, h, sqrt (C - f / B));
 }
 
 void main ()
