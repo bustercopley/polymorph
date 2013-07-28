@@ -15,7 +15,6 @@ typedef __m128d v2d;
 do {                                   \
   v4f _t = (a);                        \
   v4f _t0 = _mm_unpacklo_ps (_t, _t);  \
-  v4f _t1 = _mm_unpackhi_ps (_t, _t);  \
   (a0) = _mm_movelh_ps (_t0, _t0);     \
   (a1) = _mm_movehl_ps (_t0, _t0);     \
 } while (0)
