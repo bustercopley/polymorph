@@ -4,7 +4,6 @@
 #include "graphics.h"
 #include "memory.h"
 #include "compiler.h"
-#include "aligned-arrays.h"
 #include <cstdint>
 
 namespace
