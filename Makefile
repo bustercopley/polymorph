@@ -39,20 +39,22 @@ test: all
 debug: all
 	gdb --quiet --batch -ex run -ex bt full -ex quit --args $(polymorph_FILENAME) -x
 
-SHADER_SOURCES=\
+SHADER_RESOURCES=\
 .obj/vertex-shader.glsl.mini \
 .obj/shared-geometry-shader.glsl.mini \
 .obj/geometry-shader.glsl.mini \
 .obj/snub-geometry-shader.glsl.mini \
 .obj/fragment-shader.glsl.mini
 
+$(SHADER_RESOURCES): | .obj
+
 .obj/%.glsl.mini: src/%.glsl minify.pl
 	c:\\strawberry\\perl\\bin\\perl minify.pl $< $@
 
-.obj/resources-res.o: .obj/data $(SHADER_SOURCES) polymorph.scr.manifest resources.rc
+.obj/resources-res.o: .obj/data $(SHADER_RESOURCES) polymorph.scr.manifest resources.rc
 	windres resources.rc .obj/resources-res.o
 
-.obj/data: nodes.exe | .obj
+.obj/data: $(nodes_FILENAME) | .obj
 	.\\$(nodes_FILENAME) .obj\\data>NUL
 
 include program.mak
