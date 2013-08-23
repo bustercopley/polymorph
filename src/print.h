@@ -26,13 +26,14 @@ inline void print (const char * name)
   std::cout << name << std::endl;
 }
 
-inline void print (const char * name, double value)
+template <typename T>
+inline void print (const char * name, T value)
 {
-  double temp [1];
-  temp [0] = value;
+  T temp [1] = { value };
   print (name, temp);
 }
 
+template <>
 inline void print (const char * name, __m128 value)
 {
   float temp [4] ALIGNED16;
