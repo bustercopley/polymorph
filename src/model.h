@@ -18,7 +18,7 @@ struct object_t
   float m, l;
   float phase;
   float hue;
-  float generator_position;
+  float animation_time;
   unsigned starting_point;
   polyhedron_select_t target;
 };
@@ -26,13 +26,13 @@ struct object_t
 struct model_t
 {
   ~model_t ();
-  model_t () : memory (nullptr), capacity (0) {}
+  model_t ();
 
   bool initialize (uint64_t seed, int width, int height);
   void proceed ();
   void draw ();
 private:
-  void set_capacity (unsigned new_capacity);
+  bool set_capacity (unsigned new_capacity);
   void add_object (v4f view);
 
   float walls [6] [2] [4] ALIGNED16;
@@ -53,7 +53,6 @@ private:
   float (* u) [4];  // angular position
   float (* w) [4];  // angular velocity
   float (* f) [16]; // modelview matrix
-  float (* g) [4];  // vertex coefficients
   float (* d) [4];  // diffuse colour
 
   unsigned capacity;

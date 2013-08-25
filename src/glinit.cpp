@@ -25,7 +25,7 @@ PFNGLGETPROGRAMIVPROC glGetProgramiv = nullptr;
 PFNGLUNIFORM1FPROC glUniform1f = nullptr;
 //PFNGLUNIFORM1IPROC glUniform1i = nullptr;
 PFNGLUNIFORM3FVPROC glUniform3fv = nullptr;
-//PFNGLUNIFORM4FVPROC glUniform4fv = nullptr;
+PFNGLUNIFORM4FVPROC glUniform4fv = nullptr;
 PFNGLUNIFORMMATRIX4FVPROC glUniformMatrix4fv = nullptr;
 PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation = nullptr;
 //PFNGLVERTEXATTRIBDIVISORPROC glVertexAttribDivisor = nullptr;
@@ -104,7 +104,7 @@ bool get_glprocs ()
   VALIDGLPROC (PFNGLUNIFORM1FPROC, glUniform1f);
   //VALIDGLPROC (PFNGLUNIFORM1IPROC, glUniform1i);
   VALIDGLPROC (PFNGLUNIFORM3FVPROC, glUniform3fv);
-  //VALIDGLPROC (PFNGLUNIFORM4FVPROC, glUniform4fv);
+  VALIDGLPROC (PFNGLUNIFORM4FVPROC, glUniform4fv);
   VALIDGLPROC (PFNGLUNIFORMMATRIX4FVPROC, glUniformMatrix4fv);
   VALIDGLPROC (PFNGLGETUNIFORMLOCATIONPROC, glGetUniformLocation);
   //VALIDGLPROC (PFNGLVERTEXATTRIBDIVISORPROC, glVertexAttribDivisor);
@@ -132,13 +132,13 @@ bool get_wglChoosePixelFormatARB (HINSTANCE hInstance)
   ::ZeroMemory (& wc, sizeof wc);
   wc.hInstance = hInstance;
   wc.lpfnWndProc = & ::DefWindowProc;
-  wc.lpszClassName = "PolymorphDummy";
+  wc.lpszClassName = "GLinit";
   if (ATOM atom = ::RegisterClass (& wc))
   {
     if (HWND hwnd = ::CreateWindowEx (0,
-         MAKEINTATOM (atom), "PolymorphDummy", 0,
+         MAKEINTATOM (atom), nullptr, 0,
          CW_USEDEFAULT, 0, CW_USEDEFAULT, 0,
-         nullptr, nullptr, hInstance, nullptr))
+         HWND_MESSAGE, nullptr, hInstance, nullptr))
     {
       PIXELFORMATDESCRIPTOR pfd;
       ::ZeroMemory (& pfd, sizeof pfd);

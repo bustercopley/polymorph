@@ -43,7 +43,6 @@ const float usr::frame_time = 1.0f / 60;
 // Program name.
 const char * const usr::window_name = "Polymorph";
 const char * const usr::message_window_name = "Polymorph";
-const char * const usr::window_class_name = "Polymorph";
 const char * const usr::message =
  "And the ratios of their numbers, motions, and "
  "other properties, everywhere God, as far as "

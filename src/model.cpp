@@ -51,8 +51,15 @@ const char * names [] = {
 };
 #endif
 
+model_t::model_t () : memory (nullptr), capacity (0), count (0) { }
+
 bool model_t::initialize (unsigned long long seed, int width, int height)
 {
+  unsigned total_count = usr::fill_ratio * double (width) / height;
+
+  count = 0;
+  if (! set_capacity (total_count)) return false;
+
   rng.initialize (seed);
 
 #if 0
@@ -98,10 +105,6 @@ bool model_t::initialize (unsigned long long seed, int width, int height)
     store4f (walls [k] [1], normal);
   }
 
-  unsigned total_count = usr::fill_ratio * width / height;
-
-  count = 0;
-  set_capacity (total_count);
   max_radius = 0.0f;
 
   for (unsigned n = 0; n != total_count; ++ n) add_object (view);
@@ -139,12 +142,12 @@ model_t::~model_t ()
   deallocate (memory);
 }
 
-void model_t::set_capacity (unsigned new_capacity)
+bool model_t::set_capacity (unsigned new_capacity)
 {
-  reallocate_aligned_arrays (memory, capacity, new_capacity,
-                             & r, & x, & v, & u, & w, & f, & g, & d,
-                             & kdtree_index,
-                             & objects);
+  return reallocate_aligned_arrays (memory, capacity, new_capacity,
+                                    & r, & x, & v, & u, & w, & f, & d,
+                                    & kdtree_index,
+                                    & objects);
 }
 
 void model_t::add_object (v4f view)
@@ -190,7 +193,7 @@ void model_t::add_object (v4f view)
   std::uint64_t entropy = rng.get ();
   A.phase = rng.get_double (0.0, 1.0);
   A.hue = 6.0f * (1.0f - A.phase);
-  A.generator_position = 0.0f;
+  A.animation_time = usr::cycle_duration;
   A.target.system = static_cast <system_select_t> ((entropy >> 3) % 6);
   A.target.point = entropy & 7;
   A.starting_point = A.target.point;
@@ -202,24 +205,25 @@ void model_t::proceed ()
 {
   const float dt = usr::frame_time;
   const float T = usr::cycle_duration;
-  float value, saturation;
   animation_time += dt;
   if (animation_time >= T) animation_time -= T;
 
   for (unsigned n = 0; n != count; ++ n) {
     object_t & A = objects [n];
-    float t = animation_time + A.phase * T;
+    float t = animation_time + A.phase * usr::cycle_duration;
     if (t >= T) t -= T;
-    bumps (t, saturation, value);
-    store4f (d [n], hsv_to_rgb (A.hue, saturation, value, 0.85f));
-    if (t < step.T [0] && A.generator_position) {
+    A.animation_time = t;
+  }
+
+  for (unsigned n = 0; n != count; ++ n) {
+    object_t & A = objects [n];
+    if (A.animation_time < dt) {
       // We must perform a Markov transition.
       transition (rng, u [n], A.target, A.starting_point);
 #if PRINT_ENABLED
       ++ polyhedron_counts [polyhedra [(int) A.target.system] [A.target.point] - 1];
 #endif
     }
-    A.generator_position = step (t);
   }
 
   kdtree.compute (kdtree_index, x, count);
@@ -229,17 +233,10 @@ void model_t::proceed ()
   compute (f, x, u, count);
 
   for (unsigned n = 0; n != count; ++ n) {
-    object_t & object = objects [n];
-    unsigned sselect = object.target.system;
-    v4f alpha = _mm_set1_ps (object.generator_position);
-    v4f one = { 1.0f, 1.0f, 1.0f, 1.0f, };
-    v4f A = load4f (abc [sselect] [object.starting_point]);
-    v4f B = load4f (abc [sselect] [object.target.point]);
-    v4f k = (one - alpha) * A + alpha * B;
-    v4f a, b, c;
-    UNPACK3 (k, a, b, c);
-    v4f t = a * load4f (xyz [sselect] [0]) + b * load4f (xyz [sselect] [1]) + c * load4f (xyz [sselect] [2]);
-    store4f (g [n], k * _mm_rsqrt_ps (dot (t, t)));
+    object_t & A = objects [n];
+    float saturation, value;
+    bumps (A.animation_time, saturation, value);
+    store4f (d [n], hsv_to_rgb (A.hue, saturation, value, 0.85f));
   }
 }
 
@@ -247,11 +244,69 @@ void model_t::draw ()
 {
   for (unsigned n = 0; n != count; ++ n) {
     const object_t & object = objects [n];
-    system_select_t system_select = object.target.system;
+    system_select_t sselect = object.target.system;
     unsigned program_select = object.starting_point == 7 || object.target.point == 7 ? 1 : 0;
-    paint (r [n], f [n], g [n], d [n],
-           primitive_count [system_select],
-           vao_ids [system_select],
+
+    v4f one = { 1.0f, 1.0f, 1.0f, 1.0f, };
+    v4f lambda = _mm_set1_ps (step (object.animation_time));
+    v4f g0 = load4f (abc [sselect] [object.starting_point]);
+    v4f g1 = load4f (abc [sselect] [object.target.point]);
+    v4f k = (one - lambda) * g0 + lambda * g1;
+
+    float (& X) [3] [4] = xyz [sselect];
+    v4f T = broadcast0 (k) * load4f (X [0])
+          + broadcast1 (k) * load4f (X [1])
+          + broadcast2 (k) * load4f (X [2]);
+
+    v4f invnormT = rsqrt (dot (T, T));
+    T *= invnormT;
+
+    float g [4] ALIGNED16;
+    store4f (g, k * invnormT);
+
+    float h [3] [4] ALIGNED16;
+
+    if (program_select == 0)
+    {
+      v4f crs [3], dsq [3];
+      for (unsigned i = 0; i != 3; ++ i) {
+        v4f Y = load4f (X [(i + 1) % 3]);
+        v4f Z = load4f (X [(i + 2) % 3]);
+        v4f YZ = dot (Y, Z);
+        dsq [i] = YZ * YZ;
+        crs [i] = cross (Y, Z);
+      }
+
+      v4f tX = dot (load4f (X [0]), crs [0]); // triple product
+      v4f TU [3], usq [3];
+      for (unsigned i = 0; i != 3; ++ i) {
+        v4f a = _mm_set1_ps (g [i]);
+        TU [i] = - (a + a) * tX * crs [i] / (one - dsq [i]);
+        usq [i] = dot (TU [i], TU [i]);
+      }
+
+      v4f asq [3], vwsq [3];
+      for (unsigned i = 0; i != 3; ++ i) {
+        v4f tx = dot (T, load4f (X [i]));
+        asq [i] = one - tx * tx;
+        v4f vw = dot (TU [(i + 1) % 3], TU [(i + 2) % 3]);
+        vwsq [i] = vw * vw;
+      }
+
+#define col0(a,b,c,d) _mm_movelh_ps (_mm_unpacklo_ps (a, b), _mm_unpacklo_ps (c, d))
+
+      v4f q = { 0.25f, 0.25f, 0.25f, 0.25f, };
+      for (unsigned i = 0; i != 3; ++ i) {
+        unsigned j = (i + 1) % 3;
+        unsigned k = (i + 2) % 3;
+        v4f H = sqrt (col0 (asq [i] - q * usq [j], asq [i] - q * usq [k], usq [k] - vwsq [i] * rcp (usq [j]), usq [j] - vwsq [i] * rcp (usq [k])));
+        store4f (h [i], H);
+      }
+    }
+
+    paint (r [n], f [n], g, h, d [n],
+           primitive_count [sselect],
+           vao_ids [sselect],
            programs [program_select]);
   }
 }

@@ -18,14 +18,11 @@ my $bol = 1;
 
 # Shorten certain identifiers.
 my %abbrevs = (
-  "triangle" => "I", # 9 arguments
   "segment" => "I",  # 5 or 7 arguments
   "amplify" => "I",  # 1 argument
   "aspect" => "I",   # 6 arguments
-  "vertex" => "I",   # 3 arguments
+  "vertex" => "I",   # 2 arguments
   "color" => "J",    # 1 argument
-  "snub" => "I",     # 8 arguments
-  "sq" => "K",       # 1 argument
 );
 
 %abbrevs = map { qr/\b$_\b/ => $abbrevs {$_} } keys %abbrevs;
@@ -64,7 +61,8 @@ while (defined (my $line = <$in>))
     $buffer =~ s{\B }{}g; # strip space not after a word
     $buffer =~ s{ \B}{}g; # strip space not before a word
 
-    while ($buffer =~ m/^((?:\w+ )+)(\w+(?:=[^;]*)?);(.*)$/)
+    my $v = qr/\w+(?:=[^;]+)?/;
+    while ($buffer =~ m/\G((?:\w+ )+)($v(?:,$v)*);/g)
     {
       my $type = $1;
       my $vars = $2;
@@ -79,6 +77,7 @@ while (defined (my $line = <$in>))
         if (defined $oldtype)
         {
           print $out "$oldtype$oldvars;";
+          #$bol = 0;  # not needed
         }
         $oldtype = $type;
         $oldvars = $vars;

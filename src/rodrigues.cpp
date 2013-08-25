@@ -65,24 +65,22 @@ namespace
     }
     else {
       // Quadrants 2 and 3.
-      // Use rsqrt and mul to approximate the square root.
-      v4f rx = _mm_rsqrt_ss (xsq);           // x^-1 x^2 * *
-      v4f xx1 = _mm_unpacklo_ps (xsq, k1);   // x^2 1 * *
-      v4f xx = rx * xx1;                     // x x^2 * *
+      v4f x4 = sqrt (xsq); // approx
+      v4f xx = _mm_unpacklo_ps (x4, xsq);    // x x^2 * *
       // Call fg_reduced on (pi-sqrt(xsq))^2.
       v4f kpi = { +0x1.921fb4P1f, 0.0f, 0.0f, 0.0f, }; // pi
       v4f px1 = xx - kpi;                    // x-pi * * *
       v4f px2 = px1 * px1;                   // (pi-x)^2 * * *
       v4f px3 = _mm_unpacklo_ps (k1, px2);   // 1 (pi-x)^2 * *
       v4f px4 = _mm_movelh_ps (px3, px3);    // 1 (pi-x)^2 1 (pi-x)^2
+      v4f px5 = _mm_unpacklo_ps (px1, px2);  // x-pi (pi-x)^2 * *
       v4f fg = fg_reduced (px4);             // sin(pi-x)/(pi-x) [1-cos(pi-x)]/(pi-x)^2 * *
       // Recover sin(x) and 1-cos(x) from the result.
-      v4f px5 = _mm_unpacklo_ps (px1, px2);  // x-pi (pi-x)^2 * *
       v4f sc1 = px5 * fg;                    // -sin(x) 1+cos(x) * *
       v4f k02 = { 0.0f, 2.0f, 0.0f, 0.0f, };
       v4f sc2 = k02 - sc1;                   // sin(x) 1-cos(x) * *
       // Reciprocal-multiply to approximate f and g.
-      return _mm_rcp_ps (xx) * sc2;          // sin1(x) cos2(x) * *
+      return rcp (xx) * sc2;                 // sin1(x) cos2(x) * *
     }
   }
 
@@ -120,7 +118,7 @@ namespace
     else {
       // Quadrants 2, 3 and 4.
       v4f khalf = { 0.5f, 0.5f, 0.5f, 0.5f, };
-      v4f rx = khalf * _mm_sqrt_ps (xsq);    // x/2 x/2 x/2 x/2
+      v4f rx = khalf * sqrt (xsq);           // x/2 x/2 x/2 x/2 (approx)
       // Call fg_reduced on (1/2)(pi-sqrt(xsq))^2.
       v4f kpi = { +0x1.921fb4P0f, 0.0f, 0.0f, 0.0f, }; // pi/2
       v4f px1 = rx - kpi;                    // x/2-pi/2 * * *
@@ -137,8 +135,8 @@ namespace
       v4f cs2 = _mm_unpacklo_ps (cs1, cs1);  // cos(x/2) cos(x/2) sin(x/2) sin(x/2)
       v4f c = _mm_movelh_ps (cs2, cs2);
       v4f s = _mm_movehl_ps (cs2, cs2);
-      g = rx * c / s;
-      h = (k1 - g) / xsq;
+      g = rx * c * rcp (s);
+      h = (k1 - g) * rcp (xsq);
     }
     v4f khalf = { 0.5f, 0.5f, 0.5f, 0.5f, };
     return dot (u, w) * h * u + g * w - khalf * cross (u, w);
@@ -185,7 +183,7 @@ void advance_angular (float (* u) [4], float (* w) [4], unsigned count, float dt
     if (_mm_comigt_ss (xsq, klim1)) {
       v4f k1 = { 1.0f, 1.0f, 1.0f, 1.0f, };
       v4f k2pi = { 0x1.921fb4P2f, 0x1.921fb4P2f, 0x1.921fb4P2f, 0x1.921fb4P2f, };
-      u1 *= k1 - k2pi / _mm_sqrt_ps (xsq);
+      u1 *= k1 - k2pi * rsqrt (xsq);
     }
     store4f (u [n], u1);
   }

@@ -14,7 +14,7 @@ unsigned make_vao (unsigned N, const float (* vertices) [4], const std::uint8_t 
 namespace uniforms
 {
   enum index_t {
-    p, l, g, m, r, d, s, f, e, count
+    p, l, g, h, m, r, d, s, f, e, count
   };
 }
 
@@ -30,7 +30,8 @@ bool initialize_programs (program_t (& programs) [2], v4f view);
 void paint (const float r,
             const float (& m) [16],
             const float (& g) [4],
-            const float (& h) [4],
+            const float (& h) [3] [4],
+            const float (& d) [4],
             unsigned N,
             unsigned vao_id,
             const program_t & program);

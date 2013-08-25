@@ -8,7 +8,6 @@
 // Interface.
 
 typedef __m128 v4f;
-typedef __m128d v2d;
 
 #define SHUFFLE(a, b, c, d) ((a) | ((b) << 2) | ((c) << 4) | ((d) << 6))
 #define UNPACK2(a,a0,a1)               \
@@ -30,6 +29,18 @@ do {                                   \
 #define UNPACK4(a,a0,a1,a2,a3)         \
 do {                                   \
   v4f _t = (a);                        \
+  v4f _t0 = _mm_unpacklo_ps (_t, _t);  \
+  v4f _t1 = _mm_unpackhi_ps (_t, _t);  \
+  (a0) = _mm_movelh_ps (_t0, _t0);     \
+  (a1) = _mm_movehl_ps (_t0, _t0);     \
+  (a2) = _mm_movelh_ps (_t1, _t1);     \
+  (a3) = _mm_movehl_ps (_t1, _t1);     \
+} while (0)
+#define TRANSPOSE3(a,b,c,a0,a1,a2)    \
+do {                                   \
+  v4f _t = (a);                        \
+  v4f _u = (b);                        \
+  v4f _v = (c);                        \
   v4f _t0 = _mm_unpacklo_ps (_t, _t);  \
   v4f _t1 = _mm_unpackhi_ps (_t, _t);  \
   (a0) = _mm_movelh_ps (_t0, _t0);     \
@@ -66,9 +77,33 @@ inline v4f cross (const v4f a, const v4f b)
   return r;
 }
 
+// Reciprocal, x = 1/k.
+// Newton's method on f(x) = (1/x) - k.
+inline v4f rcp (v4f k)
+{
+  v4f x0 = _mm_rcp_ps (k);
+  return (x0 + x0) - k * (x0 * x0);
+}
+
+// Reciprocal square root, x = 1/sqrt(k).
+// Newton's method on f(x) = (1/(x^2)) - k.
+inline v4f rsqrt (v4f k)
+{
+  v4f half = { 0.5f, 0.5f, 0.5f, 0.5f, };
+  v4f three = { 3.0f, 3.0f, 3.0f, 3.0f, };
+  v4f x0 = _mm_rsqrt_ps (k);
+  return (half * x0) * (three - (x0 * x0) * k);
+}
+
 inline v4f normalize (v4f v)
 {
-  return v / _mm_sqrt_ps (dot (v, v));
+  return v * rsqrt (dot (v, v));
+}
+
+inline v4f sqrt (v4f k)
+{
+  v4f zero = { 0.0f, 0.0f, 0.0f, 0.0f, };
+  return k * _mm_and_ps (_mm_cmpneq_ps (k, zero), rsqrt (k));
 }
 
 #endif

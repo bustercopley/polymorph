@@ -59,8 +59,7 @@ namespace
       v4f dxdv = dot (dx, dv);
       v4f zero = _mm_setzero_ps ();
       if (_mm_comilt_ss (dxdv, zero)) { // Spheres approach?
-        v4f dxlen = _mm_sqrt_ps (dxsq);
-        v4f dxn = dx / dxlen;
+        v4f dxn = normalize (dx);
         v4f rw = _mm_set1_ps (r [ix]) * load4f (w [ix])
                + _mm_set1_ps (r [iy]) * load4f (w [iy]);
         v4f unn = dx * dxdv / dxsq;
@@ -147,13 +146,14 @@ kdtree_t::~kdtree_t ()
     node_end [_i] = _end;                    \
   } while (false)
 
-void kdtree_t::compute (unsigned * new_index, const float (* new_x) [4], unsigned count)
+bool kdtree_t::compute (unsigned * new_index, const float (* new_x) [4], unsigned count)
 {
   index = new_index;
   x = new_x;
   unsigned new_node_count = nodes_required (count);
-  reallocate_aligned_arrays (memory, node_count, new_node_count,
-                             & node_lohi, & node_begin, & node_end);
+  if (! reallocate_aligned_arrays (memory, node_count, new_node_count,
+                                   & node_lohi, & node_begin, & node_end))
+    return false;
   static const float inf = std::numeric_limits <float>::infinity ();
   __m128 klo = { -inf, -inf, -inf, 0.0f, };
   __m128 khi = { +inf, +inf, +inf, 0.0f, };
@@ -182,6 +182,7 @@ void kdtree_t::compute (unsigned * new_index, const float (* new_x) [4], unsigne
       stack [sp ++] = 2 * i + 1;
     }
   }
+  return true;
 }
 
 void kdtree_t::bounce (unsigned count, float R,

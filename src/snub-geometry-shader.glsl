@@ -1,56 +1,55 @@
 // -*- C++ -*-
-void segment (vec4 A, vec4 V, vec4 W, vec3 c, float h)
+void segment (vec3 S, vec4 A, vec4 V, vec4 W, float h)
 {
-  vertex (A, c, vec3 (h, 1, 1));
-  vertex (V, c, vec3 (0, 1, 1));
-  vertex (W, c, vec3 (0, 1, 1));
+  N = color (S);
+  vertex (A, vec3 (h, 1, 1));
+  vertex (V, vec3 (0, 1, 1));
+  vertex (W, vec3 (0, 1, 1));
   EndPrimitive ();
-}
-
-void triangle (vec4 U, vec4 V, vec4 W, vec3 u, vec3 v, vec3 w, float a, float b, float c)
-{
-  vec3 C = color (normalize (cross (v - u, w - u)));
-  vertex (U, C, vec3 (a, 0, 0));
-  vertex (V, C, vec3 (0, b, 0));
-  vertex (W, C, vec3 (0, 0, c));
-  EndPrimitive ();
-}
-
-void snub (vec3 s, vec3 t, vec3 x, vec3 Y, vec3 z, vec3 X, vec3 y, vec3 Z)
-{
-  vec3 u = X + y + z;
-  vec3 v = x + Y + z;
-  vec3 w = x + y + Z;
-  vec3 P = w - v;
-  vec3 Q = u - w;
-  vec3 R = v - u;
-  vec3 b = dot (s, u) * s;
-  vec3 c = dot (t, u) * t;
-  vec3 g = u - b;
-  vec3 h = u - c;
-  float A = dot (P, P);
-  float B = dot (Q, Q);
-  float C = dot (R, R);
-  float G = 1 / B;
-  float H = 1 / C;
-  float D = dot (Q, R);
-  float E = dot (R, P);
-  float F = dot (P, Q);
-  float e = dot (g, Q);
-  float f = dot (h, R);
-  mat4 q = p * m;
-  vec4 U = q * vec4 (u, 1);
-  vec4 V = q * vec4 (v, 1);
-  vec4 W = q * vec4 (w, 1);
-  triangle (U, W, V, u, w, v, sqrt (C - E * E / A), sqrt (B - D * D * H), sqrt (A - F * F * G));
-  segment (q * vec4 (b, 1), W, U, color (s), sqrt (dot (g, g) - e * e * G));
-  segment (q * vec4 (c, 1), U, V, color (t), sqrt (dot (h, h) - f * f * H));
 }
 
 void main ()
 {
-  vec3 G = r * g;
-  vec3 s = S [4];
-  vec3 t = S [2];
-  snub (s, t, G [0] * S [0], G [1] * S [1], G [2] * t, G [0] * S [3], G [1] * s, G [2] * S [5]);
+  vec3 G = r * g.xyz;
+  vec3 x = G [0] * S [0];
+  vec3 Y = G [1] * S [1];
+  vec3 z = G [2] * S [2];
+  vec3 X = G [0] * S [3];
+  vec3 y = G [1] * S [4];
+  vec3 Z = G [2] * S [5];
+
+  vec3 u = X + y + z;
+  vec3 v = x + Y + z;
+  vec3 w = x + y + Z;
+
+  vec3 P = w - v;
+  vec3 Q = u - w;
+  vec3 R = v - u;
+
+  mat4 q = p * m;
+
+  vec4 U = q * vec4 (u, 1);
+  vec4 V = q * vec4 (v, 1);
+  vec4 W = q * vec4 (w, 1);
+
+  float A = dot (P, P);
+  float B = dot (Q, Q);
+  float C = dot (R, R);
+
+  float D = dot (Q, R);
+  float E = dot (R, P);
+  float F = dot (P, Q);
+
+  float s = dot (S [4], u);
+  float t = dot (S [2], u);
+
+  N = color (normalize (cross (v - u, u - w)));
+  vertex (W, vec3 (0, 0, sqrt (B - D * D / C)));
+  vertex (V, vec3 (0, sqrt (A - F * F / B), 0));
+  vertex (U, vec3 (sqrt (C - E * E / A), 0, 0));
+  EndPrimitive ();
+
+  segment (S [4], q * vec4 (s * S [4], 1), W, U, sqrt (r * r - s * s - B / 4));
+  segment (S [2], q * vec4 (t * S [2], 1), U, V, sqrt (r * r - t * t - C / 4));
 }
+

@@ -199,7 +199,7 @@ window_info_t * create_screensaver_window (HINSTANCE hInstance, HWND parent, run
   wc.lpfnWndProc = & WndProc;
   wc.hInstance = hInstance;
   wc.hIcon = ::LoadIcon (hInstance, MAKEINTRESOURCE (257));
-  wc.lpszClassName = usr::window_class_name;
+  wc.lpszClassName = "Polymorph";
 
   ATOM atom;
   HWND hwnd;

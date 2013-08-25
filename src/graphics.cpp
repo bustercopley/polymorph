@@ -107,7 +107,7 @@ bool program_t::initialize (v4f view, unsigned gshader2)
   }
 
   for (unsigned k = 0; k != uniforms::count; ++ k) {
-    const char * names = "p\0l\0g\0m\0r\0d\0s\0f\0e\0";
+    const char * names = "p\0l\0g\0h\0m\0r\0d\0s\0f\0e\0";
     uniform_locations [k] = glGetUniformLocation (id, names + 2 * k);
   }
 
@@ -149,6 +149,7 @@ void clear ()
 void paint (float r,
             const float (& m) [16],
             const float (& g) [4],
+            const float (& h) [3] [4],
             const float (& d) [4],
             unsigned N,
             unsigned vao_id,
@@ -157,7 +158,8 @@ void paint (float r,
   glUseProgram (program.id);
   glUniform1f (program.uniform_locations [uniforms::r], r);
   glUniformMatrix4fv (program.uniform_locations [uniforms::m], 1, GL_FALSE, m);
-  glUniform3fv (program.uniform_locations [uniforms::g], 1, g);
+  glUniform4fv (program.uniform_locations [uniforms::g], 1, g);
+  glUniform4fv (program.uniform_locations [uniforms::h], 3, h [0]);
   glUniform3fv (program.uniform_locations [uniforms::d], 1, d);
   glBindVertexArray (vao_id);
   glDrawElements (GL_TRIANGLES_ADJACENCY, N * 6, GL_UNSIGNED_BYTE, nullptr);

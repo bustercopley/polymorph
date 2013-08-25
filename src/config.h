@@ -25,7 +25,6 @@ namespace usr {
   extern const float specular_material [4];
   extern const char * const window_name;
   extern const char * const message_window_name;
-  extern const char * const window_class_name;
   extern const char * const message;
 }
 
