@@ -110,7 +110,6 @@ bool model_t::initialize (unsigned long long seed, int width, int height)
   for (unsigned n = 0; n != total_count; ++ n) add_object (view);
   for (unsigned n = 0; n != count; ++ n) kdtree_index [n] = n;
 
-  animation_time = 0.0f;
   bumps.initialize (usr::hsv_s_bump, usr::hsv_v_bump);
   step.initialize (usr::morph_start, usr::morph_finish);
   initialize_systems (abc, xyz, primitive_count, vao_ids);
@@ -191,9 +190,9 @@ void model_t::add_object (v4f view)
   store4f (w [count], rng.get_vector_in_ball (0.2f * usr::temperature / A.l));
 
   std::uint64_t entropy = rng.get ();
-  A.phase = rng.get_double (0.0, 1.0);
-  A.hue = 6.0f * (1.0f - A.phase);
-  A.animation_time = usr::cycle_duration;
+  float phase = rng.get_double (0.0, 1.0);
+  A.hue = 6.0f * (1.0f - phase);
+  A.animation_time = phase * usr::cycle_duration;
   A.target.system = static_cast <system_select_t> ((entropy >> 3) % 6);
   A.target.point = entropy & 7;
   A.starting_point = A.target.point;
@@ -204,26 +203,19 @@ void model_t::add_object (v4f view)
 void model_t::proceed ()
 {
   const float dt = usr::frame_time;
-  const float T = usr::cycle_duration;
-  animation_time += dt;
-  if (animation_time >= T) animation_time -= T;
 
   for (unsigned n = 0; n != count; ++ n) {
     object_t & A = objects [n];
-    float t = animation_time + A.phase * usr::cycle_duration;
-    if (t >= T) t -= T;
-    A.animation_time = t;
-  }
-
-  for (unsigned n = 0; n != count; ++ n) {
-    object_t & A = objects [n];
-    if (A.animation_time < dt) {
+    float t = A.animation_time + dt;
+    if (t >= usr::cycle_duration) {
+      t -= usr::cycle_duration;
       // We must perform a Markov transition.
       transition (rng, u [n], A.target, A.starting_point);
 #if PRINT_ENABLED
       ++ polyhedron_counts [polyhedra [(int) A.target.system] [A.target.point] - 1];
 #endif
     }
+    A.animation_time = t;
   }
 
   kdtree.compute (kdtree_index, x, count);
