@@ -16,7 +16,6 @@
 struct object_t
 {
   float m, l;
-  float phase;
   float hue;
   float animation_time;
   unsigned starting_point;
@@ -42,7 +41,6 @@ private:
   step_t step ALIGNED16;
 
   float max_radius;
-  float animation_time;
 
   void * memory;
   object_t * objects;
