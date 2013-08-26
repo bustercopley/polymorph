@@ -110,6 +110,20 @@ bool model_t::initialize (unsigned long long seed, int width, int height)
   for (unsigned n = 0; n != total_count; ++ n) add_object (view);
   for (unsigned n = 0; n != count; ++ n) kdtree_index [n] = n;
 
+  float animation_time_offset = rng.get_double (0.0, usr::cycle_duration);
+
+  for (unsigned n = 0; n != count; ++ n) {
+    float phase = (n + 0.0f) / count;
+
+    float hue = 6.0f * phase;
+    hue = (hue < 3.0f / 2.0f ? hue * 2.0f / 3.0f : hue * 10.0f / 9.0f - 2.0f / 3.0f); // More orange.
+    objects [n].hue = hue;
+
+    float animation_time = animation_time_offset - phase * usr::cycle_duration;
+    if (animation_time < 0.0f) animation_time += usr::cycle_duration;
+    objects [n].animation_time = animation_time;
+  }
+
   bumps.initialize (usr::hsv_s_bump, usr::hsv_v_bump);
   step.initialize (usr::morph_start, usr::morph_finish);
   initialize_systems (abc, xyz, primitive_count, vao_ids);
@@ -190,9 +204,6 @@ void model_t::add_object (v4f view)
   store4f (w [count], rng.get_vector_in_ball (0.2f * usr::temperature / A.l));
 
   std::uint64_t entropy = rng.get ();
-  float phase = rng.get_double (0.0, 1.0);
-  A.hue = 6.0f * (1.0f - phase);
-  A.animation_time = phase * usr::cycle_duration;
   A.target.system = static_cast <system_select_t> ((entropy >> 3) % 6);
   A.target.point = entropy & 7;
   A.starting_point = A.target.point;

@@ -14,8 +14,8 @@ namespace
     const v4f num5 = { 5.0f, 5.0f, 5.0f, 5.0f, };
     const v4f num6 = { 6.0f, 6.0f, 6.0f, 6.0f, };
 
-    // Use offsets (0,4,2,*) to get [magenta, red, yellow, green, cyan, blue, magenta).
-    const v4f offsets = { 0.0f, 4.0f, 2.0f, 0.0f, };
+    // Use offsets (1,5,3,*) to get [red, yellow, green, cyan, blue, magenta, red).
+    const v4f offsets = { 1.0f, 5.0f, 3.0f, 0.0f, };
     v4f theta = _mm_set1_ps (hue) + offsets;
 
     // Reduce each component of theta modulo 6.0f.
