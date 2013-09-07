@@ -2,6 +2,7 @@
 #include "glinit.h"
 
 PFNWGLCHOOSEPIXELFORMATARBPROC wglChoosePixelFormatARB = nullptr;
+PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB = nullptr;
 PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT = nullptr;
 PFNGLGENVERTEXARRAYSPROC glGenVertexArrays = nullptr;
 PFNGLBINDVERTEXARRAYPROC glBindVertexArray = nullptr;
@@ -37,11 +38,11 @@ PFNGLBINDATTRIBLOCATIONPROC glBindAttribLocation = nullptr;
 PFNGLBLENDEQUATIONPROC glBlendEquation = nullptr;
 
 bool get_glprocs ();
-bool get_wglChoosePixelFormatARB (HINSTANCE hInstance);
+bool get_initial_wglprocs (HINSTANCE hInstance);
 
 HGLRC initialize_opengl (HINSTANCE hInstance, HDC hdc)
 {
-  int ilist [] = {
+  int pf_attribs [] = {
     WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
     WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
     WGL_DOUBLE_BUFFER_ARB, GL_TRUE,
@@ -53,18 +54,24 @@ HGLRC initialize_opengl (HINSTANCE hInstance, HDC hdc)
     //WGL_SAMPLES_ARB, 5,
     0, 0,
   };
-  float flist [] = { 0, 0, };
+
+  int context_attribs [] = {
+    WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
+    WGL_CONTEXT_MINOR_VERSION_ARB, 2,
+    WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+    0, 0,
+  };
 
   HGLRC hglrc;
   const UINT pfcountmax = 256;
   int pfs [pfcountmax];
   UINT pfcount;
-  if (get_wglChoosePixelFormatARB (hInstance)
-      && wglChoosePixelFormatARB (hdc, ilist, flist, pfcountmax, pfs, & pfcount)
+  if (get_initial_wglprocs (hInstance)
+      && wglChoosePixelFormatARB (hdc, pf_attribs, nullptr, pfcountmax, pfs, & pfcount)
       && pfcount
       && pfcount <= pfcountmax
       && ::SetPixelFormat (hdc, pfs [0], nullptr)
-      && (hglrc = ::wglCreateContext (hdc))
+      && (hglrc = wglCreateContextAttribsARB (hdc, nullptr, context_attribs))
       && ::wglMakeCurrent (hdc, hglrc)
       && get_glprocs ()) {
     if (wglSwapIntervalEXT) {
@@ -117,7 +124,7 @@ bool get_glprocs ()
   return true;
 }
 
-bool get_wglChoosePixelFormatARB (HINSTANCE hInstance)
+bool get_initial_wglprocs (HINSTANCE hInstance)
 {
   // To obtain an OpenGL 3 pixel format, we need to call wglChoosePixelFormatARB, but
   // first we must obtain the address of that function by calling using wglGetProcAddress,
@@ -155,6 +162,7 @@ bool get_wglChoosePixelFormatARB (HINSTANCE hInstance)
               if (::wglMakeCurrent (dc, rc))
               {
                 GLPROC(PFNWGLCHOOSEPIXELFORMATARBPROC, wglChoosePixelFormatARB);
+                GLPROC(PFNWGLCREATECONTEXTATTRIBSARBPROC, wglCreateContextAttribsARB);
                 ::wglMakeCurrent (nullptr, nullptr);
               }
               ::wglDeleteContext (rc);
