@@ -110,18 +110,18 @@ bool model_t::initialize (unsigned long long seed, int width, int height)
   for (unsigned n = 0; n != total_count; ++ n) add_object (view);
   for (unsigned n = 0; n != count; ++ n) kdtree_index [n] = n;
 
-  float animation_time_offset = rng.get_double (0.0, usr::cycle_duration);
-
+  float phase = 0.0f;
+  float global_time_offset = rng.get_double (0.0, usr::cycle_duration);
   for (unsigned n = 0; n != count; ++ n) {
-    float phase = (n + 0.0f) / count;
-
     float hue = 6.0f * phase;
     hue = (hue < 3.0f / 2.0f ? hue * 2.0f / 3.0f : hue * 10.0f / 9.0f - 2.0f / 3.0f); // More orange.
     objects [n].hue = hue;
 
-    float animation_time = animation_time_offset - phase * usr::cycle_duration;
-    if (animation_time < 0.0f) animation_time += usr::cycle_duration;
+    // Initial animation_time is in [T, 2T) to force an immediate transition.
+    float animation_time = global_time_offset + (1.0f - phase) * usr::cycle_duration;
+    if (animation_time < usr::cycle_duration) animation_time += usr::cycle_duration;
     objects [n].animation_time = animation_time;
+    phase += 1.0f / total_count;
   }
 
   bumps.initialize (usr::hsv_s_bump, usr::hsv_v_bump);
@@ -207,7 +207,6 @@ void model_t::add_object (v4f view)
   A.target.system = static_cast <system_select_t> ((entropy >> 3) % 6);
   A.target.point = entropy & 7;
   A.starting_point = A.target.point;
-  transition (rng, u [count], A.target, A.starting_point);
   ++ count;
 }
 
