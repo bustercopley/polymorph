@@ -257,10 +257,7 @@ void model_t::draw ()
     v4f k = (one - lambda) * g0 + lambda * g1;
 
     float (& X) [3] [4] = xyz [sselect];
-    v4f T = broadcast0 (k) * load4f (X [0])
-          + broadcast1 (k) * load4f (X [1])
-          + broadcast2 (k) * load4f (X [2]);
-
+    v4f T = tmapply (X, k);
     v4f invnormT = rsqrt (dot (T, T));
     T *= invnormT;
 

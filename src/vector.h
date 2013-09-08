@@ -41,12 +41,14 @@ do {                                   \
   v4f _t = (a);                        \
   v4f _u = (b);                        \
   v4f _v = (c);                        \
-  v4f _t0 = _mm_unpacklo_ps (_t, _t);  \
-  v4f _t1 = _mm_unpackhi_ps (_t, _t);  \
-  (a0) = _mm_movelh_ps (_t0, _t0);     \
-  (a1) = _mm_movehl_ps (_t0, _t0);     \
-  (a2) = _mm_movelh_ps (_t1, _t1);     \
-  (a3) = _mm_movehl_ps (_t1, _t1);     \
+  v4f _w = _mm_setzero_ps ();          \
+  v4f _t0 = _mm_unpacklo_ps (_t, _u);  \
+  v4f _t1 = _mm_unpacklo_ps (_v, _w);  \
+  v4f _t2 = _mm_unpackhi_ps (_t, _u);  \
+  v4f _t3 = _mm_unpackhi_ps (_v, _w);  \
+  (a0) = _mm_movelh_ps (_t0, _t2);     \
+  (a1) = _mm_movehl_ps (_t2, _t0);     \
+  (a2) = _mm_movelh_ps (_t1, _t3);     \
 } while (0)
 
 inline v4f load4f (const float * a) { return _mm_load_ps (a); }
@@ -104,6 +106,29 @@ inline v4f sqrt (v4f k)
 {
   v4f zero = { 0.0f, 0.0f, 0.0f, 0.0f, };
   return k * _mm_and_ps (_mm_cmpneq_ps (k, zero), rsqrt (k));
+}
+
+// // Apply the 3x3 matrix m to the column vector x.
+// inline v4f mapply (const float (& m) [3] [4], v4f x)
+// {
+//   v4f r0 = dot (load4f (m [0]), x);   // r0 r0 r0 r0
+//   v4f r1 = dot (load4f (m [1]), x);   // r1 r1 r1 r1
+//   v4f r2 = dot (load4f (m [2]), x);   // r2 r2 r2 r2
+//   v4f r3 = _mm_setzero_ps ();         // r3 r3 r3 r3
+//   v4f t0 = _mm_unpacklo_ps (r0, r1);  // r0 r1 r0 r1
+//   v4f t1 = _mm_unpacklo_ps (r2, r3);  // r2  0 r2  0
+//   return _mm_movelh_ps (t0, t1);      // r0 r1 r2 0
+// }
+
+// Transpose 3x3 matrix m and apply to column vector x.
+inline v4f tmapply (const float (& m) [3] [4], v4f x)
+{
+  v4f m0 = load4f (m [0]);
+  v4f m1 = load4f (m [1]);
+  v4f m2 = load4f (m [2]);
+  v4f x0, x1, x2;
+  UNPACK3 (x, x0, x1, x2);
+  return x0 * m0 + x1 * m1 + x2 * m2;
 }
 
 #endif
