@@ -18,6 +18,8 @@ struct object_t
   float m, l;
   float hue;
   float animation_time;
+  float locus_end [4];
+  float locus_speed;
   unsigned starting_point;
   polyhedron_select_t target;
 };
@@ -33,10 +35,12 @@ struct model_t
 private:
   bool set_capacity (unsigned new_capacity);
   void add_object (v4f view);
+  void recalculate_locus (object_t & A);
 
   float walls [6] [2] [4] ALIGNED16;
   float abc [system_count] [8] [4] ALIGNED16;
   float xyz [system_count] [3] [4] ALIGNED16;
+  float xyzinv [system_count] [3] [4] ALIGNED16;
   bumps_t bumps ALIGNED16;
   step_t step ALIGNED16;
 

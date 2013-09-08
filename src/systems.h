@@ -14,6 +14,7 @@ enum system_select_t {
 
 void initialize_systems (float (& abc) [system_count] [8] [4],
                          float (& xyz) [system_count] [3] [4],
+                         float (& xyzinv) [system_count] [3] [4],
                          unsigned (& N) [system_count],
                          unsigned (& vao_ids) [system_count]);
 

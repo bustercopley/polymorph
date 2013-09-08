@@ -13,6 +13,7 @@
 #include "aligned-arrays.h"
 #include "vector.h"
 #include "hsv-to-rgb.h"
+#include <cmath>
 
 #include "print.h"
 
@@ -126,7 +127,7 @@ bool model_t::initialize (unsigned long long seed, int width, int height)
 
   bumps.initialize (usr::hsv_s_bump, usr::hsv_v_bump);
   step.initialize (usr::morph_start, usr::morph_finish);
-  initialize_systems (abc, xyz, primitive_count, vao_ids);
+  initialize_systems (abc, xyz, xyzinv, primitive_count, vao_ids);
   return true;
 }
 
@@ -210,6 +211,20 @@ void model_t::add_object (v4f view)
   ++ count;
 }
 
+void model_t::recalculate_locus (object_t & object)
+{
+  system_select_t sselect = object.target.system;
+  v4f g0 = load4f (abc [sselect] [object.starting_point]);
+  v4f g1 = load4f (abc [sselect] [object.target.point]);
+  v4f T0 = tmapply (xyz [sselect], g0);
+  v4f T1 = tmapply (xyz [sselect], g1);
+  v4f d = dot (T0, T1);
+  v4f T2 = normalize (T1 - d * T0);
+  v4f g2 = tmapply (xyzinv [sselect], T2);
+  store4f (object.locus_end, g2);
+  object.locus_speed = std::acos (_mm_cvtss_f32 (d));
+}
+
 void model_t::proceed ()
 {
   const float dt = usr::frame_time;
@@ -221,6 +236,7 @@ void model_t::proceed ()
       t -= usr::cycle_duration;
       // We must perform a Markov transition.
       transition (rng, u [n], A.target, A.starting_point);
+      recalculate_locus (A);
 #if PRINT_ENABLED
       ++ polyhedron_counts [polyhedra [(int) A.target.system] [A.target.point] - 1];
 #endif
@@ -249,24 +265,20 @@ void model_t::draw ()
     system_select_t sselect = object.target.system;
     unsigned program_select = object.starting_point == 7 || object.target.point == 7 ? 1 : 0;
 
-    v4f one = { 1.0f, 1.0f, 1.0f, 1.0f, };
-    v4f lambda = _mm_set1_ps (step (object.animation_time));
-    v4f g0 = load4f (abc [sselect] [object.starting_point]);
-    v4f g1 = load4f (abc [sselect] [object.target.point]);
-    v4f k = (one - lambda) * g0 + lambda * g1;
-
-    float (& X) [3] [4] = xyz [sselect];
-    v4f T = tmapply (X, k);
-    v4f invnormT = rsqrt (dot (T, T));
-    T *= invnormT;
-
     float g [4] ALIGNED16;
-    store4f (g, k * invnormT);
+    {
+      float t = step (object.animation_time) * object.locus_speed;
+      v4f c = _mm_set1_ps (std::cos (t));
+      v4f s = _mm_set1_ps (std::sin (t));
+      store4f (g, c * load4f (abc [sselect] [object.starting_point]) + s * load4f (object.locus_end));
+    }
 
     float h [3] [4] ALIGNED16;
 
     if (program_select == 0)
     {
+      float (& X) [3] [4] = xyz [sselect];
+      v4f one = { 1.0f, 1.0f, 1.0f, 1.0f, };
       v4f crs [3], dsq [3];
       for (unsigned i = 0; i != 3; ++ i) {
         v4f Y = load4f (X [(i + 1) % 3]);
@@ -283,6 +295,8 @@ void model_t::draw ()
         TU [i] = - (a + a) * tX * crs [i] / (one - dsq [i]);
         usq [i] = dot (TU [i], TU [i]);
       }
+
+      v4f T = tmapply (X, load4f (g));
 
       v4f asq [3], vwsq [3];
       for (unsigned i = 0; i != 3; ++ i) {

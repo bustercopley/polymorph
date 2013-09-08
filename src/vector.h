@@ -46,9 +46,9 @@ do {                                   \
   v4f _t1 = _mm_unpacklo_ps (_v, _w);  \
   v4f _t2 = _mm_unpackhi_ps (_t, _u);  \
   v4f _t3 = _mm_unpackhi_ps (_v, _w);  \
-  (a0) = _mm_movelh_ps (_t0, _t2);     \
-  (a1) = _mm_movehl_ps (_t2, _t0);     \
-  (a2) = _mm_movelh_ps (_t1, _t3);     \
+  (a0) = _mm_movelh_ps (_t0, _t1);     \
+  (a1) = _mm_movehl_ps (_t1, _t0);     \
+  (a2) = _mm_movelh_ps (_t2, _t3);     \
 } while (0)
 
 inline v4f load4f (const float * a) { return _mm_load_ps (a); }
