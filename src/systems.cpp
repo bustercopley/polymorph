@@ -1,9 +1,10 @@
+#include "compiler.h"
 #include "mswin.h"
+#include "vector.h"
 #include "systems.h"
 #include "nodes/system.h"
 #include "graphics.h"
 #include "memory.h"
-#include "compiler.h"
 #include <cstdint>
 
 namespace
@@ -12,6 +13,16 @@ namespace
   void assign (float (* out) [4], const float (* from) [4], unsigned count)
   {
     copy_memory (out, from, count * 4 * sizeof (float));
+  }
+
+  NOINLINE
+  void assign_0213 (float (* out) [4], const float (* from) [4], unsigned count)
+  {
+    for (unsigned n = 0; n != count; ++ n) {
+      v4f t = _mm_loadu_ps (from [n]);
+      v4f s = _mm_shuffle_ps (t, t, SHUFFLE (0, 2, 1, 3));
+      store4f (out [n], s);
+    }
   }
 
   void initialize_system (float (& abc) [system_count] [8] [4],
@@ -27,15 +38,14 @@ namespace
     unsigned p = 2;
     unsigned N = 2 * p*q*r / (q*r + r*p + p*q - p*q*r);
 
-    if (select & 1) {
-      for (unsigned n = 0; n != 8; ++ n) {
-        v4f t = _mm_loadu_ps (abc_in [n]);
-        store4f (abc [select] [n], _mm_shuffle_ps (t, t, SHUFFLE (0, 2, 1, 3)));
-      }
-    }
-    else {
+    // For dual tilings, Y and Z are swapped. The permutation can
+    // be recovered from indices; however, it is hardcoded here.
+    if (select & 1)
+      assign_0213 (abc [select], abc_in, 8);
+    else
       assign (abc [select], abc_in, 8);
-    }
+
+    // Use the permutation encoded in indices.
     assign (& xyz [select] [0], xyz_in + indices_in [0] [0], 1);
     assign (& xyz [select] [1], xyz_in + indices_in [0] [4], 1);
     assign (& xyz [select] [2], xyz_in + indices_in [0] [2], 1);
