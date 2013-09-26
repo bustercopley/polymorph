@@ -104,17 +104,17 @@ inline v4f sqrt (v4f k)
   return k * _mm_and_ps (_mm_cmpneq_ps (k, zero), rsqrt (k));
 }
 
-// // Apply the 3x3 matrix m to the column vector x.
-// inline v4f mapply (const float (& m) [3] [4], v4f x)
-// {
-//   v4f r0 = dot (load4f (m [0]), x);   // r0 r0 r0 r0
-//   v4f r1 = dot (load4f (m [1]), x);   // r1 r1 r1 r1
-//   v4f r2 = dot (load4f (m [2]), x);   // r2 r2 r2 r2
-//   v4f r3 = _mm_setzero_ps ();         // r3 r3 r3 r3
-//   v4f t0 = _mm_unpacklo_ps (r0, r1);  // r0 r1 r0 r1
-//   v4f t1 = _mm_unpacklo_ps (r2, r3);  // r2  0 r2  0
-//   return _mm_movelh_ps (t0, t1);      // r0 r1 r2 0
-// }
+// Apply the 3x3 matrix m to the column vector x.
+inline v4f mapply (const float (& m) [3] [4], v4f x)
+{
+  v4f t0 = load4f (m [0]) * x;
+  v4f t1 = load4f (m [1]) * x;
+  v4f lo = _mm_hadd_ps (t0, t1); // t00+t01 t02+t03 t10+t11 t12+t13
+  v4f t2 = load4f (m [2]) * x;
+  v4f t3 = _mm_setzero_ps ();
+  v4f hi = _mm_hadd_ps (t2, t3); // t20+t21 t22+t23 0 0
+  return _mm_hadd_ps (lo, hi);
+}
 
 // Transpose 3x3 matrix m and apply to column vector x.
 inline v4f tmapply (const float (& m) [3] [4], v4f x)

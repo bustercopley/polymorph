@@ -127,7 +127,7 @@ bool model_t::initialize (unsigned long long seed, int width, int height)
 
   bumps.initialize (usr::hsv_s_bump, usr::hsv_v_bump);
   step.initialize (usr::morph_start, usr::morph_finish);
-  initialize_systems (abc, xyz, xyzinv, primitive_count, vao_ids);
+  initialize_systems (abc, xyz, xyzinvt, primitive_count, vao_ids);
   return true;
 }
 
@@ -220,7 +220,7 @@ void model_t::recalculate_locus (object_t & object)
   v4f T1 = tmapply (xyz [sselect], g1);
   v4f d = dot (T0, T1);
   v4f T2 = normalize (T1 - d * T0);
-  v4f g2 = tmapply (xyzinv [sselect], T2);
+  v4f g2 = mapply (xyzinvt [sselect], T2);
   store4f (object.locus_end, g2);
   object.locus_speed = std::acos (_mm_cvtss_f32 (d));
 }

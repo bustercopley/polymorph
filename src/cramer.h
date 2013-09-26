@@ -6,9 +6,9 @@
 
 namespace cramer
 {
-  // Invert the 3 * 3 matrix m, storing the result in minv.
+  // Invert the 3 * 3 matrix m, storing the transpose in minvt.
   template <typename T, unsigned M, unsigned N>
-  void inverse (const T (& m) [M] [N], float (& minv) [3] [4]);
+  void inverse_transpose (const T (& m) [M] [N], float (& minvt) [3] [4]);
 }
 
 // Implementation.
@@ -16,7 +16,7 @@ namespace cramer
 #include "vector.h"
 
 template <typename T, unsigned M, unsigned N>
-inline void cramer::inverse (const T (& m) [M] [N], float (& minv) [3] [4])
+void cramer::inverse_transpose (const T (& m) [M] [N], float (& minvt) [3] [4])
 {
   // Rows of m.
   v4f m0 = load4f (m [0]); // m00 m01 m02 0
@@ -39,12 +39,9 @@ inline void cramer::inverse (const T (& m) [M] [N], float (& minv) [3] [4])
   v4f determinant = dot (m0, c0);
   v4f r = rcp (determinant);
 
-  v4f t0, t1, t2;
-  TRANSPOSE3(r * c0, r * c1, r * c2, t0, t1, t2);
-
-  store4f (minv [0], t0);
-  store4f (minv [1], t1);
-  store4f (minv [2], t2);
+  store4f (minvt [0], r * c0);
+  store4f (minvt [1], r * c1);
+  store4f (minvt [2], r * c2);
 }
 
 #endif

@@ -28,7 +28,7 @@ namespace
 
   void initialize_system (float (& abc) [system_count] [8] [4],
                           float (& xyz) [system_count] [3] [4],
-                          float (& xyzinv) [system_count] [3] [4],
+                          float (& xyzinvt) [system_count] [3] [4],
                           unsigned (& primitive_count) [system_count],
                           unsigned (& vao_ids) [system_count],
                           const float (& abc_in) [8] [4],
@@ -52,7 +52,7 @@ namespace
     assign (& xyz [select] [1], xyz_in + indices_in [0] [4], 1);
     assign (& xyz [select] [2], xyz_in + indices_in [0] [2], 1);
 
-    cramer::inverse (xyz [select], xyzinv [select]);
+    cramer::inverse_transpose (xyz [select], xyzinvt [select]);
 
     primitive_count [select] = N;
     vao_ids [select] = make_vao (N, xyz_in, indices_in);
@@ -61,7 +61,7 @@ namespace
 
 void initialize_systems (float (& abc) [system_count] [8] [4],
                          float (& xyz) [system_count] [3] [4],
-                         float (& xyzinv) [system_count] [3] [4],
+                         float (& xyzinvt) [system_count] [3] [4],
                          unsigned (& primitive_count) [system_count],
                          unsigned (& vao_ids) [system_count])
 {
@@ -70,10 +70,10 @@ void initialize_systems (float (& abc) [system_count] [8] [4],
   system_t <4, 3> const & o (* reinterpret_cast <system_t <4, 3> const *> (& t + 1));
   system_t <5, 3> const & i (* reinterpret_cast <system_t <5, 3> const *> (& o + 1));
 
-  initialize_system (abc, xyz, xyzinv, primitive_count, vao_ids, t.abc, t.xyz, t.indices [0], tetrahedral, 3, 3);
-  initialize_system (abc, xyz, xyzinv, primitive_count, vao_ids, t.abc, t.xyz, t.indices [1], dual_tetrahedral, 3, 3);
-  initialize_system (abc, xyz, xyzinv, primitive_count, vao_ids, o.abc, o.xyz, o.indices [0], octahedral, 4, 3);
-  initialize_system (abc, xyz, xyzinv, primitive_count, vao_ids, o.abc, o.xyz, o.indices [1], dual_octahedral, 4, 3);
-  initialize_system (abc, xyz, xyzinv, primitive_count, vao_ids, i.abc, i.xyz, i.indices [0], icosahedral, 5, 3);
-  initialize_system (abc, xyz, xyzinv, primitive_count, vao_ids, i.abc, i.xyz, i.indices [1], dual_icosahedral, 5, 3);
+  initialize_system (abc, xyz, xyzinvt, primitive_count, vao_ids, t.abc, t.xyz, t.indices [0], tetrahedral, 3, 3);
+  initialize_system (abc, xyz, xyzinvt, primitive_count, vao_ids, t.abc, t.xyz, t.indices [1], dual_tetrahedral, 3, 3);
+  initialize_system (abc, xyz, xyzinvt, primitive_count, vao_ids, o.abc, o.xyz, o.indices [0], octahedral, 4, 3);
+  initialize_system (abc, xyz, xyzinvt, primitive_count, vao_ids, o.abc, o.xyz, o.indices [1], dual_octahedral, 4, 3);
+  initialize_system (abc, xyz, xyzinvt, primitive_count, vao_ids, i.abc, i.xyz, i.indices [0], icosahedral, 5, 3);
+  initialize_system (abc, xyz, xyzinvt, primitive_count, vao_ids, i.abc, i.xyz, i.indices [1], dual_icosahedral, 5, 3);
 }
