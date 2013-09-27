@@ -183,6 +183,12 @@ void advance_angular (float (* u) [4], float (* w) [4], unsigned count, float dt
 
 void compute (float (* f) [16], const float (* x) [4], const float (* u) [4], unsigned count)
 {
+#if __SSE4_1__
+#else
+  __m128i iv = { 0, -0x100000000ll, };
+  v4f mask = _mm_castsi128_ps (iv);    // false false false true
+#endif
+
   for (unsigned n = 0; n != count; ++ n) {
     v4f u0 = load4f (u [n]);           // u0 u1 u2 0
     v4f usq = u0 * u0;                 // u0^2 u1^2 u2^2 0
@@ -199,14 +205,21 @@ void compute (float (* f) [16], const float (* x) [4], const float (* u) [4], un
     v4f sub = symm - skew;                       // s0 s1 s2  0
     v4f add = symm + skew;                       // a0 a1 a2  0
     v4f phicos = one + b * (usq - xsq);          // d0 d1 d2 cos(x)
-    v4f phi = _mm_blend_ps (phicos, add, 8);     // d0 d1 d2  0
     v4f aslo = _mm_movelh_ps (add, sub);         // a0 a1 s0 s1
     v4f ashi = _mm_unpackhi_ps (add, sub);       // a2 s2  0  0
-    v4f ashd = _mm_movelh_ps (ashi, phi);        // a2 s2 d0 d1
+    v4f ashd = _mm_movelh_ps (ashi, phicos);     // a2 s2 d0 d1
+    v4f xyz0 = load4f (x [n]);
+#if __SSE4_1__
+    v4f phi = _mm_blend_ps (phicos, add, 8);     // d0 d1 d2  0
+    v4f xyz1 = _mm_blend_ps (xyz0, one, 8);
+#else
+    v4f phi = _mm_or_ps (_mm_andnot_ps (mask, phicos), _mm_and_ps (mask, add));
+    v4f xyz1 = _mm_or_ps (_mm_andnot_ps (mask, xyz0), _mm_and_ps (mask, one));
+#endif
     store4f (& f [n] [0], _mm_shuffle_ps (ashd, sub, SHUFFLE (2, 0, 1, 3)));  // d0 a2 s1 0
     store4f (& f [n] [4], _mm_shuffle_ps (ashd, add, SHUFFLE (1, 3, 0, 3)));  // s2 d1 a0 0
     store4f (& f [n] [8], _mm_shuffle_ps (aslo, phi, SHUFFLE (1, 2, 2, 3)));  // a1 s0 d2 0
-    store4f (& f [n] [12], _mm_blend_ps (load4f (x [n]), one, 8));            // x0 x1 x2 1
+    store4f (& f [n] [12], xyz1);                                             // x0 x1 x2 1
   }
 }
 
@@ -229,7 +242,7 @@ void rotate (float (& u) [4], const float (& v) [4])
 }
 
 // Evaluate sin and cos at x.
-// Range [0, 4.712388] ((3/2)*pi).
+// Range ([-(1/2)pi, (3/2)*pi]).
 // Argument x x * *, result sin(x) cos(x) sin(x) cos(x)
 v4f sincos (const v4f x)
 {
