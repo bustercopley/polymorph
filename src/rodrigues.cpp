@@ -37,10 +37,10 @@ namespace
   inline v4f fg_reduced (const v4f x1)
   {
     // Evaluate two polynomials at x by Estrin's method. Requires SSE3 (for haddps).
-    // f: Remes error +-0x1.950328P-21, max ulp error +-7.
-    // g: Remes error +-0x1.4711d2P-24, max ulp error +-2.
-    v4f f = { +0x1.ffffe6P-1f, -0x1.55502cP-3f, +0x1.1068aaP-7f, -0x1.847be2P-13f, };
-    v4f g = { +0x1.fffffaP-2f, -0x1.555340P-5f, +0x1.6b8f0cP-10f, -0x1.89e392P-16f, };
+    // f: Remes error +-0x1.950326P-21, max ulp error +-7.
+    // g: Remes error +-0x1.4711d0P-24, max ulp error +-2.
+    v4f f = { +0x1.ffffe6P-1f, -0x1.55502cP-3f, +0x1.1068acP-7f, -0x1.847be2P-13f, };
+    v4f g = { +0x1.fffffaP-2f, -0x1.555340P-5f, +0x1.6b8f0cP-10f, -0x1.89e394P-16f, };
     v4f fx1 = f * x1;                  // f0 f1x f2 f3x
     v4f gx1 = g * x1;                  // g0 g1x g2 g3x
     v4f fg2 = _mm_hadd_ps (fx1, gx1);  // f0+f1x f2+f3x g0+g1x g2+g3x
@@ -65,7 +65,7 @@ namespace
       // Quadrants 2 and 3.
       v4f x = sqrt (xsq);                    // x x * * (approx)
       // Call fg_reduced on (pi-x)^2.
-      v4f pi = { +0x1.921fb4P1f, +0x1.921fb4P1f, 0.0f, 0.0f, }; // pi pi 0 0
+      v4f pi = { +0x1.921fb6P1f, +0x1.921fb6P1f, 0.0f, 0.0f, }; // pi pi 0 0
       v4f px1 = x - pi;                      // x-pi x-pi * *
       v4f px2 = px1 * px1;                   // (pi-x)^2 (pi-x)^2 * *
       v4f px3 = _mm_unpacklo_ps (one, px2);  // 1 (pi-x)^2 1 (pi-x)^2
@@ -89,8 +89,8 @@ namespace
   inline v4f h_reduced (const v4f s1)
   {
     // Evaluate polynomial at s by Estrin's method. Requires SSE3 (for haddps).
-    // Remes error +-0x1.e7b99eP-28, max ulp error +-7.
-    v4f h = { +0x1.555552P-4f, +0x1.6c1cd6P-10f, +0x1.13e3e4P-15f, +0x1.f88a10P-21f, };
+    // Remes error +-0x1.e7b99cP-28, max ulp error +-2.
+    v4f h = { +0x1.555554P-4f, +0x1.6c1cd6P-10f, +0x1.13e3e4P-15f, +0x1.f88a10P-21f, };
     v4f h1 = h * s1;               // h0 h1s h2 h3s
     v4f h2 = _mm_hadd_ps (h1, h1); // h0+h1s h2+h3s h0+h1s h2+h3s
     v4f h3 = h2 * s1 * s1;         // h0+h1s h2s^2+h3s^3 h0+h1s h2s^2+h3s^3
@@ -116,7 +116,7 @@ namespace
       // Quadrants 2, 3 and 4.
       v4f hx = half * sqrt (xsq);            // x/2 x/2 x/2 x/2 (approx)
       // Call fg_reduced on (1/2)(pi-sqrt(xsq))^2.
-      v4f pi = { +0x1.921fb4P0f, +0x1.921fb4P0f, 0.0f, 0.0f, }; // pi/2 pi/2 * *
+      v4f pi = { +0x1.921fb6P0f, +0x1.921fb6P0f, 0.0f, 0.0f, }; // pi/2 pi/2 * *
       v4f px1 = hx - pi;                     // x/2-pi/2 x/2-pi/2 * *
       v4f px2 = px1 * px1;                   // (pi/2-x/2)^2 (pi/2-x/2)^2 * *
       v4f px3 = _mm_unpacklo_ps (one, px2);  // 1 (pi/2-x/2)^2 1 (pi/2-x/2)^2
@@ -139,7 +139,7 @@ namespace
   {
     // One step of the classical fourth-order Runge-Kutta method.
     v4f half = { 0.5f, 0.5f, 0.5f, 0.5f, };
-    v4f sixth = { 0x1.555554P-3f, 0x1.555554P-3f, 0x1.555554P-3f, 0x1.555554P-3f, };
+    v4f sixth = { 0x1.555556P-3f, 0x1.555556P-3f, 0x1.5555546-3f, 0x1.555556P-3f, };
     v4f A = tangent (y, x);
     v4f B = tangent (y + half * A, x);
     v4f C = tangent (y + half * B, x);
@@ -174,7 +174,7 @@ void advance_angular (float (* u) [4], float (* w) [4], unsigned count, float dt
     v4f lim1 = { +0x1.634e46P4f, 0.0f, 0.0f, 0.0f, }; // (3pi/2)^2
     if (_mm_comigt_ss (xsq, lim1)) {
       v4f one = { 1.0f, 1.0f, 1.0f, 1.0f, };
-      v4f twopi = { 0x1.921fb4P2f, 0x1.921fb4P2f, 0x1.921fb4P2f, 0x1.921fb4P2f, };
+      v4f twopi = { 0x1.921fb6P2f, 0x1.921fb6P2f, 0x1.921fb6P2f, 0x1.921fb6P2f, };
       u1 *= one - twopi * rsqrt (xsq);
     }
     store4f (u [n], u1);
@@ -260,7 +260,7 @@ v4f sincos (const v4f x)
   else {
     // Quadrants 2 and 3.
     // Call fg_reduced on (pi-x)^2.
-    v4f pi = { +0x1.921fb4P1f, +0x1.921fb4P1f, 0.0f, 0.0f, }; // pi pi 0 0
+    v4f pi = { +0x1.921fb6P1f, +0x1.921fb6P1f, 0.0f, 0.0f, }; // pi pi 0 0
     v4f px1 = pi - x;                      // pi-x pi-x * *
     v4f px2 = px1 * px1;                   // (pi-x)^2 (pi-x)^2 * *
     v4f px3 = _mm_unpacklo_ps (one, px2);  // 1 (pi-x)^2 1 (pi-x)^2
