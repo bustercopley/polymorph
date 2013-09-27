@@ -19,7 +19,7 @@ void step_t::initialize (float start, float finish)
   T [3] = 0.0f; // unused
 }
 
-float step_t::operator () (float t)
+v4f step_t::operator () (float t)
 {
   // Evaluate the polynomial by Estrin's method.
   // Mask in 0, 1 or the value according to the region to which t belongs.
@@ -36,7 +36,7 @@ float step_t::operator () (float t)
   v4f hi = { T [1], +inf, -inf, -inf, };
   v4f select = _mm_andnot_ps (_mm_cmplt_ps (ttt, lo), _mm_cmplt_ps (ttt, hi));
   v4f values = _mm_and_ps (select, f1);
-  return _mm_cvtss_f32 (_mm_hadd_ps (values, values));
+  return _mm_moveldup_ps (_mm_hadd_ps (values, values));
 }
 
 void bumps_t::initialize (bump_specifier_t b0, bump_specifier_t b1)

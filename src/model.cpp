@@ -267,9 +267,10 @@ void model_t::draw ()
 
     float g [4] ALIGNED16;
     {
-      float t = step (object.animation_time) * object.locus_speed;
-      v4f c = _mm_set1_ps (std::cos (t));
-      v4f s = _mm_set1_ps (std::sin (t));
+      v4f t = step (object.animation_time) * _mm_set1_ps (object.locus_speed);
+      v4f sc = sincos (t);
+      v4f s = _mm_moveldup_ps (sc);
+      v4f c = _mm_movehdup_ps (sc);
       store4f (g, c * load4f (abc [sselect] [object.starting_point]) + s * load4f (object.locus_end));
     }
 

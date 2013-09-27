@@ -1,5 +1,4 @@
 #include "rodrigues.h"
-#include "vector.h"
 #include "compiler.h"
 
 // See `problem.tex' for terminology and notation, and `problem.tex',
@@ -51,7 +50,7 @@ namespace
   }
 
   // Evaluate f and g at xsq.
-  // Range [0, 22.206610] ((3pi/2)^2).
+  // Range [0, 22.206610] (((3/2)*pi)^2).
   // Argument xsq xsq * *, result sin1(x) cos2(x) sin1(x) cos2(x)
   inline v4f fg (const v4f xsq)
   {
@@ -64,7 +63,7 @@ namespace
     }
     else {
       // Quadrants 2 and 3.
-      v4f x = sqrt (xsq);                    // x x x x (approx)
+      v4f x = sqrt (xsq);                    // x x * * (approx)
       // Call fg_reduced on (pi-x)^2.
       v4f pi = { +0x1.921fb4P1f, +0x1.921fb4P1f, 0.0f, 0.0f, }; // pi pi 0 0
       v4f px1 = x - pi;                      // x-pi x-pi * *
@@ -199,19 +198,15 @@ void compute (float (* f) [16], const float (* x) [4], const float (* u) [4], un
     v4f symm = b * (u1 * u2);
     v4f sub = symm - skew;                       // s0 s1 s2  0
     v4f add = symm + skew;                       // a0 a1 a2  0
-    v4f diag = one + b * (usq - xsq);            // d0 d1 d2  *
+    v4f phicos = one + b * (usq - xsq);          // d0 d1 d2 cos(x)
+    v4f phi = _mm_blend_ps (phicos, add, 8);     // d0 d1 d2  0
     v4f aslo = _mm_movelh_ps (add, sub);         // a0 a1 s0 s1
     v4f ashi = _mm_unpackhi_ps (add, sub);       // a2 s2  0  0
-    v4f ashd = _mm_movelh_ps (ashi, diag);       // a2 s2 d0 d1
-    v4f das = _mm_shuffle_ps (ashd, sub, SHUFFLE (2, 0, 1, 3));  // d0 a2 s1 0
-    v4f sda = _mm_shuffle_ps (ashd, add, SHUFFLE (1, 3, 0, 3));  // s2 d1 a0 0
-    v4f asd = _mm_shuffle_ps (aslo, diag, SHUFFLE (1, 2, 2, 0)); // a1 s0 d2 *
-    store4f (& f [n] [0], das);
-    store4f (& f [n] [4], sda);
-    store4f (& f [n] [8], asd);
-    f [n] [11] = 0.0f;
-    store4f (& f [n] [12], load4f (x [n]));
-    f [n] [15] = 1.0f;
+    v4f ashd = _mm_movelh_ps (ashi, phi);        // a2 s2 d0 d1
+    store4f (& f [n] [0], _mm_shuffle_ps (ashd, sub, SHUFFLE (2, 0, 1, 3)));  // d0 a2 s1 0
+    store4f (& f [n] [4], _mm_shuffle_ps (ashd, add, SHUFFLE (1, 3, 0, 3)));  // s2 d1 a0 0
+    store4f (& f [n] [8], _mm_shuffle_ps (aslo, phi, SHUFFLE (1, 2, 2, 3)));  // a1 s0 d2 0
+    store4f (& f [n] [12], _mm_blend_ps (load4f (x [n]), one, 8));            // x0 x1 x2 1
   }
 }
 
@@ -231,4 +226,34 @@ void rotate (float (& u) [4], const float (& v) [4])
   v4f v1 = v0 + a * cross (u1, v0) + b * (dot (u1, v0) * u1 - xsq * v0);
   // To save code don't worry about u growing too large (compare advance_angular).
   store4f (u, bch (v1, u1));
+}
+
+// Evaluate sin and cos at x.
+// Range [0, 4.712388] ((3/2)*pi).
+// Argument x x * *, result sin(x) cos(x) sin(x) cos(x)
+v4f sincos (const v4f x)
+{
+  v4f lim = { +0x1.3bd3ccP1f, 0.0f, 0.0f, 0.0f, }; // (pi/2)^2
+  v4f one = {1.0f,  1.0f, 1.0f, 1.0f, };
+  v4f alt = {0.0f,  1.0f, 0.0f, 1.0f, };
+  v4f xsq = x * x;                         // x^2 x^2 * *
+  if (_mm_comile_ss (xsq, lim)) {
+    // Quadrant 1.
+    v4f x1 = _mm_unpacklo_ps (one, xsq);   // 1 x^2 1 x^2
+    v4f fg = fg_reduced (x1);              // sin1(x) cos2(x) sin1(x) cos2(x)
+    v4f x2 = _mm_unpacklo_ps (-x, xsq);    // -x x^2 -x x^2
+    return alt - fg * x2;                  // sin(x) cos(x) sin(x) cos(x)
+  }
+  else {
+    // Quadrants 2 and 3.
+    // Call fg_reduced on (pi-x)^2.
+    v4f pi = { +0x1.921fb4P1f, +0x1.921fb4P1f, 0.0f, 0.0f, }; // pi pi 0 0
+    v4f px1 = pi - x;                      // pi-x pi-x * *
+    v4f px2 = px1 * px1;                   // (pi-x)^2 (pi-x)^2 * *
+    v4f px3 = _mm_unpacklo_ps (one, px2);  // 1 (pi-x)^2 1 (pi-x)^2
+    v4f fg = fg_reduced (px3);             // sin(pi-x)/(pi-x) [1-cos(pi-x)]/(pi-x)^2 (duplicated)
+    v4f px4 = _mm_unpacklo_ps (px1, px2);  // pi-x (pi-x)^2 pi-x (pi-x)^2
+    v4f sc1 = px4 * fg;                    // sin(x) 1+cos(x) sin(x) 1+cos(x)
+    return sc1 - alt;                      // sin(x) cos(x) sin(x) cos(x)
+  }
 }
