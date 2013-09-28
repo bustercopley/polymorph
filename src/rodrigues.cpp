@@ -51,7 +51,7 @@ namespace
 
   // Evaluate f and g at xsq.
   // Range [0, 22.206610] (((3/2)*pi)^2).
-  // Argument xsq xsq * *, result sin1(x) cos2(x) sin1(x) cos2(x)
+  // Argument xsq xsq * *, result sin1(x) cos2(x) sin1(x) cos2(x).
   inline v4f fg (const v4f xsq)
   {
     v4f lim = { +0x1.3bd3ccP1f, 0.0f, 0.0f, 0.0f, }; // (pi/2)^2
@@ -241,9 +241,8 @@ void rotate (float (& u) [4], const float (& v) [4])
   store4f (u, bch (v1, u1));
 }
 
-// Evaluate sin and cos at x.
 // Range ([-(1/2)pi, (3/2)*pi]).
-// Argument x x * *, result sin(x) cos(x) sin(x) cos(x)
+// Argument x x * *, result sin(x) cos(x) sin(x) cos(x).
 v4f sincos (const v4f x)
 {
   v4f lim = { +0x1.3bd3ccP1f, 0.0f, 0.0f, 0.0f, }; // (pi/2)^2
@@ -269,4 +268,19 @@ v4f sincos (const v4f x)
     v4f sc1 = px4 * fg;                    // sin(x) 1+cos(x) sin(x) 1+cos(x)
     return sc1 - alt;                      // sin(x) cos(x) sin(x) cos(x)
   }
+}
+
+// Range [sqrt(2)/2, 1].
+// Argument x x x x, result acos(x) acos(x) acos(x) acos(x).
+v4f arccos (v4f x)
+{
+  // Minimax polynomial for arccos(x)-sqrt(1-x*x) on [sqrt(2)/2, 1], Remes error +-0x1.9d4bc0P-13.
+  v4f one = {1.0f,  1.0f, 1.0f, 1.0f, };
+  v4f c = { +0x1.792d26P-3f, +0x1.fc52a2P-2f, -0x1.7a47c6P0f, +0x1.98011eP-1f, };
+  v4f x1 = _mm_unpacklo_ps (one, x);       // 1 x 1 x
+  v4f c1 = c * x1;                         // c0 c1x c2 c3x
+  v4f c2 = _mm_hadd_ps (c1, c1);           // c0+c1x c2+c3x c0+c1x c2+c3x
+  v4f c3 = c2 * x1 * x1;                   // c0+c1x c2x^2+c3x^3 c0+c1x c2x^2+c3x^3
+  v4f cc = _mm_hadd_ps (c3, c3);           // c(x) c(x) c(x) c(x)
+  return cc + sqrt (one - x * x);
 }

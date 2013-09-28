@@ -13,8 +13,6 @@
 #include "aligned-arrays.h"
 #include "vector.h"
 #include "hsv-to-rgb.h"
-#include <cmath>
-
 #include "print.h"
 
 #ifdef PRINT_ENABLED
@@ -222,7 +220,8 @@ void model_t::recalculate_locus (object_t & object)
   v4f T2 = normalize (T1 - d * T0);
   v4f g2 = mapply (xyzinvt [sselect], T2);
   store4f (object.locus_end, g2);
-  object.locus_speed = std::acos (_mm_cvtss_f32 (d));
+  // We have 0.774597 <= d <= 0.990879.
+  object.locus_speed = _mm_cvtss_f32 (arccos (d));
 }
 
 void model_t::proceed ()
