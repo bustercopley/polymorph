@@ -48,6 +48,8 @@ const char * names [] = {
   "snub cube",
   "snub dodecahedron",
 };
+
+float min_d = 1.0f, max_d = 0.0f;
 #endif
 
 model_t::model_t () : memory (nullptr), capacity (0), count (0) { }
@@ -138,6 +140,9 @@ bool model_t::initialize (unsigned long long seed, int width, int height)
 model_t::~model_t ()
 {
 #if PRINT_ENABLED
+  std::cout << std::scientific << std::setprecision (8);
+  std::cout << "Required range for arccos function: x in [" << min_d << ", " << max_d << "].\n\n";
+
   double total_polyhedron_count = 0.0;
   for (unsigned n = 0; n != 18; ++ n)
   {
@@ -149,7 +154,6 @@ model_t::~model_t ()
   {
     std::cout << std::setw (10) << (100.0 * polyhedron_counts [n] / total_polyhedron_count) << " % " << names [n] << "\n";
   }
-  std::cout << std::flush;
 #endif
   deallocate (memory);
 }
@@ -220,8 +224,14 @@ void model_t::recalculate_locus (object_t & object)
   v4f T2 = normalize (T1 - d * T0);
   v4f g2 = mapply (xyzinvt [sselect], T2);
   store4f (object.locus_end, g2);
-  // We have 0.774597 <= d <= 0.990879.
+  // For allowed transitions we have d in [7.74596691e-001, 9.90879238e-001].
   object.locus_speed = _mm_cvtss_f32 (arccos (d));
+
+#if PRINT_ENABLED
+  float df = _mm_cvtss_f32 (d);
+  if (min_d > df) min_d = df;
+  if (max_d < df) max_d = df;
+#endif
 }
 
 void model_t::proceed ()
