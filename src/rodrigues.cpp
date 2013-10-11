@@ -211,9 +211,9 @@ void compute (float (* f) [16], const float (* x) [4], const float (* u) [4], un
     v4f xyz0 = load4f (x [n]);
 #if __SSE4_1__
     v4f phi = _mm_blend_ps (phicos, add, 8);     // d0 d1 d2  0
-    v4f xyz1 = _mm_blend_ps (xyz0, one, 8);
+    v4f xyz1 = _mm_blend_ps (xyz0, one, 8);      // x0 x1 x2  1
 #else
-    v4f phi = _mm_or_ps (_mm_andnot_ps (mask, phicos), _mm_and_ps (mask, add));
+    v4f phi = _mm_andnot_ps (mask, phicos);
     v4f xyz1 = _mm_or_ps (_mm_andnot_ps (mask, xyz0), _mm_and_ps (mask, one));
 #endif
     store4f (& f [n] [0], _mm_shuffle_ps (ashd, sub, SHUFFLE (2, 0, 1, 3)));  // d0 a2 s1 0
@@ -241,46 +241,31 @@ void rotate (float (& u) [4], const float (& v) [4])
   store4f (u, bch (v1, u1));
 }
 
-// Range ([-(1/2)pi, (3/2)*pi]).
+// Restricted range [-pi/2, pi/2].
 // Argument x x * *, result sin(x) cos(x) sin(x) cos(x).
 v4f sincos (const v4f x)
 {
-  v4f lim = { +0x1.3bd3ccP1f, 0.0f, 0.0f, 0.0f, }; // (pi/2)^2
   v4f one = {1.0f,  1.0f, 1.0f, 1.0f, };
   v4f alt = {0.0f,  1.0f, 0.0f, 1.0f, };
-  v4f xsq = x * x;                         // x^2 x^2 * *
-  if (_mm_comile_ss (xsq, lim)) {
-    // Quadrant 1.
-    v4f x1 = _mm_unpacklo_ps (one, xsq);   // 1 x^2 1 x^2
-    v4f fg = fg_reduced (x1);              // sin1(x) cos2(x) sin1(x) cos2(x)
-    v4f x2 = _mm_unpacklo_ps (-x, xsq);    // -x x^2 -x x^2
-    return alt - fg * x2;                  // sin(x) cos(x) sin(x) cos(x)
-  }
-  else {
-    // Quadrants 2 and 3.
-    // Call fg_reduced on (pi-x)^2.
-    v4f pi = { +0x1.921fb6P1f, +0x1.921fb6P1f, 0.0f, 0.0f, }; // pi pi 0 0
-    v4f px1 = pi - x;                      // pi-x pi-x * *
-    v4f px2 = px1 * px1;                   // (pi-x)^2 (pi-x)^2 * *
-    v4f px3 = _mm_unpacklo_ps (one, px2);  // 1 (pi-x)^2 1 (pi-x)^2
-    v4f fg = fg_reduced (px3);             // sin(pi-x)/(pi-x) [1-cos(pi-x)]/(pi-x)^2 (duplicated)
-    v4f px4 = _mm_unpacklo_ps (px1, px2);  // pi-x (pi-x)^2 pi-x (pi-x)^2
-    v4f sc1 = px4 * fg;                    // sin(x) 1+cos(x) sin(x) 1+cos(x)
-    return sc1 - alt;                      // sin(x) cos(x) sin(x) cos(x)
-  }
+  v4f xsq = x * x;                       // x^2 x^2 * *
+  v4f x1 = _mm_unpacklo_ps (one, xsq);   // 1 x^2 1 x^2
+  v4f fg = fg_reduced (x1);              // sin1(x) cos2(x) sin1(x) cos2(x)
+  v4f x2 = _mm_unpacklo_ps (-x, xsq);    // -x x^2 -x x^2
+  return alt - fg * x2;                  // sin(x) cos(x) sin(x) cos(x)
 }
 
-// Range [sqrt(2)/2, 1].
+// Very restricted range [+0x1.8c97f0P-1f, +0x1.fb5486P-1f] ([0.774596691, 0.990879238]).
 // Argument x x x x, result acos(x) acos(x) acos(x) acos(x).
 v4f arccos (v4f x)
 {
-  // Minimax polynomial for arccos(x)-sqrt(1-x*x) on [sqrt(2)/2, 1], Remes error +-0x1.9d4bc0P-13.
+  // Minimax polynomial for (acos(x))^2 on [+0x1.8c97f0P-1f, +0x1.fb5486P-1f].
+  // Remes error +-0x1.460d54P-21f.
   v4f one = {1.0f,  1.0f, 1.0f, 1.0f, };
-  v4f c = { +0x1.792d26P-3f, +0x1.fc52a2P-2f, -0x1.7a47c6P0f, +0x1.98011eP-1f, };
+  v4f c = { +0x1.37b24aP1f, -0x1.7cb23cP1f, +0x1.494690P-1f, -0x1.aa37e2P-4f, };
   v4f x1 = _mm_unpacklo_ps (one, x);       // 1 x 1 x
   v4f c1 = c * x1;                         // c0 c1x c2 c3x
   v4f c2 = _mm_hadd_ps (c1, c1);           // c0+c1x c2+c3x c0+c1x c2+c3x
   v4f c3 = c2 * x1 * x1;                   // c0+c1x c2x^2+c3x^3 c0+c1x c2x^2+c3x^3
   v4f cc = _mm_hadd_ps (c3, c3);           // c(x) c(x) c(x) c(x)
-  return cc + sqrt (one - x * x);
+  return sqrt (cc);
 }
