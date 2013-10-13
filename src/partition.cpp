@@ -14,13 +14,29 @@ namespace
   {
     return x [index [i]] [dim] < x [index [j]] [dim];
   }
+
+  inline void insertion_sort (unsigned * index, const float (* x) [4], unsigned begin, unsigned end, unsigned dim)
+  {
+    for (unsigned n = begin + 1; n != end; ++ n) {
+      // Now, the range [begin, n) is sorted.
+      unsigned m = n;
+      unsigned item = index [m];
+      while (m > begin && x [item] [dim] < x [index [m - 1]] [dim]) {
+        index [m] = index [m - 1];
+        m = m - 1;
+      }
+      index [m] = item;
+      // Now, the range [begin, n + 1) is sorted.
+    }
+    // Now, the range [begin, end) is sorted.
+  }
 }
 
-// Reorder index [0, count) so that {i} <= {m} for i = 0 .. m - 1,
-// and {m} <= {j} for j = m + 1 .. count - 1,
+// Reorder the range index [b, e) so that
+//   {i} <= {m} for i in [b, m) and {m} <= {j} for j in (m, e),
 // where {i} = x [index [i]] [dim].
 // Undefined behaviour if count < 3.
-void partition (unsigned * index, const float (* x) [4], unsigned begin, unsigned middle, unsigned end, unsigned dim)
+void partition (unsigned * index, const float (* x) [4], const unsigned begin, const unsigned middle, const unsigned end, const unsigned dim)
 {
   // Move the middle element to position 1.
   swap (index, begin + 1, (begin + end) / 2);
@@ -52,21 +68,5 @@ void partition (unsigned * index, const float (* x) [4], unsigned begin, unsigne
   else return;
   // Partition the chosen range [i,j) about m. Tail call.
   if (j - i > 7) partition (index, x, i, middle, j, dim);
-  else if (j - i > 1) insertion_sort (index, x, i, j);
-}
-
-void insertion_sort (unsigned * index, const float (* x) [4], unsigned begin, unsigned end)
-{
-  const unsigned dim = 2;
-  for (unsigned n = begin + 1; n != end; ++ n) {
-    // Now, the range [begin, n) is sorted.
-    unsigned item = index [n];
-    while (n > begin && x [item] [dim] < x [index [n - 1]] [dim]) {
-      index [n] = index [n - 1];
-      n = n - 1;
-    }
-    index [n] = item;
-    // Now, the range [begin, n + 1) is sorted.
-  }
-  // Now, the range [begin, end) is sorted.
+  else if (j - i > 1) insertion_sort (index, x, i, j, dim);
 }
