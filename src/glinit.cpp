@@ -1,43 +1,24 @@
 #include "mswin.h"
 #include "glinit.h"
 
-PFNWGLCHOOSEPIXELFORMATARBPROC wglChoosePixelFormatARB = nullptr;
-PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB = nullptr;
-PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT = nullptr;
-PFNGLGENVERTEXARRAYSPROC glGenVertexArrays = nullptr;
-PFNGLBINDVERTEXARRAYPROC glBindVertexArray = nullptr;
-PFNGLGENBUFFERSPROC glGenBuffers = nullptr;
-PFNGLBINDBUFFERPROC glBindBuffer = nullptr;
-PFNGLBUFFERDATAPROC glBufferData = nullptr;
-PFNGLCREATESHADERPROC glCreateShader = nullptr;
-//PFNGLDELETESHADERPROC glDeleteShader = nullptr;
-//PFNGLDRAWELEMENTSINSTANCEDPROC glDrawElementsInstanced = nullptr;
-PFNGLSHADERSOURCEPROC glShaderSource = nullptr;
-PFNGLCOMPILESHADERPROC glCompileShader = nullptr;
-PFNGLGETSHADERINFOLOGPROC glGetShaderInfoLog = nullptr;
-PFNGLGETSHADERIVPROC glGetShaderiv = nullptr;
-PFNGLCREATEPROGRAMPROC glCreateProgram = nullptr;
-//PFNGLDELETEPROGRAMPROC glDeleteProgram = nullptr;
-PFNGLATTACHSHADERPROC glAttachShader = nullptr;
-PFNGLLINKPROGRAMPROC glLinkProgram = nullptr;
-PFNGLUSEPROGRAMPROC glUseProgram = nullptr;
-PFNGLGETPROGRAMINFOLOGPROC glGetProgramInfoLog = nullptr;
-PFNGLGETPROGRAMIVPROC glGetProgramiv = nullptr;
-PFNGLUNIFORM1FPROC glUniform1f = nullptr;
-//PFNGLUNIFORM1IPROC glUniform1i = nullptr;
-PFNGLUNIFORM3FVPROC glUniform3fv = nullptr;
-PFNGLUNIFORM4FVPROC glUniform4fv = nullptr;
-PFNGLUNIFORMMATRIX4FVPROC glUniformMatrix4fv = nullptr;
-PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation = nullptr;
-//PFNGLVERTEXATTRIBDIVISORPROC glVertexAttribDivisor = nullptr;
-PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer = nullptr;
-PFNGLENABLEVERTEXATTRIBARRAYPROC glEnableVertexAttribArray = nullptr;
-//PFNGLDISABLEVERTEXATTRIBARRAYPROC glDisableVertexAttribArray = nullptr;
-//PFNGLGETATTRIBLOCATIONPROC glGetAttribLocation = nullptr;
-PFNGLBINDATTRIBLOCATIONPROC glBindAttribLocation = nullptr;
-PFNGLBLENDEQUATIONPROC glBlendEquation = nullptr;
+#define DO_GLPROC(type,name) type name = nullptr
+#include "glprocs.inc"
+DO_GLPROC (PFNWGLCHOOSEPIXELFORMATARBPROC, wglChoosePixelFormatARB);
+DO_GLPROC (PFNWGLCREATECONTEXTATTRIBSARBPROC, wglCreateContextAttribsARB);
+#undef DO_GLPROC
 
-bool get_glprocs ();
+#define GLPROCSTRINGIZE0(a) #a
+#define GLPROC(type, name) (name = (type) ::wglGetProcAddress (GLPROCSTRINGIZE0(name)))
+#define VALIDGLPROC(type, name) if (! (GLPROC (type, name))) return false
+
+bool get_glprocs ()
+{
+#define DO_GLPROC(type, name) VALIDGLPROC (type, name)
+#include "glprocs.inc"
+#undef DO_GLPROC
+  return true;
+}
+
 bool get_initial_wglprocs (HINSTANCE hInstance);
 
 HGLRC initialize_opengl (HINSTANCE hInstance, HDC hdc)
@@ -74,54 +55,14 @@ HGLRC initialize_opengl (HINSTANCE hInstance, HDC hdc)
       && (hglrc = wglCreateContextAttribsARB (hdc, nullptr, context_attribs))
       && ::wglMakeCurrent (hdc, hglrc)
       && get_glprocs ()) {
+    PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT;
+    GLPROC (PFNWGLSWAPINTERVALEXTPROC, wglSwapIntervalEXT);
     if (wglSwapIntervalEXT) {
       wglSwapIntervalEXT (1);
     }
     return hglrc;
   }
   return nullptr;
-}
-
-#define GLPROCSTRINGIZE0(a) #a
-#define GLPROC(type, name) (name = (type) ::wglGetProcAddress (GLPROCSTRINGIZE0(name)))
-#define VALIDGLPROC(type, name) if (! (GLPROC (type, name))) return false
-
-bool get_glprocs ()
-{
-  GLPROC (PFNWGLSWAPINTERVALEXTPROC, wglSwapIntervalEXT);
-  VALIDGLPROC (PFNGLGENVERTEXARRAYSPROC, glGenVertexArrays);
-  VALIDGLPROC (PFNGLBINDVERTEXARRAYPROC, glBindVertexArray);
-  VALIDGLPROC (PFNGLGENBUFFERSPROC, glGenBuffers);
-  VALIDGLPROC (PFNGLBINDBUFFERPROC, glBindBuffer);
-  VALIDGLPROC (PFNGLBUFFERDATAPROC, glBufferData);
-  VALIDGLPROC (PFNGLCREATESHADERPROC, glCreateShader);
-  //VALIDGLPROC (PFNGLDELETESHADERPROC, glDeleteShader);
-  //VALIDGLPROC (PFNGLDRAWELEMENTSINSTANCEDPROC, glDrawElementsInstanced);
-  VALIDGLPROC (PFNGLSHADERSOURCEPROC, glShaderSource);
-  VALIDGLPROC (PFNGLCOMPILESHADERPROC, glCompileShader);
-  VALIDGLPROC (PFNGLGETSHADERINFOLOGPROC, glGetShaderInfoLog);
-  VALIDGLPROC (PFNGLGETSHADERIVPROC, glGetShaderiv);
-  VALIDGLPROC (PFNGLCREATEPROGRAMPROC, glCreateProgram);
-  //VALIDGLPROC (PFNGLDELETEPROGRAMPROC, glDeleteProgram);
-  VALIDGLPROC (PFNGLATTACHSHADERPROC, glAttachShader);
-  VALIDGLPROC (PFNGLLINKPROGRAMPROC, glLinkProgram);
-  VALIDGLPROC (PFNGLUSEPROGRAMPROC, glUseProgram);
-  VALIDGLPROC (PFNGLGETPROGRAMINFOLOGPROC, glGetProgramInfoLog);
-  VALIDGLPROC (PFNGLGETPROGRAMIVPROC, glGetProgramiv);
-  VALIDGLPROC (PFNGLUNIFORM1FPROC, glUniform1f);
-  //VALIDGLPROC (PFNGLUNIFORM1IPROC, glUniform1i);
-  VALIDGLPROC (PFNGLUNIFORM3FVPROC, glUniform3fv);
-  VALIDGLPROC (PFNGLUNIFORM4FVPROC, glUniform4fv);
-  VALIDGLPROC (PFNGLUNIFORMMATRIX4FVPROC, glUniformMatrix4fv);
-  VALIDGLPROC (PFNGLGETUNIFORMLOCATIONPROC, glGetUniformLocation);
-  //VALIDGLPROC (PFNGLVERTEXATTRIBDIVISORPROC, glVertexAttribDivisor);
-  VALIDGLPROC (PFNGLVERTEXATTRIBPOINTERPROC, glVertexAttribPointer);
-  VALIDGLPROC (PFNGLENABLEVERTEXATTRIBARRAYPROC, glEnableVertexAttribArray);
-  //VALIDGLPROC (PFNGLDISABLEVERTEXATTRIBARRAYPROC, glDisableVertexAttribArray);
-  //VALIDGLPROC (PFNGLGETATTRIBLOCATIONPROC, glGetAttribLocation);
-  VALIDGLPROC (PFNGLBINDATTRIBLOCATIONPROC, glBindAttribLocation);
-  VALIDGLPROC (PFNGLBLENDEQUATIONPROC, glBlendEquation);
-  return true;
 }
 
 bool get_initial_wglprocs (HINSTANCE hInstance)
@@ -161,8 +102,8 @@ bool get_initial_wglprocs (HINSTANCE hInstance)
             {
               if (::wglMakeCurrent (dc, rc))
               {
-                GLPROC(PFNWGLCHOOSEPIXELFORMATARBPROC, wglChoosePixelFormatARB);
-                GLPROC(PFNWGLCREATECONTEXTATTRIBSARBPROC, wglCreateContextAttribsARB);
+                VALIDGLPROC(PFNWGLCHOOSEPIXELFORMATARBPROC, wglChoosePixelFormatARB);
+                VALIDGLPROC(PFNWGLCREATECONTEXTATTRIBSARBPROC, wglCreateContextAttribsARB);
                 ::wglMakeCurrent (nullptr, nullptr);
               }
               ::wglDeleteContext (rc);
