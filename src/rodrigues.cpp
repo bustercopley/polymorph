@@ -168,28 +168,29 @@ void advance_linear (float (* x) [4], const float (* v) [4], unsigned count, flo
 void advance_angular (float (* u) [4], float (* w) [4], unsigned count, float dt)
 {
   v4f dt0 = _mm_set1_ps (dt);
+  v4f one = { 1.0f, 1.0f, 1.0f, 1.0f, };
+  v4f twopi = { 0x1.921fb6P2f, 0x1.921fb6P2f, 0x1.921fb6P2f, 0x1.921fb6P2f, };
+  v4f lim1 = { +0x1.3c0000P3f, 0.0f, 0.0f, 0.0f, }; // a touch over pi^2 (~ +0x1.3bd3ccP3)
   for (unsigned n = 0; n != count; ++ n) {
     v4f u1 = bch (dt0 * load4f (w [n]), load4f (u [n]));
     v4f xsq = dot (u1, u1);
-    v4f lim1 = { +0x1.634e46P4f, 0.0f, 0.0f, 0.0f, }; // (3pi/2)^2
     if (_mm_comigt_ss (xsq, lim1)) {
-      v4f one = { 1.0f, 1.0f, 1.0f, 1.0f, };
-      v4f twopi = { 0x1.921fb6P2f, 0x1.921fb6P2f, 0x1.921fb6P2f, 0x1.921fb6P2f, };
       u1 *= one - twopi * rsqrt (xsq);
     }
     store4f (u [n], u1);
   }
 }
 
-void compute (float (* f) [16], const float (* x) [4], const float (* u) [4], unsigned count)
+void compute (char * buffer, std::size_t stride, const float (* x) [4], const float (* u) [4], unsigned count)
 {
 #if __SSE4_1__
 #else
   __m128i iv = { 0, -0x100000000ll, };
   v4f mask = _mm_castsi128_ps (iv);    // false false false true
 #endif
-
-  for (unsigned n = 0; n != count; ++ n) {
+  char * iter = buffer;
+  for (unsigned n = 0; n != count; ++ n, iter += stride) {
+    float (& f) [16] = * reinterpret_cast <float (*) [16]> (iter);
     v4f u0 = load4f (u [n]);           // u0 u1 u2 0
     v4f usq = u0 * u0;                 // u0^2 u1^2 u2^2 0
     v4f uha = _mm_hadd_ps (usq, usq);
@@ -216,10 +217,10 @@ void compute (float (* f) [16], const float (* x) [4], const float (* u) [4], un
     v4f phi = _mm_andnot_ps (mask, phicos);
     v4f xyz1 = _mm_or_ps (_mm_andnot_ps (mask, xyz0), _mm_and_ps (mask, one));
 #endif
-    store4f (& f [n] [0], _mm_shuffle_ps (ashd, sub, SHUFFLE (2, 0, 1, 3)));  // d0 a2 s1 0
-    store4f (& f [n] [4], _mm_shuffle_ps (ashd, add, SHUFFLE (1, 3, 0, 3)));  // s2 d1 a0 0
-    store4f (& f [n] [8], _mm_shuffle_ps (aslo, phi, SHUFFLE (1, 2, 2, 3)));  // a1 s0 d2 0
-    store4f (& f [n] [12], xyz1);                                             // x0 x1 x2 1
+    store4f (& f [0], _mm_shuffle_ps (ashd, sub, SHUFFLE (2, 0, 1, 3)));  // d0 a2 s1 0
+    store4f (& f [4], _mm_shuffle_ps (ashd, add, SHUFFLE (1, 3, 0, 3)));  // s2 d1 a0 0
+    store4f (& f [8], _mm_shuffle_ps (aslo, phi, SHUFFLE (1, 2, 2, 3)));  // a1 s0 d2 0
+    store4f (& f [12], xyz1);                                             // x0 x1 x2 1
   }
 }
 
