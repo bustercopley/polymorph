@@ -31,7 +31,7 @@ struct model_t
 
   bool initialize (uint64_t seed, int width, int height);
   void proceed ();
-  void draw ();
+  void draw () const;
 private:
   bool set_capacity (unsigned new_capacity);
   void add_object (v4f view);

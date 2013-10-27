@@ -19,7 +19,7 @@ void step_t::initialize (float start, float finish)
   T [3] = 0.0f; // unused
 }
 
-v4f step_t::operator () (float t)
+v4f step_t::operator () (float t) const
 {
   // Evaluate the polynomial by Estrin's method.
   // Mask in 0, 1 or the value according to the region to which t belongs.
@@ -62,7 +62,7 @@ void bumps_t::initialize (bump_specifier_t b0, bump_specifier_t b1)
 }
 
 // Returns {f,g,f,g}, where f = bump0 (t), g = bump1 (t).
-void bumps_t::operator () (float t, float & v0, float & v1)
+void bumps_t::operator () (float t, float & v0, float & v1) const
 {
   // Compute all four polynomials by Estrin's method, and mask
   // and combine the values according to the region of the graph

@@ -11,7 +11,7 @@
 // and f is smoothly interpolated by a cubic polynomial in between.
 struct step_t
 {
-  v4f operator () (float t);
+  v4f operator () (float t) const;
   void initialize (float start, float finish);
   float c [4], T [4];
 };
@@ -34,7 +34,7 @@ struct bump_specifier_t
 // Object computes two independent "bump" functions.
 struct bumps_t
 {
-  void operator () (float t, float & v0, float & v1);
+  void operator () (float t, float & v0, float & v1) const;
   void initialize (bump_specifier_t b0, bump_specifier_t b1);
 private:
   float S0 [4], T0 [4], U0 [4], V0 [4], c [4] [4];

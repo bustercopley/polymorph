@@ -267,7 +267,7 @@ void model_t::proceed ()
   }
 }
 
-void model_t::draw ()
+void model_t::draw () const
 {
   for (unsigned n = 0; n != count; ++ n) {
     const object_t & object = objects [n];
@@ -287,7 +287,7 @@ void model_t::draw ()
 
     if (program_select == 0)
     {
-      float (& X) [3] [4] = xyz [sselect];
+      const float (& X) [3] [4] = xyz [sselect];
       v4f one = { 1.0f, 1.0f, 1.0f, 1.0f, };
       v4f crs [3], dsq [3];
       for (unsigned i = 0; i != 3; ++ i) {
