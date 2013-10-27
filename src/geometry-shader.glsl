@@ -9,7 +9,7 @@ void segment (vec4 A, vec4 V, vec4 W, float h, float k, float l)
 
 void aspect (vec4 A, vec4 T, vec4 V, vec4 W, vec3 S, vec4 h)
 {
-  N = color (S);
+  color (S);
   segment (A, V, T, h [0], h [1], h [3]);
   segment (A, T, W, h [1], h [0], h [2]);
 }

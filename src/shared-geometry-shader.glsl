@@ -18,12 +18,12 @@ in vec3 S [6];
 out flat vec3 N;
 out noperspective vec3 E;
 
-vec3 color (vec3 x)
+void color (vec3 x)
 {
   vec3 n = (m * vec4 (x, 0)).xyz;
   vec3 p = (m * vec4 (r * x, 1)).xyz;
   vec3 a = normalize (p - l);
-  return (d * max (0, -dot (a, n)) + s * pow (max (0, -dot (normalize (p), reflect (a, n))), 10)) * f * (p [2] - e);
+  N = (d * max (0, -dot (a, n)) + s * pow (max (0, -dot (normalize (p), reflect (a, n))), 10)) * f * (p [2] - e);
 }
 
 void vertex (vec4 X, vec3 e)

@@ -1,7 +1,7 @@
 // -*- C++ -*-
 void segment (vec3 S, vec4 A, vec4 V, vec4 W, float h)
 {
-  N = color (S);
+  color (S);
   vertex (A, vec3 (h, 1, 1));
   vertex (V, vec3 (0, 1, 1));
   vertex (W, vec3 (0, 1, 1));
@@ -43,7 +43,7 @@ void main ()
   float s = dot (S [4], u);
   float t = dot (S [2], u);
 
-  N = color (normalize (cross (v - u, u - w)));
+  color (normalize (cross (v - u, u - w)));
   vertex (W, vec3 (0, 0, sqrt (B - D * D / C)));
   vertex (V, vec3 (0, sqrt (A - F * F / B), 0));
   vertex (U, vec3 (sqrt (C - E * E / A), 0, 0));
