@@ -18,7 +18,7 @@ my $bol = 1;
 
 # Shorten certain identifiers.
 my %abbrevs = (
-  "segment" => "I",  # 5 or 7 arguments
+  "segment" => "I",  # 5 or 6 arguments
   "amplify" => "I",  # 1 argument
   "aspect" => "I",   # 6 arguments
   "vertex" => "I",   # 2 arguments

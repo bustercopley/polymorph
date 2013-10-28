@@ -52,4 +52,3 @@ void main ()
   segment (S [4], q * vec4 (s * S [4], 1), W, U, sqrt (r * r - s * s - B / 4));
   segment (S [2], q * vec4 (t * S [2], 1), U, V, sqrt (r * r - t * t - C / 4));
 }
-

@@ -2,7 +2,6 @@
 #include "memory.h"
 #include "kdtree.h"
 #include "model.h"
-#include "model.h"
 #include "random.h"
 #include "rodrigues.h"
 #include "markov.h"
@@ -56,13 +55,6 @@ model_t::model_t () : memory (nullptr), capacity (0), count (0) { }
 
 bool model_t::initialize (unsigned long long seed, int width, int height)
 {
-  unsigned total_count = usr::fill_ratio * double (width) / height;
-
-  count = 0;
-  if (! set_capacity (total_count)) return false;
-
-  rng.initialize (seed);
-
 #if 0
   float tz = usr::tank_distance, td = usr::tank_depth, th = usr::tank_height;
   v4f view = { tz, td, (th * width) / height, th, };
@@ -76,7 +68,11 @@ bool model_t::initialize (unsigned long long seed, int width, int height)
   v4f view = _mm_mul_ps (vw, ratio);
 #endif
 
+  unsigned total_count = usr::fill_ratio * double (width) / height;
+  if (! set_capacity (total_count)) return false;
+  if (! uniform_buffer.initialize ()) return false;
   if (! initialize_programs (programs, view)) return false;
+  rng.initialize (seed);
 
   // Calculate wall planes to exactly fill the front of the viewing frustum.
   float t [4] ALIGNED16;
@@ -161,7 +157,7 @@ model_t::~model_t ()
 bool model_t::set_capacity (unsigned new_capacity)
 {
   return reallocate_aligned_arrays (memory, capacity, new_capacity,
-                                    & r, & x, & v, & u, & w, & f, & d,
+                                    & r, & x, & v, & u, & w,
                                     & kdtree_index,
                                     & objects);
 }
@@ -257,34 +253,61 @@ void model_t::proceed ()
   kdtree.bounce (count, 2 * max_radius, objects, r, v, w, walls);
   advance_linear (x, v, count, dt);
   advance_angular (u, w, count, dt);
-  compute (f, x, u, count);
-
-  for (unsigned n = 0; n != count; ++ n) {
-    object_t & A = objects [n];
-    float saturation, value;
-    bumps (A.animation_time, saturation, value);
-    store4f (d [n], hsv_to_rgb (A.hue, saturation, value, 0.85f));
-  }
 }
 
-void model_t::draw () const
+void model_t::draw ()
 {
-  for (unsigned n = 0; n != count; ++ n) {
-    const object_t & object = objects [n];
-    system_select_t sselect = object.target.system;
-    unsigned program_select = object.starting_point == 7 || object.target.point == 7 ? 1 : 0;
+  // Draw all the shapes, one uniform buffer at a time.
+  unsigned begin = 0, end = uniform_buffer.count ();
+  while (end < count) {
+    draw (begin, end - begin);
+    begin = end;
+    end = begin + uniform_buffer.count ();
+  }
+  draw (begin, count - begin);
+}
 
-    float g [4] ALIGNED16;
+void model_t::draw (unsigned begin, unsigned count)
+{
+  // Set the modelview matrix, m.
+  compute (reinterpret_cast <char *> (& uniform_buffer [0].m), uniform_buffer.stride (), & x [begin], & u [begin], count);
+
+  // Set the circumradius, r.
+  for (unsigned n = 0; n != count; ++ n) {
+    uniform_block_t & block = uniform_buffer [n];
+    block.r [0] = r [begin + n];
+  }
+
+  // Set the diffuse material reflectance, d.
+  for (unsigned n = 0; n != count; ++ n) {
+    uniform_block_t & block = uniform_buffer [n];
+    const object_t & object = objects [begin + n];
+    float saturation, value;
+    bumps (object.animation_time, saturation, value);
+    store4f (block.d, hsv_to_rgb (object.hue, saturation, value, 0.85f));
+  }
+
+  // Set the uniform coefficients, g.
+  for (unsigned n = 0; n != count; ++ n) {
+    uniform_block_t & block = uniform_buffer [n];
+    const object_t & object = objects [begin + n];
+    system_select_t sselect = object.target.system;
     {
       v4f t = step (object.animation_time) * _mm_set1_ps (object.locus_speed);
       v4f sc = sincos (t);
       v4f s = _mm_moveldup_ps (sc);
       v4f c = _mm_movehdup_ps (sc);
-      store4f (g, c * load4f (abc [sselect] [object.starting_point]) + s * load4f (object.locus_end));
+      v4f g = c * load4f (abc [sselect] [object.starting_point]) + s * load4f (object.locus_end);
+      store4f (block.g, g);
     }
+  }
 
-    float h [3] [4] ALIGNED16;
-
+  // Precompute triangle altitudes, h (for non-snubs only).
+  for (unsigned n = 0; n != count; ++ n) {
+    uniform_block_t & block = uniform_buffer [n];
+    const object_t & object = objects [begin + n];
+    system_select_t sselect = object.target.system;
+    unsigned program_select = object.starting_point == 7 || object.target.point == 7 ? 1 : 0;
     if (program_select == 0)
     {
       const float (& X) [3] [4] = xyz [sselect];
@@ -301,12 +324,12 @@ void model_t::draw () const
       v4f tX = dot (load4f (X [0]), crs [0]); // triple product
       v4f TU [3], usq [3];
       for (unsigned i = 0; i != 3; ++ i) {
-        v4f a = _mm_set1_ps (g [i]);
+        v4f a = _mm_set1_ps (block.g [i]);
         TU [i] = - (a + a) * tX * crs [i] / (one - dsq [i]);
         usq [i] = dot (TU [i], TU [i]);
       }
 
-      v4f T = tmapply (X, load4f (g));
+      v4f T = tmapply (X, load4f (block.g));
 
       v4f asq [3], vwsq [3];
       for (unsigned i = 0; i != 3; ++ i) {
@@ -323,13 +346,22 @@ void model_t::draw () const
         unsigned j = (i + 1) % 3;
         unsigned k = (i + 2) % 3;
         v4f H = sqrt (col0 (asq [i] - q * usq [j], asq [i] - q * usq [k], usq [k] - vwsq [i] * rcp (usq [j]), usq [j] - vwsq [i] * rcp (usq [k])));
-        store4f (h [i], H);
+        store4f (block.h [i], H);
       }
     }
+  }
 
-    paint (r [n], f [n], g, h, d [n],
-           primitive_count [sselect],
+  uniform_buffer.update ();
+
+  for (unsigned n = 0; n != count; ++ n) {
+    const object_t & object = objects [begin + n];
+    system_select_t sselect = object.target.system;
+    unsigned program_select = object.starting_point == 7 || object.target.point == 7 ? 1 : 0;
+
+    paint (primitive_count [sselect],
            vao_ids [sselect],
-           programs [program_select]);
+           programs [program_select],
+           uniform_buffer.id (),
+           n * uniform_buffer.stride ());
   }
 }

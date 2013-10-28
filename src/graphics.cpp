@@ -69,6 +69,48 @@ unsigned make_vao (unsigned N, const float (* vertices) [4], const std::uint8_t 
   return vao_id;
 }
 
+namespace
+{
+  // Align x upwards to given alignment (which must be a power of 2). Store the result in y.
+  template <typename Dest, typename Source>
+  inline void align_up (Dest & y, Source x, std::intptr_t alignment)
+  {
+    y = (Dest) ((((std::intptr_t) (x)) + (alignment - 1)) & - alignment);
+  }
+}
+
+uniform_buffer_t::~uniform_buffer_t ()
+{
+  deallocate (m_memory);
+}
+
+bool uniform_buffer_t::initialize ()
+{
+  GLint size, align;
+  glGetIntegerv (GL_MAX_UNIFORM_BLOCK_SIZE, & size);
+  glGetIntegerv (GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, & align);
+  // Client-side buffer needs at least 32-byte alignment for SSE.
+  align = align > 32 ? align : 32;
+
+  m_size = size;
+  m_memory = allocate_internal (m_size + align);
+  align_up (m_begin, m_memory, align);
+  align_up (m_stride, sizeof (uniform_block_t), align);
+
+  glGenBuffers (1, & m_id);
+  glBindBuffer (GL_UNIFORM_BUFFER, m_id);
+
+  return true;
+}
+
+void uniform_buffer_t::update ()
+{
+  // Create a buffer, orphaning any previous buffer.
+  glBufferData (GL_UNIFORM_BUFFER, m_size, nullptr, GL_DYNAMIC_DRAW);
+  // Upload the buffer data.
+  glBufferSubData (GL_UNIFORM_BUFFER, 0, m_size, m_begin);
+}
+
 bool initialize_programs (program_t (& programs) [2], v4f view)
 {
   glEnable (GL_DEPTH_TEST);
@@ -107,7 +149,7 @@ bool program_t::initialize (v4f view, unsigned gshader2)
   }
 
   for (unsigned k = 0; k != uniforms::count; ++ k) {
-    const char * names = "p\0l\0g\0h\0m\0r\0d\0s\0f\0e\0";
+    const char * names = "p\0l\0s\0f\0";
     uniform_locations [k] = glGetUniformLocation (id, names + 2 * k);
   }
 
@@ -130,13 +172,19 @@ bool program_t::initialize (v4f view, unsigned gshader2)
     { 0.0f, 0.0f, 2 * z0 / 3, },
   };
 
+  float fog_coefficients [] = { z1, -1.0f / zd, };
+
+  // Values in the default uniform block.
   glUseProgram (id);
   glUniformMatrix4fv (uniform_locations [uniforms::p], 1, GL_FALSE, projection_matrix);
   glUniform3fv (uniform_locations [uniforms::l], 1, & light_position [0] [0]);
   glUniform3fv (uniform_locations [uniforms::s], 1, usr::specular_material);
-  glUniform1f (uniform_locations [uniforms::f], -1.0f / zd);
-  glUniform1f (uniform_locations [uniforms::e], z1);
+  glUniform1fv (uniform_locations [uniforms::f], 2, fog_coefficients);
   //glUseProgram (0);
+
+  // Binding for Uniform block "H".
+  GLuint uniform_block_index = glGetUniformBlockIndex (id, "H");
+  glUniformBlockBinding (id, uniform_block_index, 0);
 
   return true;
 }
@@ -146,23 +194,17 @@ void clear ()
   glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void paint (float r,
-            const float (& m) [16],
-            const float (& g) [4],
-            const float (& h) [3] [4],
-            const float (& d) [4],
-            unsigned N,
+void paint (unsigned N,
             unsigned vao_id,
-            const program_t & program)
+            const program_t & program,
+            std::int32_t uniform_buffer_id,
+            std::ptrdiff_t uniform_buffer_offset)
 {
+  const unsigned size = sizeof (uniform_block_t);
   glUseProgram (program.id);
-  glUniform1f (program.uniform_locations [uniforms::r], r);
-  glUniformMatrix4fv (program.uniform_locations [uniforms::m], 1, GL_FALSE, m);
-  glUniform4fv (program.uniform_locations [uniforms::g], 1, g);
-  glUniform4fv (program.uniform_locations [uniforms::h], 3, h [0]);
-  glUniform3fv (program.uniform_locations [uniforms::d], 1, d);
   glBindVertexArray (vao_id);
+  glBindBufferRange (GL_UNIFORM_BUFFER, 0, uniform_buffer_id, uniform_buffer_offset, size);
   glDrawElements (GL_TRIANGLES_ADJACENCY, N * 6, GL_UNSIGNED_BYTE, nullptr);
-  glBindVertexArray (0);
+  //glBindVertexArray (0);
   //glUseProgram (0);
 }
