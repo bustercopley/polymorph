@@ -139,7 +139,7 @@ namespace
   {
     // One step of the classical fourth-order Runge-Kutta method.
     v4f half = { 0.5f, 0.5f, 0.5f, 0.5f, };
-    v4f sixth = { 0x1.555556P-3f, 0x1.555556P-3f, 0x1.5555546P-3f, 0x1.555556P-3f, };
+    v4f sixth = { 0x1.555556P-3f, 0x1.555556P-3f, 0x1.5555556P-3f, 0x1.555556P-3f, };
     v4f A = tangent (y, x);
     v4f B = tangent (y + half * A, x);
     v4f C = tangent (y + half * B, x);
