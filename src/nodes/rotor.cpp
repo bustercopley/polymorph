@@ -3,7 +3,7 @@
 
 rotor_t::rotor_t (long double A) : sinA (std::sin (A)), cosA (std::cos (A)) { }
 
-void rotor_t::about (long double (& a) [4])
+void rotor_t::about (const long double (& a) [4])
 {
   // Store the matrix of the rotation about `a' through angle `A'.
   long double symm12 = a [1] * a [2] * (1 - cosA);
