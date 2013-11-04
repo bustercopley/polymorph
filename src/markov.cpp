@@ -68,7 +68,7 @@ namespace
     // variety of any snub or desnub operation that follows. Not doing it now,
     // before the replacements, makes some double-desnub combos impossible.
     unsigned entropy = rng.get (); // Seems a shame to waste it.
-    duality ^= entropy & 1 & - (current.point != 7);
+    duality ^= entropy & (current.point != 7);
 
     for (unsigned m = 0; m != replacement_count; ++ m) {
       const replacement_t f = replacements [m];
@@ -87,12 +87,12 @@ namespace
         }
         else {
           // Apply a rotation in object co-ordinates.
-          v4f temp = load4f (rotations [m - 6]);
           float rotation [4] ALIGNED16;
+          v4f temp = load4f (rotations [m - 6]);
           store4f (rotation, duality ? -temp : +temp);
           rotate (u, rotation);
           // Tetrahedral <-> icosahedral: no Markov transition is forbidden after these replacements.
-          // Tetrahedral -> dual tetrahedral: keep the starting_point we already have.
+          // Tetrahedral -> dual tetrahedral (both snub): keep the starting_point we already have.
           if (m < 8) starting_point = current.point;
         }
         break;
@@ -101,7 +101,7 @@ namespace
 
     // If non-snub, maybe switch between dual representations (again).
     // Not doing this now, after the replacement, makes some double-snub combos impossible.
-    duality ^= (entropy >> 1) & 1 & - (current.point != 7);
+    duality ^= (entropy >> 1) & (current.point != 7);
     // Restore the dual bit.
     current.system = system_select_t (current.system ^ duality);
   }
