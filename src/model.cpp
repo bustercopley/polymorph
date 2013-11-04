@@ -322,11 +322,11 @@ void model_t::draw (unsigned begin, unsigned count)
       }
 
       v4f tX = dot (load4f (X [0]), crs [0]); // triple product
-      v4f TU [3], usq [3];
+      v4f UT [3], usq [3];
       for (unsigned i = 0; i != 3; ++ i) {
         v4f a = _mm_set1_ps (block.g [i]);
-        TU [i] = - (a + a) * tX * crs [i] / (one - dsq [i]);
-        usq [i] = dot (TU [i], TU [i]);
+        UT [i] = (a + a) * tX * crs [i] / (one - dsq [i]);
+        usq [i] = dot (UT [i], UT [i]);
       }
 
       v4f T = tmapply (X, load4f (block.g));
@@ -335,7 +335,7 @@ void model_t::draw (unsigned begin, unsigned count)
       for (unsigned i = 0; i != 3; ++ i) {
         v4f tx = dot (T, load4f (X [i]));
         asq [i] = one - tx * tx;
-        v4f vw = dot (TU [(i + 1) % 3], TU [(i + 2) % 3]);
+        v4f vw = dot (UT [(i + 1) % 3], UT [(i + 2) % 3]);
         vwsq [i] = vw * vw;
       }
 
