@@ -16,7 +16,7 @@
 
 #if PRINT_ENABLED
 // These are Father Wenninger's numbers.
-static const unsigned polyhedra [system_count] [8] = {
+const unsigned polyhedra [system_count] [8] = {
   { 2, 1, 1, 11, 6, 6, 7, 4, },
   { 2, 1, 1, 11, 6, 6, 7, 4, },
   { 11, 2, 3, 13, 8, 7, 15, 17, },
@@ -52,8 +52,6 @@ float min_d = 1.0f, max_d = 0.0f;
 #endif
 
 model_t::model_t () : memory (nullptr), capacity (0), count (0) { }
-
-#include <iostream>
 
 bool model_t::initialize (unsigned long long seed, int width, int height)
 {
@@ -260,7 +258,6 @@ void model_t::proceed ()
 
 void model_t::draw ()
 {
-  clear ();
   // Draw all the shapes, one uniform buffer at a time.
   unsigned begin = 0, end = uniform_buffer.count ();
   while (end < count) {
