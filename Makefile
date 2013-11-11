@@ -13,14 +13,14 @@ nodes_OBJECTS=main.o show_system.o snub_variance.o triangle.o rotor.o
 
 polymorph_FILENAME=polymorph.scr
 polymorph_CPPFLAGS= #-Itinyscheme
-polymorph_CFLAGS=-msse4.2 -mfpmath=sse -Os
+polymorph_CFLAGS=-msse4.2 -mfpmath=sse -Os -flto
 polymorph_CXXFLAGS=-fno-exceptions -fno-rtti
 polymorph_LDFLAGS=-mwindows -s
 polymorph_LDLIBS=-lopengl32
 polymorph_EXTRA_OBJECTS=.obj/resources-res.o #.obj/tinyscheme-scheme.o
 polymorph_SOURCE_PREFIX=src/
 polymorph_OBJECTS=\
-bump.o config.o cmdline.o glinit.o graphics.o kdtree.o main.o markov.o \
+bump.o cmdline.o glinit.o graphics.o kdtree.o main.o markov.o \
 memory.o model.o partition.o random.o rodrigues.o systems.o
 # tinyscheme_SOURCE_PREFIX=tinyscheme/
 # tinyscheme_CPPFLAGS=-include src/tinyscheme-config.h

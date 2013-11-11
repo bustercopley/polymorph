@@ -8,11 +8,48 @@
 #include "random.h"
 #include "partition.h"
 #include "graphics.h"
-#include "config.h"
 #include "aligned-arrays.h"
 #include "vector.h"
 #include "hsv-to-rgb.h"
 #include "print.h"
+
+namespace usr {
+  static const unsigned fill_ratio = 100;     // Number of balls per unit of screen aspect ratio.
+
+  // Physical parameters.
+  static const float min_radius = 1.0f;
+  static const float max_radius = 1.0f;
+  static const float density = 100.0f;        // Density of a ball.
+  static const float temperature = 212;       // Average kinetic energy.
+
+  // Container characteristics.
+  static const float tank_distance = 120.0f;  // Distancia del ojo a la pantalla.
+  static const float tank_depth = 22.0f;      // Tank depth in simulation units.
+  static const float tank_height = 22.0f;     // Height of screen / tank front.
+
+  // Parameters for lighting and animation timings.
+
+  //  r ^                        r = bump (t)
+  //    |
+  // v1 +--------------XXXXXX----------------
+  //    |           X  |    |  X
+  //    |         X    |    |    X
+  //    |        X     |    |     X
+  //    |      X       |    |       X
+  // v0 +XXXX----------+----+----------XXXX-->
+  //        t0        t1    t2        t3      t
+
+  //                                         v0     v1     t0     t1     t2     t3
+  static const bump_specifier_t hsv_v_bump = { 0.25f, 1.00f, 1.50f, 1.75f, 3.75f, 4.25f, };
+  static const bump_specifier_t hsv_s_bump = { 0.00f, 0.25f, 1.50f, 1.75f, 3.75f, 4.25f, };
+
+  static const float morph_start = 1.75f;
+  static const float morph_finish = 3.50f;
+  static const float cycle_duration = 4.25f;
+
+  // Simulation speed.
+  static const float frame_time = 1.0f / 60;
+}
 
 #if PRINT_ENABLED
 // These are Father Wenninger's numbers.

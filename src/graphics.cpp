@@ -2,7 +2,6 @@
 #include "vector.h"
 #include "compiler.h"
 #include "memory.h"
-#include "config.h"
 #include "glinit.h"
 #include "graphics.h"
 #include "model.h"
@@ -149,7 +148,7 @@ bool program_t::initialize (v4f view, unsigned gshader2)
   }
 
   for (unsigned k = 0; k != uniforms::count; ++ k) {
-    const char * names = "p\0l\0s\0f\0";
+    const char * names = "p\0l\0f\0";
     uniform_locations [k] = glGetUniformLocation (id, names + 2 * k);
   }
 
@@ -178,7 +177,6 @@ bool program_t::initialize (v4f view, unsigned gshader2)
   glUseProgram (id);
   glUniformMatrix4fv (uniform_locations [uniforms::p], 1, GL_FALSE, projection_matrix);
   glUniform3fv (uniform_locations [uniforms::l], 1, & light_position [0] [0]);
-  glUniform3fv (uniform_locations [uniforms::s], 1, usr::specular_material);
   glUniform1fv (uniform_locations [uniforms::f], 2, fog_coefficients);
   //glUseProgram (0);
 

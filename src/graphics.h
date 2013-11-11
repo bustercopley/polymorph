@@ -16,7 +16,6 @@ namespace uniforms
   enum index_t {
     p, // mat4,      projection matrix
     l, // vec3,      light position
-    s, // vec3,      specular reflectance
     f, // float [2], fog coefficients
     count
   };

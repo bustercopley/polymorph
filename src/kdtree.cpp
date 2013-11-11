@@ -3,12 +3,16 @@
 #include "partition.h"
 #include "memory.h"
 #include "aligned-arrays.h"
-#include "config.h"
 #include "model.h"
 #include "vector.h"
 #include "compiler.h"
 #include <cstdint>
 #include <limits>
+
+namespace usr {
+  static const float walls_friction = 0.075f;
+  static const float balls_friction = 0.075f;
+}
 
 namespace
 {

@@ -1,6 +1,5 @@
 #include "mswin.h"
 #include "vector.h"
-#include "config.h"
 #include "glinit.h"
 #include "model.h"
 #include "random.h"
@@ -13,6 +12,20 @@
 // #include <scheme-private.h>
 // #include <scheme.h>
 #include <cstdint>
+
+namespace usr {
+  // Program name.
+  static const char * const window_name = "Polymorph";
+  static const char * const message_window_name = "Polymorph";
+  static const char * const message =
+  "And the ratios of their numbers, motions, and "
+  "other properties, everywhere God, as far as "
+  "necessity allowed or gave consent, has exactly "
+  "perfected, and harmonised in due proportion.";
+  // "\n\nThis screensaver includes TinyScheme, developed by Dimitrios "
+  // "Souflis and licensed under the Modified BSD License. "
+  // "See \"tinyscheme/COPYING.txt\" for details.";
+}
 
 inline std::uint64_t qpc ()
 {
