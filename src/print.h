@@ -61,11 +61,9 @@ inline void pexit ()
 
 #else
 #define PRINT_ENABLED 0
-template <typename T, unsigned N>
-inline void print (const char *, T (&) [N]) { }
+template <typename T, unsigned N> inline void print (const char *, T (&) [N]) { }
+template <typename T> inline void print (const char *, T) { }
 inline void print (const char *) { }
-inline void print (const char *, double) { }
-inline void print (const char *, __m128) { }
 inline void xassert (const char *, bool) { }
 inline void pexit () { }
 #define passert(condition)
