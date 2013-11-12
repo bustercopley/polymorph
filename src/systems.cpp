@@ -1,7 +1,7 @@
+#include "systems.h"
 #include "compiler.h"
 #include "mswin.h"
 #include "vector.h"
-#include "systems.h"
 #include "nodes/system.h"
 #include "cramer.h"
 #include "graphics.h"

@@ -1,4 +1,5 @@
 // -*- C++ -*-
+
 #ifndef cramer_h
 #define cramer_h
 

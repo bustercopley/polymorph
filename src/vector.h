@@ -1,7 +1,9 @@
 // -*- C++ -*-
+
 #ifndef vector_h
 #define vector_h
 
+#include "mswin.h"
 #include <immintrin.h>
 #include <cstdint>
 

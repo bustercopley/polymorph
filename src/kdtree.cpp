@@ -1,4 +1,3 @@
-#include "mswin.h"
 #include "kdtree.h"
 #include "partition.h"
 #include "memory.h"

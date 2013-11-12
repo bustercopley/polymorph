@@ -4,13 +4,10 @@
 #define model_h
 
 #include "compiler.h"
-#include "memory.h"
-#include "systems.h"
 #include "random.h"
 #include "kdtree.h"
 #include "graphics.h"
 #include "bump.h"
-#include "vector.h"
 #include "markov.h"
 
 struct object_t
@@ -34,7 +31,7 @@ struct model_t
   void draw ();
 private:
   bool set_capacity (unsigned new_capacity);
-  void add_object (v4f view);
+  void add_object (const float (& view) [4]);
   void recalculate_locus (object_t & A);
   void draw (unsigned begin, unsigned count);
 

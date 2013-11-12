@@ -1,4 +1,5 @@
 // -*- C++ -*-
+
 #ifndef compiler_h
 #define compiler_h
 

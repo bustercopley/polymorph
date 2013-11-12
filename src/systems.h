@@ -3,8 +3,6 @@
 #ifndef systems_h
 #define systems_h
 
-#include <cstdint>
-
 enum system_select_t {
   tetrahedral, dual_tetrahedral,
   octahedral, dual_octahedral,

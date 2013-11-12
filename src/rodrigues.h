@@ -4,6 +4,7 @@
 #define rodrigues_h
 
 #include "vector.h"
+#include <cstdint>
 
 // State: three-dimensional vectors x, u, v, w.
 //   x: position (defined in point_t)
@@ -22,7 +23,7 @@ void rotate (float (& u) [4], const float (& v) [4]);
 // sincos: Argument x x * *, result sin(x) cos(x) sin(x) cos(x), range ([-(1/2)pi, (3/2)*pi]).
 // arccos: Argument x x x x, result acos(x) acos(x) acos(x) acos(x), range [sqrt(2)/2, 1].
 
-v4f sincos (const v4f x);
+v4f sincos (v4f x);
 v4f arccos (v4f x);
 
 #endif

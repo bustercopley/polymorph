@@ -1,9 +1,9 @@
+#include "graphics.h"
 #include "mswin.h"
 #include "vector.h"
 #include "compiler.h"
 #include "memory.h"
 #include "glinit.h"
-#include "graphics.h"
 #include "model.h"
 #include <cstdint>
 
@@ -110,7 +110,7 @@ void uniform_buffer_t::update ()
   glBufferSubData (GL_UNIFORM_BUFFER, 0, m_size, m_begin);
 }
 
-bool initialize_programs (program_t (& programs) [2], v4f view)
+bool initialize_programs (program_t (& programs) [2], const float (& view) [4])
 {
   glEnable (GL_DEPTH_TEST);
   glDepthRange (1.0, 0.0);
@@ -124,7 +124,7 @@ bool initialize_programs (program_t (& programs) [2], v4f view)
     programs [1].initialize (view, 261);
 }
 
-bool program_t::initialize (v4f view, unsigned gshader2)
+bool program_t::initialize (const float (& view) [4], unsigned gshader2)
 {
   id = glCreateProgram ();
   GLuint vshader_id = make_shader (GL_VERTEX_SHADER, 258, 0);
@@ -152,26 +152,24 @@ bool program_t::initialize (v4f view, unsigned gshader2)
     uniform_locations [k] = glGetUniformLocation (id, names + 2 * k);
   }
 
-  float t [4] ALIGNED16;
-  store4f (t, view);
-  float z0 = - t [0];
-  float z1 = - t [0] - t [1];
-  float zd =  - t [1];
-  float w = t [2];
-  float h = t [3];
+  float z1 = view [0];
+  float z2 = view [1];
+  float x1 = view [2];
+  float y1 = view [3];
+  float zd = z2-z1;
 
   float projection_matrix [16] = {
-   -2*z0/w,   0,       0,           0,
-    0,       -2*z0/h,  0,           0,
-    0,        0,      (z0+z1)/zd,  -1,
-    0,        0,     -2*z0*z1/zd,   0,
+   -z1/x1,    0,       0,           0,
+    0,       -z1/y1,   0,           0,
+    0,        0,      (z1+z2)/zd,  -1,
+    0,        0,     -2*z1*z2/zd,   0,
   };
 
   float light_position [] [3] = {
-    { 0.0f, 0.0f, 2 * z0 / 3, },
+    { 0.0f, 0.0f, 2 * z1 / 3, },
   };
 
-  float fog_coefficients [] = { z1, -1.0f / zd, };
+  float fog_coefficients [] = { z2, -1.0f / zd, };
 
   // Values in the default uniform block.
   glUseProgram (id);

@@ -1,5 +1,4 @@
 #include "random.h"
-#include "vector.h"
 #include "compiler.h"
 
 // The algorithm is D1(A1r), aka Ranq1, from Numerical Recipes.
@@ -20,15 +19,17 @@ std::uint64_t rng_t::get ()
   return state * 2685821657736338717ull;
 }
 
+#include "random-util.h"
+
 // Random double number uniformly distributed on the interval [a, b).
-double rng_t::get_double (double a, double b)
+double get_double (rng_t & rng, double a, double b)
 {
-  return a + 0x1.0p-64 * get () * (b - a);
+  return a + 0x1.0p-64 * rng.get () * (b - a);
 }
 
 // Return a random vector uniformly distributed in
 // the interior of a sphere centre the origin.
-v4f rng_t::get_vector_in_ball (float radius)
+v4f get_vector_in_ball (rng_t & rng, float radius)
 {
   union {
     __m128i i128;
@@ -37,8 +38,8 @@ v4f rng_t::get_vector_in_ball (float radius)
   v4f v, sq;
   v4f lim = { 0x1.0p62f, 0.0f, 0.0f, 0.0f, };
   do {
-    u64 [0] = get ();
-    u64 [1] = get () & 0xffffffffull;
+    u64 [0] = rng.get ();
+    u64 [1] = rng.get () & 0xffffffffull;
     v = _mm_cvtepi32_ps (i128);
     sq = dot (v, v);
   }
@@ -50,14 +51,14 @@ v4f rng_t::get_vector_in_ball (float radius)
 
 // Return a random vector uniformly distributed in
 // the box [0,1)^3.
-v4f rng_t::get_vector_in_box ()
+v4f get_vector_in_box (rng_t & rng)
 {
   union {
     __m128i i128;
     std::uint64_t u64 [2];
   };
-  u64 [0] = get () & 0x7fffffff7fffffffull;
-  u64 [1] = get () & 0x7fffffffull;
+  u64 [0] = rng.get () & 0x7fffffff7fffffffull;
+  u64 [1] = rng.get () & 0x7fffffffull;
   v4f v = _mm_cvtepi32_ps (i128);
   v4f k = { 0x1.0p-31f, 0x1.0p-31f, 0x1.0p-31f, 0.0f };
   return k * v;

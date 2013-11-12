@@ -1,4 +1,5 @@
 // -*- C++ -*-
+
 #ifndef print_h
 #define print_h
 

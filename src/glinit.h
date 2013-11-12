@@ -1,11 +1,9 @@
 // -*- C++ -*-
+
 #ifndef glinit_h
 #define glinit_h
 
-#ifndef mswin_h
-#error Must include "mswin.h" before including "glinit.h"
-#endif
-
+#include "mswin.h"
 #include <GL/gl.h>
 #include "glext.h"
 #include "wglext.h"

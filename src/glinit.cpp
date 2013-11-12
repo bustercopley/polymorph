@@ -1,4 +1,3 @@
-#include "mswin.h"
 #include "glinit.h"
 
 #define DO_GLPROC(type,name) type name = nullptr

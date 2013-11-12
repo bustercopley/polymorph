@@ -1,11 +1,11 @@
+#include "model.h"
 #include "compiler.h"
 #include "memory.h"
 #include "kdtree.h"
-#include "model.h"
 #include "random.h"
 #include "rodrigues.h"
 #include "markov.h"
-#include "random.h"
+#include "random-util.h"
 #include "partition.h"
 #include "graphics.h"
 #include "aligned-arrays.h"
@@ -92,32 +92,24 @@ model_t::model_t () : memory (nullptr), capacity (0), count (0) { }
 
 bool model_t::initialize (unsigned long long seed, int width, int height)
 {
-#if 0
-  float tz = usr::tank_distance, td = usr::tank_depth, th = usr::tank_height;
-  v4f view = { tz, td, (th * width) / height, th, };
-#else
-  typedef std::int32_t v4i __attribute__ ((vector_size (16), aligned(16)));
-  v4i wi = { height, height, width, height, };
-  v4f hw = _mm_cvtepi32_ps ((__m128i) wi);
-  v4f hh = _mm_movelh_ps (hw, hw);
-  v4f ratio = hw / hh;
-  v4f vw = { usr::tank_distance, usr::tank_depth, usr::tank_height, usr::tank_height, };
-  v4f view = _mm_mul_ps (vw, ratio);
-#endif
+  float aspect_ratio = float (width) / height;
 
-  unsigned total_count = usr::fill_ratio * double (width) / height;
+  float view [4] ALIGNED16;
+  float tz = usr::tank_distance, td = usr::tank_depth, th = usr::tank_height;
+  v4f vw = { -tz, -tz-td, (th/2) * aspect_ratio, (th/2), };
+  store4f (view, vw);
+
+  unsigned total_count = aspect_ratio * usr::fill_ratio;
   if (! set_capacity (total_count)) return false;
   if (! uniform_buffer.initialize ()) return false;
   if (! initialize_programs (programs, view)) return false;
   rng.initialize (seed);
 
   // Calculate wall planes to exactly fill the front of the viewing frustum.
-  float t [4] ALIGNED16;
-  store4f (t, view);
-  float z1 = -t [0];
-  float z2 = -t [0] - t [1];
-  float x1 = t [2] / 2;
-  float y1 = t [3] / 2;
+  float z1 = view [0];
+  float z2 = view [1];
+  float x1 = view [2];
+  float y1 = view [3];
   float x2 = x1 * z2 / z1;
   float y2 = y1 * z2 / z1;
   // Now push the front wall back a little (avoids visual artifacts on some machines).
@@ -145,7 +137,7 @@ bool model_t::initialize (unsigned long long seed, int width, int height)
   for (unsigned n = 0; n != count; ++ n) kdtree_index [n] = n;
 
   float phase = 0.0f;
-  float global_time_offset = rng.get_double (0.0, usr::cycle_duration);
+  float global_time_offset = get_double (rng, 0.0, usr::cycle_duration);
   for (unsigned n = 0; n != count; ++ n) {
     float hue = 6.0f * phase;
     hue = (hue < 3.0f / 2.0f ? hue * 2.0f / 3.0f : hue * 10.0f / 9.0f - 2.0f / 3.0f); // More orange.
@@ -200,33 +192,31 @@ bool model_t::set_capacity (unsigned new_capacity)
                                     & objects);
 }
 
-void model_t::add_object (v4f view)
+void model_t::add_object (const float (& view) [4])
 {
   if (count == capacity) {
     set_capacity (capacity ? 2 * capacity : 128);
   }
 
   object_t & A = objects [count];
-  float R = rng.get_double (usr::min_radius, usr::max_radius);
+  float R = get_double (rng, usr::min_radius, usr::max_radius);
   r [count] = R;
   if (max_radius < R) max_radius = R;
   A.m = usr::density * R * R;
   A.l = 0.4f * A.m * R * R;
 
-  float t0 [4] ALIGNED16;
-  store4f (t0, view);
-  float z1 = t0 [0];
-  float z2 = t0 [0] + t0 [1];
-  float x1 = t0 [2] / 2;
-  float y1 = t0 [3] / 2;
+  float z1 = view [0];
+  float z2 = view [1];
+  float x1 = view [2];
+  float y1 = view [3];
   float x2 = x1 * z2 / z1;
   float y2 = y1 * z2 / z1;
   v4f R0 = { R, 0.0f, 0.0f, 0.0f, };
-  v4f a = { -x2 + R, -y2 + R, -z1 - R, 0.0f, };
-  v4f b = { +x2 - R, +y2 - R, -z2 + R, 0.0f, };
+  v4f a = { -x2 + R, -y2 + R, z2 + R, 0.0f, };
+  v4f b = { +x2 - R, +y2 - R, z1 - R, 0.0f, };
   v4f m = b - a;
  loop:
-  v4f t = a + m * rng.get_vector_in_box ();
+  v4f t = a + m * get_vector_in_box (rng);
   for (unsigned k = 0; k != 6; ++ k) {
     v4f anchor = load4f (walls [k] [0]);
     v4f normal = load4f (walls [k] [1]);
@@ -236,9 +226,9 @@ void model_t::add_object (v4f view)
     }
   }
   store4f (x [count], t);
-  store4f (v [count], rng.get_vector_in_ball (0.5f * usr::temperature / A.m));
-  store4f (u [count], rng.get_vector_in_ball (0x1.921fb4P1)); // pi
-  store4f (w [count], rng.get_vector_in_ball (0.2f * usr::temperature / A.l));
+  store4f (v [count], get_vector_in_ball (rng, 0.5f * usr::temperature / A.m));
+  store4f (u [count], get_vector_in_ball (rng, 0x1.921fb4P1)); // pi
+  store4f (w [count], get_vector_in_ball (rng, 0.2f * usr::temperature / A.l));
 
   std::uint64_t entropy = rng.get ();
   A.target.system = static_cast <system_select_t> ((entropy >> 3) % 6);
@@ -331,7 +321,7 @@ void model_t::draw (unsigned begin, unsigned count)
     const object_t & object = objects [begin + n];
     system_select_t sselect = object.target.system;
     {
-      v4f t = step (object.animation_time) * _mm_set1_ps (object.locus_speed);
+      v4f t = _mm_set1_ps (step (object.animation_time) * object.locus_speed);
       v4f sc = sincos (t);
       v4f s = _mm_moveldup_ps (sc);
       v4f c = _mm_movehdup_ps (sc);

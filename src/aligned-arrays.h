@@ -1,4 +1,5 @@
 // -*- C++ -*-
+
 #ifndef aligned_arrays_h
 #define aligned_arrays_h
 

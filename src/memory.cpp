@@ -1,5 +1,5 @@
-#include "mswin.h"
 #include "memory.h"
+#include "mswin.h"
 
 void * allocate_internal (std::size_t n)
 {

@@ -1,5 +1,4 @@
 #include "partition.h"
-#include "vector.h"
 
 namespace
 {

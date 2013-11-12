@@ -181,8 +181,6 @@ void advance_angular (float (* u) [4], float (* w) [4], unsigned count, float dt
   }
 }
 
-#include "print.h"
-
 void compute (char * buffer, std::size_t stride, const float (* x) [4], const float (* u) [4], unsigned count)
 {
   v4f iiii = { 1.0f, 1.0f, 1.0f, 1.0f, };

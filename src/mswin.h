@@ -3,12 +3,8 @@
 #ifndef mswin_h
 #define mswin_h
 
-#ifdef vector_h
-#error When both "mswin.h" and "vector.h" are included, "mswin.h" must come first.
-#endif
-
 //#define WINVER 0x500
-#define WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN 1
 #include <windows.h>
 
 namespace
