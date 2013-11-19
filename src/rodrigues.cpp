@@ -134,8 +134,8 @@ namespace
     return dot (u, w) * h * u + g * w - half * cross (u, w);
   }
 
-  // bch(x,y) = z, where e^\hat{x} e^\hat{y} = e^\hat{z}, for small x.
-  inline v4f bch (v4f x, v4f y)
+  // Compute z = bch(x,y), where e^\hat{x} e^\hat{y} = e^\hat{z}, for fairly small x.
+  inline v4f bch4 (v4f x, v4f y)
   {
     // One step of the classical fourth-order Runge-Kutta method.
     v4f half = { 0.5f, 0.5f, 0.5f, 0.5f, };
@@ -145,6 +145,24 @@ namespace
     v4f C = tangent (y + half * B, x);
     v4f D = tangent (y + C, x);
     return y + sixth * (A + (B + C) + (B + C) + D);
+  }
+
+  // Compute z = bch(x,y) for very small x.
+  inline v4f bch2 (v4f x, v4f y)
+  {
+    v4f half = { 0.5f, 0.5f, 0.5f, 0.5f, };
+    if (1) {
+      // One step of the midpoint method.
+      v4f a = tangent (y, x);
+      v4f b = tangent (y + half * a, x);
+      return y + b;
+    }
+    else {
+      // One step of Heun's method.
+      v4f a = tangent (y, x);
+      v4f b = tangent (y + a, x);
+      return y + half * (a + b);
+    }
   }
 }
 
@@ -172,7 +190,7 @@ void advance_angular (float (* u) [4], float (* w) [4], unsigned count, float dt
   v4f twopi = { 0x1.921fb6P2f, 0x1.921fb6P2f, 0x1.921fb6P2f, 0x1.921fb6P2f, };
   v4f lim1 = { +0x1.3c0000P3f, 0.0f, 0.0f, 0.0f, }; // a touch over pi^2 (~ +0x1.3bd3ccP3)
   for (unsigned n = 0; n != count; ++ n) {
-    v4f u1 = bch (dt0 * load4f (w [n]), load4f (u [n]));
+    v4f u1 = bch2 (dt0 * load4f (w [n]), load4f (u [n]));
     v4f xsq = dot (u1, u1);
     if (_mm_comigt_ss (xsq, lim1)) {
       u1 *= one - twopi * rsqrt (xsq);
@@ -240,15 +258,15 @@ void rotate (float (& u) [4], const float (& v) [4])
   v4f v0 = load4f (v);
   v4f v1 = v0 + a * cross (u1, v0) + b * (dot (u1, v0) * u1 - xsq * v0);
   // To save code don't worry about u growing too large (compare advance_angular).
-  store4f (u, bch (v1, u1));
+  store4f (u, bch4 (v1, u1));
 }
 
 // Restricted range [-pi/2, pi/2].
 // Argument x x * *, result sin(x) cos(x) sin(x) cos(x).
 v4f sincos (const v4f x)
 {
-  v4f one = {1.0f,  1.0f, 1.0f, 1.0f, };
-  v4f alt = {0.0f,  1.0f, 0.0f, 1.0f, };
+  v4f one = {1.0f, 1.0f, 1.0f, 1.0f, };
+  v4f alt = {0.0f, 1.0f, 0.0f, 1.0f, };
   v4f xsq = x * x;                       // x^2 x^2 * *
   v4f x1 = _mm_unpacklo_ps (one, xsq);   // 1 x^2 1 x^2
   v4f fg = fg_reduced (x1);              // sin1(x) cos2(x) sin1(x) cos2(x)
@@ -262,7 +280,7 @@ v4f arccos (v4f x)
 {
   // Minimax polynomial for (acos(x))^2 on [+0x1.8c97f0P-1f, +0x1.fb5486P-1f].
   // Remes error +-0x1.460d54P-21f.
-  v4f one = {1.0f,  1.0f, 1.0f, 1.0f, };
+  v4f one = {1.0f, 1.0f, 1.0f, 1.0f, };
   v4f c = { +0x1.37b24aP1f, -0x1.7cb23cP1f, +0x1.494690P-1f, -0x1.aa37e2P-4f, };
   v4f x1 = _mm_unpacklo_ps (one, x);       // 1 x 1 x
   v4f c1 = c * x1;                         // c0 c1x c2 c3x
