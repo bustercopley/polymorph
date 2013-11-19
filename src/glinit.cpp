@@ -79,7 +79,7 @@ bool get_initial_wglprocs (HINSTANCE hInstance)
   ::ZeroMemory (& wc, sizeof wc);
   wc.hInstance = hInstance;
   wc.lpfnWndProc = & ::DefWindowProc;
-  wc.lpszClassName = "GLinit";
+  wc.lpszClassName = TEXT ("GLinit");
   if (ATOM atom = ::RegisterClass (& wc))
   {
     if (HWND hwnd = ::CreateWindowEx (0,

@@ -15,16 +15,16 @@
 
 namespace usr {
   // Program name.
-  static const char * const window_name = "Polymorph";
-  static const char * const message_window_name = "Polymorph";
-  static const char * const message =
-  "And the ratios of their numbers, motions, and "
-  "other properties, everywhere God, as far as "
-  "necessity allowed or gave consent, has exactly "
-  "perfected, and harmonised in due proportion.";
-  // "\n\nThis screensaver includes TinyScheme, developed by Dimitrios "
-  // "Souflis and licensed under the Modified BSD License. "
-  // "See \"tinyscheme/COPYING.txt\" for details.";
+  static const TCHAR * const window_name = TEXT ("Polymorph");
+  static const TCHAR * const message_window_name = TEXT ("Polymorph");
+  static const TCHAR * const message =
+  TEXT ("And the ratios of their numbers, motions, and ")
+  TEXT ("other properties, everywhere God, as far as ")
+  TEXT ("necessity allowed or gave consent, has exactly ")
+  TEXT ("perfected, and harmonised in due proportion.");
+  // TEXT ("\n\nThis screensaver includes TinyScheme, developed by Dimitrios ")
+  // TEXT ("Souflis and licensed under the Modified BSD License. ")
+  // TEXT ("See \"tinyscheme/COPYING.txt\" for details.");
 }
 
 inline std::uint64_t qpc ()
@@ -212,7 +212,7 @@ window_info_t * create_screensaver_window (HINSTANCE hInstance, HWND parent, run
   wc.lpfnWndProc = & WndProc;
   wc.hInstance = hInstance;
   wc.hIcon = ::LoadIcon (hInstance, MAKEINTRESOURCE (257));
-  wc.lpszClassName = "Polymorph";
+  wc.lpszClassName = TEXT ("Polymorph");
 
   ATOM atom;
   HWND hwnd;
