@@ -5,7 +5,6 @@
 
 #include "mswin.h"
 #include <immintrin.h>
-#include <cstdint>
 
 // Interface.
 

@@ -39,7 +39,7 @@ namespace usr {
   // v0 +XXXX----------+----+----------XXXX-->
   //        t0        t1    t2        t3      t
 
-  //                                         v0     v1     t0     t1     t2     t3
+  //                                            v0     v1     t0     t1     t2     t3
   static const bump_specifier_t hsv_v_bump = { 0.25f, 1.00f, 1.50f, 1.75f, 3.75f, 4.25f, };
   static const bump_specifier_t hsv_s_bump = { 0.00f, 0.25f, 1.50f, 1.75f, 3.75f, 4.25f, };
 
@@ -285,6 +285,7 @@ void model_t::proceed ()
 
 void model_t::draw ()
 {
+  clear ();
   // Draw all the shapes, one uniform buffer at a time.
   unsigned begin = 0, end = uniform_buffer.count ();
   while (end < count) {

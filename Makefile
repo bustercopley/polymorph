@@ -1,9 +1,12 @@
 PROGRAMS=nodes polymorph #tinyscheme
-SHELL=cmd
 CC=gcc
 CXX=g++
-CFLAGS=-fstrict-aliasing -pedantic -Wall -Wextra -Wstrict-aliasing
+CFLAGS=$(MACHINE_CFLAGS) -fstrict-aliasing -pedantic -Wall -Wextra -Wstrict-aliasing
 CXXFLAGS=-std=c++0x
+
+# On 32-bit windows, prevent gcc from assuming the stack is 16-byte aligned (bug 40838).
+#MACHINE=$(shell gcc -dumpmachine)
+#MACHINE_CFLAGS=$(if $(findstring x86_64,$(MACHINE)),,-mpreferred-stack-boundary=2)
 
 nodes_FILENAME=nodes.exe
 nodes_CFLAGS=
@@ -13,7 +16,7 @@ nodes_OBJECTS=main.o show_system.o snub_variance.o triangle.o rotor.o
 
 polymorph_FILENAME=polymorph.scr
 polymorph_CPPFLAGS=-DUNICODE #-Itinyscheme
-polymorph_CFLAGS=-msse4.2 -mfpmath=sse -Os -flto
+polymorph_CFLAGS=-msse4.2 -mfpmath=sse -flto -Os
 polymorph_CXXFLAGS=-fno-exceptions -fno-rtti
 polymorph_LDFLAGS=-mwindows -s
 polymorph_LDLIBS=-lopengl32
