@@ -35,16 +35,16 @@ namespace
     //    0 +---+---+---XXXXXXXXX---+--> x
     //      0   1   2   3   4   5   6
 
-    // f (x) = ((x<2) AND 1) OR (((x<2) XOR (x<3)) AND (3-x)) OR ((NOT (x<5)) AND (x-5)).
+    // f (x) = ((x<2) AND 1) OR (((x<2) XOR (x<3)) AND (3-x)) OR (((x>=5)) AND (x-5)).
 
     v4f lt2 = _mm_cmplt_ps (theta, num2);
     v4f lt3 = _mm_cmplt_ps (theta, num3);
-    v4f lt5 = _mm_cmplt_ps (theta, num5);
-    v4f m23 = _mm_xor_ps (lt2, lt3);
+    v4f b23 = _mm_xor_ps (lt2, lt3);
+    v4f ge5 = _mm_cmpge_ps (theta, num5);
 
     v4f term1 = _mm_and_ps (lt2, num1);
-    v4f term2 = _mm_and_ps (m23, num3 - theta);
-    v4f term3 = _mm_andnot_ps (lt5, theta - num5);
+    v4f term2 = _mm_and_ps (b23, num3 - theta);
+    v4f term3 = _mm_and_ps (ge5, theta - num5);
 
     return _mm_or_ps (_mm_or_ps (term1, term2), term3);
   }
