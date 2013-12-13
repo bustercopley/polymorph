@@ -1,4 +1,5 @@
 // -*- C++ -*-
+
 #version 420
 
 in flat vec3 N;

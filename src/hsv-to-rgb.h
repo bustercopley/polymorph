@@ -1,4 +1,5 @@
 // -*- C++ -*-
+
 #ifndef hsv_to_rgb_h
 #define hsv_to_rgb_h
 

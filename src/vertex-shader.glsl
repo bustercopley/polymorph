@@ -1,4 +1,5 @@
 // -*- C++ -*-
+
 #version 420
 
 in vec4 x;

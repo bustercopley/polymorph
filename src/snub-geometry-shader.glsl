@@ -1,4 +1,5 @@
 // -*- C++ -*-
+
 void segment (vec3 S, vec4 A, vec4 V, vec4 W, float h)
 {
   color (S);

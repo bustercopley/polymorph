@@ -1,4 +1,5 @@
 // -*- C++ -*-
+
 void segment (vec4 A, vec4 V, vec4 W, float h, float k, float l)
 {
   vertex (A, vec3 (h, k, k));

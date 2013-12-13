@@ -298,4 +298,3 @@ HGLRC setup_opengl_context (HWND hwnd)
   }
   return hglrc;
 }
-
