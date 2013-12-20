@@ -246,19 +246,11 @@ void compute (char * buffer, std::size_t stride, const float (* x) [4], const fl
 // bch(u,v) for small v (roughly, |v| <= pi/4).
 void rotate (float (& u) [4], const float (& v) [4])
 {
-  // The integrator is designed to compute bch(x,y) for small x; here we want bch(u,v)
-  // where only v is required to be relatively small. We make use of the formula
-  // bch(u,v) = bch(e^\hat{u}v,u), which is a corollary of Ad(e^x)=e^ad(x).
-  // Compute v1 = e^\hat{u}v using Rodrigues' formula.
-  v4f u1 = load4f (u);
-  v4f xsq = dot (u1, u1);
-  v4f ab = fg (xsq);
-  v4f a = _mm_moveldup_ps (ab);
-  v4f b = _mm_movehdup_ps (ab);
-  v4f v0 = load4f (v);
-  v4f v1 = v0 + a * cross (u1, v0) + b * (dot (u1, v0) * u1 - xsq * v0);
-  // To save code don't worry about u growing too large (compare advance_angular).
-  store4f (u, bch4 (v1, u1));
+  // The integrator is designed to compute bch(u,v) for small u,
+  // but here we want bch(u,v) for small v.
+  // Make use of the formula bch(u,v) = -bch(-v,-u).
+  store4f (u, - bch4 (- load4f (v), - load4f (u)));
+  // If u has grown too large, it will get reduced in advance_angular.
 }
 
 // Restricted range [-pi/2, pi/2].
