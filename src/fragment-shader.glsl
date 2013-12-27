@@ -8,7 +8,7 @@ out vec4 c;
 
 float amplify (float d)
 {
-  d = clamp (2 - 100 * d, 0, 1);
+  d = clamp (1.0 - 33 * d, 0, 1);
   return (4./3) * (exp2 (-2 * d * d) - 0.25);
 }
 

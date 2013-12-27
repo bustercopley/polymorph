@@ -10,7 +10,7 @@ struct kdtree_t
   kdtree_t () : memory (nullptr), node_count (0) { }
   ~kdtree_t ();
   bool compute (unsigned * index, const float (* x) [4], unsigned count);
-  void bounce (unsigned count, float max_radius,
+  void search (unsigned count, float max_radius,
                object_t * objects,
                const float (* r),
                float (* v) [4], float (* w) [4],

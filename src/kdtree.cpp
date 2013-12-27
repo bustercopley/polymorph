@@ -188,7 +188,7 @@ bool kdtree_t::compute (unsigned * new_index, const float (* new_x) [4], unsigne
   return true;
 }
 
-void kdtree_t::bounce (unsigned count, float R,
+void kdtree_t::search (unsigned count, float R,
                        object_t * objects,
                        const float (* r),
                        float (* v) [4], float (* w) [4],
@@ -222,7 +222,7 @@ void kdtree_t::bounce (unsigned count, float R,
         for (unsigned n = node_begin [i]; n != node_end [i]; ++ n) {
           unsigned j = index [n];
           if (j > k) {
-            ::bounce (objects, r, x, v, w, j, k);
+            bounce (objects, r, x, v, w, j, k);
           }
         }
       }
@@ -258,7 +258,7 @@ void kdtree_t::bounce (unsigned count, float R,
       else {
         for (unsigned n = begin; n != end; ++ n) {
           unsigned j = index [n];
-          ::bounce (objects, r, x, v, w, walls, k, j);
+          bounce (objects, r, x, v, w, walls, k, j);
         }
       }
     }

@@ -234,7 +234,7 @@ void compute (char * buffer, std::size_t stride, const float (* x) [4], const fl
     v4f xyz1 = _mm_blend_ps (xyz0, iiii, 8);     // x0 x1 x2  1
 #else
     v4f phi = _mm_and_ps (mask, phicos);
-    v4f xyz1 = _mm_or_ps (_mm_and_ps (mask, xyz0), oooi);
+    v4f xyz1 = _mm_or_ps (xyz0, oooi);
 #endif
     store4f (& f [0], _mm_shuffle_ps (ashd, sub, SHUFFLE (2, 0, 1, 3)));  // d0 a2 s1 0
     store4f (& f [4], _mm_shuffle_ps (ashd, add, SHUFFLE (1, 3, 0, 3)));  // s2 d1 a0 0

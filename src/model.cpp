@@ -170,14 +170,12 @@ model_t::~model_t ()
   std::cout << "Required range for arccos function: x in [" << min_d << ", " << max_d << "].\n\n";
 
   double total_polyhedron_count = 0.0;
-  for (unsigned n = 0; n != 18; ++ n)
-  {
+  for (unsigned n = 0; n != 18; ++ n) {
     total_polyhedron_count += polyhedron_counts [n];
   }
 
   std::cout << std::fixed << std::setprecision (2);
-  for (unsigned n = 0; n != 18; ++ n)
-  {
+  for (unsigned n = 0; n != 18; ++ n) {
     std::cout << std::setw (10) << (100.0 * polyhedron_counts [n] / total_polyhedron_count) << " % " << names [n] << "\n";
   }
 #endif
@@ -278,7 +276,7 @@ void model_t::proceed ()
   }
 
   kdtree.compute (kdtree_index, x, count);
-  kdtree.bounce (count, 2 * max_radius, objects, r, v, w, walls);
+  kdtree.search (count, 2 * max_radius, objects, r, v, w, walls);
   advance_linear (x, v, count, dt);
   advance_angular (u, w, count, dt);
 }
@@ -321,14 +319,12 @@ void model_t::draw (unsigned begin, unsigned count)
     uniform_block_t & block = uniform_buffer [n];
     const object_t & object = objects [begin + n];
     system_select_t sselect = object.target.system;
-    {
-      v4f t = _mm_set1_ps (step (object.animation_time) * object.locus_speed);
-      v4f sc = sincos (t);
-      v4f s = _mm_moveldup_ps (sc);
-      v4f c = _mm_movehdup_ps (sc);
-      v4f g = c * load4f (abc [sselect] [object.starting_point]) + s * load4f (object.locus_end);
-      store4f (block.g, g);
-    }
+    v4f t = _mm_set1_ps (step (object.animation_time) * object.locus_speed);
+    v4f sc = sincos (t);
+    v4f s = _mm_moveldup_ps (sc);
+    v4f c = _mm_movehdup_ps (sc);
+    v4f g = c * load4f (abc [sselect] [object.starting_point]) + s * load4f (object.locus_end);
+    store4f (block.g, g);
   }
 
   // Precompute triangle altitudes, h (for non-snubs only).
@@ -337,8 +333,7 @@ void model_t::draw (unsigned begin, unsigned count)
     const object_t & object = objects [begin + n];
     system_select_t sselect = object.target.system;
     unsigned program_select = object.starting_point == 7 || object.target.point == 7 ? 1 : 0;
-    if (program_select == 0)
-    {
+    if (program_select == 0) {
       const float (& X) [3] [4] = xyz [sselect];
       v4f one = { 1.0f, 1.0f, 1.0f, 1.0f, };
       v4f crs [3], dsq [3];
