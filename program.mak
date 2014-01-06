@@ -33,8 +33,8 @@ $(foreach program,$(PROGRAMS),$(eval $(compile)))
 
 .PHONY: clean
 clean:
-	-rm -rfv .obj
-	-rm -fv $(EXTRA_CLEAN) $(foreach program,$(PROGRAMS),$(name))
+	-rmdir /s /q .obj
+	-del $(EXTRA_CLEAN) $(foreach program,$(PROGRAMS),$(name))
 
 .DELETE_ON_ERROR:
 

@@ -30,7 +30,7 @@ memory.o model.o partition.o random.o rodrigues.o systems.o
 # tinyscheme_CFLAGS=-Ofast -Wall -Wextra -Wno-switch -Wno-unused-parameter
 # tinyscheme_OBJECTS=scheme.o
 
-EXTRA_CLEAN=data .obj/resources-res.o
+EXTRA_CLEAN=data
 
 .PHONY: all test
 
