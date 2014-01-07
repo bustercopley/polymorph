@@ -7,8 +7,8 @@ namespace
     std::uintptr_t result = 0;
     while (* s == ' ' || * s == ':') ++ s;
     while ('0' <= * s && * s <= '9') {
-      ++ s;
       result = 10 * result + (* s - '0');
+      ++ s;
     }
     return result;
   }
