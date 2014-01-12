@@ -1,5 +1,5 @@
 #!c:\strawberry\perl\bin\perl.exe
-# Minifies polymorph's hlsl shader sources.
+# Minifies polymorph's glsl shader sources.
 # Not meant for general use.
 # Doesn't handle multiline statements.
 # Identifiers aren't safe from collisions.

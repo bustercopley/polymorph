@@ -1,5 +1,8 @@
 #include "partition.h"
 
+// Perhaps this should be replaced with std::nth_element, but the G++ implementation is a little bloated.
+// Also beware http://gcc.gnu.org/bugzilla/show_bug.cgi?id=58800.
+
 namespace
 {
   inline void swap (unsigned * index, unsigned i, unsigned j)

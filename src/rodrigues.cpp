@@ -172,14 +172,16 @@ void advance_linear (float (* x) [4], const float (* v) [4], unsigned count, flo
   // This can operate on padding at the end of the arrays.
   v4f dt0 = _mm_set1_ps (dt);
   for (unsigned n = 0; n != (count + 1) >> 1; ++ n) {
-    v4f x0 = load4f (x [n << 1]);
-    v4f x1 = load4f (x [(n << 1) | 1]);
-    v4f v0 = load4f (v [n << 1]);
-    v4f v1 = load4f (v [(n << 1) | 1]);
+    unsigned i0 = 2 * n;
+    unsigned i1 = 2 * n + 1;
+    v4f x0 = load4f (x [i0]);
+    v4f x1 = load4f (x [i1]);
+    v4f v0 = load4f (v [i0]);
+    v4f v1 = load4f (v [i1]);
     v4f x10 = x0 + v0 * dt0;
     v4f x11 = x1 + v1 * dt0;
-    store4f (x [n << 1], x10);
-    store4f (x [(n << 1) | 1], x11);
+    store4f (x [i0], x10);
+    store4f (x [i1], x11);
   }
 }
 

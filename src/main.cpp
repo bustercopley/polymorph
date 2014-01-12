@@ -176,7 +176,7 @@ LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
   LRESULT result = 0;
   bool call_def_window_proc = false, close_window = false;
 
-  // Retrieve the window struct pointer.
+  // Retrieve the window-struct pointer from the window userdata.
   window_struct_t * ws = reinterpret_cast <window_struct_t *> (::GetWindowLongPtr (hwnd, GWLP_USERDATA));
 
   switch (msg) {

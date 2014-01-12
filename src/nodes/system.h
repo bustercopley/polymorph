@@ -49,7 +49,7 @@ Groups and Geometry (Neumann, Stoy, Thompson); consider the area of each of thre
 lunes in which XYZ is contained, as a proportion of the area of the sphere.
 Our combinatorial map is based on this tiling. Call its faces (tiles) 'regions',
 its edges 'arcs' and its vertices 'nodes' to avoid confusion with the faces, edges
-and vertice of the polyhedra discussed elsewhere. Each node is an image of one of
+and vertices of the polyhedra discussed elsewhere. Each node is an image of one of
 X, Y, Z under the rotations and reflections described above, and in consonance
 therewith we speak of X nodes, Y nodes and Z nodes. There are:
   N/p X nodes, X [n] (0 <= X [n] < N/p for 0 <= n < N) (each contained in 2p regions),

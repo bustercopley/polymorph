@@ -238,15 +238,17 @@ void model_t::add_object (const float (& view) [4])
 void model_t::recalculate_locus (object_t & object)
 {
   system_select_t sselect = object.target.system;
-  v4f g0 = load4f (abc [sselect] [object.starting_point]);
-  v4f g1 = load4f (abc [sselect] [object.target.point]);
-  v4f T0 = tmapply (xyz [sselect], g0);
-  v4f T1 = tmapply (xyz [sselect], g1);
-  v4f d = dot (T0, T1);
-  v4f T2 = normalize (T1 - d * T0);
-  v4f g2 = mapply (xyzinvt [sselect], T2);
+  v4f g0 = load4f (abc [sselect] [object.starting_point]); // g0: Coefficients for T0 in terms of xyz.
+  v4f g1 = load4f (abc [sselect] [object.target.point]);   // g1: Coefficients for T1 in terms of xyz.
+  v4f T0 = tmapply (xyz [sselect], g0);                    // T0: Beginning of locus (unit vector).
+  v4f T1 = tmapply (xyz [sselect], g1);                    // T1: End of locus (also a unit vector).
+  v4f d = dot (T0, T1);                                    // d:  Dot product of T0 and T1 (cos s, where s is the arc-length T0-T1).
+  v4f T2 = normalize (T1 - d * T0);                        // T2: Take the component of T1 perpendicular to T0, then normalize.
+  v4f g2 = mapply (xyzinvt [sselect], T2);                 // g2: Coefficents for T2 in terms of xyz.
+  // Any point T = (cos t) T0 + (cos t) T2 (where 0 <= t <= s) on the arc T0-T1 has coefficients (cos t) g0 + (sin t) g2.
   store4f (object.locus_end, g2);
-  // For allowed transitions we have d in [7.74596691e-001, 9.90879238e-001].
+  // Calculate the arc-length s = arccos(d) of the great circular arc T0-T1.
+  // Note: for allowed transitions we have d in [7.74596691e-001, 9.90879238e-001].
   object.locus_speed = _mm_cvtss_f32 (arccos (d));
 
 #if PRINT_ENABLED
