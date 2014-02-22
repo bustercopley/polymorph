@@ -1,10 +1,9 @@
 #include <windows.h>
 
 STRINGTABLE
-	LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+    LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 BEGIN
     1   "Polymorph"
-
 END
 
 1   VERSIONINFO
@@ -20,7 +19,7 @@ BEGIN
     BEGIN
         BLOCK   "080904b0"
         BEGIN
-	    VALUE   "CompanyName", "Someware"
+            VALUE   "CompanyName", "Someware"
             VALUE   "FileDescription", "Polymorph"
             VALUE   "FileVersion", "1, 0, 0, 0"
             VALUE   "InternalName", "Polymorph"
