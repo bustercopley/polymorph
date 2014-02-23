@@ -30,7 +30,7 @@ struct model_t
   void proceed ();
   void draw ();
 private:
-  bool set_capacity (unsigned new_capacity);
+  bool set_capacity (std::size_t new_capacity);
   void add_object (const float (& view) [4]);
   void recalculate_locus (object_t & A);
   void draw (unsigned begin, unsigned count);
@@ -53,7 +53,7 @@ private:
   float (* u) [4];  // angular position
   float (* w) [4];  // angular velocity
 
-  unsigned capacity;
+  std::size_t capacity;
   unsigned count;
   unsigned primitive_count [system_count]; // = { 12, 24, 60, }
   std::uint32_t vao_ids [system_count];

@@ -182,7 +182,7 @@ model_t::~model_t ()
   deallocate (memory);
 }
 
-bool model_t::set_capacity (unsigned new_capacity)
+bool model_t::set_capacity (std::size_t new_capacity)
 {
   return reallocate_aligned_arrays (memory, capacity, new_capacity,
                                     & r, & x, & v, & u, & w,
@@ -223,10 +223,11 @@ void model_t::add_object (const float (& view) [4])
       goto loop;
     }
   }
+  const float action = usr::temperature * usr::frame_time;
   store4f (x [count], t);
-  store4f (v [count], get_vector_in_ball (rng, 0.5f * usr::temperature / A.m));
+  store4f (v [count], get_vector_in_ball (rng, 0.5f * action / A.m));
   store4f (u [count], get_vector_in_ball (rng, 0x1.921fb4P1)); // pi
-  store4f (w [count], get_vector_in_ball (rng, 0.2f * usr::temperature / A.l));
+  store4f (w [count], get_vector_in_ball (rng, 0.2f * action / A.l));
 
   std::uint64_t entropy = rng.get ();
   A.target.system = static_cast <system_select_t> ((entropy >> 3) % 6);
@@ -279,8 +280,8 @@ void model_t::proceed ()
 
   kdtree.compute (kdtree_index, x, count);
   kdtree.search (count, 2 * max_radius, objects, r, v, w, walls);
-  advance_linear (x, v, count, dt);
-  advance_angular (u, w, count, dt);
+  advance_linear (x, v, count);
+  advance_angular (u, w, count);
 }
 
 void model_t::draw ()

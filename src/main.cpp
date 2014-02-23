@@ -84,63 +84,71 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE, LPSTR lpszCmdLine, int)
   // "Once a window's pixel format is set, it cannot be changed", so the window
   // and associated resources are of no further use and are destroyed here.
 
-  WNDCLASS wc;
-  ::ZeroMemory (& wc, sizeof wc);
-  wc.hInstance = hInstance;
-  wc.lpfnWndProc = & InitWndProc;
-  wc.lpszClassName = TEXT ("GLinit");
-  ATOM init_wc = ::RegisterClass (& wc);
-
-  wc.lpfnWndProc = & MainWndProc;
-  wc.hIcon = ::LoadIcon (hInstance, MAKEINTRESOURCE (257));
-  wc.lpszClassName = usr::program_name;
-  ATOM main_wc = ::RegisterClass (& wc);
-
   // Create the dummy window. See InitWndProc.
   // Note this window does not survive creation.
-  ::CreateWindowEx (0, MAKEINTATOM (init_wc), TEXT (""), 0,
+  WNDCLASS init_wc;
+  ::ZeroMemory (& init_wc, sizeof init_wc);
+  init_wc.hInstance = hInstance;
+  init_wc.lpfnWndProc = & InitWndProc;
+  init_wc.lpszClassName = TEXT ("GLinit");
+  ATOM init_wc_atom = ::RegisterClass (& init_wc);
+  ::CreateWindowEx (0, MAKEINTATOM (init_wc_atom), TEXT (""), 0,
                     CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
                     NULL, NULL, hInstance, NULL);
-
-  ::UnregisterClass (MAKEINTATOM (init_wc), hInstance);
+  ::UnregisterClass (MAKEINTATOM (init_wc_atom), hInstance);
 
   // Exit if we failed to get the function pointers.
   if (! wglChoosePixelFormatARB) return -1;
 
   // Create the main window. See MainWndProc.
-  HWND hwnd = ::CreateWindowEx (ex_style, MAKEINTATOM (main_wc), usr::program_name, style,
+  WNDCLASS main_wc;
+  ::ZeroMemory (& main_wc, sizeof main_wc);
+  main_wc.hInstance = hInstance;
+  main_wc.lpfnWndProc = & MainWndProc;
+  main_wc.hIcon = ::LoadIcon (hInstance, MAKEINTRESOURCE (257));
+  main_wc.lpszClassName = usr::program_name;
+  ATOM main_wc_atom = ::RegisterClass (& main_wc);
+  HWND hwnd = ::CreateWindowEx (ex_style, MAKEINTATOM (main_wc_atom), usr::program_name, style,
                                 rect.left, rect.top, rect.right, rect.bottom,
                                 parent, NULL, hInstance, & ws);
 
-  if (! hwnd) return -1;
+  // Exit if we failed to create the window.
+  if (! hwnd) return 1;
 
   // Enter the main loop.
 
-  // The model is created and used here, rather than in the window procedure,
-  // because it requires 16-byte aligned stack locations.
-  // On 32-bit Windows we don't get 16-byte alignment in the window proc,
-  // so GCC computes misaligned stack locations because it assumes
-  // the stack is 16-byte aligned on function entry (bug 40838).
+  // On 32-bit Windows the system does not align the stack to 16 bytes when it
+  // calls (e.g.) the window procedure, but GCC assumes the stack is 16-byte aligned
+  // on function entry and therefore computes misaligned stack locations (bug 40838).
+
+  // That's why we clutter the main loop with the model_t object instead of creating and
+  // using it inside the window procedure. All the explicitly vectorised SSE code, which
+  // requires a 16-byte aligned stack, is implemented inside model_t.
+
+  // It would be nice to be able to declare that MainWndProc is called with 4-byte alignment.
+  // The command-line flag "-mpreferred-stack-boundary=2" applies such a policy to all
+  // functions, but results in reduced code quality due to extra instructions and increased
+  // register pressure.
+
+  // This does not affect 64-bit Windows because its calling conventions specify 16-byte stack alignment.
 
   model_t model;
   model.initialize (qpc (), rect.right, rect.bottom); // actually width, height
 
   MSG msg;
   while (::GetMessage (& msg, NULL, 0, 0)) {
-    if (msg.message == WM_APP) {
-
-      model.proceed ();
-      model.draw ();
-
-      ::InvalidateRect (msg.hwnd, NULL, FALSE);
-    }
-    else {
+    if (msg.message != WM_APP) {
       ::TranslateMessage (& msg);
       ::DispatchMessage (& msg);
     }
+    else {
+      model.proceed ();
+      model.draw ();
+      ::InvalidateRect (msg.hwnd, NULL, FALSE);
+    }
   }
 
-  ::UnregisterClass (MAKEINTATOM (main_wc), hInstance);
+  ::UnregisterClass (MAKEINTATOM (main_wc_atom), hInstance);
   return 0;
 }
 
@@ -181,7 +189,7 @@ LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
   switch (msg) {
   case WM_CREATE: {
-    result = -1; // Return -1 to abort window creation.
+    result = -1; // Abort window creation.
 
     // Stash the window-struct pointer in the window userdata.
     CREATESTRUCT * cs = reinterpret_cast <CREATESTRUCT *> (lParam);
@@ -194,8 +202,8 @@ LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     // Set up OpenGL rendering context.
     HGLRC hglrc = setup_opengl_context (hwnd);
     if (hglrc) {
-      ::PostMessage (hwnd, WM_APP, 0, 0); // Start the ball rolling.
-      result = 0; // Return 0 to continue window creation.
+      ::PostMessage (hwnd, WM_APP, 0, 0);  // Start the simulation.
+      result = 0;                          // Allow window creation to continue.
     }
     break;
   }

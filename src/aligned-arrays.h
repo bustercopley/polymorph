@@ -9,13 +9,13 @@
 // Allocate memory for a list of N arrays, each of new_length elements.
 // Copy and deallocate the previous arrays if old_length is nonzero.
 // Store the N pointers-to-first-element in the addresses p.
-// The start of each array is aligned on a 32-byte boundary.
-// The end of each array is padded with unused space to a 32-byte boundary.
+// The start of each array is aligned on a 64-byte boundary.
+// The end of each array is padded with unused space to a 64-byte boundary.
 // Sets memory and length to the new values.
 // No-op if new_length is not greater than length (can only grow).
 // Returns true for success, false for allocation failure.
 template <typename ... P>
-inline bool reallocate_aligned_arrays (void * & memory, unsigned & length, unsigned new_length, P ... p);
+inline bool reallocate_aligned_arrays (void * & memory, std::size_t & length, std::size_t new_length, P ... p);
 
 // Implementation.
 
@@ -26,34 +26,34 @@ namespace internal
 {
   inline void * align_up (void * p)
   {
-    return (void *) ((((std::intptr_t) p) + 31) & -32);
+    return (void *) ((((std::intptr_t) p) + 63) & -64);
   }
 
-  inline unsigned pad (unsigned p)
+  inline std::size_t pad (std::size_t p)
   {
-    return (unsigned) ((((int) p) + 31) & -32);
+    return (std::size_t) ((((std::ptrdiff_t) p) + 63) & -64);
   }
 
-  inline unsigned bytes_needed (unsigned)
+  inline std::size_t bytes_needed (std::size_t)
   {
     // Base case for recursion.
     // Extra bytes to align the start of the first array.
-    return 32;
+    return 64;
   }
 
   template <typename T, typename ... P>
-  inline unsigned bytes_needed (unsigned count, T **, P ... p)
+  inline std::size_t bytes_needed (std::size_t count, T **, P ... p)
   {
     return pad (count * sizeof (T)) + bytes_needed (count, p ...);
   }
 
-  inline void replace (void *, unsigned, unsigned)
+  inline void replace (void *, std::size_t, std::size_t)
   {
     // Base case for recursion.
   }
 
   template <typename T, typename ... P>
-  inline void replace (void * base, unsigned old_length, unsigned new_length, T ** x, P ... p)
+  inline void replace (void * base, std::size_t old_length, std::size_t new_length, T ** x, P ... p)
   {
     base = align_up (base);
     if (old_length && * x) {
@@ -66,10 +66,10 @@ namespace internal
 }
 
 template <typename ... P>
-inline bool reallocate_aligned_arrays (void * & memory, unsigned & length, unsigned new_length, P ... p)
+inline bool reallocate_aligned_arrays (void * & memory, std::size_t & length, std::size_t new_length, P ... p)
 {
   if (new_length > length) {
-    unsigned bytes = internal::bytes_needed (new_length, p ...);
+    std::size_t bytes = internal::bytes_needed (new_length, p ...);
     void * new_memory = allocate_internal (bytes);
     if (! new_memory) {
       return false;

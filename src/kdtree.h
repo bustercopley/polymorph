@@ -3,13 +3,15 @@
 #ifndef kdtree_h
 #define kdtree_h
 
+#include <cstdint>
+
 struct object_t;
 
 struct kdtree_t
 {
   kdtree_t () : memory (nullptr), node_count (0) { }
   ~kdtree_t ();
-  bool compute (unsigned * index, const float (* x) [4], unsigned count);
+  bool compute (unsigned * index, const float (* x) [4], std::size_t count);
   void search (unsigned count, float max_radius,
                object_t * objects,
                const float (* r),
@@ -22,7 +24,7 @@ private:
   float (* node_lohi) [2] [4];
   unsigned * node_begin;
   unsigned * node_end;
-  unsigned node_count;
+  std::size_t node_count;
 };
 
 #endif

@@ -88,8 +88,8 @@ bool uniform_buffer_t::initialize ()
   GLint size, align;
   glGetIntegerv (GL_MAX_UNIFORM_BLOCK_SIZE, & size);
   glGetIntegerv (GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, & align);
-  // Client-side buffer needs at least 32-byte alignment for SSE.
-  align = align > 32 ? align : 32;
+  // Align client-side buffer to at least 64 bytes, to avoid straddling cache lines.
+  align = align > 64 ? align : 64;
 
   m_size = size;
   m_memory = allocate_internal (m_size + align);

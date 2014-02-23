@@ -8,27 +8,28 @@
 #include <cstdint>
 #include <limits>
 
-namespace usr {
+namespace usr
+{
   static const float walls_friction = 0.075f;
   static const float balls_friction = 0.075f;
 }
 
 namespace
 {
-  inline unsigned nodes_required (unsigned point_count)
+  inline std::size_t nodes_required (std::size_t point_count)
   {
     // http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
-    unsigned m = 2;
-    unsigned t = point_count - 1;
+    std::size_t m = 2;
+    std::size_t t = point_count - 1;
     while (t >>= 1) m <<= 1; // Now m is 2^{ceil(log_2(count))}.
     return m - 1;
   }
 
-  inline unsigned node_dimension (unsigned i)
+  inline std::size_t node_dimension (std::size_t i)
   {
     // http://graphics.stanford.edu/~seander/bithacks.html#IntegerLogObvious
-    unsigned m = 0;
-    unsigned t = i + 1;
+    std::size_t m = 0;
+    std::size_t t = i + 1;
     while (t >>= 1) ++ m; // Now m is floor(log_2(i + 1)).
     return m % 3;
   }
@@ -46,13 +47,13 @@ namespace
     return load4f (masks [dim].f32);
   }
 
-  inline void bounce (object_t * objects,
-                      const float (* r), const float (* x) [4],
-                      float (* v) [4], float (* w) [4],
+  inline void bounce (object_t * RESTRICT objects,
+                      const float (* RESTRICT r), const float (* RESTRICT x) [4],
+                      float (* RESTRICT v) [4], float (* RESTRICT w) [4],
                       unsigned ix, unsigned iy)
   {
-    const object_t & A = objects [ix];
-    const object_t & B = objects [iy];
+    const object_t & RESTRICT A = objects [ix];
+    const object_t & RESTRICT B = objects [iy];
     v4f s = { r [ix] + r [iy], 0.0f, 0.0f, 0.0f, };
     v4f ssq = s * s;
     v4f dx = load4f (x [iy]) - load4f (x [ix]);
@@ -97,10 +98,10 @@ namespace
     }
   }
 
-  inline void bounce (object_t * objects,
-                      const float (* r), const float (* x) [4],
-                      float (* v) [4], float (* w) [4],
-                      float (* walls) [2] [4],
+  inline void bounce (object_t * RESTRICT objects,
+                      const float (* RESTRICT r), const float (* RESTRICT x) [4],
+                      float (* RESTRICT v) [4], float (* RESTRICT w) [4],
+                      float (* RESTRICT walls) [2] [4],
                       unsigned iw, unsigned ix)
   {
     object_t & A = objects [ix];
@@ -149,11 +150,11 @@ kdtree_t::~kdtree_t ()
     node_end [_i] = _end;                    \
   } while (false)
 
-bool kdtree_t::compute (unsigned * new_index, const float (* new_x) [4], unsigned count)
+bool kdtree_t::compute (unsigned * RESTRICT new_index, const float (* RESTRICT new_x) [4], std::size_t count)
 {
   index = new_index;
   x = new_x;
-  unsigned new_node_count = nodes_required (count);
+  std::size_t new_node_count = nodes_required (count);
   if (! reallocate_aligned_arrays (memory, node_count, new_node_count,
                                    & node_lohi, & node_begin, & node_end))
     return false;
@@ -189,10 +190,10 @@ bool kdtree_t::compute (unsigned * new_index, const float (* new_x) [4], unsigne
 }
 
 void kdtree_t::search (unsigned count, float R,
-                       object_t * objects,
-                       const float (* r),
-                       float (* v) [4], float (* w) [4],
-                       float (* walls) [2] [4])
+                       object_t * RESTRICT objects,
+                       const float (* RESTRICT r),
+                       float (* RESTRICT v) [4], float (* RESTRICT w) [4],
+                       float (* RESTRICT walls) [2] [4])
 {
   // For each ball, find nearby balls and test for collisions.
   v4f rsq = _mm_set1_ps (R * R);

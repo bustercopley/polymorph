@@ -16,8 +16,8 @@
 // Functions advance_* do inertial motion for time dt.
 
 void compute (char * buffer, std::size_t stride, const float (* x) [4], const float (* u) [4], unsigned count);
-void advance_linear (float (* x) [4], const float (* v) [4], unsigned count, float dt);
-void advance_angular (float (* u) [4], float (* w) [4], unsigned count, float dt);
+void advance_linear (float (* x) [4], const float (* v) [4], unsigned count);
+void advance_angular (float (* u) [4], float (* w) [4], unsigned count);
 void rotate (float (& u) [4], const float (& v) [4]);
 
 // sincos: Argument x x * *, result sin(x) cos(x) sin(x) cos(x), range ([-(1/2)pi, (3/2)*pi]).

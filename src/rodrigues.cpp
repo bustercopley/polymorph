@@ -4,19 +4,10 @@
 // See `problem.tex' for terminology and notation, and `problem.tex',
 // `script.mathomatic' and `script.maxima' for derivations.
 
-// `advance_linear' and `advance_angular' update the linear and the
-// angular position, x and u, for inertial motion with constant linear
-// velocity v and angular velocity w over the time increment dt.
-// It uses a single step of the classical fourth order Runge-Kutta
-// method to integrate the differential equation from `problem.tex'.
-
-// `compute' updates the OpenGL matrix from the linear and angular
-// position vectors x and u. It is implemented using SSE3 intrinsics.
-
 // Approximations: for the functions
-//   f(x^2)=sin(x)/x,
-//   g(x^2)=(1-cos(x))/x^2,
-//   h(x^2)=(1-((x/2)*cot(x/2)))/x^2,
+//   f(x^2)=f0(x)=sin(x)/x,
+//   g(x^2)=g0(x)=(1-cos(x))/x^2,
+//   h(x^2)=h0(x)=(1-k0(x))/x^2, where k0(x)=(x/2)*cot(x/2),
 // the minimax polynomials (whose maximum absolute error over the
 // specified range is minimal among polynomials of the same degree,
 // according to the Chebychev equioscillation theorem) were calculated
@@ -29,105 +20,86 @@
 // Helpers for `compute' and `advance_angular'.
 namespace
 {
-  // f(s)=sin1(sqrt(s)), where sin1(x)=sin(x)/x.
-  // g(s)=cos2(sqrt(s)), where cos2(x)=(1-cos(x))/x^2.
-
   // Range [0, 2.467401] ((pi/2)^2).
-  // Argument 1 xsq 1 xsq, result sin1(x) cos2(x) sin1(x) cos2(x).
-  inline v4f fg_reduced (const v4f x1)
+  // f: Remes error +-0x1.950326P-21, max ulp error +-14.
+  // g: Remes error +-0x1.4711d0P-24, max ulp error +-4.
+  // h: Remes error +-0x1.e7b99cP-28, max ulp error +-2.
+  const v4f fpoly = { +0x1.ffffe6P-1f, -0x1.55502cP-3f, +0x1.1068acP-7f, -0x1.847be2P-13f, };
+  const v4f gpoly = { +0x1.fffffaP-2f, -0x1.555340P-5f, +0x1.6b8f0cP-10f, -0x1.89e394P-16f, };
+  const v4f hpoly = { +0x1.555554P-4f, +0x1.6c1cd6P-10f, +0x1.13e3e4P-15f, +0x1.f88a10P-21f, };
+
+  // Evaluate two cubic polynomials at t by Estrin's method. Requires SSE3 (for haddps).
+  // First argument t t * *, result a(t) b(t) a(t) b(t).
+  inline v4f polyeval (const v4f t, const v4f a, const v4f b)
   {
-    // Evaluate two polynomials at x by Estrin's method. Requires SSE3 (for haddps).
-    // f: Remes error +-0x1.950326P-21, max ulp error +-7.
-    // g: Remes error +-0x1.4711d0P-24, max ulp error +-2.
-    v4f f = { +0x1.ffffe6P-1f, -0x1.55502cP-3f, +0x1.1068acP-7f, -0x1.847be2P-13f, };
-    v4f g = { +0x1.fffffaP-2f, -0x1.555340P-5f, +0x1.6b8f0cP-10f, -0x1.89e394P-16f, };
-    v4f fx1 = f * x1;                  // f0 f1x f2 f3x
-    v4f gx1 = g * x1;                  // g0 g1x g2 g3x
-    v4f fg2 = _mm_hadd_ps (fx1, gx1);  // f0+f1x f2+f3x g0+g1x g2+g3x
-    v4f fg3 = fg2 * x1 * x1;           // f0+f1x f2x^2+f3x^3 g0+g1x g2x^2+g3x^3
-    v4f fgfg = _mm_hadd_ps (fg3, fg3); // f(x) g(x) f(x) g(x)
-    return fgfg;
+    v4f one = { +1.0f, +1.0f, +1.0f, +1.0f, };
+    v4f t1 = _mm_unpacklo_ps (one, t);   // 1 t 1 t
+    v4f a1 = a * t1;                     // a0 a1t a2 a3t
+    v4f b1 = b * t1;                     // b0 b1t b2 b3t
+    v4f ab1 = _mm_hadd_ps (a1, b1);      // a0+a1t a2+a3t b0+b1t b2+b3t
+    v4f ab2 = ab1 * t1 * t1;             // a0+a1t a2t^2+a3t^3 b0+b1t b2t^2+b3t^3
+    v4f abab = _mm_hadd_ps (ab2, ab2);   // a(t) b(t) a(t) b(t)
+    return abab;
+  }
+
+  // Argument x x * *, result sin(x) 1-cos(x) sin(x) 1-cos(x).
+  // Range [0, 2.467401] ((pi/2)^2).
+  inline v4f sincos_internal (const v4f x)
+  {
+    v4f xsq = x * x;                           // x^2 x^2 * *
+    v4f fgfg = polyeval (xsq, fpoly, gpoly);   // sin(x)/x (1-cos(x))/x^2 sin(x)/x (1-cos(x))/x^2
+    v4f xmix = _mm_unpacklo_ps (x, xsq);       // x x^2 x x^2
+    return xmix * fgfg;                        // sin(x) 1-cos(x) sin(x) 1-cos(x)
   }
 
   // Evaluate f and g at xsq.
   // Range [0, 22.206610] (((3/2)*pi)^2).
-  // Argument xsq xsq * *, result sin1(x) cos2(x) sin1(x) cos2(x).
+  // Argument x^2 x^2 * *, result f0(x) g0(x) f0(x) g0(x).
   inline v4f fg (const v4f xsq)
   {
     v4f lim = { +0x1.3bd3ccP1f, 0.0f, 0.0f, 0.0f, }; // (pi/2)^2
-    v4f one = { 1.0f, 1.0f, 0.0f, 0.0f, };
     if (_mm_comile_ss (xsq, lim)) {
-      // Quadrant 1.
-      v4f x1 = _mm_unpacklo_ps (one, xsq);   // 1 x^2 1 x^2
-      return fg_reduced (x1);                // sin1(x) cos2(x) sin1(x) cos2(x)
+      // Quadrant 1 (0 <= x < pi/2).
+      return polyeval (xsq, fpoly, gpoly);
     }
     else {
-      // Quadrants 2 and 3.
+      // Quadrants 2 and 3 (pi/2 <= x < 3pi/2).
       v4f x = sqrt (xsq);                    // x x * * (approx)
-      // Call fg_reduced on (pi-x)^2.
+      // Let t = x - pi. Then sin(t) = -sin(x) and cos(t) = -cos(x).
       v4f pi = { +0x1.921fb6P1f, +0x1.921fb6P1f, 0.0f, 0.0f, }; // pi pi 0 0
-      v4f px1 = x - pi;                      // x-pi x-pi * *
-      v4f px2 = px1 * px1;                   // (pi-x)^2 (pi-x)^2 * *
-      v4f px3 = _mm_unpacklo_ps (one, px2);  // 1 (pi-x)^2 1 (pi-x)^2
-      v4f fgfg = fg_reduced (px3);           // sin(pi-x)/(pi-x) [1-cos(pi-x)]/(pi-x)^2 (duplicated)
-      // Recover sin(x) and 1-cos(x) from the result.
-      v4f px4 = _mm_unpacklo_ps (px1, px2);  // x-pi (pi-x)^2 x-pi (pi-x)^2
-      v4f sc1 = px4 * fgfg;                  // -sin(x) 1+cos(x) -sin(x) 1+cos(x)
-      v4f k02 = { 0.0f, 2.0f, 0.0f, 2.0f, };
-      v4f sc2 = k02 - sc1;                   // sin(x) 1-cos(x) sin(x) 1-cos(x)
+      v4f sc1 = sincos_internal (x - pi);    // -sin(x) 1+cos(x) -sin(x) 1+cos(x)
+      v4f o2o2 = { 0.0f, 2.0f, 0.0f, 2.0f, };
+      v4f sc2 = o2o2 - sc1;                  // sin(x) 1-cos(x) sin(x) 1-cos(x)
       // Reciprocal-multiply to approximate f and g.
       v4f xx = _mm_unpacklo_ps (x, xsq);     // x x^2 x x^2
-      return rcp (xx) * sc2;                 // sin1(x) cos2(x) sin1(x) cos2(x)
+      return rcp (xx) * sc2;                 // f0(x) g0(x) f0(x) g0(x)
     }
-  }
-
-  // g(s) = g0(sqrt(s)) where g0(x)=(x/2)cot(x/2).
-  // h(s) = h0(sqrt(s)) where h0(x)=(1-g(x))/x^2.
-
-  // Range [0, (pi/2)^2].
-  // Argument 1 s 1 s, result h(s) h(s) h(s) h(s).
-  inline v4f h_reduced (const v4f s1)
-  {
-    // Evaluate polynomial at s by Estrin's method. Requires SSE3 (for haddps).
-    // Remes error +-0x1.e7b99cP-28, max ulp error +-2.
-    v4f h = { +0x1.555554P-4f, +0x1.6c1cd6P-10f, +0x1.13e3e4P-15f, +0x1.f88a10P-21f, };
-    v4f h1 = h * s1;               // h0 h1s h2 h3s
-    v4f h2 = _mm_hadd_ps (h1, h1); // h0+h1s h2+h3s h0+h1s h2+h3s
-    v4f h3 = h2 * s1 * s1;         // h0+h1s h2s^2+h3s^3 h0+h1s h2s^2+h3s^3
-    v4f hh = _mm_hadd_ps (h3, h3); // h(s) h(s) h(s) h(s)
-    return hh;
   }
 
   inline v4f tangent (v4f u, v4f w)
   {
     v4f one = { 1.0f, 1.0f, 1.0f, 1.0f, };
     v4f half = { 0.5f, 0.5f, 0.5f, 0.5f, };
-    v4f lim = { +0x1.3bd3ccP1f, 0.0f, 0.0f, 0.0f, }; // (pi/2)^2 0 0 0
+    v4f hpi = { +0x1.921fb6P0f, +0x1.921fb6P0f, 0.0f, 0.0f, }; // pi/2 pi/2 0 0
+    v4f lim = { +0x1.3bd3ccP1f, 0.0f, 0.0f, 0.0f, };           // (pi/2)^2 0 0 0
     v4f xsq = dot (u, u);
     v4f g, h;
     // Evaluate g and h at xsq (range [0, (2pi)^2)).
     if (_mm_comile_ss (xsq, lim)) {
-      // Quadrant 1.
-      v4f x1 = _mm_unpacklo_ps (one, xsq);   // 1 x^2 1 x^2
-      h = h_reduced (x1);
-      g = one - xsq * h;
+      // Quadrant 1 (0 <= x < pi/2).
+      h = polyeval (xsq, hpoly, hpoly);  // Cubic in xsq.
+      g = one - xsq * h;                 // Quartic in xsq (the extra precision is important).
     }
     else {
-      // Quadrants 2, 3 and 4.
-      v4f hx = half * sqrt (xsq);            // x/2 x/2 x/2 x/2 (approx)
-      // Call fg_reduced on (1/2)(pi-sqrt(xsq))^2.
-      v4f pi = { +0x1.921fb6P0f, +0x1.921fb6P0f, 0.0f, 0.0f, }; // pi/2 pi/2 * *
-      v4f px1 = hx - pi;                     // x/2-pi/2 x/2-pi/2 * *
-      v4f px2 = px1 * px1;                   // (pi/2-x/2)^2 (pi/2-x/2)^2 * *
-      v4f px3 = _mm_unpacklo_ps (one, px2);  // 1 (pi/2-x/2)^2 1 (pi/2-x/2)^2
-      v4f fgfg = fg_reduced (px3);           // sin(pi/2-x/2)/(pi/2-x/2) [1-cos(pi/2-x/2)]/(pi/2-x/2)^2 (duplicated)
-      // Recover sin(x/2) and cos(x/2) from the result.
-      v4f px4 = _mm_unpacklo_ps (px1, px2);  // x/2-pi/2 (pi/2-x/2)^2 x/2-pi/2 (pi/2-x/2)^2
-      v4f sc = px4 * fgfg;                   // -cos(x/2) 1-sin(x/2) -cos(x/2) 1-sin(x/2)
-      v4f k01 = { 0.0f, 1.0f, 0.0f, 1.0f, };
-      v4f cs = k01 - sc;                     // cos(x/2) sin(x/2) cos(x/2) sin(x/2)
+      // Quadrants 2, 3 and 4 (pi/2 <= 2pi).
+      // Let t = x/2 - pi/2. Then sin(t) = -cos(x/2) and cos(t) = sin(x/2).
+      v4f hx = half * sqrt (xsq);              // x/2 x/2 x/2 x/2 (approx)
+      v4f sc = sincos_internal (hx - hpi);     // -cos(x/2) 1-sin(x/2) -cos(x/2) 1-sin(x/2)
+      v4f oioi = { 0.0f, 1.0f, 0.0f, 1.0f, };
+      v4f cs = oioi - sc;                      // cos(x/2) sin(x/2) cos(x/2) sin(x/2)
       v4f c = _mm_moveldup_ps (cs);
       v4f s = _mm_movehdup_ps (cs);
+      // Reciprocal-multiply to approximate (x/2)cot(x/2).
       g = hx * c * rcp (s);
       h = (one - g) * rcp (xsq);
     }
@@ -144,7 +116,7 @@ namespace
     v4f B = tangent (y + half * A, x);
     v4f C = tangent (y + half * B, x);
     v4f D = tangent (y + C, x);
-    return y + sixth * (A + (B + C) + (B + C) + D);
+    return y + sixth * ((A + D) + ((B + C) + (B + C)));
   }
 
   // Compute z = bch(x,y) for very small x.
@@ -166,33 +138,46 @@ namespace
   }
 }
 
-void advance_linear (float (* x) [4], const float (* v) [4], unsigned count, float dt)
+// Update position x for motion with constant velocity v over a unit time interval.
+void advance_linear (float (* RESTRICT x) [4], const float (* RESTRICT v) [4], unsigned count)
 {
-  // Load 32 bytes (one cache line) of data at a time.
+  // Load 64 bytes (one cache line) of data at a time.
   // This can operate on padding at the end of the arrays.
-  v4f dt0 = _mm_set1_ps (dt);
-  for (unsigned n = 0; n != (count + 1) >> 1; ++ n) {
-    unsigned i0 = 2 * n;
-    unsigned i1 = 2 * n + 1;
+  for (unsigned n = 0; n != (count + 3) >> 2; ++ n) {
+    unsigned i0 = 4 * n;
+    unsigned i1 = 4 * n + 1;
+    unsigned i2 = 4 * n + 2;
+    unsigned i3 = 4 * n + 3;
     v4f x0 = load4f (x [i0]);
     v4f x1 = load4f (x [i1]);
+    v4f x2 = load4f (x [i2]);
+    v4f x3 = load4f (x [i3]);
     v4f v0 = load4f (v [i0]);
     v4f v1 = load4f (v [i1]);
-    v4f x10 = x0 + v0 * dt0;
-    v4f x11 = x1 + v1 * dt0;
-    store4f (x [i0], x10);
-    store4f (x [i1], x11);
+    v4f v2 = load4f (v [i2]);
+    v4f v3 = load4f (v [i3]);
+    v4f x10 = x0 + v0;
+    v4f x11 = x1 + v1;
+    v4f x12 = x2 + v2;
+    v4f x13 = x3 + v3;
+    _mm_store_ps (x [i0], x10);
+    _mm_store_ps (x [i1], x11);
+    _mm_store_ps (x [i2], x12);
+    _mm_store_ps (x [i3], x13);
   }
+  _mm_sfence ();
 }
 
-void advance_angular (float (* u) [4], float (* w) [4], unsigned count, float dt)
+// Update angular position u for motion with constant angular velocity w over a unit time interval.
+// Use a single step of a second order method to integrate the differential equation from "problem.tex".
+void advance_angular (float (* RESTRICT u) [4], float (* RESTRICT w) [4], unsigned count)
 {
-  v4f dt0 = _mm_set1_ps (dt);
   v4f one = { 1.0f, 1.0f, 1.0f, 1.0f, };
   v4f twopi = { 0x1.921fb6P2f, 0x1.921fb6P2f, 0x1.921fb6P2f, 0x1.921fb6P2f, };
   v4f lim1 = { +0x1.3c0000P3f, 0.0f, 0.0f, 0.0f, }; // a touch over pi^2 (~ +0x1.3bd3ccP3)
   for (unsigned n = 0; n != count; ++ n) {
-    v4f u1 = bch2 (dt0 * load4f (w [n]), load4f (u [n]));
+    v4f u1 = bch2 (load4f (w [n]), load4f (u [n]));
+    // If |u|^2 exceeds lim1, scale u in order to adjust its length by -2pi.
     v4f xsq = dot (u1, u1);
     if (_mm_comigt_ss (xsq, lim1)) {
       u1 *= one - twopi * rsqrt (xsq);
@@ -201,7 +186,8 @@ void advance_angular (float (* u) [4], float (* w) [4], unsigned count, float dt
   }
 }
 
-void compute (char * buffer, std::size_t stride, const float (* x) [4], const float (* u) [4], unsigned count)
+// Compute OpenGL modelview matrices from linear and angular position vectors, x and u.
+void compute (char * RESTRICT buffer, std::size_t stride, const float (* RESTRICT x) [4], const float (* RESTRICT u) [4], unsigned count)
 {
   v4f iiii = { 1.0f, 1.0f, 1.0f, 1.0f, };
 #if __SSE4_1__
@@ -246,7 +232,7 @@ void compute (char * buffer, std::size_t stride, const float (* x) [4], const fl
 }
 
 // bch(u,v) for small v (roughly, |v| <= pi/4).
-void rotate (float (& u) [4], const float (& v) [4])
+void rotate (float (& RESTRICT u) [4], const float (& RESTRICT v) [4])
 {
   // The integrator is designed to compute bch(u,v) for small u,
   // but here we want bch(u,v) for small v.
@@ -259,13 +245,9 @@ void rotate (float (& u) [4], const float (& v) [4])
 // Argument x x * *, result sin(x) cos(x) sin(x) cos(x).
 v4f sincos (const v4f x)
 {
-  v4f one = {1.0f, 1.0f, 1.0f, 1.0f, };
-  v4f alt = {0.0f, 1.0f, 0.0f, 1.0f, };
-  v4f xsq = x * x;                       // x^2 x^2 * *
-  v4f x1 = _mm_unpacklo_ps (one, xsq);   // 1 x^2 1 x^2
-  v4f fg = fg_reduced (x1);              // sin1(x) cos2(x) sin1(x) cos2(x)
-  v4f x2 = _mm_unpacklo_ps (-x, xsq);    // -x x^2 -x x^2
-  return alt - fg * x2;                  // sin(x) cos(x) sin(x) cos(x)
+  v4f oioi = {0.0f, 1.0f, 0.0f, 1.0f, };
+  v4f sc = sincos_internal (-x);   // -sin(x) 1-cos(x) -sin(x) 1-cos(x)
+  return oioi - sc;                // sin(x) cos(x) sin(x) cos(x)
 }
 
 // Very restricted range [+0x1.8c97f0P-1f, +0x1.fb5486P-1f] ([0.774596691, 0.990879238]).
@@ -273,13 +255,7 @@ v4f sincos (const v4f x)
 v4f arccos (v4f x)
 {
   // Minimax polynomial for (acos(x))^2 on [+0x1.8c97f0P-1f, +0x1.fb5486P-1f].
-  // Remes error +-0x1.460d54P-21f.
-  v4f one = {1.0f, 1.0f, 1.0f, 1.0f, };
-  v4f c = { +0x1.37b24aP1f, -0x1.7cb23cP1f, +0x1.494690P-1f, -0x1.aa37e2P-4f, };
-  v4f x1 = _mm_unpacklo_ps (one, x);       // 1 x 1 x
-  v4f c1 = c * x1;                         // c0 c1x c2 c3x
-  v4f c2 = _mm_hadd_ps (c1, c1);           // c0+c1x c2+c3x c0+c1x c2+c3x
-  v4f c3 = c2 * x1 * x1;                   // c0+c1x c2x^2+c3x^3 c0+c1x c2x^2+c3x^3
-  v4f cc = _mm_hadd_ps (c3, c3);           // c(x) c(x) c(x) c(x)
-  return sqrt (cc);
+  // Remes error +-0x1.460d54P-21f, max ulp error +-446.
+  const v4f p = { +0x1.37b24aP1f, -0x1.7cb23cP1f, +0x1.494690P-1f, -0x1.aa37e2P-4f, };
+  return sqrt (polyeval (x, p, p));
 }
