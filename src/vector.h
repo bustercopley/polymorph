@@ -40,7 +40,6 @@ do {                                   \
 
 inline v4f load4f (const float * a) { return _mm_load_ps (a); }
 inline void store4f (float * a, v4f v) { _mm_store_ps (a, v); }
-inline void move4f (float * dst, float * src) { store4f (dst, load4f (src)); }
 
 inline v4f dot (v4f u, v4f v)
 {
