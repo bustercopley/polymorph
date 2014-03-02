@@ -31,6 +31,7 @@ inline std::uint64_t qpc ()
 
 struct window_struct_t
 {
+  model_t model;
   POINT initial_cursor_position;
   run_mode_t mode;
 };
@@ -116,36 +117,10 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE, LPSTR lpszCmdLine, int)
   if (! hwnd) return 1;
 
   // Enter the main loop.
-
-  // On 32-bit Windows the system does not align the stack to 16 bytes when it
-  // calls (e.g.) the window procedure, but GCC assumes the stack is 16-byte aligned
-  // on function entry and therefore computes misaligned stack locations (bug 40838).
-
-  // That's why we clutter the main loop with the model_t object instead of creating and
-  // using it inside the window procedure. All the explicitly vectorised SSE code, which
-  // requires a 16-byte aligned stack, is implemented inside model_t.
-
-  // It would be nice to be able to declare that MainWndProc is called with 4-byte alignment.
-  // The command-line flag "-mpreferred-stack-boundary=2" applies such a policy to all
-  // functions, but results in reduced code quality due to extra instructions and increased
-  // register pressure.
-
-  // This does not affect 64-bit Windows because its calling conventions specify 16-byte stack alignment.
-
-  model_t model;
-  model.initialize (qpc (), rect.right, rect.bottom); // actually width, height
-
   MSG msg;
   while (::GetMessage (& msg, NULL, 0, 0)) {
-    if (msg.message != WM_APP) {
-      ::TranslateMessage (& msg);
-      ::DispatchMessage (& msg);
-    }
-    else {
-      model.proceed ();
-      model.draw ();
-      ::InvalidateRect (msg.hwnd, NULL, FALSE);
-    }
+    ::TranslateMessage (& msg);
+    ::DispatchMessage (& msg);
   }
 
   ::UnregisterClass (MAKEINTATOM (main_wc_atom), hInstance);
@@ -202,9 +177,17 @@ LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     // Set up OpenGL rendering context.
     HGLRC hglrc = setup_opengl_context (hwnd);
     if (hglrc) {
+      ws->model.initialize (qpc (), cs->cx, cs->cy);
       ::PostMessage (hwnd, WM_APP, 0, 0);  // Start the simulation.
       result = 0;                          // Allow window creation to continue.
     }
+    break;
+  }
+
+  case WM_APP: {
+    ws->model.proceed ();
+    ws->model.draw ();
+    ::InvalidateRect (hwnd, NULL, FALSE);
     break;
   }
 

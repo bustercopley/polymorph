@@ -4,9 +4,10 @@ CXX=g++
 CFLAGS=$(MACHINE_CFLAGS) -fstrict-aliasing -pedantic -Wall -Wextra -Wstrict-aliasing
 CXXFLAGS=-std=c++0x
 
-# On 32-bit windows, prevent gcc from assuming the stack is 16-byte aligned (bug 40838).
-#MACHINE=$(shell gcc -dumpmachine)
-#MACHINE_CFLAGS=$(if $(findstring x86_64,$(MACHINE)),,-mpreferred-stack-boundary=2)
+X86_64=$(findstring x86_64,$(shell gcc -dumpmachine))
+
+# On 32-bit Windows, prevent gcc from assuming the stack is 16-byte aligned (bug 40838).
+MACHINE_CFLAGS=$(if $(X86_64),,-mpreferred-stack-boundary=3)
 
 nodes_FILENAME=nodes.exe
 nodes_CFLAGS=
