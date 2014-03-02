@@ -50,14 +50,18 @@ namespace
     return _mm_or_ps (_mm_or_ps (term1, term2), term3);
   }
 
-  inline v4f hsv_to_rgb (float hue, float saturation, float value, float alpha)
+  // Assumes saturation and value have all four components equal, and alpha's first three components are zero.
+  inline v4f hsv_to_rgb (float hue, v4f saturation, v4f value, v4f alpha)
   {
-    v4f hv = hue_vector (hue);
-    v4f s0 = { saturation, saturation, saturation, 0.0f, };
-    v4f va = { value, value, value, alpha, };
-    v4f chroma = va * s0;       // c c c 0
-    v4f base = va - chroma;     // x x x a
-    return base + chroma * hv;  // r g b a
+    v4f chroma = saturation * value;
+    v4f base = value - chroma;
+    v4f rgbx = base + chroma * hue_vector (hue);
+#if __SSE4_1__
+    return _mm_blend_ps (rgbx, alpha, 8); // rgba
+#else
+    const union { std::uint32_t u [4]; v4f f; } mask = { 0xffffffff, 0xffffffff, 0xffffffff, 0x00000000, };
+    return _mm_or_ps (_mm_and_ps (mask.f, rgbx), alpha);
+#endif
   }
 }
 

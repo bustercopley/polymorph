@@ -40,8 +40,8 @@ namespace usr {
   //        t0        t1    t2        t3      t
 
   //                                            v0     v1     t0     t1     t2     t3
-  static const bump_specifier_t hsv_v_bump = { 0.25f, 1.00f, 1.50f, 1.75f, 3.75f, 4.25f, };
   static const bump_specifier_t hsv_s_bump = { 0.00f, 0.25f, 1.50f, 1.75f, 3.75f, 4.25f, };
+  static const bump_specifier_t hsv_v_bump = { 0.25f, 1.00f, 1.50f, 1.75f, 3.75f, 4.25f, };
 
   static const float morph_start = 1.75f;
   static const float morph_finish = 3.50f;
@@ -311,20 +311,21 @@ void model_t::draw (unsigned begin, unsigned count)
   }
 
   // Set the diffuse material reflectance, d.
+  const v4f alpha = { 0.0f, 0.0f, 0.0f, 0.85f, };
   for (unsigned n = 0; n != count; ++ n) {
     uniform_block_t & block = uniform_buffer [n];
     const object_t & object = objects [begin + n];
-    float saturation, value;
-    bumps (object.animation_time, saturation, value);
-    store4f (block.d, hsv_to_rgb (object.hue, saturation, value, 0.85f));
+    v4f satval = bumps (object.animation_time);
+    v4f sat = _mm_moveldup_ps (satval);
+    v4f val = _mm_movehdup_ps (satval);
+    store4f (block.d, hsv_to_rgb (object.hue, sat, val, alpha));
   }
 
-  // Set the uniform coefficients, g.
   for (unsigned n = 0; n != count; ++ n) {
     uniform_block_t & block = uniform_buffer [n];
     const object_t & object = objects [begin + n];
     system_select_t sselect = object.target.system;
-    v4f t = _mm_set1_ps (step (object.animation_time) * object.locus_length);
+    v4f t = step (object.animation_time) * _mm_set1_ps (object.locus_length);
     v4f sc = sincos (t);
     v4f s = _mm_moveldup_ps (sc);
     v4f c = _mm_movehdup_ps (sc);

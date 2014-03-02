@@ -1,5 +1,4 @@
 #include "bump.h"
-#include "vector.h"
 #include <limits>
 
 void step_t::initialize (float start, float finish)
@@ -19,14 +18,14 @@ void step_t::initialize (float start, float finish)
   T [3] = 0.0f; // unused
 }
 
-float step_t::operator () (float t) const
+v4f step_t::operator () (float t) const
 {
   // Evaluate the polynomial by Estrin's method.
   // Mask in 0, 1 or the value according to the region to which t belongs.
   static const float inf = std::numeric_limits <float>::infinity ();
   v4f c4 = load4f (c);
   v4f one = { 1.0f, 1.0f, 1.0f, 1.0f, };
-  v4f ttt = { t, t, t, t, };
+  v4f ttt = _mm_set1_ps (t);
   v4f tt = _mm_unpacklo_ps (one, ttt); // 1 t 1 t
   v4f f0 = c4 * tt;                    // c0 c1*t c2 c3*t
   v4f ha = _mm_hadd_ps (f0, f0) * tt * tt;
@@ -36,7 +35,8 @@ float step_t::operator () (float t) const
   v4f hi = { T [1], +inf, -inf, -inf, };
   v4f select = _mm_andnot_ps (_mm_cmplt_ps (ttt, lo), _mm_cmplt_ps (ttt, hi));
   v4f values = _mm_and_ps (select, f1);
-  return _mm_cvtss_f32 (_mm_hadd_ps (values, values));
+  v4f step = _mm_hadd_ps (values, values);
+  return _mm_unpacklo_ps (step, step);
 }
 
 void bumps_t::initialize (bump_specifier_t b0, bump_specifier_t b1)
@@ -62,12 +62,12 @@ void bumps_t::initialize (bump_specifier_t b0, bump_specifier_t b1)
 }
 
 // Returns {f,g,f,g}, where f = bump0 (t), g = bump1 (t).
-void bumps_t::operator () (float t, float & v0, float & v1) const
+v4f bumps_t::operator () (float t) const
 {
   // Compute all four polynomials by Estrin's method, and mask
   // and combine the values according to the region of the graph
   // to which t belongs.
-  v4f s = { t, t, t, t, };
+  v4f s = _mm_set1_ps (t);
   v4f S = load4f (S0);
   v4f T = load4f (T0);
   v4f U = load4f (U0);
@@ -77,12 +77,10 @@ void bumps_t::operator () (float t, float & v0, float & v1) const
   v4f f = f01 + f12 * s * s;
   v4f ltS = _mm_cmplt_ps (s, S);
   v4f ltT = _mm_cmplt_ps (s, T);
-  v4f val_ltS = _mm_and_ps (ltS, U);
-  v4f val_mST = _mm_and_ps (_mm_andnot_ps (ltS, ltT), f);
-  v4f val_geT = _mm_andnot_ps (ltT, V);
-  v4f val = _mm_or_ps (_mm_or_ps (val_ltS, val_geT), val_mST);
-  float fgfg [4];
-  store4f (fgfg, _mm_hadd_ps (val, val));
-  v0 = fgfg [0];
-  v1 = fgfg [1];
+  v4f bST = _mm_xor_ps (ltS, ltT);
+  v4f term1 = _mm_and_ps (ltS, U);
+  v4f term2 = _mm_and_ps (bST, f);
+  v4f term3 = _mm_andnot_ps (ltT, V);
+  v4f val = _mm_or_ps (_mm_or_ps (term1, term2), term3);
+  return _mm_hadd_ps (val, val);
 }

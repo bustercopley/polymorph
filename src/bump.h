@@ -3,16 +3,31 @@
 #ifndef bump_h
 #define bump_h
 
-// Function object to compute the smoothstep function:
-//   f(t) = 0 for t < start,
-//   f(t) = 1 for t > finish,
-// and f is smoothly interpolated by a cubic polynomial in between.
+// Interface.
+
+#include "vector.h"
+
+// step_t: function object to compute the smoothstep function.
+
+//  r ^          r = step (t)
+//    |
+//  1 +--------------XXXXXX--
+//    |           X  |
+//    |         X    |
+//    |        X     |
+//    |      X       |
+//  0 +XXXX----------+------->
+//        t0        t1        t
+
 struct step_t
 {
-  float operator () (float t) const;
-  void initialize (float start, float finish);
+  v4f operator () (float t) const;
+  void initialize (float t0, float t1);
+private:
   float c [4], T [4];
 };
+
+// bumps_t: function object to compute two independent "bump" functions.
 
 //  r ^                        r = bump (t)
 //    |
@@ -29,13 +44,12 @@ struct bump_specifier_t
   float v0, v1, t0, t1, t2, t3;
 };
 
-// Object computes two independent "bump" functions.
 struct bumps_t
 {
-  void operator () (float t, float & v0, float & v1) const;
+  v4f operator () (float t) const;
   void initialize (bump_specifier_t b0, bump_specifier_t b1);
 private:
-  float S0 [4], T0 [4], U0 [4], V0 [4], c [4] [4];
+  float c [4] [4], S0 [4], T0 [4], U0 [4], V0 [4];
 };
 
 #endif
