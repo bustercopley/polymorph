@@ -43,7 +43,7 @@ namespace
   }
 
   // Argument x x * *, result sin(x) 1-cos(x) sin(x) 1-cos(x).
-  // Range [0, 2.467401] ((pi/2)^2).
+  // Range [0, 1.57079632] (pi/2).
   inline v4f sincos_internal (const v4f x)
   {
     v4f xsq = x * x;                           // x^2 x^2 * *
