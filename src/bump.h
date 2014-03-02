@@ -3,8 +3,6 @@
 #ifndef bump_h
 #define bump_h
 
-// Interface.
-
 #include "vector.h"
 
 // step_t: function object to compute the smoothstep function.
