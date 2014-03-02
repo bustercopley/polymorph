@@ -251,7 +251,7 @@ void model_t::recalculate_locus (object_t & object)
   store4f (object.locus_end, g2);
   // Calculate the arc-length s = arccos(d) of the great circular arc T0-T1.
   // Note: for allowed transitions we have d in [7.74596691e-001, 9.90879238e-001].
-  object.locus_speed = _mm_cvtss_f32 (arccos (d));
+  object.locus_length = _mm_cvtss_f32 (arccos (d));
 
 #if PRINT_ENABLED
   float df = _mm_cvtss_f32 (d);
@@ -324,7 +324,7 @@ void model_t::draw (unsigned begin, unsigned count)
     uniform_block_t & block = uniform_buffer [n];
     const object_t & object = objects [begin + n];
     system_select_t sselect = object.target.system;
-    v4f t = _mm_set1_ps (step (object.animation_time) * object.locus_speed);
+    v4f t = _mm_set1_ps (step (object.animation_time) * object.locus_length);
     v4f sc = sincos (t);
     v4f s = _mm_moveldup_ps (sc);
     v4f c = _mm_movehdup_ps (sc);

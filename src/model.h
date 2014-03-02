@@ -16,7 +16,7 @@ struct object_t
   float hue;
   float animation_time;
   float locus_end [4];
-  float locus_speed;
+  float locus_length;
   unsigned starting_point;
   polyhedron_select_t target;
 };
