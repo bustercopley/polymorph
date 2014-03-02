@@ -20,7 +20,7 @@ nodes_OBJECTS=main.o show_system.o snub_variance.o triangle.o rotor.o
 
 polymorph_FILENAME=polymorph.scr
 polymorph_CPPFLAGS=-DUNICODE #-Itinyscheme
-polymorph_CFLAGS=-fno-ident -nodefaultlibs -msse3 -nostartfiles -mfpmath=sse -flto -Os
+polymorph_CFLAGS=-nodefaultlibs -nostartfiles -fno-ident -msse3 -mfpmath=sse -flto -Os
 polymorph_CXXFLAGS=-fno-exceptions -fno-rtti
 polymorph_LDFLAGS=-mwindows -s -Xlinker --entry=$(ENTRY_POINT) -Xlinker --disable-runtime-pseudo-reloc
 polymorph_LDLIBS=-luser32 -lkernel32 -lgdi32 -lopengl32 -lmsvcrt
