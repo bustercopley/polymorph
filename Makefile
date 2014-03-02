@@ -7,7 +7,7 @@ CXXFLAGS=-std=c++0x
 X86_64=$(findstring x86_64,$(shell gcc -dumpmachine))
 
 # On 32-bit Windows, prevent gcc from assuming the stack is 16-byte aligned (bug 40838).
-MACHINE_CFLAGS=$(if $(X86_64),,-mpreferred-stack-boundary=3)
+MACHINE_CFLAGS=$(if $(X86_64),,-mpreferred-stack-boundary=2)
 
 nodes_FILENAME=nodes.exe
 nodes_CFLAGS=
