@@ -259,8 +259,10 @@ void model_t::recalculate_locus (object_t & object)
 #endif
 }
 
-void model_t::proceed ()
+void model_t::draw_next ()
 {
+  //Advance.
+
   const float dt = usr::frame_time;
 
   for (unsigned n = 0; n != count; ++ n) {
@@ -282,10 +284,9 @@ void model_t::proceed ()
   kdtree.search (count, 2 * max_radius, objects, r, v, w, walls);
   advance_linear (x, v, count);
   advance_angular (u, w, count);
-}
 
-void model_t::draw ()
-{
+  // Draw.
+
   clear ();
   // Draw all the shapes, one uniform buffer at a time.
   unsigned begin = 0, end = uniform_buffer.count ();

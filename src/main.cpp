@@ -185,8 +185,7 @@ LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
   }
 
   case WM_APP: {
-    ws->model.proceed ();
-    ws->model.draw ();
+    ws->model.draw_next ();
     ::InvalidateRect (hwnd, NULL, FALSE);
     break;
   }

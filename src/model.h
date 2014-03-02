@@ -27,8 +27,7 @@ struct model_t
   model_t ();
 
   bool initialize (uint64_t seed, int width, int height);
-  void proceed ();
-  void draw ();
+  void draw_next ();
 private:
   bool set_capacity (std::size_t new_capacity);
   void add_object (const float (& view) [4]);
