@@ -40,19 +40,20 @@ LRESULT CALLBACK InitWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 HGLRC setup_opengl_context (HWND hwnd);
 
-int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE, LPSTR lpszCmdLine, int)
+// Called by custom_entry_point (below).
+int custom_main (HINSTANCE hInstance)
 {
   // Read command line arguments.
 
   HWND parent = NULL;
-  run_mode_t mode = parse_command_line (lpszCmdLine, & parent);
+  run_mode_t mode = parse_command_line (::GetCommandLine (), & parent);
 
   if (mode == configure) {
     ::MessageBox (NULL, usr::message, usr::program_name, MB_OK | MB_ICONASTERISK);
     return 0;
   }
 
- // Placement and window style of the main window.
+  // Placement and window style of the main window.
 
   RECT rect;
   DWORD style;
@@ -124,7 +125,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE, LPSTR lpszCmdLine, int)
   }
 
   ::UnregisterClass (MAKEINTATOM (main_wc_atom), hInstance);
-  return 0;
+  return msg.wParam;
 }
 
 LRESULT CALLBACK InitWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -287,4 +288,26 @@ HGLRC setup_opengl_context (HWND hwnd)
     ::ReleaseDC (hwnd, hdc);
   }
   return hglrc;
+}
+
+// Tiny startup.
+
+// No standard handles, window placement, environment variables,
+// command-line transformation, global constructors and destructors,
+// atexit functions, stack realignment, thread-local storage,
+// runtime relocation fixups, 387 floating-point initialization,
+// signal handlers or exceptions.
+
+extern "C"
+{
+  // This symbol is provided by all recent GCC or MSVC linkers.
+  extern IMAGE_DOS_HEADER __ImageBase;
+
+  // This must be specified in the link command line, "-Wl,-ecustom_startup".
+  extern void custom_startup ()
+  {
+    HINSTANCE hInstance = reinterpret_cast <HINSTANCE> (& __ImageBase);
+    int status = custom_main (hInstance);
+    ::ExitProcess (static_cast <UINT> (status));
+  }
 }

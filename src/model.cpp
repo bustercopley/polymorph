@@ -230,7 +230,8 @@ void model_t::add_object (const float (& view) [4])
   store4f (w [count], get_vector_in_ball (rng, 0.2f * action / A.l));
 
   std::uint64_t entropy = rng.get ();
-  A.target.system = static_cast <system_select_t> ((entropy >> 3) % 6);
+  // Don't use 64-bit modulus in 32-bit environments, as it's provided by libc.
+  A.target.system = system_select_t ((std::size_t (entropy) >> 3) % 6);
   A.target.point = entropy & 7;
   A.starting_point = A.target.point;
   ++ count;

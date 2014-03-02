@@ -9,6 +9,9 @@ X86_64=$(findstring x86_64,$(shell gcc -dumpmachine))
 # On 32-bit Windows, prevent gcc from assuming the stack is 16-byte aligned (bug 40838).
 MACHINE_CFLAGS=$(if $(X86_64),,-mpreferred-stack-boundary=2)
 
+# On 32-bit Windows, add a leading underscore to indicate the _cdecl calling convention.
+ENTRY_POINT=$(if $(X86_64),,_)custom_startup
+
 nodes_FILENAME=nodes.exe
 nodes_CFLAGS=
 nodes_LDFLAGS=
@@ -17,10 +20,10 @@ nodes_OBJECTS=main.o show_system.o snub_variance.o triangle.o rotor.o
 
 polymorph_FILENAME=polymorph.scr
 polymorph_CPPFLAGS=-DUNICODE #-Itinyscheme
-polymorph_CFLAGS=-msse4.2 -mfpmath=sse -flto -Os
+polymorph_CFLAGS=-fno-ident -nodefaultlibs -msse3 -nostartfiles -mfpmath=sse -flto -Os
 polymorph_CXXFLAGS=-fno-exceptions -fno-rtti
-polymorph_LDFLAGS=-mwindows -s
-polymorph_LDLIBS=-lopengl32
+polymorph_LDFLAGS=-mwindows -s -Xlinker --entry=$(ENTRY_POINT) -Xlinker --disable-runtime-pseudo-reloc
+polymorph_LDLIBS=-luser32 -lkernel32 -lgdi32 -lopengl32 -lmsvcrt
 polymorph_EXTRA_OBJECTS=.obj/resources-res.o #.obj/tinyscheme-scheme.o
 polymorph_SOURCE_PREFIX=src/
 polymorph_OBJECTS=\
