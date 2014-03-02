@@ -43,11 +43,11 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE, LPSTR lpszCmdLine, int)
 {
   // Read command line arguments.
 
-  HWND parent = nullptr;
+  HWND parent = NULL;
   run_mode_t mode = parse_command_line (lpszCmdLine, & parent);
 
   if (mode == configure) {
-    ::MessageBox (nullptr, usr::message, usr::program_name, MB_OK | MB_ICONASTERISK);
+    ::MessageBox (NULL, usr::message, usr::program_name, MB_OK | MB_ICONASTERISK);
     return 0;
   }
 
@@ -218,7 +218,7 @@ LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
   }
 
   case WM_SETCURSOR:
-    ::SetCursor (ws->mode == fullscreen ? nullptr : (::LoadCursor (nullptr, IDC_ARROW)));
+    ::SetCursor (ws->mode == fullscreen ? NULL : (::LoadCursor (NULL, IDC_ARROW)));
     break;
 
   case WM_MOUSEMOVE:
@@ -246,7 +246,7 @@ LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     break;
 
   case WM_DESTROY:
-    ::wglMakeCurrent (nullptr, nullptr);
+    ::wglMakeCurrent (NULL, NULL);
     //::wglDeleteContext (ws->hglrc);
     ::PostQuitMessage (0);
     break;
@@ -290,13 +290,13 @@ HGLRC setup_opengl_context (HWND hwnd)
     0, 0,
   };
 
-  HGLRC hglrc = nullptr;
+  HGLRC hglrc = NULL;
   int pf;
   UINT pfcount;
   if (HDC hdc = ::GetDC (hwnd)) {
-    if (wglChoosePixelFormatARB (hdc, pf_attribs, nullptr, 1, & pf, & pfcount)) {
-      if (::SetPixelFormat (hdc, pf, nullptr)) {
-        hglrc = wglCreateContextAttribsARB (hdc, nullptr, context_attribs);
+    if (wglChoosePixelFormatARB (hdc, pf_attribs, NULL, 1, & pf, & pfcount)) {
+      if (::SetPixelFormat (hdc, pf, NULL)) {
+        hglrc = wglCreateContextAttribsARB (hdc, NULL, context_attribs);
         if (hglrc) {
           ::wglMakeCurrent (hdc, hglrc);
         }
