@@ -160,12 +160,11 @@ void advance_linear (float (* RESTRICT x) [4], const float (* RESTRICT v) [4], u
     v4f x11 = x1 + v1;
     v4f x12 = x2 + v2;
     v4f x13 = x3 + v3;
-    _mm_store_ps (x [i0], x10);
-    _mm_store_ps (x [i1], x11);
-    _mm_store_ps (x [i2], x12);
-    _mm_store_ps (x [i3], x13);
+    _mm_stream_ps (x [i0], x10);
+    _mm_stream_ps (x [i1], x11);
+    _mm_stream_ps (x [i2], x12);
+    _mm_stream_ps (x [i3], x13);
   }
-  _mm_sfence ();
 }
 
 // Update angular position u for motion with constant angular velocity w over a unit time interval.
@@ -192,9 +191,8 @@ void compute (char * RESTRICT buffer, std::size_t stride, const float (* RESTRIC
   v4f iiii = { 1.0f, 1.0f, 1.0f, 1.0f, };
 #if __SSE4_1__
 #else
-  __m128i imask = { -1ll, 0xffffffffll };
-  v4f mask = _mm_castsi128_ps (imask); // true true true false
-  v4f oooi = _mm_andnot_ps (mask, iiii);
+  const union { std::uint32_t u [4]; v4f f; } mask = { 0xffffffff, 0xffffffff, 0xffffffff, 0x00000000, };
+  v4f oooi = _mm_andnot_ps (mask.f, iiii);
 #endif
   char * iter = buffer;
   for (unsigned n = 0; n != count; ++ n, iter += stride) {
@@ -221,7 +219,7 @@ void compute (char * RESTRICT buffer, std::size_t stride, const float (* RESTRIC
     v4f phi = _mm_blend_ps (phicos, add, 8);     // d0 d1 d2  0
     v4f xyz1 = _mm_blend_ps (xyz0, iiii, 8);     // x0 x1 x2  1
 #else
-    v4f phi = _mm_and_ps (mask, phicos);
+    v4f phi = _mm_and_ps (mask.f, phicos);
     v4f xyz1 = _mm_or_ps (xyz0, oooi);
 #endif
     store4f (& f [0], _mm_shuffle_ps (ashd, sub, SHUFFLE (2, 0, 1, 3)));  // d0 a2 s1 0
