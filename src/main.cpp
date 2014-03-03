@@ -131,7 +131,7 @@ int custom_main (HINSTANCE hInstance)
 LRESULT CALLBACK InitWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   if (msg == WM_NCCREATE) {
-    // Set up legacy rendering context to get OpenGL function pointers.
+    // Set up a legacy rendering context to get the OpenGL function pointers.
     PIXELFORMATDESCRIPTOR pfd;
     ::ZeroMemory (& pfd, sizeof pfd);
     pfd.nSize = sizeof pfd;
