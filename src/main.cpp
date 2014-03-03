@@ -300,10 +300,10 @@ HGLRC setup_opengl_context (HWND hwnd)
 
 extern "C"
 {
-  // This symbol is provided by all recent GCC or MSVC linkers.
+  // This symbol is provided by all recent GCC and MSVC linkers.
   extern IMAGE_DOS_HEADER __ImageBase;
 
-  // This must be specified in the link command line, "-Wl,-ecustom_startup".
+  // This entry point must be specified in the linker command line.
   extern void custom_startup ()
   {
     HINSTANCE hInstance = reinterpret_cast <HINSTANCE> (& __ImageBase);
