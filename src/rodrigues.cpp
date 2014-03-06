@@ -191,7 +191,7 @@ void compute (char * RESTRICT buffer, std::size_t stride, const float (* RESTRIC
   v4f iiii = { 1.0f, 1.0f, 1.0f, 1.0f, };
 #if __SSE4_1__
 #else
-  const union { std::uint32_t u [4]; v4f f; } mask = { 0xffffffff, 0xffffffff, 0xffffffff, 0x00000000, };
+  const union { std::uint32_t u [4]; v4f f; } mask = { { 0xffffffff, 0xffffffff, 0xffffffff, 0x00000000, }, };
   v4f oooi = _mm_andnot_ps (mask.f, iiii);
 #endif
   char * iter = buffer;

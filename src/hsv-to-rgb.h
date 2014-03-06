@@ -59,7 +59,7 @@ namespace
 #if __SSE4_1__
     return _mm_blend_ps (rgbx, alpha, 8); // rgba
 #else
-    const union { std::uint32_t u [4]; v4f f; } mask = { 0xffffffff, 0xffffffff, 0xffffffff, 0x00000000, };
+    const union { std::uint32_t u [4]; v4f f; } mask = { { 0xffffffff, 0xffffffff, 0xffffffff, 0x00000000, }, };
     return _mm_or_ps (_mm_and_ps (mask.f, rgbx), alpha);
 #endif
   }
