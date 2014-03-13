@@ -1,7 +1,12 @@
 #include "rotor.h"
 #include <cmath>
 
-rotor_t::rotor_t (long double A) : sinA (std::sin (A)), cosA (std::cos (A)) { }
+rotor_t::rotor_t (long double A) :
+  sinA (std::sin (A)),
+  cosA (std::cos (A))
+{
+
+}
 
 void rotor_t::about (const long double (& a) [4])
 {
