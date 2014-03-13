@@ -144,6 +144,18 @@ void advance_linear (float (* RESTRICT x) [4], const float (* RESTRICT v) [4], u
   // Load 64 bytes (one cache line) of data at a time.
   // This can operate on padding at the end of the arrays.
   for (unsigned n = 0; n != (count + 3) >> 2; ++ n) {
+#if __AVX__
+    unsigned i0 = 4 * n;
+    unsigned i2 = 4 * n + 2;
+    __m256 x0 = _mm256_load_ps (x [i0]);
+    __m256 x2 = _mm256_load_ps (x [i2]);
+    __m256 v0 = _mm256_load_ps (v [i0]);
+    __m256 v2 = _mm256_load_ps (v [i2]);
+    __m256 x10 = x0 + v0;
+    __m256 x12 = x2 + v2;
+    _mm256_stream_ps (x [i0], x10);
+    _mm256_stream_ps (x [i2], x12);
+#else
     unsigned i0 = 4 * n;
     unsigned i1 = 4 * n + 1;
     unsigned i2 = 4 * n + 2;
@@ -164,6 +176,7 @@ void advance_linear (float (* RESTRICT x) [4], const float (* RESTRICT v) [4], u
     _mm_stream_ps (x [i1], x11);
     _mm_stream_ps (x [i2], x12);
     _mm_stream_ps (x [i3], x13);
+#endif
   }
 }
 
