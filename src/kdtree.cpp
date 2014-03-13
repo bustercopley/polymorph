@@ -119,13 +119,14 @@ namespace
         v4f rn = R * normal;
         v4f vF = load4f (v [ix]) - vN - cross (load4f (w [ix]), rn);
         v4f kf = _mm_set1_ps (usr::walls_friction);
-        v4f uneg = vN + kf * vF;
+        v4f kvF = kf * vF;
+        v4f uneg = vN + kvF;
         v4f vN_sq = vn * vn;
-        v4f vF_sq = dot (vF, vF);
-        v4f kvF_sq = kf * (kf * vF_sq);
+        v4f k_vFsq = dot (kvF, vF);
+        v4f kvF_sq = kf * k_vFsq;
         v4f ml = { A.m, A.l, A.m, A.l, };
         v4f wtf = _mm_unpacklo_ps (vN_sq + kvF_sq, (R * R) * kvF_sq) / ml;
-        v4f munu = (vN_sq + kf * vF_sq) / (ml * _mm_hadd_ps (wtf, wtf));
+        v4f munu = (vN_sq + k_vFsq) / (ml * _mm_hadd_ps (wtf, wtf));
         munu += munu;
         munu = _mm_unpacklo_ps (munu, munu);
         v4f mu = _mm_movelh_ps (munu, munu);
@@ -193,7 +194,7 @@ void kdtree_t::search (unsigned count, float R,
                        object_t * RESTRICT objects,
                        const float (* RESTRICT r),
                        float (* RESTRICT v) [4], float (* RESTRICT w) [4],
-                       float (* RESTRICT walls) [2] [4])
+                       float (* RESTRICT walls) [2] [4]) const
 {
   // For each ball, find nearby balls and test for collisions.
   v4f rsq = _mm_set1_ps (R * R);

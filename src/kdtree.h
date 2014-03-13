@@ -16,7 +16,7 @@ struct kdtree_t
                object_t * objects,
                const float (* r),
                float (* v) [4], float (* w) [4],
-               float (* walls) [2] [4]);
+               float (* walls) [2] [4]) const;
 private:
   unsigned * index;
   const float (* x) [4];
