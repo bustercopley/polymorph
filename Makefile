@@ -1,16 +1,8 @@
 PROGRAMS=nodes polymorph #tinyscheme
 CC=gcc
 CXX=g++
-CFLAGS=$(MACHINE_CFLAGS) -fstrict-aliasing -pedantic -Wall -Wextra -Wstrict-aliasing
+CFLAGS=-pedantic -Wall -Wextra
 CXXFLAGS=-std=c++0x
-
-X86_64=$(findstring x86_64,$(shell gcc -dumpmachine))
-
-# On 32-bit Windows, prevent gcc from assuming the stack is 16-byte aligned (bug 40838).
-MACHINE_CFLAGS=$(if $(X86_64),,-mpreferred-stack-boundary=2)
-
-# On 32-bit Windows, add a leading underscore to indicate the _cdecl calling convention.
-ENTRY_POINT=$(if $(X86_64),,_)custom_startup
 
 nodes_FILENAME=nodes.exe
 nodes_CFLAGS=
@@ -19,11 +11,11 @@ nodes_SOURCE_PREFIX=src/nodes/
 nodes_OBJECTS=main.o show_system.o snub_variance.o triangle.o rotor.o
 
 polymorph_FILENAME=polymorph.scr
-polymorph_CPPFLAGS=-DUNICODE #-Itinyscheme
-polymorph_CFLAGS=-nodefaultlibs -nostartfiles -fno-ident -msse3 -mfpmath=sse -flto -Os
-polymorph_CXXFLAGS=-fno-exceptions -fno-rtti
-polymorph_LDFLAGS=-mwindows -s -Xlinker --entry=$(ENTRY_POINT) -Xlinker --disable-runtime-pseudo-reloc
-polymorph_LDLIBS=-luser32 -lkernel32 -lgdi32 -lopengl32
+polymorph_CPPFLAGS=$(CONFIG_CPPFLAGS)
+polymorph_CFLAGS=$(CONFIG_CFLAGS)
+polymorph_CXXFLAGS=$(CONFIG_CXXFLAGS)
+polymorph_LDFLAGS=$(CONFIG_LDFLAGS)
+polymorph_LDLIBS=$(CONFIG_LDLIBS)
 polymorph_EXTRA_OBJECTS=.obj/resources-res.o #.obj/tinyscheme-scheme.o
 polymorph_SOURCE_PREFIX=src/
 polymorph_OBJECTS=\
@@ -33,6 +25,37 @@ memory.o model.o partition.o random.o rodrigues.o systems.o
 # tinyscheme_CPPFLAGS=-include src/tinyscheme-config.h
 # tinyscheme_CFLAGS=-Ofast -Wall -Wextra -Wno-switch -Wno-unused-parameter
 # tinyscheme_OBJECTS=scheme.o
+
+# Platform-specific variables. Platform prefix is x86_ or x64_ (autodetected).
+PLATFORM=$(if $(findstring x86_64,$(shell gcc -dumpmachine)),x64,x86)
+PLATFORM_CFLAGS=$($(PLATFORM)_CFLAGS)
+PLATFORM_ENTRY_POINT=$($(PLATFORM)_ENTRY_POINT)
+
+x64_ENTRY_POINT=custom_startup
+
+# The leading underscore indicates the _cdecl calling convention.
+x86_ENTRY_POINT=_custom_startup
+# Don't assume 16-byte stack alignment (bug 40838).
+x86_CFLAGS=-mpreferred-stack-boundary=2
+
+CONFIG=TINY
+CONFIG_CPPFLAGS=$($(CONFIG)_CPPFLAGS)
+CONFIG_CFLAGS=$($(CONFIG)_CFLAGS)
+CONFIG_CXXFLAGS=$($(CONFIG)_CXXFLAGS)
+CONFIG_LDFLAGS=$($(CONFIG)_LDFLAGS)
+CONFIG_LDLIBS=$($(CONFIG)_LDLIBS)
+
+BASE_CPPFLAGS=-DUNICODE #-Itinyscheme
+BASE_CFLAGS=$(PLATFORM_CFLAGS) -msse3 -mfpmath=sse -fno-ident -flto -Os
+BASE_CXXFLAGS=-fno-exceptions -fno-rtti
+BASE_LDFLAGS=-mwindows -s
+BASE_LDLIBS=-lopengl32
+
+TINY_CPPFLAGS=$(BASE_CPPFLAGS) -DTINY
+TINY_CFLAGS=$(BASE_CFLAGS)
+TINY_CXXFLAGS=$(BASE_CXXFLAGS)
+TINY_LDFLAGS=$(BASE_LDFLAGS) -nodefaultlibs -nostartfiles -Xlinker --entry=$(PLATFORM_ENTRY_POINT) -Xlinker --disable-runtime-pseudo-reloc
+TINY_LDLIBS=$(BASE_LDLIBS) -lgdi32 -luser32 -lkernel32
 
 EXTRA_CLEAN=data
 

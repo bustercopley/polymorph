@@ -40,7 +40,6 @@ LRESULT CALLBACK InitWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 HGLRC setup_opengl_context (HWND hwnd);
 
-// Called by custom_entry_point (below).
 int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 {
   // Read command line arguments.
@@ -279,6 +278,8 @@ HGLRC setup_opengl_context (HWND hwnd)
   return hglrc;
 }
 
+#ifdef TINY
+
 // Tiny startup.
 
 // No standard handles, window placement, environment variables,
@@ -290,13 +291,15 @@ HGLRC setup_opengl_context (HWND hwnd)
 extern "C"
 {
   // This symbol is provided by all recent GCC and MSVC linkers.
-  extern IMAGE_DOS_HEADER __ImageBase;
+  IMAGE_DOS_HEADER __ImageBase;
 
   // This entry point must be specified in the linker command line.
-  extern void custom_startup ()
+  void custom_startup ()
   {
     HINSTANCE hInstance = reinterpret_cast <HINSTANCE> (& __ImageBase);
     int status = WinMain (hInstance, NULL, NULL, 0);
     ::ExitProcess (static_cast <UINT> (status));
   }
 }
+
+#endif
