@@ -23,7 +23,7 @@ polymorph_CPPFLAGS=-DUNICODE #-Itinyscheme
 polymorph_CFLAGS=-nodefaultlibs -nostartfiles -fno-ident -msse3 -mfpmath=sse -flto -Os
 polymorph_CXXFLAGS=-fno-exceptions -fno-rtti
 polymorph_LDFLAGS=-mwindows -s -Xlinker --entry=$(ENTRY_POINT) -Xlinker --disable-runtime-pseudo-reloc
-polymorph_LDLIBS=-luser32 -lkernel32 -lgdi32 -lopengl32 -lmsvcrt
+polymorph_LDLIBS=-luser32 -lkernel32 -lgdi32 -lopengl32
 polymorph_EXTRA_OBJECTS=.obj/resources-res.o #.obj/tinyscheme-scheme.o
 polymorph_SOURCE_PREFIX=src/
 polymorph_OBJECTS=\

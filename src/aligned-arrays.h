@@ -56,9 +56,10 @@ namespace internal
   inline void replace (void * base, std::size_t old_length, std::size_t new_length, T ** x, P ... p)
   {
     base = align_up (base);
-    if (old_length && * x) {
-      copy_memory (base, * x, old_length * (sizeof ** x));
-    }
+    // Not currently used:
+    //if (old_length && * x) {
+    //  copy_memory (base, * x, old_length * (sizeof ** x));
+    //}
     * x = reinterpret_cast <T *> (base);
     base = reinterpret_cast <void *> (* x + new_length);
     replace (base, old_length, new_length, p ...);

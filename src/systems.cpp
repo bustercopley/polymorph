@@ -11,18 +11,14 @@
 namespace
 {
   NOINLINE
-  void assign (float (* out) [4], const float (* from) [4], unsigned count)
-  {
-    copy_memory (out, from, count * 4 * sizeof (float));
-  }
-
-  NOINLINE
-  void assign_0213 (float (* out) [4], const float (* from) [4], unsigned count)
+  void assign (float (* out) [4], const float (* from) [4], unsigned count, bool shuffle)
   {
     for (unsigned n = 0; n != count; ++ n) {
       v4f t = _mm_loadu_ps (from [n]);
-      v4f s = _mm_shuffle_ps (t, t, SHUFFLE (0, 2, 1, 3));
-      store4f (out [n], s);
+      // Maybe swap Y and Z components.
+      if (shuffle)
+        t = _mm_shuffle_ps (t, t, SHUFFLE (0, 2, 1, 3));
+      store4f (out [n], t);
     }
   }
 
@@ -42,15 +38,12 @@ namespace
 
     // For dual tilings, Y and Z are swapped. The permutation can
     // be recovered from indices; however, it is hardcoded here.
-    if (select & 1)
-      assign_0213 (abc [select], abc_in, 8);
-    else
-      assign (abc [select], abc_in, 8);
+    assign (abc [select], abc_in, 8, select & 1);
 
     // Use the permutation encoded in indices.
-    assign (& xyz [select] [0], xyz_in + indices_in [0] [0], 1);
-    assign (& xyz [select] [1], xyz_in + indices_in [0] [4], 1);
-    assign (& xyz [select] [2], xyz_in + indices_in [0] [2], 1);
+    assign (& xyz [select] [0], xyz_in + indices_in [0] [0], 1, false);
+    assign (& xyz [select] [1], xyz_in + indices_in [0] [4], 1, false);
+    assign (& xyz [select] [2], xyz_in + indices_in [0] [2], 1, false);
 
     cramer::inverse_transpose (xyz [select], xyzinvt [select]);
 

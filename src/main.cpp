@@ -41,7 +41,7 @@ LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 HGLRC setup_opengl_context (HWND hwnd);
 
 // Called by custom_entry_point (below).
-int custom_main (HINSTANCE hInstance)
+int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 {
   // Read command line arguments.
 
@@ -88,11 +88,7 @@ int custom_main (HINSTANCE hInstance)
 
   // Create the dummy window. See InitWndProc.
   // Note this window does not survive creation.
-  WNDCLASS init_wc;
-  ::ZeroMemory (& init_wc, sizeof init_wc);
-  init_wc.hInstance = hInstance;
-  init_wc.lpfnWndProc = & InitWndProc;
-  init_wc.lpszClassName = TEXT ("GLinit");
+  WNDCLASS init_wc = { 0, & InitWndProc, 0, 0, hInstance, NULL, NULL, NULL, NULL, TEXT ("GLinit") };
   ATOM init_wc_atom = ::RegisterClass (& init_wc);
   ::CreateWindowEx (0, MAKEINTATOM (init_wc_atom), TEXT (""), 0,
                     CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
@@ -103,12 +99,8 @@ int custom_main (HINSTANCE hInstance)
   if (! wglChoosePixelFormatARB) return -1;
 
   // Create the main window. See MainWndProc.
-  WNDCLASS main_wc;
-  ::ZeroMemory (& main_wc, sizeof main_wc);
-  main_wc.hInstance = hInstance;
-  main_wc.lpfnWndProc = & MainWndProc;
-  main_wc.hIcon = ::LoadIcon (hInstance, MAKEINTRESOURCE (257));
-  main_wc.lpszClassName = usr::program_name;
+  HICON icon = ::LoadIcon (hInstance, MAKEINTRESOURCE (257));
+  WNDCLASS main_wc = { 0, & MainWndProc, 0, 0, hInstance, icon, NULL, NULL, NULL, usr::program_name };
   ATOM main_wc_atom = ::RegisterClass (& main_wc);
   HWND hwnd = ::CreateWindowEx (ex_style, MAKEINTATOM (main_wc_atom), usr::program_name, style,
                                 rect.left, rect.top, rect.right, rect.bottom,
@@ -132,10 +124,7 @@ LRESULT CALLBACK InitWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   if (msg == WM_NCCREATE) {
     // Set up a legacy rendering context to get the OpenGL function pointers.
-    PIXELFORMATDESCRIPTOR pfd;
-    ::ZeroMemory (& pfd, sizeof pfd);
-    pfd.nSize = sizeof pfd;
-    pfd.dwFlags = PFD_SUPPORT_OPENGL;
+    PIXELFORMATDESCRIPTOR pfd = { sizeof pfd, 1, PFD_SUPPORT_OPENGL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, };
     if (HDC hdc = ::GetDC (hwnd)) {
       int pf = ::ChoosePixelFormat (hdc, & pfd);
       ::SetPixelFormat (hdc, pf, & pfd);
@@ -307,7 +296,7 @@ extern "C"
   extern void custom_startup ()
   {
     HINSTANCE hInstance = reinterpret_cast <HINSTANCE> (& __ImageBase);
-    int status = custom_main (hInstance);
+    int status = WinMain (hInstance, NULL, NULL, 0);
     ::ExitProcess (static_cast <UINT> (status));
   }
 }
