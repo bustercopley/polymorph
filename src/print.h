@@ -5,7 +5,7 @@
 
 //#define ENABLE_PRINT
 
-#ifdef ENABLE_PRINT
+#if defined (ENABLE_PRINT) && ! defined (TINY)
 #define PRINT_ENABLED 1
 #include <cstdlib>
 #include <iostream>
