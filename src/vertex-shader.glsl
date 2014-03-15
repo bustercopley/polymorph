@@ -5,7 +5,7 @@
 in vec4 x;
 out vec3 S;
 
-void main()
+void main ()
 {
   S = x.xyz;
 }
