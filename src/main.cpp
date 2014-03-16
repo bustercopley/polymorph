@@ -161,7 +161,10 @@ LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     ::SetWindowLongPtr (hwnd, GWLP_USERDATA, reinterpret_cast <LONG_PTR> (ws));
 
     // Remember initial mouse-pointer position to detect mouse movement.
-    ::GetCursorPos (& ws->initial_cursor_position);
+    POINT cursor;
+    ::GetCursorPos (& cursor);
+    ::ScreenToClient (hwnd, & cursor);
+    ws->initial_cursor_position = cursor;
 
     // Set up OpenGL rendering context.
     HGLRC hglrc = setup_opengl_context (hwnd);
@@ -195,11 +198,10 @@ LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
   case WM_MOUSEMOVE:
     if (ws->mode == fullscreen) {
       // Compare the current mouse position with the one stored in the window struct.
-      POINT current = { GET_X_LPARAM (lParam), GET_Y_LPARAM (lParam) };
-      ::ClientToScreen (hwnd, & current);
-      SHORT dx = current.x - ws->initial_cursor_position.x;
-      SHORT dy = current.y - ws->initial_cursor_position.y;
-      close_window = dx > 10 || dy > 10 || dx * dx + dy * dy  > 100;
+      DWORD cursor = (DWORD) lParam;
+      int dx = GET_X_LPARAM (cursor) - ws->initial_cursor_position.x;
+      int dy = GET_Y_LPARAM (cursor) - ws->initial_cursor_position.y;
+      close_window = (dx < -10 || dx > 10) || (dy < -10 || dy > 10);
     }
     break;
 
