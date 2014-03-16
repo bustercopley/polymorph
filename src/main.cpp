@@ -38,7 +38,6 @@ struct window_struct_t
 
 LRESULT CALLBACK InitWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-HGLRC setup_opengl_context (HWND hwnd);
 
 int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 {
@@ -167,7 +166,41 @@ LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     ws->initial_cursor_position = cursor;
 
     // Set up OpenGL rendering context.
-    HGLRC hglrc = setup_opengl_context (hwnd);
+    const int pf_attribs [] = {
+      WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
+      WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
+      WGL_DOUBLE_BUFFER_ARB, GL_TRUE,
+      WGL_ACCELERATION_ARB, WGL_FULL_ACCELERATION_ARB,
+      WGL_SWAP_METHOD_ARB, WGL_SWAP_EXCHANGE_ARB,
+      WGL_COLOR_BITS_ARB, 32,
+      WGL_DEPTH_BITS_ARB, 4,
+      WGL_SAMPLE_BUFFERS_ARB, GL_FALSE,
+      //WGL_SAMPLES_ARB, 5,
+      0, 0,
+    };
+
+    const int context_attribs [] = {
+      WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
+      WGL_CONTEXT_MINOR_VERSION_ARB, 2,
+      WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+      0, 0,
+    };
+
+    HGLRC hglrc = NULL;
+    int pf;
+    UINT pfcount;
+    if (HDC hdc = ::GetDC (hwnd)) {
+      if (wglChoosePixelFormatARB (hdc, pf_attribs, NULL, 1, & pf, & pfcount)) {
+        if (::SetPixelFormat (hdc, pf, NULL)) {
+          hglrc = wglCreateContextAttribsARB (hdc, NULL, context_attribs);
+          if (hglrc) {
+            ::wglMakeCurrent (hdc, hglrc);
+          }
+        }
+      }
+      ::ReleaseDC (hwnd, hdc);
+    }
+
     if (hglrc) {
       ws->model.initialize (qpc (), cs->cx, cs->cy);
       ::PostMessage (hwnd, WM_APP, 0, 0);  // Start the simulation.
@@ -238,46 +271,6 @@ LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
   }
 
   return result;
-}
-
-// Set up a proper pixel format and rendering context for the main window.
-HGLRC setup_opengl_context (HWND hwnd)
-{
-  const int pf_attribs [] = {
-    WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
-    WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
-    WGL_DOUBLE_BUFFER_ARB, GL_TRUE,
-    WGL_ACCELERATION_ARB, WGL_FULL_ACCELERATION_ARB,
-    WGL_SWAP_METHOD_ARB, WGL_SWAP_EXCHANGE_ARB,
-    WGL_COLOR_BITS_ARB, 32,
-    WGL_DEPTH_BITS_ARB, 4,
-    WGL_SAMPLE_BUFFERS_ARB, GL_FALSE,
-    //WGL_SAMPLES_ARB, 5,
-    0, 0,
-  };
-
-  const int context_attribs [] = {
-    WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
-    WGL_CONTEXT_MINOR_VERSION_ARB, 2,
-    WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
-    0, 0,
-  };
-
-  HGLRC hglrc = NULL;
-  int pf;
-  UINT pfcount;
-  if (HDC hdc = ::GetDC (hwnd)) {
-    if (wglChoosePixelFormatARB (hdc, pf_attribs, NULL, 1, & pf, & pfcount)) {
-      if (::SetPixelFormat (hdc, pf, NULL)) {
-        hglrc = wglCreateContextAttribsARB (hdc, NULL, context_attribs);
-        if (hglrc) {
-          ::wglMakeCurrent (hdc, hglrc);
-        }
-      }
-    }
-    ::ReleaseDC (hwnd, hdc);
-  }
-  return hglrc;
 }
 
 #ifdef TINY
