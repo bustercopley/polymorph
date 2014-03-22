@@ -17,13 +17,6 @@ namespace usr {
   TEXT ("perfected, and harmonised in due proportion.");
 }
 
-inline std::uint64_t qpc ()
-{
-  LARGE_INTEGER t;
-  ::QueryPerformanceCounter (& t);
-  return t.QuadPart;
-}
-
 struct window_struct_t
 {
   model_t model;
@@ -197,7 +190,9 @@ LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     }
 
     if (hglrc) {
-      ws->model.initialize (qpc (), cs->cx, cs->cy);
+      LARGE_INTEGER qpc;
+      ::QueryPerformanceCounter (& qpc);
+      ws->model.initialize (qpc.QuadPart, cs->cx, cs->cy);
       ::PostMessage (hwnd, WM_APP, 0, 0);  // Start the simulation.
       result = 0;                          // Allow window creation to continue.
     }
