@@ -5,9 +5,6 @@
 #include "model.h"
 #include "cmdline.h"
 #include <windowsx.h>
-// #include "tinyscheme-config.h"
-// #include <scheme-private.h>
-// #include <scheme.h>
 #include <cstdint>
 
 namespace usr {
@@ -18,9 +15,6 @@ namespace usr {
   TEXT ("other properties, everywhere God, as far as ")
   TEXT ("necessity allowed or gave consent, has exactly ")
   TEXT ("perfected, and harmonised in due proportion.");
-  // TEXT ("\n\nThis screensaver includes TinyScheme, developed by Dimitrios ")
-  // TEXT ("Souflis and licensed under the Modified BSD License. ")
-  // TEXT ("See \"tinyscheme/COPYING.txt\" for details.");
 }
 
 inline std::uint64_t qpc ()

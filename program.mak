@@ -5,10 +5,11 @@
 DEPFLAGS=-MMD
 
 name=$($(program)_FILENAME)
+objdir=$($(program)_OBJDIR)
 source_prefix=$($(program)_SOURCE_PREFIX)
 extra_objects=$($(program)_EXTRA_OBJECTS)
-objects=$(extra_objects) $(foreach object,$($(program)_OBJECTS),.obj/$(program)-$(object))
-depends=$(foreach object,$($(program)_OBJECTS),.obj/$(program)-$(object:%.o=%.d))
+objects=$(extra_objects) $(foreach object,$($(program)_OBJECTS),$(objdir)/$(object))
+depends=$(foreach object,$($(program)_OBJECTS),$(objdir)/$(object:%.o=%.d))
 cppflags=$($(program)_CPPFLAGS) $(CPPFLAGS)
 ccflags=$(CFLAGS) $(CCFLAGS) $($(program)_CFLAGS) $($(program)_CCFLAGS)
 cxxflags=$(CFLAGS) $(CXXFLAGS) $($(program)_CFLAGS) $($(program)_CXXFLAGS)
@@ -16,10 +17,12 @@ ldflags=$($(program)_LDFLAGS) $(LDFLAGS)
 ldlibs=$($(program)_LDLIBS) $(LDLIBS)
 
 define compile
-.obj/$(program)-%.o: $(source_prefix)%.cpp | .obj
-	$(CXX) $(cppflags) $(cxxflags) $(DEPFLAGS) $$< -c -o $$@
-.obj/$(program)-%.o: $(source_prefix)%.c | .obj
-	$(CC) $(cppflags) $(ccflags) $(DEPFLAGS) $$< -c -o $$@
+$(objdir)/%.o: $(source_prefix)%.cpp | $(objdir)
+	$(CXX) $(DEPFLAGS) $(cppflags) $(cxxflags) $$< -c -o $$@
+$(objdir)/%.o: $(source_prefix)%.c | $(objdir)
+	$(CC) $(DEPFLAGS) $(cppflags) $(ccflags) $$< -c -o $$@
+$(objdir):
+	-md $(subst /,\,$(objdir))
 ifdef $(program)_FILENAME
 $(name): $(objects)
 	$(CXX) $(cflags) $(cxxflags) $(ldflags) $(objects) $(ldlibs) -o $(name)
@@ -28,13 +31,10 @@ endef
 
 $(foreach program,$(PROGRAMS),$(eval $(compile)))
 
-.obj:
-	-mkdir .obj
-
 .PHONY: clean
 clean:
-	-rmdir /s /q .obj
-	-del $(EXTRA_CLEAN) $(foreach program,$(PROGRAMS),$(name))
+	-rd /s /q .obj
+	-del $(foreach program,$(PROGRAMS),$(name)) $(subst /,\,$(EXTRA_CLEAN))
 
 .DELETE_ON_ERROR:
 

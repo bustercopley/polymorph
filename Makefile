@@ -1,54 +1,63 @@
-PROGRAMS=nodes polymorph #tinyscheme
+# Use the compilers from win-builds. The current version has a mistake in
+# C:/win-builds-64/lib64/gcc/x86_64-w64-mingw32/4.8.2/specs. To fix it,
+# add -LC:/win-builds-64/lib to the end of the *link spec string.
+
+PROGRAMS=nodes polymorph
+PLATFORM=x64
+CONFIG=tiny
+
+OLDPATH:=$(PATH)
+PATH=$(PLATFORM_PATH);$(OLDPATH)
+
 CC=gcc
 CXX=g++
 CFLAGS=-pedantic -Wall -Wextra
 CXXFLAGS=-std=c++0x
 
-nodes_FILENAME=nodes.exe
-nodes_CFLAGS=
+nodes_FILENAME=nodes-$(PLATFORM).exe
+nodes_OBJDIR=.obj/nodes/$(PLATFORM)
+nodes_CFLAGS=$(PLATFORM_CFLAGS)
 nodes_LDFLAGS=
 nodes_SOURCE_PREFIX=src/nodes/
 nodes_OBJECTS=main.o show_system.o snub_variance.o triangle.o rotor.o
 
-polymorph_FILENAME=polymorph.scr
+polymorph_FILENAME=polymorph-$(PLATFORM)-$(CONFIG).scr
+polymorph_OBJDIR=.obj/polymorph/$(PLATFORM)/$(CONFIG)
 polymorph_CPPFLAGS=$(CONFIG_CPPFLAGS)
-polymorph_CFLAGS=$(CONFIG_CFLAGS) -Os
+polymorph_CFLAGS=$(PLATFORM_CFLAGS) $(CONFIG_CFLAGS) -Os
 polymorph_CXXFLAGS=$(CONFIG_CXXFLAGS)
 polymorph_LDFLAGS=$(CONFIG_LDFLAGS) -s
 polymorph_LDLIBS=$(CONFIG_LDLIBS)
-polymorph_EXTRA_OBJECTS=.obj/resources-res.o #.obj/tinyscheme-scheme.o
+polymorph_EXTRA_OBJECTS=.obj/polymorph/$(PLATFORM)/resources-res.o
 polymorph_SOURCE_PREFIX=src/
 polymorph_OBJECTS=\
 bump.o cmdline.o glinit.o graphics.o kdtree.o main.o markov.o \
 memory.o model.o partition.o random.o rodrigues.o systems.o
-# tinyscheme_SOURCE_PREFIX=tinyscheme/
-# tinyscheme_CPPFLAGS=-include src/tinyscheme-config.h
-# tinyscheme_CFLAGS=-Ofast -Wall -Wextra -Wno-switch -Wno-unused-parameter
-# tinyscheme_OBJECTS=scheme.o
 
-# Platform-specific variables. Platform prefix is x86_ or x64_ (autodetected).
-PLATFORM=$(if $(findstring x86_64,$(shell gcc -dumpmachine)),x64,x86)
-PLATFORM_CFLAGS=$($(PLATFORM)_CFLAGS)
-PLATFORM_ENTRY_POINT=$($(PLATFORM)_ENTRY_POINT)
+x86_PATH=c:\win-builds-32\bin
+x64_PATH=c:\win-builds-64\bin
 
+# The underscore indicates the _cdecl calling convention.
+x86_ENTRY_POINT=_custom_startup
 x64_ENTRY_POINT=custom_startup
 
-# The leading underscore indicates the _cdecl calling convention.
-x86_ENTRY_POINT=_custom_startup
-# Don't assume 16-byte stack alignment (bug 40838).
+# Don't assume 16-byte stack alignment on 32-bit Windows (GCC bug 40838).
 x86_CFLAGS=-mpreferred-stack-boundary=2
 
-CONFIG=tiny
+PLATFORM_CFLAGS=$($(PLATFORM)_CFLAGS)
+PLATFORM_ENTRY_POINT=$($(PLATFORM)_ENTRY_POINT)
+PLATFORM_PATH=$($(PLATFORM)_PATH)
+
 CONFIG_CPPFLAGS=$($(CONFIG)_CPPFLAGS)
 CONFIG_CFLAGS=$($(CONFIG)_CFLAGS)
 CONFIG_CXXFLAGS=$($(CONFIG)_CXXFLAGS)
 CONFIG_LDFLAGS=$($(CONFIG)_LDFLAGS)
 CONFIG_LDLIBS=$($(CONFIG)_LDLIBS)
 
-base_CPPFLAGS=-DUNICODE #-Itinyscheme
-base_CFLAGS=$(PLATFORM_CFLAGS) -msse3 -mfpmath=sse -fno-ident -flto -fno-fat-lto-objects
-base_CXXFLAGS=-fno-exceptions -fno-rtti
-base_LDFLAGS=-mwindows
+base_CPPFLAGS=-DUNICODE
+base_CFLAGS=-msse3 -mfpmath=sse -fno-ident -flto -fno-fat-lto-objects
+base_CXXFLAGS=-fno-rtti -fno-exceptions
+base_LDFLAGS=-mwindows -fwhole-program
 base_LDLIBS=-lopengl32
 
 tiny_CPPFLAGS=$(base_CPPFLAGS) -DTINY
@@ -70,21 +79,27 @@ debug: all
 	gdb --quiet --batch -ex run -ex bt full -ex quit --args $(polymorph_FILENAME) -x
 
 SHADER_RESOURCES=\
-.obj/vertex-shader.glsl.mini \
-.obj/shared-geometry-shader.glsl.mini \
-.obj/geometry-shader.glsl.mini \
-.obj/snub-geometry-shader.glsl.mini \
-.obj/fragment-shader.glsl.mini
+.obj/polymorph/vertex-shader.glsl.mini \
+.obj/polymorph/shared-geometry-shader.glsl.mini \
+.obj/polymorph/geometry-shader.glsl.mini \
+.obj/polymorph/snub-geometry-shader.glsl.mini \
+.obj/polymorph/fragment-shader.glsl.mini
 
-$(SHADER_RESOURCES): | .obj
+RESOURCES=$(SHADER_RESOURCES) polymorph.scr.manifest .obj/polymorph/$(PLATFORM)/data
 
-.obj/%.glsl.mini: src/%.glsl minify.pl
+.obj/polymorph:
+	-md .obj\\polymorph
+
+.obj/polymorph/$(PLATFORM):
+	-md .obj\\polymorph\\$(PLATFORM)
+
+.obj/polymorph/%.glsl.mini: src/%.glsl minify.pl | .obj/polymorph
 	c:\\strawberry\\perl\\bin\\perl minify.pl $< $@
 
-.obj/resources-res.o: .obj/data $(SHADER_RESOURCES) polymorph.scr.manifest src/resources.rc
-	windres -I.obj src/resources.rc .obj/resources-res.o
+.obj/polymorph/$(PLATFORM)/data: $(nodes_FILENAME) | .obj/polymorph/$(PLATFORM)
+	.\\$(nodes_FILENAME) .obj\\polymorph\\$(PLATFORM)\\data>NUL
 
-.obj/data: $(nodes_FILENAME) | .obj
-	.\\$(nodes_FILENAME) .obj\\data>NUL
+.obj/polymorph/$(PLATFORM)/resources-res.o: $(RESOURCES) src/resources.rc | .obj/polymorph/$(PLATFORM)
+	windres -I.obj/polymorph -I.obj/polymorph/$(PLATFORM) src/resources.rc .obj/polymorph/$(PLATFORM)/resources-res.o
 
 include program.mak
