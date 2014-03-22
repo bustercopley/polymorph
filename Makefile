@@ -12,9 +12,9 @@ nodes_OBJECTS=main.o show_system.o snub_variance.o triangle.o rotor.o
 
 polymorph_FILENAME=polymorph.scr
 polymorph_CPPFLAGS=$(CONFIG_CPPFLAGS)
-polymorph_CFLAGS=$(CONFIG_CFLAGS)
+polymorph_CFLAGS=$(CONFIG_CFLAGS) -Os
 polymorph_CXXFLAGS=$(CONFIG_CXXFLAGS)
-polymorph_LDFLAGS=$(CONFIG_LDFLAGS)
+polymorph_LDFLAGS=$(CONFIG_LDFLAGS) -s
 polymorph_LDLIBS=$(CONFIG_LDLIBS)
 polymorph_EXTRA_OBJECTS=.obj/resources-res.o #.obj/tinyscheme-scheme.o
 polymorph_SOURCE_PREFIX=src/
@@ -38,28 +38,28 @@ x86_ENTRY_POINT=_custom_startup
 # Don't assume 16-byte stack alignment (bug 40838).
 x86_CFLAGS=-mpreferred-stack-boundary=2
 
-CONFIG=TINY
+CONFIG=tiny
 CONFIG_CPPFLAGS=$($(CONFIG)_CPPFLAGS)
 CONFIG_CFLAGS=$($(CONFIG)_CFLAGS)
 CONFIG_CXXFLAGS=$($(CONFIG)_CXXFLAGS)
 CONFIG_LDFLAGS=$($(CONFIG)_LDFLAGS)
 CONFIG_LDLIBS=$($(CONFIG)_LDLIBS)
 
-BASE_CPPFLAGS=-DUNICODE #-Itinyscheme
-BASE_CFLAGS=$(PLATFORM_CFLAGS) -msse3 -mfpmath=sse -fno-ident -flto -Os
-BASE_CXXFLAGS=-fno-exceptions -fno-rtti
-BASE_LDFLAGS=-mwindows -s
-BASE_LDLIBS=-lopengl32
+base_CPPFLAGS=-DUNICODE #-Itinyscheme
+base_CFLAGS=$(PLATFORM_CFLAGS) -msse3 -mfpmath=sse -fno-ident -flto -fno-fat-lto-objects
+base_CXXFLAGS=-fno-exceptions -fno-rtti
+base_LDFLAGS=-mwindows
+base_LDLIBS=-lopengl32
 
-TINY_CPPFLAGS=$(BASE_CPPFLAGS) -DTINY
-TINY_CFLAGS=$(BASE_CFLAGS)
-TINY_CXXFLAGS=$(BASE_CXXFLAGS)
-TINY_LDFLAGS=$(BASE_LDFLAGS) -nodefaultlibs -nostartfiles -Xlinker --entry=$(PLATFORM_ENTRY_POINT) -Xlinker --disable-runtime-pseudo-reloc
-TINY_LDLIBS=$(BASE_LDLIBS) -lgdi32 -luser32 -lkernel32
+tiny_CPPFLAGS=$(base_CPPFLAGS) -DTINY
+tiny_CFLAGS=$(base_CFLAGS) -fno-asynchronous-unwind-tables
+tiny_CXXFLAGS=$(base_CXXFLAGS)
+tiny_LDFLAGS=-nostdlib --entry=$(PLATFORM_ENTRY_POINT) -Wl,--subsystem=windows,--disable-runtime-pseudo-reloc
+tiny_LDLIBS=$(base_LDLIBS) -lgdi32 -luser32 -lkernel32
 
 EXTRA_CLEAN=data
 
-.PHONY: all test
+.PHONY: all test debug
 
 all: $(polymorph_FILENAME)
 
