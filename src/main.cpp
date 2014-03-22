@@ -1,5 +1,6 @@
 #include "compiler.h"
 #include "mswin.h"
+#include "resources.h"
 #include "glinit.h"
 #include "model.h"
 #include "cmdline.h"
@@ -97,7 +98,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE, LPSTR, int)
   if (! wglChoosePixelFormatARB) return -1;
 
   // Create the main window. See MainWndProc.
-  HICON icon = ::LoadIcon (hInstance, MAKEINTRESOURCE (257));
+  HICON icon = ::LoadIcon (hInstance, MAKEINTRESOURCE (ID_ICON));
   WNDCLASS main_wc = { 0, & MainWndProc, 0, 0, hInstance, icon, NULL, NULL, NULL, usr::program_name };
   ATOM main_wc_atom = ::RegisterClass (& main_wc);
   HWND hwnd = ::CreateWindowEx (ex_style, MAKEINTATOM (main_wc_atom), usr::program_name, style,

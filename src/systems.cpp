@@ -1,6 +1,7 @@
 #include "systems.h"
 #include "compiler.h"
 #include "mswin.h"
+#include "resources.h"
 #include "vector.h"
 #include "nodes/system.h"
 #include "cramer.h"
@@ -58,7 +59,9 @@ void initialize_systems (float (& abc) [system_count] [8] [4],
                          unsigned (& primitive_count) [system_count],
                          unsigned (& vao_ids) [system_count])
 {
-  const void * data = get_resource_data (256, nullptr);
+  const char * data;
+  std::size_t size;
+  get_resource_data (ID_DATA, data, size);
   system_t <3, 3> const & t (* reinterpret_cast <system_t <3, 3> const *> (data));
   system_t <4, 3> const & o (* reinterpret_cast <system_t <4, 3> const *> (& t + 1));
   system_t <5, 3> const & i (* reinterpret_cast <system_t <5, 3> const *> (& o + 1));

@@ -81,8 +81,8 @@ $(SHADER_RESOURCES): | .obj
 .obj/%.glsl.mini: src/%.glsl minify.pl
 	c:\\strawberry\\perl\\bin\\perl minify.pl $< $@
 
-.obj/resources-res.o: .obj/data $(SHADER_RESOURCES) polymorph.scr.manifest resources.rc
-	windres resources.rc .obj/resources-res.o
+.obj/resources-res.o: .obj/data $(SHADER_RESOURCES) polymorph.scr.manifest src/resources.rc
+	windres -I.obj src/resources.rc .obj/resources-res.o
 
 .obj/data: $(nodes_FILENAME) | .obj
 	.\\$(nodes_FILENAME) .obj\\data>NUL

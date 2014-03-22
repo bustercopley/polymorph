@@ -1,4 +1,4 @@
-#include <windows.h>
+#include "resources.h"
 
 STRINGTABLE
     LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
@@ -35,12 +35,12 @@ BEGIN
     END
 END
 
-256 256  ".obj/data"
-257 ICON "icosahedron.ico"
-258 258  ".obj/vertex-shader.glsl.mini"
-259 259  ".obj/shared-geometry-shader.glsl.mini"
-260 260  ".obj/geometry-shader.glsl.mini"
-261 261  ".obj/snub-geometry-shader.glsl.mini"
-262 262  ".obj/fragment-shader.glsl.mini"
+ID_ICON ICON "icosahedron.ico"
+ID_DATA RCDATA "data"
+ID_VERTEX_SHADER RCDATA "vertex-shader.glsl.mini"
+ID_SHARED_GEOMETRY_SHADER RCDATA "shared-geometry-shader.glsl.mini"
+ID_GEOMETRY_SHADER RCDATA "geometry-shader.glsl.mini"
+ID_SNUB_GEOMETRY_SHADER RCDATA "snub-geometry-shader.glsl.mini"
+ID_FRAGMENT_SHADER RCDATA "fragment-shader.glsl.mini"
 
 CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "polymorph.scr.manifest"
