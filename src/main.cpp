@@ -205,6 +205,10 @@ LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     break;
   }
 
+  case WM_ERASEBKGND:
+    result = TRUE;
+    break;
+
   case WM_PAINT: {
     PAINTSTRUCT ps;
     ::BeginPaint (hwnd, & ps);
