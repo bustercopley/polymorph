@@ -34,26 +34,6 @@ polymorph_OBJECTS=\
 bump.o cmdline.o glinit.o graphics.o kdtree.o main.o markov.o \
 memory.o model.o partition.o random.o rodrigues.o systems.o
 
-x86_PATH=c:\win-builds-32\bin
-x64_PATH=c:\win-builds-64\bin
-
-# The underscore indicates the _cdecl calling convention.
-x86_ENTRY_POINT=_custom_startup
-x64_ENTRY_POINT=custom_startup
-
-# Don't assume 16-byte stack alignment on 32-bit Windows (GCC bug 40838).
-x86_CFLAGS=-mpreferred-stack-boundary=2
-
-PLATFORM_CFLAGS=$($(PLATFORM)_CFLAGS)
-PLATFORM_ENTRY_POINT=$($(PLATFORM)_ENTRY_POINT)
-PLATFORM_PATH=$($(PLATFORM)_PATH)
-
-CONFIG_CPPFLAGS=$($(CONFIG)_CPPFLAGS)
-CONFIG_CFLAGS=$($(CONFIG)_CFLAGS)
-CONFIG_CXXFLAGS=$($(CONFIG)_CXXFLAGS)
-CONFIG_LDFLAGS=$($(CONFIG)_LDFLAGS)
-CONFIG_LDLIBS=$($(CONFIG)_LDLIBS)
-
 base_CPPFLAGS=-DUNICODE
 base_CFLAGS=-msse3 -mfpmath=sse -fno-ident -flto -fno-fat-lto-objects
 base_CXXFLAGS=-fno-rtti -fno-exceptions
@@ -65,6 +45,23 @@ tiny_CFLAGS=$(base_CFLAGS) -fno-asynchronous-unwind-tables
 tiny_CXXFLAGS=$(base_CXXFLAGS)
 tiny_LDFLAGS=-nostdlib --entry=$(PLATFORM_ENTRY_POINT) -Wl,--subsystem=windows,--disable-runtime-pseudo-reloc
 tiny_LDLIBS=$(base_LDLIBS) -lgdi32 -luser32 -lkernel32
+
+x86_PATH=c:\win-builds-32\bin
+x86_ENTRY_POINT=_custom_startup
+x86_CFLAGS=-mpreferred-stack-boundary=2
+
+x64_PATH=c:\win-builds-64\bin
+x64_ENTRY_POINT=custom_startup
+
+PLATFORM_CFLAGS=$($(PLATFORM)_CFLAGS)
+PLATFORM_ENTRY_POINT=$($(PLATFORM)_ENTRY_POINT)
+PLATFORM_PATH=$($(PLATFORM)_PATH)
+
+CONFIG_CPPFLAGS=$($(CONFIG)_CPPFLAGS)
+CONFIG_CFLAGS=$($(CONFIG)_CFLAGS)
+CONFIG_CXXFLAGS=$($(CONFIG)_CXXFLAGS)
+CONFIG_LDFLAGS=$($(CONFIG)_LDFLAGS)
+CONFIG_LDLIBS=$($(CONFIG)_LDLIBS)
 
 EXTRA_CLEAN=data
 

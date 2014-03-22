@@ -5,9 +5,9 @@
 DEPFLAGS=-MMD
 
 name=$($(program)_FILENAME)
-objdir=$($(program)_OBJDIR)
 source_prefix=$($(program)_SOURCE_PREFIX)
 extra_objects=$($(program)_EXTRA_OBJECTS)
+objdir=$($(program)_OBJDIR)
 objects=$(extra_objects) $(foreach object,$($(program)_OBJECTS),$(objdir)/$(object))
 depends=$(foreach object,$($(program)_OBJECTS),$(objdir)/$(object:%.o=%.d))
 cppflags=$($(program)_CPPFLAGS) $(CPPFLAGS)
