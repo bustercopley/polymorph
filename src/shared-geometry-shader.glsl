@@ -25,7 +25,7 @@ void color (vec3 x)
   vec3 n = (m * vec4 (x, 0)).xyz;
   vec3 p = (m * vec4 (r * x, 1)).xyz;
   vec3 a = normalize (p - l);
-  N = (d.xyz * max (0, -dot (a, n)) + 0.3 * pow (max (0, -dot (normalize (p), reflect (a, n))), 10)) * f [1] * (p [2] - f [0]);                                                                                                             ;
+  N = (d.xyz * max (0, -dot (a, n)) + 0.3 * pow (max (0, -dot (normalize (p), reflect (a, n))), 10)) * f [1] * (p [2] - f [0]);
 }
 
 void vertex (vec4 X, vec3 e)
