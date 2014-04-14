@@ -41,9 +41,9 @@ base_LDFLAGS=-mwindows -fwhole-program
 base_LDLIBS=-lopengl32
 
 tiny_CPPFLAGS=$(base_CPPFLAGS) -DTINY
-tiny_CFLAGS=$(base_CFLAGS) -fno-asynchronous-unwind-tables
+tiny_CFLAGS=$(base_CFLAGS)
 tiny_CXXFLAGS=$(base_CXXFLAGS)
-tiny_LDFLAGS=-nostdlib --entry=$(PLATFORM_ENTRY_POINT) -Wl,--subsystem=windows,--disable-runtime-pseudo-reloc
+tiny_LDFLAGS=-nostdlib --entry=$(PLATFORM_ENTRY_POINT) -Wl,--subsystem=windows,--disable-runtime-pseudo-reloc -fno-asynchronous-unwind-tables
 tiny_LDLIBS=$(base_LDLIBS) -lgdi32 -luser32 -lkernel32
 
 x86_PATH=c:\win-builds-32\bin
