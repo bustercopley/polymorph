@@ -1,5 +1,5 @@
 #!c:\strawberry\perl\bin\perl.exe
-# Minifies polymorph's glsl shader sources.
+# Minifies Polymorph's GLSL shader sources.
 # Not meant for general use.
 # Doesn't handle multiline statements.
 # Identifiers aren't safe from collisions.
@@ -11,6 +11,8 @@ my ($infile, $outfile) = @ARGV;
 open my $in, "<", $infile or die "Can't open input file \"$infile\": $!";
 open my $out, ">", $outfile or die "Can't open output file \"$outfile\": $!";
 
+binmode $out;
+
 my $buffer = "";
 my $oldtype;
 my $oldvars;
@@ -18,11 +20,10 @@ my $bol = 1;
 
 # Shorten certain identifiers.
 my %abbrevs = (
-  "segment" => "I",  # 5 or 6 arguments
+  "segment" => "I",  # 4 or 6 arguments
   "amplify" => "I",  # 1 argument
-  "aspect" => "I",   # 6 arguments
+  "aspect" => "I",   # 5 arguments
   "vertex" => "I",   # 2 arguments
-  "color" => "J",    # 1 argument
 );
 
 %abbrevs = map { qr/\b$_\b/ => $abbrevs {$_} } keys %abbrevs;
@@ -61,7 +62,7 @@ while (defined (my $line = <$in>))
     $buffer =~ s{\B }{}g; # strip space not after a word
     $buffer =~ s{ \B}{}g; # strip space not before a word
 
-    my $v = qr/\w+(?:=[^;]+)?/;
+    my $v = qr/\w+(?:\[\w+\])?(?:=[^;]+)?/;
     while ($buffer =~ m/\G((?:\w+ )+)($v(?:,$v)*);/g)
     {
       my $type = $1;
