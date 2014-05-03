@@ -1,4 +1,5 @@
 // -*- C++ -*-
+
 #ifndef resource_h
 #define resource_h
 

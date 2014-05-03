@@ -3,6 +3,7 @@
 #ifndef graphics_h
 #define graphics_h
 
+#include <cstddef>
 #include <cstdint>
 
 void clear ();

@@ -3,6 +3,7 @@
 #ifndef kdtree_h
 #define kdtree_h
 
+#include <cstddef>
 #include <cstdint>
 
 struct object_t;

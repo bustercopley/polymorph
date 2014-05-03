@@ -6,8 +6,6 @@
 #include "vector.h"
 #include "glinit.h"
 #include "model.h"
-#include <cstdint>
-
 #include "print.h"
 
 namespace

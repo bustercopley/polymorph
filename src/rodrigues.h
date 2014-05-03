@@ -4,6 +4,7 @@
 #define rodrigues_h
 
 #include "vector.h"
+#include <cstddef>
 #include <cstdint>
 
 // State: three-dimensional vectors x, u, v, w.
