@@ -119,16 +119,16 @@ bool initialize_programs (program_t (& programs) [2], const float (& view) [4])
   glBlendEquation (GL_FUNC_ADD);
   glBlendFunc (GL_DST_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   return
-    programs [0].initialize (view, ID_GEOMETRY_SHADER) &&
-    programs [1].initialize (view, ID_SNUB_GEOMETRY_SHADER);
+    programs [0].initialize (view, IDR_GEOMETRY_SHADER) &&
+    programs [1].initialize (view, IDR_SNUB_GEOMETRY_SHADER);
 }
 
 bool program_t::initialize (const float (& view) [4], unsigned gshader2)
 {
   id = glCreateProgram ();
-  GLuint vshader_id = make_shader (GL_VERTEX_SHADER, ID_VERTEX_SHADER, 0);
-  GLuint gshader_id = make_shader (GL_GEOMETRY_SHADER, ID_SHARED_GEOMETRY_SHADER, gshader2);
-  GLuint fshader_id = make_shader (GL_FRAGMENT_SHADER, ID_FRAGMENT_SHADER, 0);
+  GLuint vshader_id = make_shader (GL_VERTEX_SHADER, IDR_VERTEX_SHADER, 0);
+  GLuint gshader_id = make_shader (GL_GEOMETRY_SHADER, IDR_SHARED_GEOMETRY_SHADER, gshader2);
+  GLuint fshader_id = make_shader (GL_FRAGMENT_SHADER, IDR_FRAGMENT_SHADER, 0);
   if (vshader_id == 0 || gshader_id == 0 || fshader_id == 0) {
     return false;
   }

@@ -85,7 +85,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE, LPSTR, int)
   if (! wglChoosePixelFormatARB) return -1;
 
   // Create the main window. See MainWndProc.
-  HICON icon = ::LoadIcon (hInstance, MAKEINTRESOURCE (ID_ICON));
+  HICON icon = ::LoadIcon (hInstance, MAKEINTRESOURCE (IDI_APPICON));
   WNDCLASS main_wc = { 0, & MainWndProc, 0, 0, hInstance, icon, NULL, NULL, NULL, usr::program_name };
   ATOM main_wc_atom = ::RegisterClass (& main_wc);
   HWND hwnd = ::CreateWindowEx (ex_style, MAKEINTATOM (main_wc_atom), usr::program_name, style,

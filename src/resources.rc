@@ -35,12 +35,13 @@ BEGIN
     END
 END
 
-ID_ICON ICON "icosahedron.ico"
-ID_DATA RCDATA "data"
-ID_VERTEX_SHADER RCDATA "vertex-shader.glsl.mini"
-ID_SHARED_GEOMETRY_SHADER RCDATA "shared-geometry-shader.glsl.mini"
-ID_GEOMETRY_SHADER RCDATA "geometry-shader.glsl.mini"
-ID_SNUB_GEOMETRY_SHADER RCDATA "snub-geometry-shader.glsl.mini"
-ID_FRAGMENT_SHADER RCDATA "fragment-shader.glsl.mini"
+IDI_APPICON ICON "icosahedron.ico"
+
+IDR_DATA RCDATA "data"
+IDR_VERTEX_SHADER RCDATA "vertex-shader.glsl.mini"
+IDR_SHARED_GEOMETRY_SHADER RCDATA "shared-geometry-shader.glsl.mini"
+IDR_GEOMETRY_SHADER RCDATA "geometry-shader.glsl.mini"
+IDR_SNUB_GEOMETRY_SHADER RCDATA "snub-geometry-shader.glsl.mini"
+IDR_FRAGMENT_SHADER RCDATA "fragment-shader.glsl.mini"
 
 CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "polymorph.scr.manifest"
