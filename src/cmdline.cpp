@@ -6,7 +6,6 @@ namespace
   std::uintptr_t from_string (const TCHAR * s)
   {
     std::uintptr_t result = 0;
-    while (* s == TEXT (' ') || * s == TEXT (':')) ++ s;
     while (TEXT ('0') <= * s && * s <= TEXT ('9')) {
       result = 10 * result + (* s - TEXT ('0'));
       ++ s;
@@ -15,9 +14,8 @@ namespace
   }
 }
 
-run_mode_t parse_command_line (const TCHAR * s, HWND * parent_buf)
+void parse_command_line (const TCHAR * s, run_mode_t & mode, bool & configure, HWND & parent)
 {
-  run_mode_t mode = configure;
   // Skip the image path, which might be quoted.
   if (* s == TEXT ('"')) {
     ++ s;
@@ -27,15 +25,21 @@ run_mode_t parse_command_line (const TCHAR * s, HWND * parent_buf)
   else {
     while (* s && * s != TEXT (' ')) ++ s;
   }
+
+  mode = fullscreen;
+  configure = true;
+  parent = NULL;
+
  repeat:
   if (TCHAR c = * s) {
     ++ s;
     c = c & TEXT ('_'); // Convert to upper case.
-    if (c == TEXT ('S')) mode = fullscreen;
+    if (c == TEXT ('S'));
     else if (c == TEXT ('X')) mode = special;
     else if (c == TEXT ('P') || c == TEXT ('L')) mode = embedded;
     else goto repeat;
-    * parent_buf = reinterpret_cast <HWND> (from_string (s));
+    while (* s == TEXT (' ') || * s == TEXT (':')) ++ s;
+    parent = reinterpret_cast <HWND> (from_string (s));
+    configure = false;
   }
-  return mode;
 }

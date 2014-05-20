@@ -30,21 +30,20 @@ LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 {
   // Read command line arguments.
+  run_mode_t mode;
+  bool configure;
+  HWND parent;
+  parse_command_line (::GetCommandLine (), mode, configure, parent);
 
-  HWND parent = NULL;
-  run_mode_t mode = parse_command_line (::GetCommandLine (), & parent);
-
-  if (mode == configure) {
+  if (configure) {
     ::MessageBox (NULL, usr::message, usr::program_name, MB_OK | MB_ICONASTERISK);
     return 0;
   }
 
   // Placement and window style of the main window.
-
   RECT rect;
   DWORD style;
   DWORD ex_style  = 0;
-
   if (mode == embedded) {
     style = WS_CHILD | WS_VISIBLE;
     ::GetClientRect (parent, & rect); // 0, 0, width, height
