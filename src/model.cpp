@@ -27,7 +27,7 @@ namespace usr {
   static const float tank_depth = 22.0f;      // Tank depth in simulation units.
   static const float tank_height = 22.0f;     // Height of screen / tank front.
 
-  // Parameters for lighting and animation timings.
+  // Parameters for material-colour animation timings.
 
   //  r ^                        r = bump (t)
   //    |
@@ -43,6 +43,7 @@ namespace usr {
   static const bump_specifier_t hsv_s_bump = { 0.00f, 0.25f, 1.50f, 1.75f, 3.75f, 4.25f, };
   static const bump_specifier_t hsv_v_bump = { 0.25f, 1.00f, 1.50f, 1.75f, 3.75f, 4.25f, };
 
+  // Parameters for morph animation timings.
   static const float morph_start = 1.75f;
   static const float morph_finish = 3.50f;
   static const float cycle_duration = 4.25f;
