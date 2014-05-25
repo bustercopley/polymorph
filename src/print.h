@@ -11,6 +11,7 @@
 #include <iostream>
 #include <iomanip>
 #include <immintrin.h>
+#include "compiler.h"
 
 template <typename T, unsigned N>
 inline void print (const char * name, T (& value) [N])
