@@ -3,6 +3,6 @@
 #ifndef partition_h
 #define partition_h
 
-void partition (unsigned * index, const float (* x) [4], unsigned begin, unsigned middle, unsigned end, unsigned dim);
+void partition (unsigned * index, const float (* x) [4], unsigned dim, unsigned begin, unsigned middle, unsigned end);
 
 #endif

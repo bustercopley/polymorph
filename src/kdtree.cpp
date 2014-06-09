@@ -171,9 +171,9 @@ bool kdtree_t::compute (unsigned * RESTRICT new_index, const float (* RESTRICT n
     unsigned begin = node_begin [i];
     unsigned end = node_end [i];
     if (end - begin > 2) {
-      unsigned middle = (begin + end) / 2;
       unsigned dim = node_dimension (i);
-      partition (index, x, begin, middle, end, dim);
+      unsigned middle = begin + (end - begin) / 2;
+      partition (index, x, dim, begin, middle, end);
       v4f lo = load4f (node_lohi [i] [0]);
       v4f hi = load4f (node_lohi [i] [1]);
       v4f mid = load4f (x [index [middle]]);
