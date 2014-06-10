@@ -278,10 +278,10 @@ LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 extern "C"
 {
-  // This symbol is provided by the linker.
-  IMAGE_DOS_HEADER __ImageBase;
+  // This symbol is defined by the linker.
+  extern IMAGE_DOS_HEADER __ImageBase;
 
-  // This entry point must be specified in the linker command line.
+  // In the linker command line, specify this function as the entry point.
   void custom_startup ()
   {
     HINSTANCE hInstance = reinterpret_cast <HINSTANCE> (& __ImageBase);
