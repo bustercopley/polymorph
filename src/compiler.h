@@ -7,6 +7,7 @@
 #define NOINLINE __attribute__ ((noinline))
 #define ALWAYS_INLINE __attribute__ ((always_inline))
 #define ALIGNED16 __attribute__ ((aligned(16)))
+#define VISIBLE __attribute__ ((externally_visible))
 #define RESTRICT __restrict__
 #else
 #define NOINLINE

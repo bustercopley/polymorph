@@ -282,6 +282,7 @@ extern "C"
   extern IMAGE_DOS_HEADER __ImageBase;
 
   // In the linker command line, specify this function as the entry point.
+  void custom_startup () VISIBLE;
   void custom_startup ()
   {
     HINSTANCE hInstance = reinterpret_cast <HINSTANCE> (& __ImageBase);

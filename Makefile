@@ -1,7 +1,3 @@
-# Use the compilers from win-builds. The current version has a mistake in
-# C:/win-builds-64/lib64/gcc/x86_64-w64-mingw32/4.8.2/specs. To fix it,
-# add -LC:/win-builds-64/lib to the end of the *link spec string.
-
 PROGRAMS=nodes polymorph
 PLATFORM=x64
 CONFIG=tiny
@@ -34,23 +30,23 @@ polymorph_OBJECTS=\
 bump.o cmdline.o glinit.o graphics.o kdtree.o main.o markov.o \
 memory.o model.o partition.o random.o rodrigues.o systems.o
 
-base_CPPFLAGS=-DUNICODE
-base_CFLAGS=-msse3 -mfpmath=sse -fno-ident -flto -fno-fat-lto-objects
+base_CPPFLAGS=
+base_CFLAGS=-municode -msse3 -mfpmath=sse -flto -fno-fat-lto-objects
 base_CXXFLAGS=-fno-rtti -fno-exceptions
 base_LDFLAGS=-mwindows -fwhole-program
 base_LDLIBS=-lopengl32
 
 tiny_CPPFLAGS=$(base_CPPFLAGS) -DTINY
-tiny_CFLAGS=$(base_CFLAGS)
+tiny_CFLAGS=$(base_CFLAGS) -fno-ident -fno-asynchronous-unwind-tables
 tiny_CXXFLAGS=$(base_CXXFLAGS)
-tiny_LDFLAGS=-nostdlib --entry=$(PLATFORM_ENTRY_POINT) -Wl,--subsystem=windows,--disable-runtime-pseudo-reloc -fno-asynchronous-unwind-tables
+tiny_LDFLAGS=$(base_LDFLAGS) -nostdlib --entry=$(PLATFORM_ENTRY_POINT) -Wl,--disable-runtime-pseudo-reloc
 tiny_LDLIBS=$(base_LDLIBS) -lgdi32 -luser32 -lkernel32
 
-x86_PATH=c:\win-builds-32\bin
+x86_PATH=C:\mingw32\bin
 x86_ENTRY_POINT=_custom_startup
 x86_CFLAGS=-mpreferred-stack-boundary=2
 
-x64_PATH=c:\win-builds-64\bin
+x64_PATH=C:\mingw64\bin
 x64_ENTRY_POINT=custom_startup
 
 PLATFORM_CFLAGS=$($(PLATFORM)_CFLAGS)
@@ -85,16 +81,16 @@ SHADER_RESOURCES=\
 RESOURCES=$(SHADER_RESOURCES) polymorph.scr.manifest .obj/polymorph/$(PLATFORM)/data
 
 .obj/polymorph:
-	-md .obj\\polymorph
+	-md .obj\polymorph
 
 .obj/polymorph/$(PLATFORM):
-	-md .obj\\polymorph\\$(PLATFORM)
+	-md .obj\polymorph\$(PLATFORM)
 
 .obj/polymorph/%.glsl.mini: src/%.glsl minify.pl | .obj/polymorph
-	c:\\strawberry\\perl\\bin\\perl minify.pl $< $@
+	c:\strawberry\perl\bin\perl minify.pl $< $@
 
 .obj/polymorph/$(PLATFORM)/data: $(nodes_FILENAME) | .obj/polymorph/$(PLATFORM)
-	.\\$(nodes_FILENAME) .obj\\polymorph\\$(PLATFORM)\\data>NUL
+	.\$(nodes_FILENAME) .obj\polymorph\$(PLATFORM)\data>NUL
 
 .obj/polymorph/$(PLATFORM)/resources-res.o: $(RESOURCES) src/resources.rc | .obj/polymorph/$(PLATFORM)
 	windres -I.obj/polymorph -I.obj/polymorph/$(PLATFORM) src/resources.rc .obj/polymorph/$(PLATFORM)/resources-res.o
