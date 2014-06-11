@@ -3,6 +3,8 @@
 #ifndef aligned_arrays_h
 #define aligned_arrays_h
 
+#include <cstddef>
+
 // Interface.
 
 // p is a list of N addresses of pointers-to-elements.
