@@ -8,7 +8,7 @@ PATH=$(PLATFORM_PATH);$(OLDPATH)
 CC=gcc
 CXX=g++
 CFLAGS=-pedantic -Wall -Wextra
-CXXFLAGS=-std=c++0x
+CXXFLAGS=-std=c++1y
 
 nodes_FILENAME=nodes-$(PLATFORM).exe
 nodes_OBJDIR=.obj/nodes/$(PLATFORM)
@@ -30,10 +30,10 @@ polymorph_OBJECTS=\
 bump.o cmdline.o glinit.o graphics.o kdtree.o main.o markov.o \
 memory.o model.o partition.o random.o rodrigues.o systems.o
 
-base_CPPFLAGS=
-base_CFLAGS=-municode -msse3 -mfpmath=sse -flto -fno-fat-lto-objects
-base_CXXFLAGS=-fno-rtti -fno-exceptions
-base_LDFLAGS=-mwindows -fwhole-program
+base_CPPFLAGS=-DUNICODE -D_UNICODE
+base_CFLAGS=-msse3 -mfpmath=sse -flto -fno-fat-lto-objects
+base_CXXFLAGS=-fno-rtti -fno-exceptions -ffast-math
+base_LDFLAGS=-mwindows -municode -fwhole-program
 base_LDLIBS=-lopengl32
 
 tiny_CPPFLAGS=$(base_CPPFLAGS) -DTINY

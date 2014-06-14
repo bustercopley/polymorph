@@ -5,8 +5,8 @@
 
 #include "mswin.h"
 #include <GL/gl.h>
-#include "glext.h"
-#include "wglext.h"
+#include <GL/glext.h>
+#include <GL/wglext.h>
 
 bool get_glprocs ();
 

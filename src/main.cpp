@@ -4,6 +4,7 @@
 #include "glinit.h"
 #include "model.h"
 #include "cmdline.h"
+#include <tchar.h>
 #include <windowsx.h>
 #include <cstdint>
 
@@ -27,7 +28,7 @@ struct window_struct_t
 LRESULT CALLBACK InitWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE, LPSTR, int)
+int WINAPI _tWinMain (HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
 {
   // Read command line arguments.
   run_mode_t mode;
@@ -286,7 +287,7 @@ extern "C"
   void custom_startup ()
   {
     HINSTANCE hInstance = reinterpret_cast <HINSTANCE> (& __ImageBase);
-    int status = WinMain (hInstance, NULL, NULL, 0);
+    int status = _tWinMain (hInstance, NULL, NULL, 0);
     ::ExitProcess (static_cast <UINT> (status));
   }
 }
