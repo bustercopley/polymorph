@@ -7,9 +7,15 @@
 
 enum run_mode_t
 {
-  fullscreen, special, embedded
+  screensaver, persistent, parented
 };
 
-void parse_command_line (const TCHAR * s, run_mode_t & mode, bool & configure, HWND & parent_buf);
+struct arguments_t
+{
+  arguments_t (const TCHAR * s);
+  run_mode_t mode;
+  bool configure;
+  HWND parent;
+};
 
 #endif

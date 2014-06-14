@@ -14,7 +14,7 @@ namespace
   }
 }
 
-void parse_command_line (const TCHAR * s, run_mode_t & mode, bool & configure, HWND & parent)
+arguments_t::arguments_t (const TCHAR * s)
 {
   // Skip the image path, which might be quoted.
   if (* s == TEXT ('"')) {
@@ -26,7 +26,7 @@ void parse_command_line (const TCHAR * s, run_mode_t & mode, bool & configure, H
     while (* s && * s != TEXT (' ')) ++ s;
   }
 
-  mode = fullscreen;
+  mode = screensaver;
   configure = true;
   parent = NULL;
 
@@ -35,8 +35,8 @@ void parse_command_line (const TCHAR * s, run_mode_t & mode, bool & configure, H
     ++ s;
     c = c & TEXT ('_'); // Convert to upper case.
     if (c == TEXT ('S'));
-    else if (c == TEXT ('X')) mode = special;
-    else if (c == TEXT ('P') || c == TEXT ('L')) mode = embedded;
+    else if (c == TEXT ('X')) mode = persistent;
+    else if (c == TEXT ('P') || c == TEXT ('L')) mode = parented;
     else goto repeat;
     while (* s == TEXT (' ') || * s == TEXT (':')) ++ s;
     parent = reinterpret_cast <HWND> (from_string (s));

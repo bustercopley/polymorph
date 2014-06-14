@@ -31,8 +31,8 @@ inline bool operator == (const polyhedron_select_t & x, const polyhedron_select_
 
 namespace
 {
-  const unsigned probability_max = 1 << 31;
-  const unsigned probability_mask = probability_max - 1;
+  const unsigned probability_max = 1u << 31u;
+  const unsigned probability_mask = probability_max - 1u;
   const struct replacement_t {
     polyhedron_select_t before, after;
     unsigned probability;
@@ -59,6 +59,11 @@ namespace
     { +0x1.caf0fcP-2, +0x1.448542P-1, 0.0f, 0.0f, }, // T7 -> T7*
   };
 
+  inline bool bernoulli_trial (rng_t & rng, unsigned probability)
+  {
+    return (rng.get () & probability_mask) < probability;
+  }
+
   inline void maybe_perform_replacement (rng_t & rng, float (& u) [4], polyhedron_select_t & current, unsigned & starting_point)
   {
     // Replacements are in terms of the primary representation so mask out the dual bit for now.
@@ -70,32 +75,29 @@ namespace
     unsigned entropy = rng.get (); // Seems a shame to waste it.
     duality ^= entropy & (current.point != 7);
 
-    for (unsigned m = 0; m != replacement_count; ++ m) {
-      const replacement_t f = replacements [m];
-      if (current == f.before && (rng.get () & probability_mask) < f.probability) {
-        current = f.after;
-        // Fixups after the replacement: avoid backtracking transitions
-        // by updating starting_point, and maybe appply a rotation.
-        if (m < 6) {
-          // Tetrahedral <-> octahedral; if the starting polyhedron exists in both
-          // tilings, forbid backtracking to it; otherwise, no transition is forbidden.
-          // The fundamental triangles of the tetrahedral and octahedral tilings
-          // are chosen so that no rotation is needed after these replacements.
-          unsigned j = 0;
-          while (j != 3 && starting_point != replacements [m / 3 + j].before.point) ++ j;
-          starting_point = j == 3 ? current.point : replacements [m / 3 + j].after.point;
-        }
-        else {
-          // Apply a rotation in object co-ordinates.
-          float rotation [4] ALIGNED16;
-          v4f temp = load4f (rotations [m - 6]);
-          store4f (rotation, duality ? -temp : +temp);
-          rotate (u, rotation);
-          // Tetrahedral <-> icosahedral: no Markov transition is forbidden after these replacements.
-          // Tetrahedral -> dual tetrahedral (both snub): keep the starting_point we already have.
-          if (m < 8) starting_point = current.point;
-        }
-        break;
+    unsigned m = 0;
+    while (m != replacement_count && ! (replacements [m].before == current && bernoulli_trial (rng, replacements [m].probability))) ++ m;
+    if (m != replacement_count) {
+      current = replacements [m].after;
+      // Fixups after the replacement: avoid backtracking transitions
+      // by updating starting_point, and maybe appply a rotation.
+      if (m < 6) {
+        // Tetrahedral <-> octahedral; if the starting polyhedron exists in both
+        // tilings, forbid backtracking to it; otherwise, no transition is forbidden.
+        // The fundamental triangles of the tetrahedral and octahedral tilings
+        // are chosen so that no rotation is needed after these replacements.
+        unsigned j = 0;
+        while (j != 3 && starting_point != replacements [m / 3 + j].before.point) ++ j;
+        starting_point = j == 3 ? current.point : replacements [m / 3 + j].after.point;
+      }
+      else {
+        // Apply a rotation in object co-ordinates.
+        v4f rotation = load4f (rotations [m - 6]);
+        if (duality) rotation = - rotation;
+        store4f (u, rotate (load4f (u), rotation));
+        // Tetrahedral <-> icosahedral: no Markov transition is forbidden after these replacements.
+        // Tetrahedral -> dual tetrahedral (both snub): keep the starting_point we already have.
+        if (m < 8) starting_point = current.point;
       }
     }
 

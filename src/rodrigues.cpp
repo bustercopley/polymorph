@@ -242,13 +242,13 @@ void compute (char * RESTRICT buffer, std::size_t stride, const float (* RESTRIC
   }
 }
 
-// bch(u,v) for small v (roughly, |v| <= pi/4).
-void rotate (float (& RESTRICT u) [4], const float (& RESTRICT v) [4])
+// bch (u, v) for small v (roughly, |v| <= pi/4).
+v4f rotate (v4f u, v4f v)
 {
-  // The integrator is designed to compute bch(u,v) for small u,
-  // but here we want bch(u,v) for small v.
-  // Make use of the formula bch(u,v) = -bch(-v,-u).
-  store4f (u, - bch4 (- load4f (v), - load4f (u)));
+  // The integrator is designed to compute bch (u, v) for small u,
+  // but here we want bch (u, v) for small v.
+  // Make use of the formula bch (u, v) = - bch (- v, - u).
+  return - bch4 (- v, - u);
   // If u has grown too large, it will get reduced in advance_angular.
 }
 

@@ -30,13 +30,10 @@ LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 int WINAPI _tWinMain (HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
 {
-  // Read command line arguments.
-  run_mode_t mode;
-  bool configure;
-  HWND parent;
-  parse_command_line (::GetCommandLine (), mode, configure, parent);
+  LPCTSTR cmdline = ::GetCommandLine ();
+  arguments_t arguments (cmdline);
 
-  if (configure) {
+  if (arguments.configure) {
     ::MessageBox (NULL, usr::message, usr::program_name, MB_OK | MB_ICONASTERISK);
     return 0;
   }
@@ -45,13 +42,13 @@ int WINAPI _tWinMain (HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
   RECT rect;
   DWORD style;
   DWORD ex_style  = 0;
-  if (mode == embedded) {
+  if (arguments.mode == parented) {
     style = WS_CHILD | WS_VISIBLE;
-    ::GetClientRect (parent, & rect); // 0, 0, width, height
+    ::GetClientRect (arguments.parent, & rect); // 0, 0, width, height
   }
   else {
     style = WS_POPUP | WS_VISIBLE;
-    if (mode == fullscreen) ex_style = WS_EX_TOPMOST;
+    if (arguments.mode == screensaver) ex_style = WS_EX_TOPMOST;
     rect.left =   ::GetSystemMetrics (SM_XVIRTUALSCREEN);
     rect.top =    ::GetSystemMetrics (SM_YVIRTUALSCREEN);
     rect.right =  ::GetSystemMetrics (SM_CXVIRTUALSCREEN); // actually width, not right
@@ -59,7 +56,7 @@ int WINAPI _tWinMain (HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
   }
 
   window_struct_t ws ALIGNED16;
-  ws.mode = mode;
+  ws.mode = arguments.mode;
 
   // Create a window with an OpenGL rendering context.
 
@@ -90,7 +87,7 @@ int WINAPI _tWinMain (HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
   ATOM main_wc_atom = ::RegisterClass (& main_wc);
   HWND hwnd = ::CreateWindowEx (ex_style, MAKEINTATOM (main_wc_atom), usr::program_name, style,
                                 rect.left, rect.top, rect.right, rect.bottom,
-                                parent, NULL, hInstance, & ws);
+                                arguments.parent, NULL, hInstance, & ws);
 
   // Exit if we failed to create the window.
   if (! hwnd) return 1;
@@ -108,26 +105,19 @@ int WINAPI _tWinMain (HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
 
 LRESULT CALLBACK InitWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-  if (msg == WM_NCCREATE) {
-    // Set up a legacy rendering context to get the OpenGL function pointers.
-    PIXELFORMATDESCRIPTOR pfd = { sizeof pfd, 1, PFD_SUPPORT_OPENGL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, };
-    if (HDC hdc = ::GetDC (hwnd)) {
-      int pf = ::ChoosePixelFormat (hdc, & pfd);
-      ::SetPixelFormat (hdc, pf, & pfd);
-      if (HGLRC hglrc = ::wglCreateContext (hdc)) {
-        ::wglMakeCurrent (hdc, hglrc);
-        // Get the function pointers.
-        get_glprocs ();
-        ::wglMakeCurrent (NULL, NULL);
-        ::wglDeleteContext (hglrc);
-      }
-      ::ReleaseDC (hwnd, hdc);
-    }
-    return FALSE; // Abort window creation.
-  }
-  else {
-    return ::DefWindowProc (hwnd, msg, wParam, lParam);
-  }
+  if (msg != WM_NCCREATE) return ::DefWindowProc (hwnd, msg, wParam, lParam);
+  PIXELFORMATDESCRIPTOR pfd = { sizeof pfd, 1, PFD_SUPPORT_OPENGL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, };
+  HDC hdc = ::GetDC (hwnd);
+  int pf = ::ChoosePixelFormat (hdc, & pfd);
+  ::SetPixelFormat (hdc, pf, & pfd);
+  HGLRC hglrc = ::wglCreateContext (hdc);
+  ::wglMakeCurrent (hdc, hglrc);
+  // Get the function pointers.
+  get_glprocs ();
+  ::wglMakeCurrent (NULL, NULL);
+  ::wglDeleteContext (hglrc);
+  ::ReleaseDC (hwnd, hdc);
+  return FALSE; // Abort window creation.
 }
 
 LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -174,20 +164,14 @@ LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
       0, 0,
     };
 
-    HGLRC hglrc = NULL;
     int pf;
     UINT pfcount;
-    if (HDC hdc = ::GetDC (hwnd)) {
-      if (wglChoosePixelFormatARB (hdc, pf_attribs, NULL, 1, & pf, & pfcount)) {
-        if (::SetPixelFormat (hdc, pf, NULL)) {
-          hglrc = wglCreateContextAttribsARB (hdc, NULL, context_attribs);
-          if (hglrc) {
-            ::wglMakeCurrent (hdc, hglrc);
-          }
-        }
-      }
-      ::ReleaseDC (hwnd, hdc);
-    }
+    HDC hdc = ::GetDC (hwnd);
+    wglChoosePixelFormatARB (hdc, pf_attribs, NULL, 1, & pf, & pfcount);
+    ::SetPixelFormat (hdc, pf, NULL);
+    HGLRC hglrc = wglCreateContextAttribsARB (hdc, NULL, context_attribs);
+    ::wglMakeCurrent (hdc, hglrc);
+    ::ReleaseDC (hwnd, hdc);
 
     if (hglrc) {
       LARGE_INTEGER qpc;
@@ -205,10 +189,6 @@ LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     break;
   }
 
-  case WM_ERASEBKGND:
-    result = TRUE;
-    break;
-
   case WM_PAINT: {
     PAINTSTRUCT ps;
     ::BeginPaint (hwnd, & ps);
@@ -219,11 +199,11 @@ LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
   }
 
   case WM_SETCURSOR:
-    ::SetCursor (ws->mode == fullscreen ? NULL : (::LoadCursor (NULL, IDC_ARROW)));
+    ::SetCursor (ws->mode == screensaver ? NULL : (::LoadCursor (NULL, IDC_ARROW)));
     break;
 
   case WM_MOUSEMOVE:
-    if (ws->mode == fullscreen) {
+    if (ws->mode == screensaver) {
       // Compare the current mouse position with the one stored in the window struct.
       DWORD cursor = (DWORD) lParam;
       int dx = GET_X_LPARAM (cursor) - ws->initial_cursor_position.x;
@@ -233,16 +213,16 @@ LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     break;
 
   case WM_KEYDOWN: case WM_LBUTTONDOWN: case WM_MBUTTONDOWN: case WM_RBUTTONDOWN:
-    close_window = ws->mode == fullscreen || ws->mode == special;
+    close_window = ws->mode != parented;
     break;
 
   case WM_ACTIVATE: case WM_ACTIVATEAPP: case WM_NCACTIVATE:
-    close_window = ws->mode == fullscreen && LOWORD (wParam) == WA_INACTIVE;
+    close_window = ws->mode == screensaver && LOWORD (wParam) == WA_INACTIVE;
     call_def_window_proc = true;
     break;
 
   case WM_SYSCOMMAND:
-    call_def_window_proc = ! (ws->mode == fullscreen && wParam == SC_SCREENSAVE);
+    call_def_window_proc = ! (ws->mode == screensaver && wParam == SC_SCREENSAVE);
     break;
 
   case WM_DESTROY:
