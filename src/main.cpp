@@ -33,7 +33,7 @@ int WINAPI _tWinMain (HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
   LPCTSTR cmdline = ::GetCommandLine ();
   arguments_t arguments (cmdline);
 
-  if (arguments.configure) {
+  if (arguments.mode == configure) {
     ::MessageBox (NULL, usr::message, usr::program_name, MB_OK | MB_ICONASTERISK);
     return 0;
   }

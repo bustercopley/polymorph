@@ -26,20 +26,18 @@ arguments_t::arguments_t (const TCHAR * s)
     while (* s && * s != TEXT (' ')) ++ s;
   }
 
-  mode = screensaver;
-  configure = true;
+  mode = configure;
   parent = NULL;
 
  repeat:
   if (TCHAR c = * s) {
     ++ s;
     c = c & TEXT ('_'); // Convert to upper case.
-    if (c == TEXT ('S'));
+    if (c == TEXT ('S')) mode = screensaver;
     else if (c == TEXT ('X')) mode = persistent;
     else if (c == TEXT ('P') || c == TEXT ('L')) mode = parented;
     else goto repeat;
     while (* s == TEXT (' ') || * s == TEXT (':')) ++ s;
     parent = reinterpret_cast <HWND> (from_string (s));
-    configure = false;
   }
 }

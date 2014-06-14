@@ -7,14 +7,13 @@
 
 enum run_mode_t
 {
-  screensaver, persistent, parented
+  screensaver, persistent, parented, configure
 };
 
 struct arguments_t
 {
   arguments_t (const TCHAR * s);
   run_mode_t mode;
-  bool configure;
   HWND parent;
 };
 
