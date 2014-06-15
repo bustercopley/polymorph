@@ -8,10 +8,12 @@
 #include <GL/glext.h>
 #include <GL/wglext.h>
 
-bool get_glprocs ();
-
+// Declare OpenGL function pointer variables, defined in glinit.cpp.
 #define DO_GLPROC(type,name) extern type name
 #include "glprocs.inc"
 #undef DO_GLPROC
+
+bool glinit (HINSTANCE hInstance);
+HGLRC install_rendering_context (HWND hwnd);
 
 #endif

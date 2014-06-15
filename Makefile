@@ -28,7 +28,7 @@ polymorph_EXTRA_OBJECTS=.obj/polymorph/$(PLATFORM)/resources-res.o
 polymorph_SOURCE_PREFIX=src/
 polymorph_OBJECTS=\
 bump.o cmdline.o glinit.o graphics.o kdtree.o main.o markov.o \
-memory.o model.o partition.o random.o rodrigues.o systems.o
+memory.o model.o partition.o polymorph.o random.o rodrigues.o systems.o
 
 base_CPPFLAGS=-DUNICODE -D_UNICODE
 base_CFLAGS=-msse3 -mfpmath=sse -flto -fno-fat-lto-objects
