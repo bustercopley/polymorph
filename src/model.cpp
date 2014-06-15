@@ -94,11 +94,8 @@ model_t::model_t () : memory (nullptr), capacity (0), count (0) { }
 bool model_t::initialize (unsigned long long seed, int width, int height)
 {
   float aspect_ratio = float (width) / height;
-
-  float view [4] ALIGNED16;
   float tz = usr::tank_distance, td = usr::tank_depth, th = usr::tank_height;
-  v4f vw = { -tz, -tz-td, (th/2) * aspect_ratio, (th/2), };
-  store4f (view, vw);
+  float view [4] ALIGNED16 = { -tz, -tz-td, (th/2) * aspect_ratio, (th/2), };
 
   unsigned total_count = aspect_ratio * usr::fill_ratio;
   if (! set_capacity (total_count)) return false;
