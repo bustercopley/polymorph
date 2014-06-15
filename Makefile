@@ -69,7 +69,7 @@ test: all
 	$(polymorph_FILENAME) -x
 
 debug: all
-	gdb --quiet --batch -ex run -ex bt full -ex quit --args $(polymorph_FILENAME) -x
+	$(PLATFORM_PATH)\gdb --quiet --batch -ex run -ex bt full -ex quit --args $(polymorph_FILENAME) -x
 
 SHADER_RESOURCES=\
 .obj/polymorph/vertex-shader.glsl.mini \
