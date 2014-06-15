@@ -7,7 +7,6 @@
 #include "model.h"
 #include "aligned-arrays.h"
 #include "qpc.h"
-#include <new>
 
 LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -34,9 +33,7 @@ LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
     ws->hglrc = install_rendering_context (hwnd);
     if (ws->hglrc) {
-      LARGE_INTEGER qpc;
-      ::QueryPerformanceCounter (& qpc);
-      ws->model.initialize (qpc.QuadPart, cs->cx, cs->cy);
+      ws->model.initialize (qpc (), cs->cx, cs->cy);
       result = 0; // Allow window creation to continue.
     }
     break;
