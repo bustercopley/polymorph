@@ -9,6 +9,8 @@
 #include "graphics.h"
 #include "bump.h"
 #include "markov.h"
+#include "settings.h"
+#include <cstdint>
 
 struct object_t
 {
@@ -26,11 +28,12 @@ struct model_t
   ~model_t ();
   model_t ();
 
-  bool initialize (uint64_t seed, int width, int height);
+  bool initialize (std::uint64_t seed);
+  bool start (int width, int height, const settings_t & settings);
   void draw_next ();
 private:
   bool set_capacity (std::size_t new_capacity);
-  void add_object (const float (& view) [4]);
+  void add_object (const float (& view) [4], float temperature);
   void recalculate_locus (object_t & A);
   void draw (unsigned begin, unsigned count);
 

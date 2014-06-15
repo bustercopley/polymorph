@@ -109,7 +109,7 @@ void uniform_buffer_t::update ()
   glBufferSubData (GL_UNIFORM_BUFFER, 0, m_size, m_begin);
 }
 
-bool initialize_programs (program_t (& programs) [2], const float (& view) [4])
+bool initialize_programs (program_t (& programs) [2])
 {
   glEnable (GL_DEPTH_TEST);
   glDepthRange (1.0, 0.0);
@@ -119,11 +119,43 @@ bool initialize_programs (program_t (& programs) [2], const float (& view) [4])
   glBlendEquation (GL_FUNC_ADD);
   glBlendFunc (GL_DST_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   return
-    programs [0].initialize (view, IDR_GEOMETRY_SHADER) &&
-    programs [1].initialize (view, IDR_SNUB_GEOMETRY_SHADER);
+    programs [0].initialize (IDR_GEOMETRY_SHADER) &&
+    programs [1].initialize (IDR_SNUB_GEOMETRY_SHADER);
 }
 
-bool program_t::initialize (const float (& view) [4], unsigned gshader2)
+void set_view (program_t (& programs) [2], const float (& view) [4])
+{
+  float z1 = view [0];
+  float z2 = view [1];
+  float x1 = view [2];
+  float y1 = view [3];
+  float zd = z2-z1;
+
+  float projection_matrix [16] = {
+   -z1/x1,    0,       0,           0,
+    0,       -z1/y1,   0,           0,
+    0,        0,      (z1+z2)/zd,  -1,
+    0,        0,     -2*z1*z2/zd,   0,
+  };
+
+  float light_position [] [3] = {
+    { 0.0f, 0.0f, 2 * z1 / 3, },
+  };
+
+  float fog_coefficients [] = { z2, -1.0f / zd, };
+
+  for (unsigned i = 0; i != 2; ++ i)
+  {
+    program_t p = programs [i];
+    // Values in the default uniform block.
+    glUseProgram (p.id);
+    glUniformMatrix4fv (p.uniform_locations [uniforms::p], 1, GL_FALSE, projection_matrix);
+    glUniform3fv (p.uniform_locations [uniforms::l], 1, & light_position [0] [0]);
+    glUniform1fv (p.uniform_locations [uniforms::f], 2, fog_coefficients);
+  }
+}
+
+bool program_t::initialize (unsigned gshader2)
 {
   id = glCreateProgram ();
   GLuint vshader_id = make_shader (GL_VERTEX_SHADER, IDR_VERTEX_SHADER, 0);
@@ -150,32 +182,6 @@ bool program_t::initialize (const float (& view) [4], unsigned gshader2)
     const char * names = "p\0l\0f\0";
     uniform_locations [k] = glGetUniformLocation (id, names + 2 * k);
   }
-
-  float z1 = view [0];
-  float z2 = view [1];
-  float x1 = view [2];
-  float y1 = view [3];
-  float zd = z2-z1;
-
-  float projection_matrix [16] = {
-   -z1/x1,    0,       0,           0,
-    0,       -z1/y1,   0,           0,
-    0,        0,      (z1+z2)/zd,  -1,
-    0,        0,     -2*z1*z2/zd,   0,
-  };
-
-  float light_position [] [3] = {
-    { 0.0f, 0.0f, 2 * z1 / 3, },
-  };
-
-  float fog_coefficients [] = { z2, -1.0f / zd, };
-
-  // Values in the default uniform block.
-  glUseProgram (id);
-  glUniformMatrix4fv (uniform_locations [uniforms::p], 1, GL_FALSE, projection_matrix);
-  glUniform3fv (uniform_locations [uniforms::l], 1, & light_position [0] [0]);
-  glUniform1fv (uniform_locations [uniforms::f], 2, fog_coefficients);
-  //glUseProgram (0);
 
   // Binding for Uniform block "H".
   GLuint uniform_block_index = glGetUniformBlockIndex (id, "H");

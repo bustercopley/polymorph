@@ -25,16 +25,24 @@ LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     ws = (window_struct_t *) cs->lpCreateParams;
     ::SetWindowLongPtr (hwnd, GWLP_USERDATA, reinterpret_cast <LONG_PTR> (ws));
 
-    // Remember initial mouse-pointer position to detect mouse movement.
-    POINT cursor;
-    ::GetCursorPos (& cursor);
-    ::ScreenToClient (hwnd, & cursor);
-    ws->initial_cursor_position = cursor;
-
     ws->hglrc = install_rendering_context (hwnd);
     if (ws->hglrc) {
-      ws->model.initialize (qpc (), cs->cx, cs->cy);
+      ws->model.initialize (qpc ());
       result = 0; // Allow window creation to continue.
+    }
+    break;
+  }
+
+  case WM_WINDOWPOSCHANGED: {
+    WINDOWPOS * windowpos = (WINDOWPOS *) lParam;
+    if (windowpos->flags & SWP_SHOWWINDOW) {
+      // Remember initial mouse-pointer position to detect mouse movement.
+      POINT cursor;
+      ::GetCursorPos (& cursor);
+      ::ScreenToClient (hwnd, & cursor);
+      ws->initial_cursor_position = cursor;
+      ws->model.start (windowpos->cx, windowpos->cy, * ws->settings);
+      ws->model.draw_next ();
     }
     break;
   }
@@ -58,7 +66,7 @@ LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     break;
 
   case WM_MOUSEMOVE:
-    if (ws->mode == screensaver) {
+    if (ws->mode == screensaver || ws->mode == configure) {
       // Compare the current mouse position with the one stored in the window struct.
       DWORD cursor = (DWORD) lParam;
       int dx = GET_X_LPARAM (cursor) - ws->initial_cursor_position.x;
@@ -72,12 +80,12 @@ LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     break;
 
   case WM_ACTIVATE: case WM_ACTIVATEAPP: case WM_NCACTIVATE:
-    close_window = ws->mode == screensaver && LOWORD (wParam) == WA_INACTIVE;
+    close_window = (ws->mode == screensaver || ws->mode == configure) && LOWORD (wParam) == WA_INACTIVE;
     call_def_window_proc = true;
     break;
 
   case WM_SYSCOMMAND:
-    call_def_window_proc = ! (ws->mode == screensaver && wParam == SC_SCREENSAVE);
+    call_def_window_proc = ! ((ws->mode == screensaver || ws->mode == configure) && wParam == SC_SCREENSAVE);
     break;
 
   case WM_DESTROY:
@@ -91,7 +99,13 @@ LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     break;
   }
 
-  if (close_window) ::PostMessage (hwnd, WM_CLOSE, 0, 0);
+  if (close_window) {
+    if (ws->mode == configure)
+      ::ShowWindow (hwnd, SW_HIDE);
+    else
+      ::PostMessage (hwnd, WM_CLOSE, 0, 0);
+  }
+
   if (call_def_window_proc) result = ::DefWindowProc (hwnd, msg, wParam, lParam);
 
   return result;
@@ -110,7 +124,7 @@ HWND create_window (HINSTANCE hInstance, HWND parent, ATOM wndclass_id, LPCTSTR 
 {
   // Create the main window. See MainWndProc for details.
   DWORD style = ws->mode == parented ? WS_CHILD : WS_POPUP;
-  DWORD ex_style = ws->mode == screensaver ? WS_EX_TOPMOST : 0;
+  DWORD ex_style = WS_EX_TOOLWINDOW | (ws->mode == screensaver || ws->mode == configure ? WS_EX_TOPMOST : 0);
   RECT rect;
   if (ws->mode == parented) {
     ::GetClientRect (parent, & rect);

@@ -14,13 +14,10 @@
 #include "print.h"
 
 namespace usr {
-  static const unsigned fill_ratio = 100;     // Number of balls per unit of screen aspect ratio.
-
   // Physical parameters.
   static const float min_radius = 1.0f;
   static const float max_radius = 1.0f;
   static const float density = 100.0f;        // Density of a ball.
-  static const float temperature = 212;       // Average kinetic energy.
 
   // Container characteristics.
   static const float tank_distance = 120.0f;  // Distancia del ojo a la pantalla.
@@ -91,17 +88,17 @@ float min_d = 1.0f, max_d = 0.0f;
 
 model_t::model_t () : memory (nullptr), capacity (0), count (0) { }
 
-bool model_t::initialize (unsigned long long seed, int width, int height)
+bool model_t::start (int width, int height, const settings_t & settings)
 {
   float aspect_ratio = float (width) / height;
+  unsigned total_count;
+  if (settings.count < 2) total_count = settings.count + 1;
+  else total_count = 3 + aspect_ratio * 2.12f * (settings.count - 2);
+  if (! set_capacity (total_count)) return false;
+
   float tz = usr::tank_distance, td = usr::tank_depth, th = usr::tank_height;
   float view [4] ALIGNED16 = { -tz, -tz-td, (th/2) * aspect_ratio, (th/2), };
-
-  unsigned total_count = aspect_ratio * usr::fill_ratio;
-  if (! set_capacity (total_count)) return false;
-  if (! uniform_buffer.initialize ()) return false;
-  if (! initialize_programs (programs, view)) return false;
-  rng.initialize (seed);
+  set_view (programs, view);
 
   // Calculate wall planes to exactly fill the front of the viewing frustum.
   float z1 = view [0];
@@ -129,9 +126,9 @@ bool model_t::initialize (unsigned long long seed, int width, int height)
     store4f (walls [k] [1], normal);
   }
 
+  count = 0;
   max_radius = 0.0f;
-
-  for (unsigned n = 0; n != total_count; ++ n) add_object (view);
+  for (unsigned n = 0; n != total_count; ++ n) add_object (view, 4.0f * settings.speed);
   for (unsigned n = 0; n != count; ++ n) kdtree_index [n] = n;
 
   float phase = 0.0f;
@@ -147,11 +144,17 @@ bool model_t::initialize (unsigned long long seed, int width, int height)
     objects [n].animation_time = animation_time;
     phase += 1.0f / total_count;
   }
+  return true;
+}
 
+bool model_t::initialize (std::uint64_t seed)
+{
+  if (! uniform_buffer.initialize ()) return false;
+  if (! initialize_programs (programs)) return false;
+  rng.initialize (seed);
   bumps.initialize (usr::hsv_s_bump, usr::hsv_v_bump);
   step.initialize (usr::morph_start, usr::morph_finish);
   initialize_systems (abc, xyz, xyzinvt, primitive_count, vao_ids);
-
   return true;
 }
 
@@ -188,11 +191,11 @@ bool model_t::set_capacity (std::size_t new_capacity)
                                     & objects);
 }
 
-void model_t::add_object (const float (& view) [4])
+void model_t::add_object (const float (& view) [4], float temperature)
 {
-  if (count == capacity) {
-    set_capacity (capacity ? 2 * capacity : 128);
-  }
+  // if (count == capacity) {
+  //   set_capacity (capacity ? 2 * capacity : 128);
+  // }
 
   object_t & A = objects [count];
   float R = get_double (rng, usr::min_radius, usr::max_radius);
@@ -221,7 +224,7 @@ void model_t::add_object (const float (& view) [4])
       goto loop;
     }
   }
-  const float action = usr::temperature * usr::frame_time;
+  const float action = temperature * usr::frame_time;
   store4f (x [count], t);
   store4f (v [count], get_vector_in_ball (rng, 0.5f * action / A.m));
   store4f (u [count], get_vector_in_ball (rng, 0x1.921fb4P1)); // pi
@@ -279,11 +282,13 @@ void model_t::draw_next ()
     A.animation_time = t;
   }
 
-  kdtree.compute (kdtree_index, x, count);
-  kdtree.search (count, 2 * max_radius, objects, r, v, w, walls);
-  advance_linear (x, v, count);
-  advance_angular (u, w, count);
-
+  if (count) {
+    // The behaviour of kdtree_t::compute is undefined if count is zero.
+    kdtree.compute (kdtree_index, x, count);
+    kdtree.search (count, 2 * max_radius, objects, r, v, w, walls);
+    advance_linear (x, v, count);
+    advance_angular (u, w, count);
+  }
   // Draw.
 
   clear ();

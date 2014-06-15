@@ -24,7 +24,7 @@ struct program_t
 {
   std::uint32_t id;
   std::uint32_t uniform_locations [uniforms::count];
-  bool initialize (const float (& view) [4], unsigned gshader_resource_id);
+  bool initialize (unsigned gshader_resource_id);
 };
 
 struct uniform_block_t
@@ -58,7 +58,8 @@ private:
   std::uint32_t m_id;
 };
 
-bool initialize_programs (program_t (& programs) [2], const float (& view) [4]);
+bool initialize_programs (program_t (& programs) [2]);
+void set_view (program_t (& programs) [2], const float (& view) [4]);
 
 void paint (unsigned N,
             unsigned vao_id,

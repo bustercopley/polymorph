@@ -5,45 +5,49 @@
 #include "model.h"
 #include "cmdline.h"
 #include "polymorph.h"
+#include "settings.h"
+#include "configure.h"
 #include <tchar.h>
 #include <windowsx.h>
 #include <cstdint>
 
-static const TCHAR * const message =
- TEXT ("And the ratios of their numbers, motions, and ")
- TEXT ("other properties, everywhere God, as far as ")
- TEXT ("necessity allowed or gave consent, has exactly ")
- TEXT ("perfected, and harmonised in due proportion.");
-
 int WINAPI _tWinMain (HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
 {
+  if (! glinit (hInstance)) return 1;
+
   LPCTSTR display_name;
   ::LoadString (hInstance, 1, (LPTSTR) (& display_name), 0);
 
   arguments_t arguments (::GetCommandLine ());
 
-  if (arguments.mode == configure) {
-    ::MessageBox (NULL, message, display_name, MB_OK | MB_ICONASTERISK);
-    return 0;
-  }
+  settings_t settings = default_settings;
+  load_settings (settings);
 
-  if (! glinit (hInstance)) return 1;
-
-  // Create the main window.
   window_struct_t ws ALIGNED16;
   ws.mode = arguments.mode;
+  ws.settings = & settings;
 
+  // Create the main window.
   ATOM main_wndclass_atom = register_class (hInstance);
   HWND hwnd = create_window (hInstance, arguments.parent, main_wndclass_atom, display_name, & ws);
-  if (! hwnd) return 1;
 
-  ::ShowWindow (hwnd, SW_SHOW);
+  dialog_struct_t ds;
+  ds.settings = & settings;
+  ds.hwnd = hwnd;
+
+  // Create the configure dialog if in configure mode.
+  HWND hdlg = arguments.mode == configure ? create_dialog (hInstance, & ds) : NULL;
+
+  // Show the main window, or the configure dialog if in configure mode.
+  ::ShowWindow (arguments.mode == configure ? hdlg : hwnd, SW_SHOW);
 
   // Enter the main loop.
   MSG msg;
   while (::GetMessage (& msg, NULL, 0, 0)) {
-    ::TranslateMessage (& msg);
-    ::DispatchMessage (& msg);
+    if (! hdlg || ! ::IsDialogMessage (hdlg, & msg)) {
+      ::TranslateMessage (& msg);
+      ::DispatchMessage (& msg);
+    }
   }
 
   ::UnregisterClass (MAKEINTATOM (main_wndclass_atom), hInstance);

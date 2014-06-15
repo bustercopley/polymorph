@@ -8,6 +8,8 @@
 
 struct object_t;
 
+// The behaviour of kdtree_t::compute is undefined if count is zero.
+
 struct kdtree_t
 {
   kdtree_t () : memory (nullptr), node_count (0) { }

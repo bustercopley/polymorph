@@ -15,4 +15,29 @@ IDR_GEOMETRY_SHADER RCDATA "geometry-shader.glsl.mini"
 IDR_SNUB_GEOMETRY_SHADER RCDATA "snub-geometry-shader.glsl.mini"
 IDR_FRAGMENT_SHADER RCDATA "fragment-shader.glsl.mini"
 
+#define DLGWIDTH 284
+#define DLGHEIGHT 140
+
+IDD_CONFIGURE DIALOGEX 100, 100, DLGWIDTH, DLGHEIGHT
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Polymorph"
+FONT 9, "Segoe UI", 0, 0, 0x1
+BEGIN
+  ICON             IDI_APPICON, IDC_STATIC, 30, 22, 20, 20
+  LTEXT            "And the ratios of their numbers, motions, and "
+                   "other properties, everywhere God, as far as "
+                   "necessity allowed or gave consent, has exactly "
+                   "perfected, and harmonised in due proportion.", IDC_MESSAGE, 80, 14, 140, 38
+  CTEXT            "TIMAEUS, Plato.", IDC_STATIC, 80, 50, 140, 10
+  LTEXT            " Count", IDC_COUNT_STATIC, 0, 0, 40, 14, SS_CENTERIMAGE
+  LTEXT            " Speed ", IDC_SPEED_STATIC, 0, 0, 40, 14, SS_CENTERIMAGE
+  LTEXT            "© 2005-2014 Buster Copley", IDC_STATIC, 9, DLGHEIGHT-36, 100, 10
+  CONTROL          "", IDC_COUNT_TRACKBAR, TRACKBAR_CLASS, TBS_FIXEDLENGTH | TBS_NOTICKS | TBS_BOTH | WS_TABSTOP, 80, 68, 140, 14
+  CONTROL          "", IDC_SPEED_TRACKBAR, TRACKBAR_CLASS, TBS_NOTICKS | TBS_BOTH | WS_TABSTOP, 80, 84, 140, 14
+  CTEXT            "", IDC_BUTTON_RECT, 0, DLGHEIGHT-26, DLGWIDTH, 26
+  DEFPUSHBUTTON    "OK", IDOK, DLGWIDTH-164, DLGHEIGHT-20, 50, 14, WS_TABSTOP
+  PUSHBUTTON       "Cancel", IDCANCEL, DLGWIDTH-110, DLGHEIGHT-20, 50, 14, WS_TABSTOP
+  PUSHBUTTON       "&Preview", IDC_PREVIEW_BUTTON, DLGWIDTH-56, DLGHEIGHT-20, 50, 14, WS_TABSTOP
+END
+
 CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "polymorph.scr.manifest"

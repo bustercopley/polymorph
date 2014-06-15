@@ -27,8 +27,8 @@ polymorph_LDLIBS=$(CONFIG_LDLIBS)
 polymorph_EXTRA_OBJECTS=.obj/polymorph/$(PLATFORM)/resources-res.o
 polymorph_SOURCE_PREFIX=src/
 polymorph_OBJECTS=\
-bump.o cmdline.o glinit.o graphics.o kdtree.o main.o markov.o \
-memory.o model.o partition.o polymorph.o random.o rodrigues.o systems.o
+bump.o cmdline.o configure.o glinit.o graphics.o kdtree.o main.o markov.o \
+memory.o model.o partition.o polymorph.o random.o rodrigues.o settings.o systems.o
 
 base_CPPFLAGS=-DUNICODE -D_UNICODE
 base_CFLAGS=-msse3 -mfpmath=sse -flto -fno-fat-lto-objects
@@ -40,7 +40,7 @@ tiny_CPPFLAGS=$(base_CPPFLAGS) -DTINY
 tiny_CFLAGS=$(base_CFLAGS) -fno-ident -fno-asynchronous-unwind-tables
 tiny_CXXFLAGS=$(base_CXXFLAGS)
 tiny_LDFLAGS=$(base_LDFLAGS) -nostdlib --entry=$(PLATFORM_ENTRY_POINT) -Wl,--disable-runtime-pseudo-reloc
-tiny_LDLIBS=$(base_LDLIBS) -lgdi32 -luser32 -lkernel32
+tiny_LDLIBS=$(base_LDLIBS) -lgdi32 -ladvapi32 -luser32 -lkernel32
 
 x86_PATH=C:\mingw32\bin
 x86_ENTRY_POINT=_custom_startup
@@ -66,7 +66,7 @@ EXTRA_CLEAN=data
 all: $(polymorph_FILENAME)
 
 test: all
-	$(polymorph_FILENAME) -x
+	$(polymorph_FILENAME)
 
 debug: all
 	$(PLATFORM_PATH)\gdb --quiet --batch -ex run -ex bt full -ex quit --args $(polymorph_FILENAME) -x

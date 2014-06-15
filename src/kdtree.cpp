@@ -155,6 +155,7 @@ bool kdtree_t::compute (unsigned * RESTRICT new_index, const float (* RESTRICT n
 {
   index = new_index;
   x = new_x;
+  // Undefined behaviour if count == 0.
   std::size_t new_node_count = nodes_required (count);
   if (! reallocate_aligned_arrays (memory, node_count, new_node_count,
                                    & node_lohi, & node_begin, & node_end))

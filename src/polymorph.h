@@ -5,10 +5,12 @@
 #include "mswin.h"
 #include "cmdline.h"
 #include "model.h"
+#include "settings.h"
 
 struct window_struct_t
 {
   model_t model;
+  settings_t * settings;
   run_mode_t mode;
   POINT initial_cursor_position;
   HGLRC hglrc;
