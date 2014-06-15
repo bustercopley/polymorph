@@ -1,4 +1,4 @@
-vD#include "compiler.h"
+#include "compiler.h"
 #include "mswin.h"
 #include <windowsx.h>
 #include "polymorph.h"
