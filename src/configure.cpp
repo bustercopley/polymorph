@@ -1,6 +1,7 @@
 #include "configure.h"
 #include "resources.h"
 #include "settings.h"
+#include "reposition.h"
 
 #define DlgControl_GetFont(dlg, id) ((HFONT) ::SendDlgItemMessage (dlg, id, WM_GETFONT, 0, 0))
 #define DlgControl_SetFont(dlg, id, font) ::SendDlgItemMessage (dlg, id, WM_SETFONT, (WPARAM) (font), 0)
@@ -26,6 +27,7 @@ INT_PTR CALLBACK DialogProc (HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
       DlgTrackBar_SetPos (hdlg, IDC_SPEED_TRACKBAR, ds->settings->speed, TRUE);
       DlgTrackBar_SetBuddy (hdlg, IDC_COUNT_TRACKBAR, FALSE, IDC_COUNT_STATIC);
       DlgTrackBar_SetBuddy (hdlg, IDC_SPEED_TRACKBAR, FALSE, IDC_SPEED_STATIC);
+      reposition_window (hdlg);
       return (INT_PTR) TRUE;
     }
 
