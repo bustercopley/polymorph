@@ -93,7 +93,7 @@ bool model_t::start (int width, int height, const settings_t & settings)
   float aspect_ratio = float (width) / height;
   unsigned total_count;
   if (settings.count < 2) total_count = settings.count + 1;
-  else total_count = 3 + aspect_ratio * 2.12f * (settings.count - 2);
+  else total_count = 3 + 4 * aspect_ratio * (settings.count - 2);
   if (! set_capacity (total_count)) return false;
 
   float tz = usr::tank_distance, td = usr::tank_depth, th = usr::tank_height;
@@ -128,7 +128,7 @@ bool model_t::start (int width, int height, const settings_t & settings)
 
   count = 0;
   max_radius = 0.0f;
-  for (unsigned n = 0; n != total_count; ++ n) add_object (view, 4.0f * settings.speed);
+  for (unsigned n = 0; n != total_count; ++ n) add_object (view, 8.0f * settings.speed);
   for (unsigned n = 0; n != count; ++ n) kdtree_index [n] = n;
 
   float phase = 0.0f;
