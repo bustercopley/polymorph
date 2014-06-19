@@ -36,11 +36,12 @@ LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
   case WM_WINDOWPOSCHANGED: {
     WINDOWPOS * windowpos = (WINDOWPOS *) lParam;
     if (windowpos->flags & SWP_SHOWWINDOW) {
-      // Remember initial mouse-pointer position to detect mouse movement.
+      // Remember initial cursor position to detect mouse movement.
       POINT cursor;
       ::GetCursorPos (& cursor);
       ::ScreenToClient (hwnd, & cursor);
       ws->initial_cursor_position = cursor;
+      // (Re-)start the simulation.
       ws->model.start (windowpos->cx, windowpos->cy, * ws->settings);
       ws->model.draw_next ();
     }
@@ -62,7 +63,7 @@ LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
   }
 
   case WM_SETCURSOR:
-    ::SetCursor (ws->mode == screensaver ? NULL : ::LoadCursor (NULL, IDC_ARROW));
+    ::SetCursor (ws->mode == screensaver || ws->mode == configure ? NULL : ::LoadCursor (NULL, IDC_ARROW));
     break;
 
   case WM_MOUSEMOVE:
