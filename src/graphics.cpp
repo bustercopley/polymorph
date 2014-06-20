@@ -1,11 +1,8 @@
 #include "graphics.h"
 #include "compiler.h"
 #include "memory.h"
-#include "mswin.h"
 #include "resources.h"
-#include "vector.h"
 #include "glinit.h"
-#include "model.h"
 #include "print.h"
 
 namespace

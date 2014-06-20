@@ -60,18 +60,15 @@ int WINAPI _tWinMain (HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
 
 // No standard handles, window placement, environment variables,
 // command-line transformation, global constructors and destructors,
-// atexit functions, stack realignment, thread-local storage,
-// runtime relocation fixups, 387 floating-point initialization,
-// signal handlers or exceptions.
-
+// atexit functions, thread-local storage, runtime relocation fixups,
+// 387 floating-point initialization, signal handlers or exceptions.
 extern "C"
 {
   // This symbol is defined by the linker.
   extern IMAGE_DOS_HEADER __ImageBase;
 
   // In the linker command line, specify this function as the entry point.
-  void custom_startup () VISIBLE;
-  void custom_startup ()
+  VISIBLE NORETURN ALIGN_STACK void custom_startup ()
   {
     HINSTANCE hInstance = reinterpret_cast <HINSTANCE> (& __ImageBase);
     int status = _tWinMain (hInstance, NULL, NULL, 0);

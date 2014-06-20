@@ -32,7 +32,7 @@ INT_PTR CALLBACK DialogProc (HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
     }
 
   case WM_CTLCOLORSTATIC: case WM_CTLCOLORDLG: {
-    COLORREF color = ::GetDlgCtrlID ((HWND) lParam) == IDC_BUTTON_RECT ? COLOR_BTNFACE : COLOR_WINDOW;
+    COLORREF color = ::GetDlgCtrlID ((HWND) lParam) == IDC_BUTTON_STATIC ? COLOR_BTNFACE : COLOR_WINDOW;
     ::SetBkColor ((HDC) wParam, ::GetSysColor (color));
     return (INT_PTR) ::GetSysColorBrush (color);
   }
