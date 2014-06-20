@@ -34,7 +34,7 @@ $(foreach program,$(PROGRAMS),$(eval $(compile)))
 .PHONY: clean
 clean:
 	-rd /s /q .obj
-	-del $(foreach program,$(PROGRAMS),$(name)) $(subst /,\,$(EXTRA_CLEAN))
+	-del $(subst /,\,$(EXTRA_CLEAN))
 
 .DELETE_ON_ERROR:
 

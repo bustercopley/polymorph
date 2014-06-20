@@ -7,8 +7,9 @@
 #include "model.h"
 #include "aligned-arrays.h"
 #include "qpc.h"
+#include "print.h"
 
-LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+ALIGN_STACK LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   LRESULT result = 0;
   bool call_def_window_proc = false, close_window = false;

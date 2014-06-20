@@ -10,9 +10,9 @@ CXX=g++
 CFLAGS=-pedantic -Wall -Wextra
 CXXFLAGS=-std=c++1y
 
-nodes_FILENAME=nodes-$(PLATFORM).exe
+nodes_FILENAME=$(nodes_OBJDIR)/nodes.exe
 nodes_OBJDIR=.obj/nodes/$(PLATFORM)
-nodes_CFLAGS=$(PLATFORM_CFLAGS)
+nodes_CFLAGS=
 nodes_LDFLAGS=
 nodes_SOURCE_PREFIX=src/nodes/
 nodes_OBJECTS=main.o show_system.o snub_variance.o triangle.o rotor.o
@@ -20,7 +20,7 @@ nodes_OBJECTS=main.o show_system.o snub_variance.o triangle.o rotor.o
 polymorph_FILENAME=polymorph-$(PLATFORM)-$(CONFIG).scr
 polymorph_OBJDIR=.obj/polymorph/$(PLATFORM)/$(CONFIG)
 polymorph_CPPFLAGS=$(CONFIG_CPPFLAGS)
-polymorph_CFLAGS=$(PLATFORM_CFLAGS) $(CONFIG_CFLAGS) -Os
+polymorph_CFLAGS=$(CONFIG_CFLAGS) -Os
 polymorph_CXXFLAGS=$(CONFIG_CXXFLAGS)
 polymorph_LDFLAGS=$(CONFIG_LDFLAGS) -s
 polymorph_LDLIBS=$(CONFIG_LDLIBS)
@@ -44,12 +44,10 @@ tiny_LDLIBS=$(base_LDLIBS) -lgdi32 -ladvapi32 -luser32 -lkernel32
 
 x86_PATH=C:\mingw32\bin
 x86_ENTRY_POINT=_custom_startup
-x86_CFLAGS=-mpreferred-stack-boundary=2
 
 x64_PATH=C:\mingw64\bin
 x64_ENTRY_POINT=custom_startup
 
-PLATFORM_CFLAGS=$($(PLATFORM)_CFLAGS)
 PLATFORM_ENTRY_POINT=$($(PLATFORM)_ENTRY_POINT)
 PLATFORM_PATH=$($(PLATFORM)_PATH)
 
@@ -59,7 +57,7 @@ CONFIG_CXXFLAGS=$($(CONFIG)_CXXFLAGS)
 CONFIG_LDFLAGS=$($(CONFIG)_LDFLAGS)
 CONFIG_LDLIBS=$($(CONFIG)_LDLIBS)
 
-EXTRA_CLEAN=data
+EXTRA_CLEAN=polymorph-*.scr
 
 .PHONY: all test debug
 
@@ -78,7 +76,7 @@ SHADER_RESOURCES=\
 .obj/polymorph/snub-geometry-shader.glsl.mini \
 .obj/polymorph/fragment-shader.glsl.mini
 
-RESOURCES=$(SHADER_RESOURCES) polymorph.scr.manifest .obj/polymorph/$(PLATFORM)/data
+RESOURCES=$(SHADER_RESOURCES) src/polymorph.scr.manifest .obj/polymorph/$(PLATFORM)/data
 
 .obj/polymorph:
 	-md .obj\polymorph
@@ -90,7 +88,7 @@ RESOURCES=$(SHADER_RESOURCES) polymorph.scr.manifest .obj/polymorph/$(PLATFORM)/
 	c:\strawberry\perl\bin\perl minify.pl $< $@
 
 .obj/polymorph/$(PLATFORM)/data: $(nodes_FILENAME) | .obj/polymorph/$(PLATFORM)
-	.\$(nodes_FILENAME) .obj\polymorph\$(PLATFORM)\data>NUL
+	$(subst /,\,$(nodes_FILENAME)) .obj\polymorph\$(PLATFORM)\data>NUL
 
 .obj/polymorph/$(PLATFORM)/resources-res.o: $(RESOURCES) src/resources.rc | .obj/polymorph/$(PLATFORM)
 	windres -I.obj/polymorph -I.obj/polymorph/$(PLATFORM) src/resources.rc .obj/polymorph/$(PLATFORM)/resources-res.o
