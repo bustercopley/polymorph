@@ -6,7 +6,7 @@ BEGIN
     1   "Polymorph"
 END
 
-IDI_APPICON ICON "icosahedron.ico"
+IDI_APPICON ICON "snub-dodecahedron.ico"
 
 IDR_DATA RCDATA "data"
 IDR_VERTEX_SHADER RCDATA "vertex-shader.glsl.mini"
