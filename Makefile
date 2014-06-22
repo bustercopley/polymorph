@@ -94,3 +94,4 @@ RESOURCES=$(SHADER_RESOURCES) src/polymorph.scr.manifest .obj/polymorph/$(PLATFO
 	windres -I.obj/polymorph -I.obj/polymorph/$(PLATFORM) src/resources.rc .obj/polymorph/$(PLATFORM)/resources-res.o
 
 include program.mak
+include build-all.mak
