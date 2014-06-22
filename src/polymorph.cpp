@@ -90,6 +90,13 @@ ALIGN_STACK LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LP
     call_def_window_proc = ! ((ws->mode == screensaver || ws->mode == configure) && wParam == SC_SCREENSAVE);
     break;
 
+  case WM_CLOSE:
+    if (ws->mode == configure)
+      ::ShowWindow (hwnd, SW_HIDE);
+    else
+      ::DestroyWindow (hwnd);
+    break;
+
   case WM_DESTROY:
     ::wglMakeCurrent (NULL, NULL);
     if (ws->hglrc) ::wglDeleteContext (ws->hglrc);
@@ -101,13 +108,7 @@ ALIGN_STACK LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LP
     break;
   }
 
-  if (close_window) {
-    if (ws->mode == configure)
-      ::ShowWindow (hwnd, SW_HIDE);
-    else
-      ::PostMessage (hwnd, WM_CLOSE, 0, 0);
-  }
-
+  if (close_window) ::PostMessage (hwnd, WM_CLOSE, 0, 0);
   if (call_def_window_proc) result = ::DefWindowProc (hwnd, msg, wParam, lParam);
 
   return result;
@@ -126,7 +127,7 @@ HWND create_window (HINSTANCE hInstance, HWND parent, ATOM wndclass_id, LPCTSTR 
 {
   // Create the main window. See MainWndProc for details.
   DWORD style = ws->mode == parented ? WS_CHILD : WS_POPUP;
-  DWORD ex_style = WS_EX_TOOLWINDOW | (ws->mode == screensaver || ws->mode == configure ? WS_EX_TOPMOST : 0);
+  DWORD ex_style = (ws->mode == screensaver || ws->mode == configure ? WS_EX_TOPMOST | WS_EX_TOOLWINDOW : 0);
   RECT rect;
   if (ws->mode == parented) {
     ::GetClientRect (parent, & rect);
