@@ -19,7 +19,7 @@ const unsigned buddy_count = sizeof buddies / sizeof * buddies;
 
 HWND create_dialog (HINSTANCE hInstance, dialog_struct_t * ds)
 {
-  return ::CreateDialogParam (hInstance, MAKEINTRESOURCE (IDD_CONFIGURE), NULL, DialogProc, (LPARAM) ds);
+  return ::CreateDialogParam (hInstance, MAKEINTRESOURCE (IDD_CONFIGURE), ds->hwnd, DialogProc, (LPARAM) ds);
 }
 
 INT_PTR CALLBACK DialogProc (HWND hdlg, UINT message, WPARAM wParam, LPARAM lParam)
@@ -39,6 +39,8 @@ INT_PTR CALLBACK DialogProc (HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
     for (unsigned i = 0; i != buddy_count; ++ i)
       DlgTrackBar_SetBuddy (hdlg, buddies [i] [1], buddies [i] [0], buddies [i] [2]);
     reposition_window (hdlg);
+    // Override the Z order specified by the ownership relationship.
+    ::SetWindowPos (hdlg, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOOWNERZORDER);
     return TRUE;
   }
 

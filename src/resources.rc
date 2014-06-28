@@ -6,7 +6,7 @@ BEGIN
     1   "Polymorph"
 END
 
-IDI_APPICON ICON "snub-dodecahedron.ico"
+IDI_APPICON ICON "polyhedron.ico"
 
 IDR_DATA RCDATA "data"
 IDR_VERTEX_SHADER RCDATA "vertex-shader.glsl.mini"
@@ -21,6 +21,7 @@ IDR_FRAGMENT_SHADER RCDATA "fragment-shader.glsl.mini"
 
 IDD_CONFIGURE DIALOGEX 0, 0, DLGW, DLGH
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_APPWINDOW
 CAPTION "Polymorph"
 FONT 9, "Segoe UI", 0, 0, 0x1
 BEGIN

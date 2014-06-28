@@ -116,9 +116,14 @@ ALIGN_STACK LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LP
 
 ATOM register_class (HINSTANCE hInstance)
 {
+  // The screensaver window has no taskbar button or system menu, but the small
+  // icon is inherited by the (owned) configure dialog and used for the taskbar button.
+  // We could set the dialog's small icon directly, but then it would appear in
+  // the dialog's system menu, which is not the desired effect.
   HICON icon = (HICON) ::LoadImage (hInstance, MAKEINTRESOURCE (IDI_APPICON), IMAGE_ICON, 0, 0, LR_LOADTRANSPARENT);
-  WNDCLASS wndclass = { 0, & MainWndProc, 0, 0, hInstance, icon, NULL, NULL, NULL, TEXT ("Polymorph") };
-  ATOM wndclass_id = ::RegisterClass (& wndclass);
+  HICON icon_small = (HICON) ::LoadImage (hInstance, MAKEINTRESOURCE (IDI_APPICON), IMAGE_ICON, 16, 16, LR_LOADTRANSPARENT);
+  WNDCLASSEX wndclass = { sizeof (WNDCLASSEX), 0, & MainWndProc, 0, 0, hInstance, icon, NULL, NULL, NULL, TEXT ("Polymorph"), icon_small };
+  ATOM wndclass_id = ::RegisterClassEx (& wndclass);
   ::DestroyIcon (icon);
   return wndclass_id;
 }
@@ -127,7 +132,7 @@ HWND create_window (HINSTANCE hInstance, HWND parent, ATOM wndclass_id, LPCTSTR 
 {
   // Create the main window. See MainWndProc for details.
   DWORD style = ws->mode == parented ? WS_CHILD : WS_POPUP;
-  DWORD ex_style = (ws->mode == screensaver || ws->mode == configure ? WS_EX_TOPMOST | WS_EX_TOOLWINDOW : 0);
+  DWORD ex_style = (ws->mode == screensaver || ws->mode == configure ? WS_EX_TOPMOST : 0) | WS_EX_TOOLWINDOW;
   RECT rect;
   if (ws->mode == parented) {
     ::GetClientRect (parent, & rect);
