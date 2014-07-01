@@ -7,10 +7,10 @@
 
 struct rng_t {
   rng_t () = default;
-  void initialize (uint64_t seed);
-  uint64_t get ();
+  void initialize (std::uint64_t seed);
+  std::uint64_t get ();
 private:
-  uint64_t state;
+  std::uint64_t state;
   rng_t (const rng_t &) = delete;
   rng_t & operator = (const rng_t &) = delete;
 };
