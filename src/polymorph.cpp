@@ -34,14 +34,31 @@ ALIGN_STACK LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LP
     break;
   }
 
+  case WM_WINDOWPOSCHANGING: {
+    WINDOWPOS * windowpos = (WINDOWPOS *) lParam;
+    if (windowpos->flags & SWP_SHOWWINDOW) {
+      if (ws->mode == parented) {
+        RECT rect;
+        ::GetClientRect (::GetParent (hwnd), & rect);
+        windowpos->cx = rect.right;
+        windowpos->cy = rect.bottom;
+      }
+      else {
+        windowpos->x  = ::GetSystemMetrics (SM_XVIRTUALSCREEN);
+        windowpos->y  = ::GetSystemMetrics (SM_YVIRTUALSCREEN);
+        windowpos->cx = ::GetSystemMetrics (SM_CXVIRTUALSCREEN);
+        windowpos->cy = ::GetSystemMetrics (SM_CYVIRTUALSCREEN);
+      }
+      windowpos->flags &= ~ (SWP_NOSIZE | SWP_NOMOVE);
+    }
+    break;
+  }
+
   case WM_WINDOWPOSCHANGED: {
     WINDOWPOS * windowpos = (WINDOWPOS *) lParam;
     if (windowpos->flags & SWP_SHOWWINDOW) {
       // Remember initial cursor position to detect mouse movement.
-      POINT cursor;
-      ::GetCursorPos (& cursor);
-      ::ScreenToClient (hwnd, & cursor);
-      ws->initial_cursor_position = cursor;
+      ::GetCursorPos (& ws->initial_cursor_position);
       // (Re-)start the simulation.
       ws->model.start (windowpos->cx, windowpos->cy, * ws->settings);
       ws->model.draw_next ();
@@ -70,9 +87,9 @@ ALIGN_STACK LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LP
   case WM_MOUSEMOVE:
     if (ws->mode == screensaver || ws->mode == configure) {
       // Compare the current mouse position with the one stored in the window struct.
-      DWORD cursor = (DWORD) lParam;
-      int dx = GET_X_LPARAM (cursor) - ws->initial_cursor_position.x;
-      int dy = GET_Y_LPARAM (cursor) - ws->initial_cursor_position.y;
+      DWORD pos = ::GetMessagePos ();
+      int dx = GET_X_LPARAM (pos) - ws->initial_cursor_position.x;
+      int dy = GET_Y_LPARAM (pos) - ws->initial_cursor_position.y;
       close_window = (dx < -10 || dx > 10) || (dy < -10 || dy > 10);
     }
     break;
@@ -91,8 +108,15 @@ ALIGN_STACK LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LP
     break;
 
   case WM_CLOSE:
-    if (ws->mode == configure)
-      ::ShowWindow (hwnd, SW_HIDE);
+    if (ws->mode == configure) {
+      if (::GetWindowLongPtr (hwnd, GWL_STYLE) & WS_VISIBLE) {
+        // Workaround for bug observed on Windows 8.1 where hiding
+        // a full-monitor OpenGL window does not remove it from the display:
+        // resize the window before hiding it.
+        ::SetWindowPos (hwnd, NULL, 0, 0, 0, 0, SWP_NOOWNERZORDER | SWP_NOCOPYBITS);
+        ::ShowWindow (hwnd, SW_HIDE);
+      }
+    }
     else
       ::DestroyWindow (hwnd);
     break;
@@ -133,17 +157,7 @@ HWND create_window (HINSTANCE hInstance, HWND parent, ATOM wndclass_id, LPCTSTR 
   // Create the main window. See MainWndProc for details.
   DWORD style = ws->mode == parented ? WS_CHILD : WS_POPUP;
   DWORD ex_style = (ws->mode == screensaver || ws->mode == configure ? WS_EX_TOPMOST : 0) | WS_EX_TOOLWINDOW;
-  RECT rect;
-  if (ws->mode == parented) {
-    ::GetClientRect (parent, & rect);
-  }
-  else {
-    rect.left =   ::GetSystemMetrics (SM_XVIRTUALSCREEN);
-    rect.top =    ::GetSystemMetrics (SM_YVIRTUALSCREEN);
-    rect.right =  ::GetSystemMetrics (SM_CXVIRTUALSCREEN); // actually width, not right
-    rect.bottom = ::GetSystemMetrics (SM_CYVIRTUALSCREEN); // actually height, not bottom
-  }
   return ::CreateWindowEx (ex_style, MAKEINTATOM (wndclass_id), display_name, style,
-                           rect.left, rect.top, rect.right, rect.bottom,
+                           0, 0, 0, 0,
                            parent, NULL, hInstance, ws);
 }

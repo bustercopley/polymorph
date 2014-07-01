@@ -59,7 +59,7 @@ private:
 };
 
 bool initialize_programs (program_t (& programs) [2]);
-void set_view (program_t (& programs) [2], const float (& view) [4]);
+void set_view (program_t (& programs) [2], const float (& view) [4], int width, int height);
 
 void paint (unsigned N,
             unsigned vao_id,

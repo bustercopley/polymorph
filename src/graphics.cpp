@@ -120,8 +120,9 @@ bool initialize_programs (program_t (& programs) [2])
     programs [1].initialize (IDR_SNUB_GEOMETRY_SHADER);
 }
 
-void set_view (program_t (& programs) [2], const float (& view) [4])
+void set_view (program_t (& programs) [2], const float (& view) [4], int width, int height)
 {
+  glViewport (0, 0, width, height);
   float z1 = view [0];
   float z2 = view [1];
   float x1 = view [2];

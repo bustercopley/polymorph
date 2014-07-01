@@ -98,7 +98,7 @@ bool model_t::start (int width, int height, const settings_t & settings)
 
   float tz = usr::tank_distance, td = usr::tank_depth, th = usr::tank_height;
   float view [4] ALIGNED16 = { -tz, -tz-td, (th/2) * aspect_ratio, (th/2), };
-  set_view (programs, view);
+  set_view (programs, view, width, height);
 
   // Calculate wall planes to exactly fill the front of the viewing frustum.
   float z1 = view [0];
@@ -157,12 +157,6 @@ bool model_t::initialize (std::uint64_t seed)
   initialize_systems (abc, xyz, xyzinvt, primitive_count, vao_ids);
   return true;
 }
-
-#if PRINT_ENABLED
-#include <ostream>
-#include <iostream>
-#include <iomanip>
-#endif
 
 model_t::~model_t ()
 {
