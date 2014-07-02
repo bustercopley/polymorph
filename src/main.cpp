@@ -23,19 +23,17 @@ int WINAPI _tWinMain (HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
   settings_t settings = default_settings;
   load_settings (settings);
 
+  // Create the main window.
   window_struct_t ws ALIGNED16;
   ws.mode = arguments.mode;
   ws.settings = & settings;
-
-  // Create the main window.
   ATOM main_wndclass_atom = register_class (hInstance);
   HWND hwnd = create_window (hInstance, arguments.parent, main_wndclass_atom, display_name, & ws);
 
+  // Create the configure dialog if in configure mode.
   dialog_struct_t ds;
   ds.settings = & settings;
   ds.hwnd = hwnd;
-
-  // Create the configure dialog if in configure mode.
   HWND hdlg = arguments.mode == configure ? create_dialog (hInstance, & ds) : NULL;
 
   // Show the main window, or the configure dialog if in configure mode.
@@ -61,7 +59,7 @@ int WINAPI _tWinMain (HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
 // No standard handles, window placement, environment variables,
 // command-line transformation, global constructors and destructors,
 // atexit functions, thread-local storage, runtime relocation fixups,
-// 387 floating-point initialization, signal handlers or exceptions.
+// 387 floating-point initialization, signal handlers and no exceptions.
 extern "C"
 {
   // This symbol is defined by the linker.
