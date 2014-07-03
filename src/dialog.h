@@ -1,6 +1,6 @@
 // -*- C++ -*-
-#ifndef configure_cpp
-#define configure_cpp
+#ifndef dialog_h
+#define dialog_h
 
 #include "mswin.h"
 #include "settings.h"

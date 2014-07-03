@@ -1,17 +1,14 @@
-#include "cmdline.h"
+#include "arguments.h"
 #include <cstdint>
 
-namespace
+std::uintptr_t from_string (const TCHAR * s)
 {
-  std::uintptr_t from_string (const TCHAR * s)
-  {
-    std::uintptr_t result = 0;
-    while (TEXT ('0') <= * s && * s <= TEXT ('9')) {
-      result = 10 * result + (* s - TEXT ('0'));
-      ++ s;
-    }
-    return result;
+  std::uintptr_t result = 0;
+  while (TEXT ('0') <= * s && * s <= TEXT ('9')) {
+    result = 10 * result + (* s - TEXT ('0'));
+    ++ s;
   }
+  return result;
 }
 
 arguments_t::arguments_t (const TCHAR * s)

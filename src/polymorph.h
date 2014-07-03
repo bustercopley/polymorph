@@ -3,7 +3,7 @@
 #define polymorph_h
 
 #include "mswin.h"
-#include "cmdline.h"
+#include "arguments.h"
 #include "model.h"
 #include "settings.h"
 

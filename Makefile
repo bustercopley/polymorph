@@ -27,7 +27,7 @@ polymorph_LDLIBS=$(CONFIG_LDLIBS)
 polymorph_EXTRA_OBJECTS=.obj/polymorph/$(PLATFORM)/resources-res.o
 polymorph_SOURCE_PREFIX=src/
 polymorph_OBJECTS=\
-bump.o cmdline.o configure.o glinit.o graphics.o kdtree.o main.o markov.o memory.o \
+arguments.o bump.o dialog.o glinit.o graphics.o kdtree.o main.o markov.o memory.o \
 model.o partition.o polymorph.o random.o reposition.o rodrigues.o settings.o systems.o
 
 base_CPPFLAGS=-DUNICODE -D_UNICODE

@@ -3,10 +3,10 @@
 #include "resources.h"
 #include "glinit.h"
 #include "model.h"
-#include "cmdline.h"
+#include "arguments.h"
 #include "polymorph.h"
 #include "settings.h"
-#include "configure.h"
+#include "dialog.h"
 #include <tchar.h>
 #include <windowsx.h>
 #include <cstdint>

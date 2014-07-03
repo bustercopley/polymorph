@@ -1,7 +1,7 @@
 // -*- C++ -*-
 
-#ifndef cmdline_h
-#define cmdline_h
+#ifndef arguments_h
+#define arguments_h
 
 #include "mswin.h"
 
