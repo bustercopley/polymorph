@@ -5,6 +5,8 @@
 #include "model.h"
 #include "vector.h"
 #include "compiler.h"
+#include "bsr.h"
+#include <cstddef>
 #include <cstdint>
 #include <limits>
 
@@ -16,22 +18,14 @@ namespace usr
 
 namespace
 {
-  inline std::size_t nodes_required (std::size_t point_count)
+  inline std::size_t nodes_required (std::size_t n)
   {
-    // http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
-    std::size_t m = 2;
-    std::size_t t = point_count - 1;
-    while (t >>= 1) m <<= 1; // Now m is 2^{ceil(log_2(count))}.
-    return m - 1;
+    return (std::size_t (2) << bsr (n - 1)) - std::size_t (1);
   }
 
   inline std::size_t node_dimension (std::size_t i)
   {
-    // http://graphics.stanford.edu/~seander/bithacks.html#IntegerLogObvious
-    std::size_t m = 0;
-    std::size_t t = i + 1;
-    while (t >>= 1) ++ m; // Now m is floor(log_2(i + 1)).
-    return m % 3;
+    return bsr (i + 1) % std::size_t (3);
   }
 
   inline v4f dim_mask (unsigned dim)
