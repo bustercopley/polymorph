@@ -5,6 +5,8 @@
 #include "glprocs.inc"
 #undef DO_GLPROC
 
+#define WC_GLINIT TEXT ("g")
+
 // These functions are needed during initialisation; they are handled specially.
 PFNWGLCHOOSEPIXELFORMATARBPROC wglChoosePixelFormatARB = nullptr;
 PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB = nullptr;
@@ -66,12 +68,11 @@ bool glinit (HINSTANCE hInstance)
 {
   // Create legacy OpenGL window to get function pointers needed to create a proper OpenGL window.
   // The window does not survive creation. See InitWndProc for details.
-  WNDCLASS init_wndclass = { 0, & InitWndProc, 0, 0, hInstance, NULL, NULL, NULL, NULL, TEXT ("GLinit") };
-  ATOM init_wndclass_atom = ::RegisterClass (& init_wndclass);
-  ::CreateWindowEx (0, MAKEINTATOM (init_wndclass_atom), TEXT (""), 0,
+  WNDCLASSEX init_wndclass = { sizeof (WNDCLASSEX), 0, & InitWndProc, 0, 0, hInstance, NULL, NULL, NULL, NULL, WC_GLINIT, NULL };
+  ::RegisterClassEx (& init_wndclass);
+  ::CreateWindowEx (0, WC_GLINIT, TEXT (""), 0,
                     CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
                     NULL, NULL, hInstance, NULL);
-  ::UnregisterClass (MAKEINTATOM (init_wndclass_atom), hInstance);
   return wglChoosePixelFormatARB && wglCreateContextAttribsARB;
 }
 

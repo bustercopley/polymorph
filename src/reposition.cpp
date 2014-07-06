@@ -10,6 +10,8 @@
 // "How do I get the effect of CW_USEDEFAULT positioning on a window I've already created?"
 // http://blogs.msdn.com/b/oldnewthing/archive/2013/11/22/10470631.aspx
 
+#define WC_REPOSWND TEXT ("p")
+
 LRESULT CALLBACK RepositionWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   if (msg != WM_NCCREATE) return ::DefWindowProc (hwnd, msg, wParam, lParam);
@@ -34,10 +36,10 @@ void reposition_window (HWND hwnd)
   int cx = window_rect.right - window_rect.left;
   int cy = window_rect.bottom - window_rect.top;
   HINSTANCE hInstance = (HINSTANCE) ::GetWindowLongPtr (hwnd, GWLP_HINSTANCE);
-  WNDCLASS wndclass = { 0, & RepositionWndProc, 0, 0, hInstance, NULL, NULL, NULL, NULL, TEXT ("WPos") };
-  ATOM atom = ::RegisterClass (& wndclass);
-  ::CreateWindowEx (0, MAKEINTATOM (atom), TEXT (""), 0,
+  WNDCLASS wndclass = { 0, & RepositionWndProc, 0, 0, hInstance, NULL, NULL, NULL, NULL, WC_REPOSWND };
+  ::RegisterClass (& wndclass);
+  ::CreateWindowEx (0, WC_REPOSWND, TEXT (""), 0,
                     CW_USEDEFAULT, CW_USEDEFAULT, cx, cy,
                     NULL, NULL, hInstance, (LPVOID) hwnd);
-  ::UnregisterClass (MAKEINTATOM (atom), hInstance);
+  ::UnregisterClass (WC_REPOSWND, hInstance);
 }

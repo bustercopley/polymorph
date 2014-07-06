@@ -3,12 +3,6 @@
 #include "settings.h"
 #include "reposition.h"
 
-#define DlgControl_GetFont(hdlg, id) ((HFONT) ::SendDlgItemMessage (hdlg, id, WM_GETFONT, 0, 0))
-#define DlgControl_SetFont(hdlg, id, font) ::SendDlgItemMessage (hdlg, id, WM_SETFONT, (WPARAM) (font), 0)
-#define DlgTrackBar_GetPos(hdlg, id) ::SendDlgItemMessage (hdlg, id, TBM_GETPOS, 0, 0)
-#define DlgTrackBar_SetPos(hdlg, id, pos, redraw) ::SendDlgItemMessage (hdlg, id, TBM_SETPOS, (WPARAM) (redraw), (LPARAM) (pos))
-#define DlgTrackBar_SetBuddy(hdlg, id, buddy, side) ::SendDlgItemMessage (hdlg, id, TBM_SETBUDDY, (WPARAM) (side), (LPARAM) (::GetDlgItem (hdlg, buddy)))
-
 const UINT buddies [] [3] = {
   { IDC_MAX_COUNT_STATIC, IDC_COUNT_TRACKBAR, FALSE, },
   { IDC_MIN_COUNT_STATIC, IDC_COUNT_TRACKBAR, TRUE,  },
@@ -33,11 +27,15 @@ INT_PTR CALLBACK DialogProc (HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
     ::SetWindowLongPtr (hdlg, DWLP_USER, (LONG_PTR) ds);
     HFONT font = ::CreateFont (16, 0, 0, 0, FW_DONTCARE, TRUE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
                                CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, VARIABLE_PITCH | FF_ROMAN, TEXT ("Segoe UI"));
-    DlgControl_SetFont (hdlg, IDC_MESSAGE, font);
-    DlgTrackBar_SetPos (hdlg, IDC_COUNT_TRACKBAR, ds->settings->count, TRUE);
-    DlgTrackBar_SetPos (hdlg, IDC_SPEED_TRACKBAR, ds->settings->speed, TRUE);
-    for (unsigned i = 0; i != buddy_count; ++ i)
-      DlgTrackBar_SetBuddy (hdlg, buddies [i] [1], buddies [i] [0], buddies [i] [2]);
+    ::SendMessage (::GetDlgItem (hdlg, IDC_MESSAGE), WM_SETFONT, (WPARAM) font, 0);
+    HWND hwnd_count_trackbar = ::GetDlgItem (hdlg, IDC_COUNT_TRACKBAR);
+    HWND hwnd_speed_trackbar = ::GetDlgItem (hdlg, IDC_SPEED_TRACKBAR);
+    ::SendMessage (hwnd_count_trackbar, TBM_SETPOS, (WPARAM) TRUE, (LPARAM) ds->settings->count);
+    ::SendMessage (hwnd_speed_trackbar, TBM_SETPOS, (WPARAM) TRUE, (LPARAM) ds->settings->speed);
+    ::SendMessage (hwnd_count_trackbar, TBM_SETBUDDY, (WPARAM) FALSE, (LPARAM) ::GetDlgItem (hdlg, IDC_MAX_COUNT_STATIC));
+    ::SendMessage (hwnd_count_trackbar, TBM_SETBUDDY, (WPARAM) TRUE, (LPARAM) ::GetDlgItem (hdlg, IDC_MIN_COUNT_STATIC));
+    ::SendMessage (hwnd_speed_trackbar, TBM_SETBUDDY, (WPARAM) FALSE, (LPARAM) ::GetDlgItem (hdlg, IDC_MAX_SPEED_STATIC));
+    ::SendMessage (hwnd_speed_trackbar, TBM_SETBUDDY, (WPARAM) TRUE, (LPARAM) ::GetDlgItem (hdlg, IDC_MIN_SPEED_STATIC));
     reposition_window (hdlg);
     // Override the Z order specified by the ownership relationship.
     ::SetWindowPos (hdlg, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOOWNERZORDER);
@@ -45,14 +43,13 @@ INT_PTR CALLBACK DialogProc (HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
   }
 
   case WM_DESTROY:
-    ::DeleteObject (DlgControl_GetFont (hdlg, IDC_MESSAGE));
     ::PostQuitMessage (0);
     return FALSE;
 
   case WM_COMMAND: {
     const UINT id = LOWORD (wParam);
-    ds->settings->count = DlgTrackBar_GetPos (hdlg, IDC_COUNT_TRACKBAR);
-    ds->settings->speed = DlgTrackBar_GetPos (hdlg, IDC_SPEED_TRACKBAR);
+    ds->settings->count = ::SendMessage (::GetDlgItem (hdlg, IDC_COUNT_TRACKBAR), TBM_GETPOS, 0, 0);
+    ds->settings->speed = ::SendMessage (::GetDlgItem (hdlg, IDC_SPEED_TRACKBAR), TBM_GETPOS, 0, 0);
     if (id == IDOK) save_settings (* ds->settings);
     if (id != IDC_PREVIEW_BUTTON) ::DestroyWindow (hdlg);
     if (id == IDC_PREVIEW_BUTTON) ::ShowWindow (ds->hwnd, SW_SHOW);
@@ -90,8 +87,7 @@ INT_PTR CALLBACK DialogProc (HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
   }
 
   case WM_CTLCOLORSTATIC: case WM_CTLCOLORDLG: {
-    COLORREF color = ::GetDlgCtrlID ((HWND) lParam) == IDC_BUTTONS_STATIC ? COLOR_BTNFACE : COLOR_WINDOW;
-    ::SetBkColor ((HDC) wParam, ::GetSysColor (color));
+    COLORREF color = (HWND) lParam == ::GetDlgItem (hdlg, IDC_BUTTONS_STATIC) ? COLOR_BTNFACE : COLOR_WINDOW;
     return (INT_PTR) ::GetSysColorBrush (color);
   }
 

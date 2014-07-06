@@ -9,6 +9,8 @@
 #include "qpc.h"
 #include "print.h"
 
+#define WC_MAIN TEXT ("M")
+
 ALIGN_STACK LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   LRESULT result = 0;
@@ -138,7 +140,7 @@ ALIGN_STACK LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LP
   return result;
 }
 
-ATOM register_class (HINSTANCE hInstance)
+void register_class (HINSTANCE hInstance)
 {
   // The screensaver window has no taskbar button or system menu, but the small
   // icon is inherited by the (owned) configure dialog and used for the taskbar button.
@@ -146,18 +148,16 @@ ATOM register_class (HINSTANCE hInstance)
   // the dialog's system menu, which is not the desired effect.
   HICON icon = (HICON) ::LoadImage (hInstance, MAKEINTRESOURCE (IDI_APPICON), IMAGE_ICON, 0, 0, LR_LOADTRANSPARENT);
   HICON icon_small = (HICON) ::LoadImage (hInstance, MAKEINTRESOURCE (IDI_APPICON), IMAGE_ICON, 16, 16, LR_LOADTRANSPARENT);
-  WNDCLASSEX wndclass = { sizeof (WNDCLASSEX), 0, & MainWndProc, 0, 0, hInstance, icon, NULL, NULL, NULL, TEXT ("Polymorph"), icon_small };
-  ATOM wndclass_id = ::RegisterClassEx (& wndclass);
-  ::DestroyIcon (icon);
-  return wndclass_id;
+  WNDCLASSEX wndclass = { sizeof (WNDCLASSEX), 0, & MainWndProc, 0, 0, hInstance, icon, NULL, NULL, NULL, WC_MAIN, icon_small };
+  ::RegisterClassEx (& wndclass);
 }
 
-HWND create_window (HINSTANCE hInstance, HWND parent, ATOM wndclass_id, LPCTSTR display_name, window_struct_t * ws)
+HWND create_window (HINSTANCE hInstance, HWND parent, LPCTSTR display_name, window_struct_t * ws)
 {
   // Create the main window. See MainWndProc for details.
   DWORD style = ws->mode == parented ? WS_CHILD : WS_POPUP;
   DWORD ex_style = (ws->mode == screensaver || ws->mode == configure ? WS_EX_TOPMOST : 0) | WS_EX_TOOLWINDOW;
-  return ::CreateWindowEx (ex_style, MAKEINTATOM (wndclass_id), display_name, style,
+  return ::CreateWindowEx (ex_style, WC_MAIN, display_name, style,
                            0, 0, 0, 0,
                            parent, NULL, hInstance, ws);
 }

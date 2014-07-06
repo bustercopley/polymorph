@@ -27,8 +27,8 @@ int WINAPI _tWinMain (HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
   window_struct_t ws ALIGNED16;
   ws.mode = arguments.mode;
   ws.settings = & settings;
-  ATOM main_wndclass_atom = register_class (hInstance);
-  HWND hwnd = create_window (hInstance, arguments.parent, main_wndclass_atom, display_name, & ws);
+  register_class (hInstance);
+  HWND hwnd = create_window (hInstance, arguments.parent, display_name, & ws);
 
   // Create the configure dialog if in configure mode.
   dialog_struct_t ds;
@@ -47,8 +47,6 @@ int WINAPI _tWinMain (HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
       ::DispatchMessage (& msg);
     }
   }
-
-  ::UnregisterClass (MAKEINTATOM (main_wndclass_atom), hInstance);
   return msg.wParam;
 }
 

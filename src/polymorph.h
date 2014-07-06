@@ -16,7 +16,7 @@ struct window_struct_t
   HGLRC hglrc;
 };
 
-ATOM register_class (HINSTANCE hInstance);
-HWND create_window (HINSTANCE hInstance, HWND parent, ATOM wndclass_id, LPCTSTR display_name, window_struct_t * ws);
+void register_class (HINSTANCE hInstance);
+HWND create_window (HINSTANCE hInstance, HWND parent, LPCTSTR display_name, window_struct_t * ws);
 
 #endif
