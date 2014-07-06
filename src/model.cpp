@@ -221,7 +221,7 @@ void model_t::add_object (const float (& view) [4], float temperature)
   const float action = temperature * usr::frame_time;
   store4f (x [count], t);
   store4f (v [count], get_vector_in_ball (rng, 0.5f * action / A.m));
-  store4f (u [count], get_vector_in_ball (rng, 0x1.921fb4P1)); // pi
+  store4f (u [count], get_vector_in_ball (rng, 0x1.921fb4P1f)); // pi
   store4f (w [count], get_vector_in_ball (rng, 0.2f * action / A.l));
 
   std::uint64_t entropy = rng.get ();

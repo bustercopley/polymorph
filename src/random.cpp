@@ -44,7 +44,7 @@ v4f get_vector_in_ball (rng_t & rng, float radius)
     sq = dot (v, v);
   }
   while (_mm_comige_ss (sq, lim));
-  float rs = 0x1.0p-31 * radius;
+  float rs = 0x1.0p-31f * radius;
   v4f k = { rs, rs, rs, 0.0f, };
   return k * v;
 }
