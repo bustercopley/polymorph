@@ -7,6 +7,8 @@
 
 namespace
 {
+#if PRINT_ENABLED
+#define PRINT_INFO_LOG(a, b, c) print_info_log (a, b, c)
   inline void print_info_log (GLuint object,
                               PFNGLGETSHADERIVPROC glGet__iv,
                               PFNGLGETSHADERINFOLOGPROC glGet__InfoLog)
@@ -23,6 +25,9 @@ namespace
       }
     }
   }
+#else
+#define PRINT_INFO_LOG(a, b, c)
+#endif
 
   GLuint make_shader (GLenum type, int id1, int id2)
   {
@@ -38,7 +43,7 @@ namespace
     glGetShaderiv (id, GL_COMPILE_STATUS, & status);
     if (! status) {
       print ("Shader compilation failed: ", 1000 * id1 + id2);
-      print_info_log (id, glGetShaderiv, glGetShaderInfoLog);
+      PRINT_INFO_LOG (id, glGetShaderiv, glGetShaderInfoLog);
       return 0;
     }
     return id;
@@ -111,9 +116,7 @@ bool initialize_programs (program_t (& programs) [2])
   glEnable (GL_DEPTH_TEST);
   glDepthRange (1.0, 0.0);
   glEnable (GL_CULL_FACE);
-  //glCullFace (GL_BACK);
   glEnable (GL_BLEND);
-  glBlendEquation (GL_FUNC_ADD);
   glBlendFunc (GL_DST_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   return
     programs [0].initialize (IDR_GEOMETRY_SHADER) &&
@@ -172,7 +175,7 @@ bool program_t::initialize (unsigned gshader2)
   GLint status;
   glGetProgramiv (id, GL_LINK_STATUS, & status);
   if (! status) {
-    print_info_log (id, glGetProgramiv, glGetProgramInfoLog);
+    PRINT_INFO_LOG (id, glGetProgramiv, glGetProgramInfoLog);
     return false;
   }
 
