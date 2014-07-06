@@ -62,6 +62,10 @@ while (defined (my $line = <$in>))
     $buffer =~ s{\B }{}g; # strip space not after a word
     $buffer =~ s{ \B}{}g; # strip space not before a word
 
+    # Delete unnecessary zeros from floating-point literals.
+    $buffer =~ s{(\d\.\d*)0+\b}{$1}g;
+    $buffer =~ s{\b0\.(\d)}{.$1}g;
+
     my $v = qr/\w+(?:\[\w+\])?(?:=[^;]+)?/;
     while ($buffer =~ m/\G((?:\w+ )+)($v(?:,$v)*);/g)
     {
