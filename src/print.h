@@ -43,7 +43,7 @@ inline void print (const char * name, T value)
 template <>
 inline void print (const char * name, __m128 value)
 {
-  float temp [4] ALIGNED16;
+  ALIGNED16 float temp [4];
   _mm_store_ps (temp, value);
   print (name, temp);
 }

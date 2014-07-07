@@ -51,7 +51,7 @@ namespace
     { { tetrahedral, 7, }, { dual_tetrahedral, 7, }, probability_max / 2, },
   };
   const unsigned replacement_count = sizeof replacements / sizeof * replacements;
-  const float rotations [3] [4] ALIGNED16 = {
+  ALIGNED16 const float rotations [3] [4] = {
     // Rotate about an X-node through angle pi/4.
     { -0x1.921fb4P-1f, 0.0f, 0.0f, 0.0f, }, // I1 -> T7
     { +0x1.921fb4P-1f, 0.0f, 0.0f, 0.0f, }, // T7 -> I1

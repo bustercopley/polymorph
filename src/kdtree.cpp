@@ -30,10 +30,10 @@ namespace
 
   inline v4f dim_mask (unsigned dim)
   {
-    static const union {
+    ALIGNED16 static const union {
       std::uint32_t u32 [4];
       float f32 [4];
-    } masks [3] ALIGNED16 = {
+    } masks [3] = {
       { { 0xffffffff, 0, 0, 0, }, },
       { { 0, 0xffffffff, 0, 0, }, },
       { { 0, 0, 0xffffffff, 0, }, },

@@ -24,7 +24,7 @@ int WINAPI _tWinMain (HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
   load_settings (settings);
 
   // Create the main window.
-  window_struct_t ws ALIGNED16;
+  ALIGNED16 window_struct_t ws;
   ws.mode = arguments.mode;
   ws.settings = & settings;
   register_class (hInstance);

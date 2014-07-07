@@ -37,12 +37,12 @@ private:
   void recalculate_locus (object_t & A);
   void draw (unsigned begin, unsigned count);
 
-  float walls [6] [2] [4] ALIGNED16;
-  float abc [system_count] [8] [4] ALIGNED16;
-  float xyz [system_count] [3] [4] ALIGNED16;
-  float xyzinvt [system_count] [3] [4] ALIGNED16;
-  bumps_t bumps ALIGNED16;
-  step_t step ALIGNED16;
+  ALIGNED16 float walls [6] [2] [4];
+  ALIGNED16 float abc [system_count] [8] [4];
+  ALIGNED16 float xyz [system_count] [3] [4];
+  ALIGNED16 float xyzinvt [system_count] [3] [4];
+  ALIGNED16 bumps_t bumps;
+  ALIGNED16 step_t step;
 
   float max_radius;
 
