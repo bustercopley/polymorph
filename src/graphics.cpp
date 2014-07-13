@@ -50,7 +50,7 @@ namespace
   }
 }
 
-static const int attribute_id = 0;
+static const int attribute_id_x = 0;
 
 unsigned make_vao (unsigned N, const float (* vertices) [4], const std::uint8_t (* indices) [6])
 {
@@ -63,8 +63,8 @@ unsigned make_vao (unsigned N, const float (* vertices) [4], const std::uint8_t 
   glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, buffer_ids [1]);
   glBufferData (GL_ARRAY_BUFFER, (N + 2) * 4 * sizeof (float), vertices, GL_STATIC_DRAW);
   glBufferData (GL_ELEMENT_ARRAY_BUFFER, 6 * N * sizeof (std::uint8_t), indices, GL_STATIC_DRAW);
-  glVertexAttribPointer (attribute_id, 4, GL_FLOAT, GL_FALSE, 0, 0);
-  glEnableVertexAttribArray (attribute_id);
+  glVertexAttribPointer (attribute_id_x, 4, GL_FLOAT, GL_FALSE, 0, 0);
+  glEnableVertexAttribArray (attribute_id_x);
   //glBindVertexArray (0);
   return vao_id;
 }
@@ -169,7 +169,7 @@ bool program_t::initialize (unsigned gshader2)
   glAttachShader (id, vshader_id);
   glAttachShader (id, gshader_id);
   glAttachShader (id, fshader_id);
-  glBindAttribLocation (id, attribute_id, "x");
+  glBindAttribLocation (id, attribute_id_x, "x");
   glLinkProgram (id);
 
   GLint status;
@@ -199,7 +199,7 @@ void clear ()
 void paint (unsigned N,
             unsigned vao_id,
             const program_t & program,
-            std::int32_t uniform_buffer_id,
+            std::uint32_t uniform_buffer_id,
             std::ptrdiff_t uniform_buffer_offset)
 {
   const unsigned size = sizeof (uniform_block_t);
