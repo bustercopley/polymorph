@@ -3,7 +3,7 @@
 STRINGTABLE
     LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 BEGIN
-    1   "Polymorph"
+    1   APPNAME
 END
 
 IDI_APPICON ICON "polyhedron.ico"

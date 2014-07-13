@@ -5,6 +5,15 @@
 
 #include "mswin.h"
 
+#define x64_tiny_APPNAME "Polymorph"
+#define x86_tiny_APPNAME "Polymorph (x86)"
+#define x64_base_APPNAME "Polymorph (base)"
+#define x86_base_APPNAME "Polymorph (x86) (base)"
+
+#define APPNAME_CONC0(a,b) a ## b
+#define APPNAME_CONC(a,b) APPNAME_CONC0(a,b)
+#define APPNAME APPNAME_CONC(PLATFORM_CONFIG, _APPNAME)
+
 #define IDI_APPICON 1
 
 #define IDR_DATA 1

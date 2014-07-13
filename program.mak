@@ -13,6 +13,7 @@ depends=$(foreach object,$($(program)_OBJECTS),$(objdir)/$(object:%.o=%.d))
 cppflags=$($(program)_CPPFLAGS) $(CPPFLAGS)
 ccflags=$(CFLAGS) $(CCFLAGS) $($(program)_CFLAGS) $($(program)_CCFLAGS)
 cxxflags=$(CFLAGS) $(CXXFLAGS) $($(program)_CFLAGS) $($(program)_CXXFLAGS)
+resflags=$(cppflags) $($(program)_RESFLAGS)
 ldflags=$($(program)_LDFLAGS) $(LDFLAGS)
 ldlibs=$($(program)_LDLIBS) $(LDLIBS)
 
@@ -21,6 +22,8 @@ $(objdir)/%.o: $(source_prefix)%.cpp | $(objdir)
 	$(CXX) $(DEPFLAGS) $(cppflags) $(cxxflags) $$< -c -o $$@
 $(objdir)/%.o: $(source_prefix)%.c | $(objdir)
 	$(CC) $(DEPFLAGS) $(cppflags) $(ccflags) $$< -c -o $$@
+$(objdir)/%-res.o: $(source_prefix)%.rc | $(objdir)
+	windres $(resflags) $$< $$@
 $(objdir):
 	-md $(subst /,\,$(objdir))
 ifdef $(program)_FILENAME

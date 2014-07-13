@@ -17,14 +17,15 @@ nodes_LDFLAGS=
 nodes_SOURCE_PREFIX=src/nodes/
 nodes_OBJECTS=main.o show_system.o snub_variance.o triangle.o rotor.o
 
-polymorph_FILENAME=polymorph-$(PLATFORM)-$(CONFIG).scr
+polymorph_FILENAME="$($(PLATFORM)_$(CONFIG)_APPNAME).scr"
 polymorph_OBJDIR=.obj/polymorph/$(PLATFORM)/$(CONFIG)
 polymorph_CPPFLAGS=$(CONFIG_CPPFLAGS)
 polymorph_CFLAGS=$(CONFIG_CFLAGS) -Os
 polymorph_CXXFLAGS=$(CONFIG_CXXFLAGS)
 polymorph_LDFLAGS=$(CONFIG_LDFLAGS) -s
 polymorph_LDLIBS=$(CONFIG_LDLIBS)
-polymorph_EXTRA_OBJECTS=.obj/polymorph/$(PLATFORM)/resources-res.o
+polymorph_RESFLAGS=-DPLATFORM_CONFIG=$(PLATFORM)_$(CONFIG) -I.obj/polymorph -I.obj/polymorph/$(PLATFORM)
+polymorph_EXTRA_OBJECTS=.obj/polymorph/$(PLATFORM)/$(CONFIG)/resources-res.o
 polymorph_SOURCE_PREFIX=src/
 polymorph_OBJECTS=\
 arguments.o bump.o dialog.o glinit.o graphics.o kdtree.o main.o markov.o memory.o \
@@ -48,6 +49,11 @@ x86_ENTRY_POINT=_custom_startup
 x64_PATH=C:\mingw64\bin
 x64_ENTRY_POINT=custom_startup
 
+x64_tiny_APPNAME=Polymorph
+x86_tiny_APPNAME=Polymorph (x86)
+x64_base_APPNAME=Polymorph (base)
+x86_base_APPNAME=Polymorph (x86) (base)
+
 PLATFORM_ENTRY_POINT=$($(PLATFORM)_ENTRY_POINT)
 PLATFORM_PATH=$($(PLATFORM)_PATH)
 
@@ -57,7 +63,7 @@ CONFIG_CXXFLAGS=$($(CONFIG)_CXXFLAGS)
 CONFIG_LDFLAGS=$($(CONFIG)_LDFLAGS)
 CONFIG_LDLIBS=$($(CONFIG)_LDLIBS)
 
-EXTRA_CLEAN=polymorph-*.scr
+EXTRA_CLEAN=Polymorph*.scr
 
 .PHONY: all test debug
 
@@ -90,8 +96,7 @@ RESOURCES=$(SHADER_RESOURCES) src/polymorph.scr.manifest .obj/polymorph/$(PLATFO
 .obj/polymorph/$(PLATFORM)/data: $(nodes_FILENAME) | .obj/polymorph/$(PLATFORM)
 	$(subst /,\,$(nodes_FILENAME)) .obj\polymorph\$(PLATFORM)\data>NUL
 
-.obj/polymorph/$(PLATFORM)/resources-res.o: $(RESOURCES) src/resources.rc | .obj/polymorph/$(PLATFORM)
-	windres -I.obj/polymorph -I.obj/polymorph/$(PLATFORM) src/resources.rc .obj/polymorph/$(PLATFORM)/resources-res.o
+.obj/polymorph/$(PLATFORM)/$(CONFIG)/resources-res.o: $(RESOURCES) src/resources.h
 
 include program.mak
 include build-all.mak
