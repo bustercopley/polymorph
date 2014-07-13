@@ -24,6 +24,7 @@ my %abbrevs = (
   "amplify" => "I",  # 1 argument
   "aspect" => "I",   # 5 arguments
   "vertex" => "I",   # 2 arguments
+  "color" => "J",    # 1 argument
 );
 
 %abbrevs = map { qr/\b$_\b/ => $abbrevs {$_} } keys %abbrevs;
