@@ -132,7 +132,7 @@ bool model_t::start (int width, int height, const settings_t & settings)
   for (unsigned n = 0; n != count; ++ n) kdtree_index [n] = n;
 
   float phase = 0.0f;
-  float global_time_offset = get_double (rng, 0.0, usr::cycle_duration);
+  float global_time_offset = get_float (rng, 0.0f, usr::cycle_duration);
   for (unsigned n = 0; n != count; ++ n) {
     float hue = 6.0f * phase;
     hue = (hue < 3.0f / 2.0f ? hue * 2.0f / 3.0f : hue * 10.0f / 9.0f - 2.0f / 3.0f); // More orange.
@@ -192,7 +192,7 @@ void model_t::add_object (const float (& view) [4], float temperature)
   // }
 
   object_t & A = objects [count];
-  float R = get_double (rng, usr::min_radius, usr::max_radius);
+  float R = get_float (rng, usr::min_radius, usr::max_radius);
   r [count] = R;
   if (max_radius < R) max_radius = R;
   A.m = usr::density * R * R;

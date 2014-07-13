@@ -21,10 +21,10 @@ std::uint64_t rng_t::get ()
 
 #include "random-util.h"
 
-// Random double number uniformly distributed on the interval [a, b).
-double get_double (rng_t & rng, double a, double b)
+// Random floating-point number uniformly distributed on the interval [a, b).
+float get_float (rng_t & rng, float a, float b)
 {
-  return a + 0x1.0p-64 * rng.get () * (b - a);
+  return a + 0x1.0p-64f * rng.get () * (b - a);
 }
 
 // Return a random vector uniformly distributed in
