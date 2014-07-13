@@ -3,6 +3,7 @@
 #ifndef vector_h
 #define vector_h
 
+#include "compiler.h"
 #include "mswin.h"
 #include <immintrin.h>
 
@@ -52,7 +53,7 @@ inline v4f dot (v4f u, v4f v)
 #endif
 }
 
-inline v4f cross (const v4f a, const v4f b)
+ALWAYS_INLINE inline v4f cross (const v4f a, const v4f b)
 {
   v4f c = _mm_shuffle_ps (a, a, SHUFFLE (1, 2, 0, 3)); // a1 a2 a0 a3
   v4f d = _mm_shuffle_ps (b, b, SHUFFLE (1, 2, 0, 3)); // b1 b2 b0 b3
@@ -86,12 +87,11 @@ inline v4f normalize (v4f v)
 
 inline v4f sqrt (v4f k)
 {
-  v4f zero = { 0.0f, 0.0f, 0.0f, 0.0f, };
-  return k * _mm_and_ps (_mm_cmpneq_ps (k, zero), rsqrt (k));
+  return k * _mm_and_ps (_mm_cmpneq_ps (k, _mm_setzero_ps ()), rsqrt (k));
 }
 
 // Apply the 3x3 matrix m to the column vector x.
-inline v4f mapply (const float (& m) [3] [4], v4f x)
+ALWAYS_INLINE inline v4f mapply (const float (& m) [3] [4], v4f x)
 {
 #if __SSE4_1__
   v4f t0 = _mm_dp_ps (load4f (m [0]), x, 0x71);
@@ -110,7 +110,7 @@ inline v4f mapply (const float (& m) [3] [4], v4f x)
 }
 
 // Transpose 3x3 matrix m and apply to column vector x.
-inline v4f tmapply (const float (& m) [3] [4], v4f x)
+ALWAYS_INLINE inline v4f tmapply (const float (& m) [3] [4], v4f x)
 {
   v4f m0 = load4f (m [0]);
   v4f m1 = load4f (m [1]);
