@@ -156,7 +156,9 @@ HWND create_window (HINSTANCE hInstance, HWND parent, LPCTSTR display_name, wind
 {
   // Create the main window. See MainWndProc for details.
   DWORD style = ws->mode == parented ? WS_CHILD : WS_POPUP;
-  DWORD ex_style = (ws->mode == screensaver || ws->mode == configure ? WS_EX_TOPMOST : 0) | WS_EX_TOOLWINDOW;
+  DWORD ex_style =
+    (ws->mode == screensaver || ws->mode == configure ? WS_EX_TOPMOST : 0) |
+    (ws->mode == persistent ? WS_EX_APPWINDOW : WS_EX_TOOLWINDOW);
   return ::CreateWindowEx (ex_style, WC_MAIN, display_name, style,
                            0, 0, 0, 0,
                            parent, NULL, hInstance, ws);
