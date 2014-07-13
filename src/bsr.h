@@ -2,17 +2,14 @@
 #ifndef bsr_h
 #define bsr_h
 
+#include "vector.h"
 #include <cstddef>
 
-inline std::size_t bsr (std::size_t x)
+inline unsigned bsr (unsigned x)
 {
-  std::size_t result;
-
-  asm ("bsr\t%[x], %[result]"
-       : [result] "=r" (result)
-       : [x] "mr" (x));
-
-  return result;
+  unsigned long result;
+  _BitScanReverse (& result, x);
+  return (unsigned) result;
 }
 
 #endif
