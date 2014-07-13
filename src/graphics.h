@@ -41,7 +41,7 @@ struct uniform_buffer_t
   inline uniform_buffer_t () : m_begin (0) { };
   inline std::size_t count () const { return m_size / m_stride; }
   inline std::size_t stride () const { return m_stride; }
-  inline std::size_t id () const { return m_id; }
+  inline std::uint32_t id () const { return m_id; }
   inline uniform_block_t & operator [] (std::size_t index) const
   {
     return * ((uniform_block_t *) (m_begin + index * m_stride));
@@ -64,7 +64,7 @@ void set_view (program_t (& programs) [2], const float (& view) [4], int width, 
 void paint (unsigned N,
             unsigned vao_id,
             const program_t & program,
-            std::int32_t uniform_buffer_id,
+            std::uint32_t uniform_buffer_id,
             std::ptrdiff_t uniform_buffer_offset);
 
 #endif

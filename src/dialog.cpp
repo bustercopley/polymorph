@@ -48,8 +48,8 @@ INT_PTR CALLBACK DialogProc (HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
 
   case WM_COMMAND: {
     const UINT id = LOWORD (wParam);
-    ds->settings->count = ::SendMessage (::GetDlgItem (hdlg, IDC_COUNT_TRACKBAR), TBM_GETPOS, 0, 0);
-    ds->settings->speed = ::SendMessage (::GetDlgItem (hdlg, IDC_SPEED_TRACKBAR), TBM_GETPOS, 0, 0);
+    ds->settings->count = (DWORD) ::SendMessage (::GetDlgItem (hdlg, IDC_COUNT_TRACKBAR), TBM_GETPOS, 0, 0);
+    ds->settings->speed = (DWORD) ::SendMessage (::GetDlgItem (hdlg, IDC_SPEED_TRACKBAR), TBM_GETPOS, 0, 0);
     if (id == IDOK) save_settings (* ds->settings);
     if (id != IDC_PREVIEW_BUTTON) ::DestroyWindow (hdlg);
     if (id == IDC_PREVIEW_BUTTON) ::ShowWindow (ds->hwnd, SW_SHOW);
@@ -78,7 +78,7 @@ INT_PTR CALLBACK DialogProc (HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
       // Retrieve the buddy's text.
       const WPARAM buffer_size = 64;
       TCHAR buffer [buffer_size];
-      int length = ::SendMessage (hwnd_buddy, WM_GETTEXT, buffer_size, (LPARAM) buffer);
+      UINT length = (UINT) ::SendMessage (hwnd_buddy, WM_GETTEXT, buffer_size, (LPARAM) buffer);
       // Render the text.
       ::SetTextAlign (drawitem->hDC, (buddy_side ? TA_RIGHT : TA_LEFT) | TA_BASELINE | TA_NOUPDATECP);
       ::ExtTextOut (drawitem->hDC, x, y, 0, NULL, buffer, length, NULL);

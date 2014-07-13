@@ -4,7 +4,6 @@
 #define kdtree_h
 
 #include <cstddef>
-#include <cstdint>
 
 struct object_t;
 
@@ -14,7 +13,7 @@ struct kdtree_t
 {
   kdtree_t () : memory (nullptr), node_count (0) { }
   ~kdtree_t ();
-  bool compute (unsigned * index, const float (* x) [4], std::size_t count);
+  bool compute (unsigned * index, const float (* x) [4], unsigned count);
   void search (unsigned count, float max_radius,
                object_t * objects,
                const float (* r),

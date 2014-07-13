@@ -18,14 +18,14 @@ namespace usr
 
 namespace
 {
-  inline std::size_t nodes_required (std::size_t n)
+  inline unsigned nodes_required (unsigned n)
   {
-    return (std::size_t (2) << bsr (n - 1)) - std::size_t (1);
+    return (2u << bsr (n - 1u)) - 1u;
   }
 
-  inline std::size_t node_dimension (std::size_t i)
+  inline unsigned node_dimension (unsigned i)
   {
-    return bsr (i + 1) % std::size_t (3);
+    return bsr (i + 1u) % 3u;
   }
 
   inline v4f dim_mask (unsigned dim)
@@ -46,8 +46,8 @@ namespace
                       float (* RESTRICT v) [4], float (* RESTRICT w) [4],
                       unsigned ix, unsigned iy)
   {
-    const object_t & RESTRICT A = objects [ix];
-    const object_t & RESTRICT B = objects [iy];
+    const object_t & A = objects [ix];
+    const object_t & B = objects [iy];
     v4f s = { r [ix] + r [iy], 0.0f, 0.0f, 0.0f, };
     v4f ssq = s * s;
     v4f dx = load4f (x [iy]) - load4f (x [ix]);
@@ -145,18 +145,18 @@ kdtree_t::~kdtree_t ()
     node_end [_i] = _end;                    \
   } while (false)
 
-bool kdtree_t::compute (unsigned * RESTRICT new_index, const float (* RESTRICT new_x) [4], std::size_t count)
+bool kdtree_t::compute (unsigned * RESTRICT new_index, const float (* RESTRICT new_x) [4], unsigned count)
 {
   index = new_index;
   x = new_x;
   // Undefined behaviour if count == 0.
-  std::size_t new_node_count = nodes_required (count);
+  unsigned new_node_count = nodes_required (count);
   if (! reallocate_aligned_arrays (memory, node_count, new_node_count,
                                    & node_lohi, & node_begin, & node_end))
     return false;
   static const float inf = std::numeric_limits <float>::infinity ();
-  __m128 klo = { -inf, -inf, -inf, 0.0f, };
-  __m128 khi = { +inf, +inf, +inf, 0.0f, };
+  v4f klo = { -inf, -inf, -inf, 0.0f, };
+  v4f khi = { +inf, +inf, +inf, 0.0f, };
   SETNODE (0, klo, khi, 0, count);
   unsigned stack [50]; // Big enough.
   unsigned sp = 0;

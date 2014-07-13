@@ -76,6 +76,8 @@ namespace
     }
   }
 
+  // Total derivative of f at 0, where f is the continuous function R->R^3 such that
+  // e^{\hat{f}(t)} = e^{\hat{u}} e^{t\hat{w} for all real t, and f(0) = u.
   inline v4f tangent (v4f u, v4f w)
   {
     v4f one = { 1.0f, 1.0f, 1.0f, 1.0f, };
@@ -151,8 +153,8 @@ void advance_linear (float (* RESTRICT x) [4], const float (* RESTRICT v) [4], u
     __m256 x2 = _mm256_load_ps (x [i2]);
     __m256 v0 = _mm256_load_ps (v [i0]);
     __m256 v2 = _mm256_load_ps (v [i2]);
-    __m256 x10 = x0 + v0;
-    __m256 x12 = x2 + v2;
+    __m256 x10 = _mm256_add_ps (x0, v0);
+    __m256 x12 = _mm256_add_ps (x2, v2);
     _mm256_stream_ps (x [i0], x10);
     _mm256_stream_ps (x [i2], x12);
 #else

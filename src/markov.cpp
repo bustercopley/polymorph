@@ -72,7 +72,7 @@ namespace
     // If non-snub, maybe switch between dual representations, to permit either
     // variety of any snub or desnub operation that follows. Not doing it now,
     // before the replacements, makes some double-desnub combos impossible.
-    unsigned entropy = rng.get (); // Seems a shame to waste it.
+    unsigned entropy = (unsigned) rng.get (); // Seems a shame to waste it.
     duality ^= entropy & (current.point != 7);
 
     unsigned m = 0;

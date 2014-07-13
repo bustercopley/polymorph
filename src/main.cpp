@@ -47,7 +47,7 @@ int WINAPI _tWinMain (HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
       ::DispatchMessage (& msg);
     }
   }
-  return msg.wParam;
+  return (int) msg.wParam;
 }
 
 #ifdef TINY
@@ -66,9 +66,9 @@ extern "C"
   // In the linker command line, specify this function as the entry point.
   VISIBLE NORETURN ALIGN_STACK void custom_startup ()
   {
-    HINSTANCE hInstance = reinterpret_cast <HINSTANCE> (& __ImageBase);
+    HINSTANCE hInstance = (HINSTANCE) & __ImageBase;
     int status = _tWinMain (hInstance, NULL, NULL, 0);
-    ::ExitProcess (static_cast <UINT> (status));
+    ::ExitProcess ((UINT) (status));
   }
 }
 

@@ -93,7 +93,7 @@ bool model_t::start (int width, int height, const settings_t & settings)
   float aspect_ratio = float (width) / height;
   unsigned total_count;
   if (settings.count < 2) total_count = settings.count + 1;
-  else total_count = 3 + 4 * aspect_ratio * (settings.count - 2);
+  else total_count = (unsigned) (3 + 4 * aspect_ratio * (settings.count - 2));
   if (! set_capacity (total_count)) return false;
 
   float tz = usr::tank_distance, td = usr::tank_depth, th = usr::tank_height;
@@ -287,11 +287,11 @@ void model_t::draw_next ()
 
   clear ();
   // Draw all the shapes, one uniform buffer at a time.
-  unsigned begin = 0, end = uniform_buffer.count ();
+  unsigned begin = 0, end = (unsigned) uniform_buffer.count ();
   while (end < count) {
     draw (begin, end - begin);
     begin = end;
-    end = begin + uniform_buffer.count ();
+    end = begin + (unsigned) uniform_buffer.count ();
   }
   draw (begin, count - begin);
 }
@@ -389,6 +389,6 @@ void model_t::draw (unsigned begin, unsigned count)
            vao_ids [sselect],
            programs [program_select],
            uniform_buffer.id (),
-           n * uniform_buffer.stride ());
+           (std::uint32_t) (n * uniform_buffer.stride ()));
   }
 }
