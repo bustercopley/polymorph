@@ -53,8 +53,8 @@ namespace
   const unsigned replacement_count = sizeof replacements / sizeof * replacements;
   ALIGNED16 const float rotations [3] [4] = {
     // Rotate about an X-node through angle pi/4.
-    { -0x1.921fb4P-1f, 0.0f, 0.0f, 0.0f, }, // I1 -> T7
-    { +0x1.921fb4P-1f, 0.0f, 0.0f, 0.0f, }, // T7 -> I1
+    { -0x1.921fb6P-1f, 0.0f, 0.0f, 0.0f, }, // I1 -> T7
+    { +0x1.921fb6P-1f, 0.0f, 0.0f, 0.0f, }, // T7 -> I1
     // Rotate about a Z-node through angle approximately 0.2471 pi.
     { +0x1.caf0fcP-2f, +0x1.448542P-1f, 0.0f, 0.0f, }, // T7 -> T7*
   };
