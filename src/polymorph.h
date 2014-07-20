@@ -1,4 +1,5 @@
 // -*- C++ -*-
+
 #ifndef polymorph_h
 #define polymorph_h
 

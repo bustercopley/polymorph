@@ -1,4 +1,5 @@
 // -*- C++ -*-
+
 #ifndef reposition_h
 #define reposition_h
 

@@ -1,4 +1,5 @@
 // -*- C++ -*-
+
 #ifndef qpc_h
 #define qpc_h
 

@@ -1,4 +1,5 @@
 // -*- C++ -*-
+
 #ifndef bsr_h
 #define bsr_h
 

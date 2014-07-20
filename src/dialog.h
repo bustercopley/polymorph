@@ -1,4 +1,5 @@
 // -*- C++ -*-
+
 #ifndef dialog_h
 #define dialog_h
 
