@@ -1,4 +1,4 @@
-PROGRAMS=nodes polymorph
+PROGRAMS=polymorph
 PLATFORM=x64
 CONFIG=tiny
 
@@ -9,13 +9,6 @@ CC=gcc
 CXX=g++
 CFLAGS=-pedantic -Wall -Wextra
 CXXFLAGS=-std=c++1y
-
-nodes_FILENAME=$(nodes_OBJDIR)/nodes.exe
-nodes_OBJDIR=.obj/nodes/$(PLATFORM)
-nodes_CFLAGS=
-nodes_LDFLAGS=
-nodes_SOURCE_PREFIX=src/nodes/
-nodes_OBJECTS=main.o show_system.o snub_variance.o triangle.o rotor.o
 
 polymorph_FILENAME="$($(PLATFORM)_$(CONFIG)_APPNAME).scr"
 polymorph_OBJDIR=.obj/polymorph/$(PLATFORM)/$(CONFIG)
@@ -29,7 +22,7 @@ polymorph_EXTRA_OBJECTS=.obj/polymorph/$(PLATFORM)/$(CONFIG)/resources-res.o
 polymorph_SOURCE_PREFIX=src/
 polymorph_OBJECTS=\
 arguments.o bump.o dialog.o glinit.o graphics.o kdtree.o main.o markov.o memory.o \
-model.o partition.o polymorph.o random.o reposition.o rodrigues.o settings.o systems.o
+model.o partition.o polymorph.o random.o reposition.o rodrigues.o settings.o systems.o make_system.o
 
 base_CPPFLAGS=-DUNICODE -D_UNICODE
 base_CFLAGS=-msse3 -mfpmath=sse -flto -fno-fat-lto-objects
@@ -82,7 +75,7 @@ SHADER_RESOURCES=\
 .obj/polymorph/snub-geometry-shader.glsl.mini \
 .obj/polymorph/fragment-shader.glsl.mini
 
-RESOURCES=$(SHADER_RESOURCES) src/polymorph.scr.manifest .obj/polymorph/$(PLATFORM)/data
+RESOURCES=$(SHADER_RESOURCES) src/polymorph.scr.manifest
 
 .obj/polymorph:
 	-md .obj\polymorph
@@ -92,9 +85,6 @@ RESOURCES=$(SHADER_RESOURCES) src/polymorph.scr.manifest .obj/polymorph/$(PLATFO
 
 .obj/polymorph/%.glsl.mini: src/%.glsl minify.pl | .obj/polymorph
 	c:\strawberry\perl\bin\perl minify.pl $< $@
-
-.obj/polymorph/$(PLATFORM)/data: $(nodes_FILENAME) | .obj/polymorph/$(PLATFORM)
-	$(subst /,\,$(nodes_FILENAME)) .obj\polymorph\$(PLATFORM)\data>NUL
 
 .obj/polymorph/$(PLATFORM)/$(CONFIG)/resources-res.o: $(RESOURCES) src/resources.h
 

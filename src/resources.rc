@@ -8,7 +8,6 @@ END
 
 IDI_APPICON ICON "polyhedron.ico"
 
-IDR_DATA RCDATA "data"
 IDR_VERTEX_SHADER RCDATA "vertex-shader.glsl.mini"
 IDR_SHARED_GEOMETRY_SHADER RCDATA "shared-geometry-shader.glsl.mini"
 IDR_GEOMETRY_SHADER RCDATA "geometry-shader.glsl.mini"

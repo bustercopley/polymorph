@@ -8,11 +8,9 @@ x64-all-configs: | .obj/polymorph
 x86-all-configs: | .obj/polymorph
 	$(MAKE) PLATFORM=x86 all-configs
 all-configs: base tiny
-data: | .obj/polymorph/$(PLATFORM)
-	$(MAKE) .obj/polymorph/$(PLATFORM)/data
-base: data
+base:
 	$(MAKE) CONFIG=base all
-tiny: data
+tiny:
 	$(MAKE) CONFIG=tiny all
 
 .PHONY: all-platforms-all-configs

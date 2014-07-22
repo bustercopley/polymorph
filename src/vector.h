@@ -91,7 +91,7 @@ inline v4f sqrt (v4f k)
 }
 
 // Apply the 3x3 matrix m to the column vector x.
-ALWAYS_INLINE inline v4f mapply (const float (& m) [3] [4], v4f x)
+ALWAYS_INLINE inline v4f mapply (const float (* m) [4], v4f x)
 {
 #if __SSE4_1__
   v4f t0 = _mm_dp_ps (load4f (m [0]), x, 0x71);
@@ -110,7 +110,7 @@ ALWAYS_INLINE inline v4f mapply (const float (& m) [3] [4], v4f x)
 }
 
 // Transpose 3x3 matrix m and apply to column vector x.
-ALWAYS_INLINE inline v4f tmapply (const float (& m) [3] [4], v4f x)
+ALWAYS_INLINE inline v4f tmapply (const float (* m) [4], v4f x)
 {
   v4f m0 = load4f (m [0]);
   v4f m1 = load4f (m [1]);

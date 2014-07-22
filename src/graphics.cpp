@@ -52,7 +52,7 @@ namespace
 
 static const int attribute_id_x = 0;
 
-unsigned make_vao (unsigned N, const float (* vertices) [4], const std::uint8_t (* indices) [6])
+unsigned make_vao (unsigned N, const float (* vertices) [4], const unsigned (* indices) [6])
 {
   unsigned vao_id;
   glGenVertexArrays (1, & vao_id);
@@ -62,7 +62,7 @@ unsigned make_vao (unsigned N, const float (* vertices) [4], const std::uint8_t 
   glBindBuffer (GL_ARRAY_BUFFER, buffer_ids [0]);
   glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, buffer_ids [1]);
   glBufferData (GL_ARRAY_BUFFER, (N + 2) * 4 * sizeof (float), vertices, GL_STATIC_DRAW);
-  glBufferData (GL_ELEMENT_ARRAY_BUFFER, 6 * N * sizeof (std::uint8_t), indices, GL_STATIC_DRAW);
+  glBufferData (GL_ELEMENT_ARRAY_BUFFER, 6 * N * sizeof (unsigned), indices, GL_STATIC_DRAW);
   glVertexAttribPointer (attribute_id_x, 4, GL_FLOAT, GL_FALSE, 0, 0);
   glEnableVertexAttribArray (attribute_id_x);
   //glBindVertexArray (0);
@@ -206,7 +206,7 @@ void paint (unsigned N,
   glUseProgram (program.id);
   glBindVertexArray (vao_id);
   glBindBufferRange (GL_UNIFORM_BUFFER, 0, uniform_buffer_id, uniform_buffer_offset, size);
-  glDrawElements (GL_TRIANGLES_ADJACENCY, N * 6, GL_UNSIGNED_BYTE, nullptr);
+  glDrawElements (GL_TRIANGLES_ADJACENCY, N * 6, GL_UNSIGNED_INT, nullptr);
   //glBindVertexArray (0);
   //glUseProgram (0);
 }

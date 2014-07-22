@@ -8,7 +8,7 @@
 
 void clear ();
 
-unsigned make_vao (unsigned N, const float (* vertices) [4], const std::uint8_t (* indices) [6]);
+unsigned make_vao (unsigned N, const float (* vertices) [4], const unsigned (* indices) [6]);
 
 namespace uniforms
 {
