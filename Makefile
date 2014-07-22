@@ -10,7 +10,7 @@ CXX=g++
 CFLAGS=-pedantic -Wall -Wextra
 CXXFLAGS=-std=c++1y
 
-polymorph_FILENAME="$($(PLATFORM)_$(CONFIG)_APPNAME).scr"
+polymorph_FILENAME=$($(PLATFORM)_$(CONFIG)_APPNAME).scr
 polymorph_OBJDIR=.obj/polymorph/$(PLATFORM)/$(CONFIG)
 polymorph_CPPFLAGS=$(CONFIG_CPPFLAGS)
 polymorph_CFLAGS=$(CONFIG_CFLAGS) -Os
@@ -63,10 +63,10 @@ EXTRA_CLEAN=Polymorph*.scr
 all: $(polymorph_FILENAME)
 
 test: all
-	$(polymorph_FILENAME)
+	"$(polymorph_FILENAME)"
 
 debug: all
-	$(PLATFORM_PATH)\gdb --quiet --batch -ex run -ex bt full -ex quit --args $(polymorph_FILENAME) -x
+	$(PLATFORM_PATH)\gdb --quiet --batch -ex run -ex bt full -ex quit --args "$(polymorph_FILENAME)" -x
 
 SHADER_RESOURCES=\
 .obj/polymorph/vertex-shader.glsl.mini \
