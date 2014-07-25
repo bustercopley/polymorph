@@ -1,8 +1,8 @@
 #include "rodrigues.h"
 #include "compiler.h"
 
-// See `problem.tex' for terminology and notation, and `problem.tex',
-// `script.mathomatic' and `script.maxima' for derivations.
+// See "problem.tex" for terminology and notation, and "problem.tex",
+// "script.mathomatic" and "script.maxima" for derivations.
 
 // Approximations: for the functions
 //   f(x^2)=f0(x)=sin(x)/x,
@@ -17,7 +17,7 @@
 // value correctly rounded toward zero, and is the maximum over 600000
 // equally spaced sample arguments x^2.
 
-// Helpers for `compute' and `advance_angular'.
+// Helpers for "compute" and "advance_angular".
 namespace
 {
   // Range [0, 2.467401] ((pi/2)^2).
