@@ -296,6 +296,12 @@ void model_t::draw_next ()
   draw (begin, count - begin);
 }
 
+// Returns { a [0], b [0], c [0], d [0], };
+inline v4f transversal0 (v4f a, v4f b, v4f c, v4f d)
+{
+  return _mm_movelh_ps (_mm_unpacklo_ps (a, b), _mm_unpacklo_ps (c, d));
+}
+
 void model_t::draw (unsigned begin, unsigned count)
 {
   // Set the modelview matrix, m.
@@ -315,48 +321,39 @@ void model_t::draw (unsigned begin, unsigned count)
     v4f satval = bumps (object.animation_time);
     v4f sat = _mm_moveldup_ps (satval);
     v4f val = _mm_movehdup_ps (satval);
-    store4f (block.d, hsv_to_rgb (object.hue, sat, val, alpha));
-  }
+    _mm_stream_ps (block.d, hsv_to_rgb (object.hue, sat, val, alpha));
 
-  for (unsigned n = 0; n != count; ++ n) {
-    uniform_block_t & block = uniform_buffer [n];
-    const object_t & object = objects [begin + n];
     system_select_t sselect = object.target.system;
     v4f t = step (object.animation_time) * _mm_set1_ps (object.locus_length);
     v4f sc = sincos (t);
     v4f s = _mm_moveldup_ps (sc);
     v4f c = _mm_movehdup_ps (sc);
     v4f g = c * load4f (abc [sselect] [object.starting_point]) + s * load4f (object.locus_end);
-    store4f (block.g, g);
-  }
+    _mm_stream_ps (block.g, g);
 
-  // Precompute triangle altitudes, h (for non-snubs only).
-  for (unsigned n = 0; n != count; ++ n) {
-    uniform_block_t & block = uniform_buffer [n];
-    const object_t & object = objects [begin + n];
-    system_select_t sselect = object.target.system;
-    unsigned program_select = object.starting_point == 7 || object.target.point == 7 ? 1 : 0;
-    if (program_select == 0) {
+    // Precompute triangle altitudes, h (for non-snubs only).
+    if (object.starting_point != 7 && object.target.point != 7) {
       const float (& X) [3] [4] = xyz [sselect];
       v4f one = { 1.0f, 1.0f, 1.0f, 1.0f, };
-      v4f crs [3], dsq [3];
+      v4f crs [3];
       for (unsigned i = 0; i != 3; ++ i) {
         v4f Y = load4f (X [(i + 1) % 3]);
         v4f Z = load4f (X [(i + 2) % 3]);
-        v4f YZ = dot (Y, Z);
-        dsq [i] = YZ * YZ;
         crs [i] = cross (Y, Z);
       }
 
       v4f tX = dot (load4f (X [0]), crs [0]); // triple product
-      v4f UT [3], usq [3];
+      v4f abc [3], UT [3], usq [3];
+      UNPACK3 (g, abc [0], abc [1], abc [2]);
       for (unsigned i = 0; i != 3; ++ i) {
-        v4f a = _mm_set1_ps (block.g [i]);
-        UT [i] = (a + a) * tX * crs [i] / (one - dsq [i]);
+        v4f a = abc [i];
+        v4f yz = crs [i];
+        v4f cscsq = rcp (dot (yz, yz));
+        UT [i] = (a + a) * tX * yz * cscsq;
         usq [i] = dot (UT [i], UT [i]);
       }
 
-      v4f T = tmapply (X, load4f (block.g));
+      v4f T = tmapply (X, g);
 
       v4f asq [3], vwsq [3];
       for (unsigned i = 0; i != 3; ++ i) {
@@ -366,14 +363,11 @@ void model_t::draw (unsigned begin, unsigned count)
         vwsq [i] = vw * vw;
       }
 
-#define col0(a,b,c,d) _mm_movelh_ps (_mm_unpacklo_ps (a, b), _mm_unpacklo_ps (c, d))
-
       v4f q = { 0.25f, 0.25f, 0.25f, 0.25f, };
       for (unsigned i = 0; i != 3; ++ i) {
         unsigned j = (i + 1) % 3;
         unsigned k = (i + 2) % 3;
-        v4f H = sqrt (col0 (asq [i] - q * usq [j], asq [i] - q * usq [k], usq [k] - vwsq [i] * rcp (usq [j]), usq [j] - vwsq [i] * rcp (usq [k])));
-        store4f (block.h [i], H);
+        _mm_stream_ps (block.h [i], sqrt (transversal0 (asq [i] - q * usq [j], asq [i] - q * usq [k], usq [k] - vwsq [i] * rcp (usq [j]), usq [j] - vwsq [i] * rcp (usq [k]))));
       }
     }
   }
