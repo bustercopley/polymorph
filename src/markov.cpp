@@ -113,12 +113,23 @@ void transition (rng_t & rng, float (& u) [4], polyhedron_select_t & current, un
 {
   maybe_perform_replacement (rng, u, current, starting_point);
 
+  const std::uint8_t disallowed [] = {
+    0b00001001u,
+    0b00010010u,
+    0b00100100u,
+    0b10111001u,
+    0b10111010u,
+    0b10111100u,
+    0b11000000u,
+    0b11111000u,
+  };
+
   // Perform a Markov transition.
   unsigned next;
   do next = rng.get () & 7; /* PLEASE */
 
   // Certain transitions are not allowed:
-  while (next == starting_point || 1 & current.point ["\017\027\047\271\272\274\300\370"] >> next);
+  while (next == starting_point || 1 & current.point [disallowed] >> next);
 
   starting_point = current.point;
   current.point = next;

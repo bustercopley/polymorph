@@ -258,17 +258,17 @@ v4f rotate (v4f u, v4f v)
 // Argument x x * *, result sin(x) cos(x) sin(x) cos(x).
 v4f sincos (const v4f x)
 {
-  v4f oioi = {0.0f, 1.0f, 0.0f, 1.0f, };
+  v4f oioi = { 0.0f, 1.0f, 0.0f, 1.0f, };
   v4f sc = sincos_internal (-x);   // -sin(x) 1-cos(x) -sin(x) 1-cos(x)
   return oioi - sc;                // sin(x) cos(x) sin(x) cos(x)
 }
 
-// Very restricted range [+0x1.8c97f0P-1f, +0x1.fb5486P-1f] ([0.774596691, 0.990879238]).
+// Range [+0x1.555554P-2f, +0x1.fb5486P-1f] ([0.333333313, 0.990879238]), poor accuracy.
 // Argument x x x x, result acos(x) acos(x) acos(x) acos(x).
 v4f arccos (v4f x)
 {
-  // Minimax polynomial for (acos(x))^2 on [+0x1.8c97f0P-1f, +0x1.fb5486P-1f].
-  // Remes error +-0x1.460d54P-21f, max ulp error +-446.
-  const v4f p = { +0x1.37b24aP1f, -0x1.7cb23cP1f, +0x1.494690P-1f, -0x1.aa37e2P-4f, };
+  // Minimax polynomial for (acos(x))^2 on [+0x1.555554P-2f, +0x1.fb5486P-1f].
+  // Remes error +-0x1.5e7a70P-14f, max ulp error +-44904.
+  const v4f p = { +0x1.3a61d6P1f, -0x1.870bc8P1f, +0x1.7dcd36P-1f, -0x1.2cd4deP-3f, };
   return sqrt (polyeval (x, p, p));
 }
