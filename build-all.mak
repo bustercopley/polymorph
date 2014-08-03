@@ -6,9 +6,9 @@ dist: clean-all
 clean-all: clean
 	$(MAKE) all-platforms-all-configs
 all-platforms-all-configs: x64-all-configs x86-all-configs
-x64-all-configs: | .obj/polymorph
+x64-all-configs: $(SHADER_RESOURCES) | .obj/polymorph
 	$(MAKE) PLATFORM=x64 all-configs
-x86-all-configs: | .obj/polymorph
+x86-all-configs: $(SHADER_RESOURCES) | .obj/polymorph
 	$(MAKE) PLATFORM=x86 all-configs
 all-configs: base tiny
 base:
@@ -16,6 +16,6 @@ base:
 tiny:
 	$(MAKE) CONFIG=tiny all
 
-.PHONY: all-platforms-all-configs
+.PHONY: clean-all all-platforms-all-configs
 .PHONY: x86-all-configs x64-all-configs
 .PHONY: all-configs data base tiny
