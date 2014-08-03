@@ -1,5 +1,8 @@
 # -*- Makefile-gmake -*-
 
+dist: clean-all
+	copy /y Polymorph.scr "g:\www\htdocs\polymorph\Polymorph.scr"
+	copy /y Polymorph-x86.scr "g:\www\htdocs\polymorph\Polymorph (x86).scr"
 clean-all: clean
 	$(MAKE) all-platforms-all-configs
 all-platforms-all-configs: x64-all-configs x86-all-configs

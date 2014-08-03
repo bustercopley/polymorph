@@ -43,9 +43,9 @@ x64_PATH=C:\mingw64\bin
 x64_ENTRY_POINT=custom_startup
 
 x64_tiny_APPNAME=Polymorph
-x86_tiny_APPNAME=Polymorph (x86)
-x64_base_APPNAME=Polymorph (base)
-x86_base_APPNAME=Polymorph (x86) (base)
+x86_tiny_APPNAME=Polymorph-x86
+x64_base_APPNAME=Polymorph-base
+x86_base_APPNAME=Polymorph-x86-base
 
 PLATFORM_ENTRY_POINT=$($(PLATFORM)_ENTRY_POINT)
 PLATFORM_PATH=$($(PLATFORM)_PATH)
@@ -63,10 +63,10 @@ EXTRA_CLEAN=Polymorph*.scr
 all: $(polymorph_FILENAME)
 
 test: all
-	"$(polymorph_FILENAME)"
+	$(polymorph_FILENAME)
 
 debug: all
-	$(PLATFORM_PATH)\gdb --quiet --batch -ex run -ex bt full -ex quit --args "$(polymorph_FILENAME)" -x
+	$(PLATFORM_PATH)\gdb --quiet --batch -ex run -ex bt full -ex quit --args $(polymorph_FILENAME) -x
 
 SHADER_RESOURCES=\
 .obj/polymorph/vertex-shader.glsl.mini \

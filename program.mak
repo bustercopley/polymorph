@@ -28,7 +28,7 @@ $(objdir):
 	-md $(subst /,\,$(objdir))
 ifdef $(program)_FILENAME
 $(name): $(objects)
-	$(CXX) $(cflags) $(cxxflags) $(ldflags) $(objects) $(ldlibs) -o "$(name)"
+	$(CXX) $(cflags) $(cxxflags) $(ldflags) $(objects) $(ldlibs) -o $(name)
 endif
 endef
 
