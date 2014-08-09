@@ -35,15 +35,15 @@ v4f get_vector_in_ball (rng_t & rng, float radius)
     __m128i i128;
     std::uint64_t u64 [2];
   };
-  v4f v, sq;
+  v4f v, vsq;
   v4f lim = { 0x1.0p62f, 0.0f, 0.0f, 0.0f, };
   do {
     u64 [0] = rng.get ();
     u64 [1] = rng.get () & 0xffffffffull;
     v = _mm_cvtepi32_ps (i128);
-    sq = dot (v, v);
+    vsq = dot (v, v);
   }
-  while (_mm_comige_ss (sq, lim));
+  while (_mm_comige_ss (vsq, lim));
   float rs = 0x1.0p-31f * radius;
   v4f k = { rs, rs, rs, 0.0f, };
   return k * v;

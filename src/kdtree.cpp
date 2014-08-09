@@ -41,6 +41,8 @@ namespace
     return load4f (masks [dim].f32);
   }
 
+  // Called when two balls might collide.
+  // Maybe apply equal and opposite impulses to objects ix and iy.
   inline void bounce (object_t * RESTRICT objects,
                       const float (* RESTRICT r), const float (* RESTRICT x) [4],
                       float (* RESTRICT v) [4], float (* RESTRICT w) [4],
@@ -67,18 +69,18 @@ namespace
 
         // Now take the nonzero multiplier lambda such that the
         // impulse lambda*u is consistent with conservation of
-        // energy and momentum.
-        // (Lambda is implicit now. See "elastic.tex".)
+        // energy and momentum. See "doc/elastic.tex" for a sane
+        // version of the disturbing ad-hoc calculation below.
 
         v4f dxu = cross (dxn, u);
         v4f km2 = { -2.0f, -2.0f, -2.0f, -2.0f, };
         v4f top = km2 * (dot (u, dv) - dot (dxu, rw));
-        v4f uu = dot (u, u);
+        v4f usq = dot (u, u);
+        v4f dxusq = dot (dxu, dxu);
         v4f R = { 1.0f, 1.0f, r [ix], r [iy], };
-        v4f rdxu = (R * R) * dot (dxu, dxu);
-        v4f urdxu = _mm_movehl_ps (rdxu, uu);
+        v4f urdxu_sq = _mm_movehl_ps (R * R * dxusq, usq);
         v4f divisors = { A.m, B.m, A.l, B.l, };
-        v4f quotients = urdxu / divisors;
+        v4f quotients = urdxu_sq / divisors;
         v4f ha = _mm_hadd_ps (quotients, quotients);
         v4f hh = _mm_hadd_ps (ha, ha);
         v4f munu = (top * R) / (hh * divisors);
@@ -92,6 +94,7 @@ namespace
     }
   }
 
+  // Called when a ball might collide with a wall.
   inline void bounce (object_t * RESTRICT objects,
                       const float (* RESTRICT r), const float (* RESTRICT x) [4],
                       float (* RESTRICT v) [4], float (* RESTRICT w) [4],
@@ -107,6 +110,7 @@ namespace
       v4f vn = dot (load4f (v [ix]), normal);
       v4f zero = _mm_setzero_ps ();
       if (_mm_comilt_ss (vn, zero)) { // Sphere approaches plane?
+        // A comprehensible version is left as an exercise to the reader.
         // vN is the normal component of v. (The normal is a unit vector).
         // vF is the tangential contact velocity, composed of glide and spin.
         v4f vN = vn * normal;
