@@ -33,7 +33,7 @@ v4f step_t::operator () (float t) const
   v4f f1 = _mm_unpacklo_ps (f, one);   // f 1 * *
   v4f lo = load4f (T);
   v4f hi = { T [1], +inf, -inf, -inf, };
-  v4f select = _mm_andnot_ps (_mm_cmplt_ps (ttt, lo), _mm_cmplt_ps (ttt, hi));
+  v4f select = _mm_and_ps (_mm_cmpge_ps (ttt, lo), _mm_cmplt_ps (ttt, hi));
   v4f values = _mm_and_ps (select, f1);
   v4f step = _mm_hadd_ps (values, values);
   return _mm_unpacklo_ps (step, step);
@@ -51,10 +51,10 @@ void bumps_t::initialize (bump_specifier_t b0, bump_specifier_t b1)
   v4f three = { 3.0f, 3.0f, 3.0f, 3.0f, };
   v4f dt = T - S;
   v4f m = (V - U) / (dt * dt * dt);
-  store4f (c [3], ntwo * m);
-  store4f (c [2], three * m * (S + T));
-  store4f (c [1], ntwo * three * m * S * T);
   store4f (c [0], U + m * S * S * (three * T - S));
+  store4f (c [1], ntwo * three * m * S * T);
+  store4f (c [2], three * m * (S + T));
+  store4f (c [3], ntwo * m);
   store4f (S0, S);
   store4f (T0, T);
   store4f (U0, U);
@@ -76,11 +76,10 @@ v4f bumps_t::operator () (float t) const
   v4f f12 = load4f (c [2]) + load4f (c [3]) * s;
   v4f f = f01 + f12 * s * s;
   v4f ltS = _mm_cmplt_ps (s, S);
-  v4f ltT = _mm_cmplt_ps (s, T);
-  v4f bST = _mm_xor_ps (ltS, ltT);
-  v4f term1 = _mm_and_ps (ltS, U);
-  v4f term2 = _mm_and_ps (bST, f);
-  v4f term3 = _mm_andnot_ps (ltT, V);
-  v4f val = _mm_or_ps (_mm_or_ps (term1, term2), term3);
+  v4f geT = _mm_cmpge_ps (s, T);
+  v4f x1 = _mm_andnot_ps (_mm_or_ps (ltS, geT), f);
+  v4f x2 = _mm_and_ps (ltS, U);
+  v4f x3 = _mm_and_ps (geT, V);
+  v4f val = _mm_or_ps (_mm_or_ps (x1, x2), x3);
   return _mm_hadd_ps (val, val);
 }
