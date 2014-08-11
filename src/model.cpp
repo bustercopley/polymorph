@@ -304,6 +304,8 @@ inline v4f transversal0 (v4f a, v4f b, v4f c, v4f d)
 
 void model_t::draw (unsigned begin, unsigned count)
 {
+  static const unsigned mod3 [] = { 0, 1, 2, 0, 1, };
+
   // Set the modelview matrix, m.
   compute (reinterpret_cast <char *> (& uniform_buffer [0].m), uniform_buffer.stride (), & x [begin], & u [begin], count);
 
@@ -337,8 +339,8 @@ void model_t::draw (unsigned begin, unsigned count)
       v4f one = { 1.0f, 1.0f, 1.0f, 1.0f, };
       v4f crs [3];
       for (unsigned i = 0; i != 3; ++ i) {
-        v4f Y = load4f (X [(i + 1) % 3]);
-        v4f Z = load4f (X [(i + 2) % 3]);
+        v4f Y = load4f (X [mod3 [i + 1]]);
+        v4f Z = load4f (X [mod3 [i + 2]]);
         crs [i] = cross (Y, Z);
       }
 
@@ -359,14 +361,14 @@ void model_t::draw (unsigned begin, unsigned count)
       for (unsigned i = 0; i != 3; ++ i) {
         v4f tx = dot (T, load4f (X [i]));
         asq [i] = one - tx * tx;
-        v4f vw = dot (UT [(i + 1) % 3], UT [(i + 2) % 3]);
+        v4f vw = dot (UT [mod3 [i + 1]], UT [mod3 [i + 2]]);
         vwsq [i] = vw * vw;
       }
 
       v4f q = { 0.25f, 0.25f, 0.25f, 0.25f, };
       for (unsigned i = 0; i != 3; ++ i) {
-        unsigned j = (i + 1) % 3;
-        unsigned k = (i + 2) % 3;
+        unsigned j = mod3 [i + 1];
+        unsigned k = mod3 [i + 2];
         _mm_stream_ps (block.h [i], sqrt (transversal0 (asq [i] - q * usq [j], asq [i] - q * usq [k], usq [k] - vwsq [i] * rcp (usq [j]), usq [j] - vwsq [i] * rcp (usq [k]))));
       }
     }
