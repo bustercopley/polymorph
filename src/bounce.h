@@ -10,9 +10,9 @@ namespace usr
 // Called when two balls might collide.
 // Maybe apply equal and opposite impulses to objects ix and iy.
 inline void bounce (object_t * RESTRICT objects,
-                      const float (* RESTRICT r), const float (* RESTRICT x) [4],
-                      float (* RESTRICT v) [4], float (* RESTRICT w) [4],
-                      unsigned ix, unsigned iy)
+                    const float (* RESTRICT r), const float (* RESTRICT x) [4],
+                    float (* RESTRICT v) [4], float (* RESTRICT w) [4],
+                    unsigned ix, unsigned iy)
 {
   const object_t & A = objects [ix];
   const object_t & B = objects [iy];
