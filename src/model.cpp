@@ -279,7 +279,7 @@ void model_t::draw_next ()
   if (count) {
     // The behaviour of kdtree_t::compute is undefined if count is zero.
     kdtree.compute (kdtree_index, x, count);
-    kdtree.search (count, 2 * max_radius, objects, r, v, w, walls);
+    kdtree.search (kdtree_index, x, count, walls, max_radius, objects, r, v, w);
     advance_linear (x, v, count);
     advance_angular (u, w, count);
   }
