@@ -7,21 +7,16 @@
 #include "vector.h"
 #include "bsr.h"
 
-inline unsigned nonleaf_nodes_required (unsigned n)
-{
-  return (1 << bsr (n - 1)) - 1;
-}
-
 // Simplified kd-tree of fixed dimension k = 3,
 // using an implicit binary tree of constant depth.
 
-// The build phase is pretty much the classical algorithm, making use of
-// the partition routine from quicksort. There are two search phases.
+// The build phase is pretty much the classical algorithm, making use
+// of the partition routine from quicksort. There are two search phases.
 // First, for each point P in the tree, traverse the kd-tree discarding
-// nodes not intersecting the search cube, namely the bounding cube of
-// the sphere centre P, radius max_radius. Second, for each of the wall
-// planes, traverse the kd-tree discarding nodes whose minimum directed
-// distance from the wall is greater than max_radius.
+// nodes not intersecting the bounding box of the sphere centre P, radius
+// 2*max_radius. Second, for each of the wall planes, traverse the kd-tree
+// discarding nodes whose minimum directed distance from the wall is
+// greater than max_radius.
 
 // For simplicity and efficiency, parameters needed for the bounce calculation
 // are passed to the kd-tree search function and forwarded directly, without the
@@ -65,6 +60,11 @@ inline unsigned nonleaf_nodes_required (unsigned n)
 //   the d co-ordinate is less than or equal to w, and for points in [mid, end),
 //   the d co-ordinate is greater than or equal to w, where d === k (mod 3), and
 //   where w is the co-ordinate value associated with the non-leaf node.
+
+inline unsigned nonleaf_nodes_required (unsigned n)
+{
+  return (1 << bsr (n - 1)) - 1;
+}
 
 kdtree_t::~kdtree_t ()
 {
@@ -133,8 +133,8 @@ void kdtree_t::search (unsigned * RESTRICT index, const float (* RESTRICT x) [4]
         }
         // Push one or both child nodes onto the stack.
         float s = split [node];
-        if (x [target] [dim] - max_radius <= s) stack_node [stack_top ++] = 2 * node + 1;
-        if (x [target] [dim] + max_radius >= s) stack_node [stack_top ++] = 2 * node + 2;
+        if (x [target] [dim] - 2 * max_radius <= s) stack_node [stack_top ++] = 2 * node + 1;
+        if (x [target] [dim] + 2 * max_radius >= s) stack_node [stack_top ++] = 2 * node + 2;
         // Descend one level to our children's level.
         dim = mod3 [dim + 1];
         first_node_of_current_level = 2 * first_node_of_current_level + 1;
@@ -164,10 +164,10 @@ void kdtree_t::search (unsigned * RESTRICT index, const float (* RESTRICT x) [4]
     unsigned stack_top = 0;
     // The root (outer) node box's corners are at infinity.
     // Don't actually use infinity, in order to work under "-ffinite-math-only".
-    static const v4f huge_value = { 0x1.0P+60, 0x1.0P+60, 0x1.0P+60, 0.0f, };
+    static const v4f big_value = { 0x1.0P+60, 0x1.0P+60, 0x1.0P+60, 0.0f, };
     static const v4f sign_bit = { -0.0f, -0.0f, -0.0f, 0.0f, };
     v4f normal_non_negative = _mm_cmpge_ps (normal, _mm_setzero_ps ());
-    v4f critical_corner = _mm_xor_ps (_mm_and_ps (normal_non_negative, sign_bit), huge_value);
+    v4f critical_corner = _mm_xor_ps (_mm_and_ps (normal_non_negative, sign_bit), big_value);
     // Push node 0 onto the stack.
     store4f (stack_corner [stack_top], critical_corner);
     stack_node [stack_top] = 0;
