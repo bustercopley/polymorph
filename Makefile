@@ -13,9 +13,9 @@ CXXFLAGS=-std=c++1y
 polymorph_FILENAME=$($(PLATFORM)_$(CONFIG)_APPNAME).scr
 polymorph_OBJDIR=.obj/polymorph/$(PLATFORM)/$(CONFIG)
 polymorph_CPPFLAGS=$(CONFIG_CPPFLAGS)
-polymorph_CFLAGS=$(CONFIG_CFLAGS) -Os
+polymorph_CFLAGS=$(CONFIG_CFLAGS)
 polymorph_CXXFLAGS=$(CONFIG_CXXFLAGS)
-polymorph_LDFLAGS=$(CONFIG_LDFLAGS) -s
+polymorph_LDFLAGS=$(CONFIG_LDFLAGS)
 polymorph_LDLIBS=$(CONFIG_LDLIBS)
 polymorph_RESFLAGS=-DPLATFORM_CONFIG=$(PLATFORM)_$(CONFIG) -I.obj/polymorph -I.obj/polymorph/$(PLATFORM)
 polymorph_EXTRA_OBJECTS=.obj/polymorph/$(PLATFORM)/$(CONFIG)/resources-res.o
@@ -24,17 +24,29 @@ polymorph_OBJECTS=\
 arguments.o bump.o dialog.o glinit.o graphics.o kdtree.o main.o markov.o memory.o \
 model.o partition.o polymorph.o random.o reposition.o rodrigues.o settings.o systems.o make_system.o
 
-base_CPPFLAGS=-DUNICODE -D_UNICODE
-base_CFLAGS=-msse3 -mfpmath=sse -flto -fno-fat-lto-objects
-base_CXXFLAGS=-fno-rtti -fno-exceptions -ffast-math
-base_LDFLAGS=-mwindows -municode -fwhole-program
-base_LDLIBS=-lopengl32
+common_CPPFLAGS=-DUNICODE -D_UNICODE
+common_CFLAGS=-msse3 -mfpmath=sse -fno-ident
+common_CXXFLAGS=-fno-rtti -fno-exceptions -ffast-math
+common_LDFLAGS=-mwindows -municode
+common_LDLIBS=-lopengl32
 
-tiny_CPPFLAGS=$(base_CPPFLAGS) -DTINY
-tiny_CFLAGS=$(base_CFLAGS) -fno-ident -fno-asynchronous-unwind-tables
-tiny_CXXFLAGS=$(base_CXXFLAGS)
-tiny_LDFLAGS=$(base_LDFLAGS) -nostdlib --entry=$(PLATFORM_ENTRY_POINT) -Wl,--disable-runtime-pseudo-reloc
-tiny_LDLIBS=$(base_LDLIBS) -lgdi32 -ladvapi32 -luser32 -lkernel32
+base_CPPFLAGS=$(common_CPPFLAGS)
+base_CFLAGS=$(common_CFLAGS) -flto -Os
+base_CXXFLAGS=$(common_CXXFLAGS)
+base_LDFLAGS=$(common_LDFLAGS) -s
+base_LDLIBS=$(common_LDLIBS)
+
+tiny_CPPFLAGS=$(common_CPPFLAGS) -DTINY
+tiny_CFLAGS=$(common_CFLAGS) -flto -Os -fno-asynchronous-unwind-tables
+tiny_CXXFLAGS=$(common_CXXFLAGS)
+tiny_LDFLAGS=$(common_LDFLAGS) -s -nostdlib --entry=$(PLATFORM_ENTRY_POINT) -Wl,--disable-runtime-pseudo-reloc
+tiny_LDLIBS=$(common_LDLIBS) -lgdi32 -ladvapi32 -luser32 -lkernel32
+
+debug_CPPFLAGS=$(common_CPPFLAGS)
+debug_CFLAGS=$(common_CFLAGS) -g -ggdb
+debug_CXXFLAGS=$(common_CXXFLAGS)
+debug_LDFLAGS=$(common_LDFLAGS)
+debug_LDLIBS=$(common_LDLIBS)
 
 x86_PATH=C:\mingw32\bin
 x86_ENTRY_POINT=_custom_startup
@@ -42,10 +54,12 @@ x86_ENTRY_POINT=_custom_startup
 x64_PATH=C:\mingw64\bin
 x64_ENTRY_POINT=custom_startup
 
-x64_tiny_APPNAME=Polymorph
-x86_tiny_APPNAME=Polymorph-x86
 x64_base_APPNAME=Polymorph-base
 x86_base_APPNAME=Polymorph-x86-base
+x64_tiny_APPNAME=Polymorph
+x86_tiny_APPNAME=Polymorph-x86
+x64_debug_APPNAME=Polymorph-debug
+x86_debug_APPNAME=Polymorph-x86-debug
 
 PLATFORM_ENTRY_POINT=$($(PLATFORM)_ENTRY_POINT)
 PLATFORM_PATH=$($(PLATFORM)_PATH)

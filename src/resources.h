@@ -9,6 +9,8 @@
 #define x86_tiny_APPNAME "Polymorph (x86)"
 #define x64_base_APPNAME "Polymorph (base)"
 #define x86_base_APPNAME "Polymorph (x86) (base)"
+#define x64_debug_APPNAME "Polymorph (debug)"
+#define x86_debug_APPNAME "Polymorph (x86) (debug)"
 
 #define APPNAME_CONC0(a,b) a ## b
 #define APPNAME_CONC(a,b) APPNAME_CONC0(a,b)
