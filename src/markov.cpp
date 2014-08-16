@@ -114,9 +114,9 @@ void transition (rng_t & rng, float (& u) [4], polyhedron_select_t & current, un
   maybe_perform_replacement (rng, u, current, starting_point);
 
   const std::uint8_t disallowed [] = {
-    0b00001001u,
-    0b00010010u,
-    0b00100100u,
+    0b00001111u,
+    0b00010111u,
+    0b00100111u,
     0b10111001u,
     0b10111010u,
     0b10111100u,

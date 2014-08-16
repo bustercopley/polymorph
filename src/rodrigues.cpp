@@ -93,7 +93,7 @@ namespace
       g = one - xsq * h;                 // Quartic in xsq (the extra precision is important).
     }
     else {
-      // Quadrants 2, 3 and 4 (pi/2 <= 2pi).
+      // Quadrants 2, 3 and 4 (pi/2 <= x < 2pi).
       // Let t = x/2 - pi/2. Then sin(t) = -cos(x/2) and cos(t) = sin(x/2).
       v4f hx = half * sqrt (xsq);              // x/2 x/2 x/2 x/2 (approx)
       v4f sc = sincos_internal (hx - hpi);     // -cos(x/2) 1-sin(x/2) -cos(x/2) 1-sin(x/2)
@@ -263,12 +263,12 @@ v4f sincos (const v4f x)
   return oioi - sc;                // sin(x) cos(x) sin(x) cos(x)
 }
 
-// Range [+0x1.555554P-2f, +0x1.fb5486P-1f] ([0.333333313, 0.990879238]), poor accuracy.
+// Very restricted range [+0x1.8c97f0P-1f, +0x1.fb5486P-1f] ([0.774596691, 0.990879238]).
 // Argument x x x x, result acos(x) acos(x) acos(x) acos(x).
 v4f arccos (v4f x)
 {
-  // Minimax polynomial for (acos(x))^2 on [+0x1.555554P-2f, +0x1.fb5486P-1f].
-  // Remes error +-0x1.5e7a70P-14f, max ulp error +-44904.
-  const v4f p = { +0x1.3a61d6P1f, -0x1.870bc8P1f, +0x1.7dcd36P-1f, -0x1.2cd4deP-3f, };
-  return sqrt (polyeval (x, p, p));
+  // Minimax polynomial for (acos(x))^2 on [+0x1.8c97f0P-1f, +0x1.fb5486P-1f].
+  // Remes error +-0x1.460d54P-21f, max ulp error +-446.
+  const v4f p = { +0x1.37b24aP1f, -0x1.7cb23cP1f, +0x1.494690P-1f, -0x1.aa37e2P-4f, };
+  return sqrt_nonzero (polyeval (x, p, p));
 }
