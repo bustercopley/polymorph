@@ -5,13 +5,6 @@
 
 // Did I mention that 'make_system' works by magic?
 
-template <typename T>
-inline void demarcate (char * & memory, T * & pointer, unsigned N)
-{
-  pointer = (T *) memory;
-  memory += N * sizeof (T);
-}
-
 void make_system (unsigned q, unsigned r, const float (& xyz_in) [3] [4], float (* xyz) [4], unsigned (* indices) [6])
 {
   unsigned * P, * Q, * R;     // Permutations taking black triangles around nodes.
