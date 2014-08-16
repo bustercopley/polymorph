@@ -19,7 +19,7 @@ void make_system (unsigned q, unsigned r, const float (& xyz_in) [3] [4], float 
   unsigned * P0, * R0;        // One of the triangles around each P- and R- node.
 
   // This is too much memory to allocate on the stack in one go under -nostdlib.
-  void * const memory = (char *) allocate_internal (410 * sizeof (unsigned));
+  void * const memory = allocate_internal (410 * sizeof (unsigned));
   unsigned * memp = (unsigned *) memory;
   P = memp; memp += 60;
   Q = memp; memp += 60;
@@ -28,7 +28,7 @@ void make_system (unsigned q, unsigned r, const float (& xyz_in) [3] [4], float 
   Qx = memp; memp += 60;
   Rx = memp; memp += 60;
   P0 = memp; memp += 30;
-  R0 = memp; memp += 20;
+  R0 = memp; // memp += 20;
 
   const unsigned p = 2, N = 2 * p*q*r / (q*r + r*p + p*q - p*q*r), Np = N / p, Nq = N / q, Nr = N / r;
 
@@ -160,4 +160,6 @@ void make_system (unsigned q, unsigned r, const float (& xyz_in) [3] [4], float 
     indices [n] [4] = Qx [k] + N / p;
     indices [n] [5] = Rx [k] + N / p + N / q;
   }
+
+  deallocate (memory);
 }
