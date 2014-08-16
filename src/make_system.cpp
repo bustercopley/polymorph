@@ -12,32 +12,29 @@ inline void demarcate (char * & memory, T * & pointer, unsigned N)
   memory += N * sizeof (T);
 }
 
-system_data_t make_system (unsigned q, unsigned r, const float (& xyz_in) [3] [4], char * memory)
+void make_system (unsigned q, unsigned r, const float (& xyz_in) [3] [4], float (* xyz) [4], unsigned (* indices) [6])
 {
-  const unsigned p = 2, N = 2 * p*q*r / (q*r + r*p + p*q - p*q*r), Np = N / p, Nq = N / q, Nr = N / r;
-
   unsigned * P, * Q, * R;     // Permutations taking black triangles around nodes.
   unsigned * Px, * Qx, * Rx;  // Take a triangle to its P-, Q- or R-node.
   unsigned * P0, * R0;        // One of the triangles around each P- and R- node.
-  float (* x) [4];
-  float (* y) [4];
-  float (* z) [4];
 
-  system_data_t result;
-  demarcate (memory, x, Np);
-  demarcate (memory, y, Nq);
-  demarcate (memory, z, Nr);
-  demarcate (memory, result.indices, N);
-  demarcate (memory, P, N);
-  demarcate (memory, Q, N);
-  demarcate (memory, R, N);
-  demarcate (memory, Px, N);
-  demarcate (memory, Qx, N);
-  demarcate (memory, Rx, N);
-  demarcate (memory, P0, Np);
-  demarcate (memory, R0, Nr);
+  // This is too much memory to allocate on the stack in one go under -nostdlib.
+  void * const memory = (char *) allocate_internal (410 * sizeof (unsigned));
+  unsigned * memp = (unsigned *) memory;
+  P = memp; memp += 60;
+  Q = memp; memp += 60;
+  R = memp; memp += 60;
+  Px = memp; memp += 60;
+  Qx = memp; memp += 60;
+  Rx = memp; memp += 60;
+  P0 = memp; memp += 30;
+  R0 = memp; memp += 20;
 
-  result.xyz = x;
+  const unsigned p = 2, N = 2 * p*q*r / (q*r + r*p + p*q - p*q*r), Np = N / p, Nq = N / q, Nr = N / r;
+
+  float (* x) [4] = xyz;
+  float (* y) [4] = x + Np;
+  float (* z) [4] = y + Nq;
 
   store4f (x [0], load4f (xyz_in [0]));
   store4f (y [0], load4f (xyz_in [1]));
@@ -156,13 +153,11 @@ system_data_t make_system (unsigned q, unsigned r, const float (& xyz_in) [3] [4
     unsigned i = n;
     unsigned j = i [R];
     unsigned k = j [P];
-    result.indices [n] [0] = Px [j];
-    result.indices [n] [1] = Qx [j] + N / p;
-    result.indices [n] [2] = Rx [i] + N / p + N / q;
-    result.indices [n] [3] = Px [i];
-    result.indices [n] [4] = Qx [k] + N / p;
-    result.indices [n] [5] = Rx [k] + N / p + N / q;
+    indices [n] [0] = Px [j];
+    indices [n] [1] = Qx [j] + N / p;
+    indices [n] [2] = Rx [i] + N / p + N / q;
+    indices [n] [3] = Px [i];
+    indices [n] [4] = Qx [k] + N / p;
+    indices [n] [5] = Rx [k] + N / p + N / q;
   }
-
-  return result;
 }

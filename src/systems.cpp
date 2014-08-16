@@ -145,9 +145,6 @@ void initialize_systems (float (& abc) [system_count] [8] [4],
                          unsigned (& primitive_count) [system_count],
                          unsigned (& vao_ids) [system_count])
 {
-  char * memory = (char *) allocate_internal (770 * sizeof (unsigned) + 248 * sizeof (float) + 63);
-  char * aligned = (char *) ((((std::intptr_t) memory) + 63) & -64);
-
   auto init = [&] (const triangle_t & t, system_select_t select, unsigned q, unsigned r) -> void
   {
     copy (t.xyz, xyz [select]);
@@ -155,8 +152,10 @@ void initialize_systems (float (& abc) [system_count] [8] [4],
     cramer::inverse_transpose (xyz [select], xyzinvt [select]);
     unsigned p = 2;
     unsigned N = 2 * p*q*r / (q*r + r*p + p*q - p*q*r);
-    system_data_t data = make_system (q, r, t.xyz, aligned);
-    vao_ids [select] = make_vao (N, data.xyz, data.indices);
+    unsigned indices [60] [6];
+    ALIGNED16 float xyz [62] [4];
+    make_system (q, r, t.xyz, xyz, indices);
+    vao_ids [select] = make_vao (N, xyz, indices);
     primitive_count [select] = N;
   };
 
@@ -166,6 +165,4 @@ void initialize_systems (float (& abc) [system_count] [8] [4],
     reflect (triangle);
     init (triangle, system_select_t (2 * n + 1), 3, 3 + n);
   }
-
-  deallocate (memory);
 }
