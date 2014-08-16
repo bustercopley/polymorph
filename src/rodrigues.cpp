@@ -270,5 +270,5 @@ v4f arccos (v4f x)
   // Minimax polynomial for (acos(x))^2 on [+0x1.8c97f0P-1f, +0x1.fb5486P-1f].
   // Remes error +-0x1.460d54P-21f, max ulp error +-446.
   const v4f p = { +0x1.37b24aP1f, -0x1.7cb23cP1f, +0x1.494690P-1f, -0x1.aa37e2P-4f, };
-  return sqrt_nonzero (polyeval (x, p, p));
+  return sqrt (polyeval (x, p, p));
 }
