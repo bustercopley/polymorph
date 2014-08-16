@@ -1,6 +1,5 @@
 #include "make_system.h"
 #include "rotor.h"
-#include "memory.h"
 
 // Did I mention that 'make_system' works by magic?
 
@@ -105,13 +104,15 @@ void make_system (unsigned q, unsigned r, const float (& xyz_in) [3] [4], float 
     rotor_t Y_rotate (y [m0 / q], B);
     for (unsigned n = m0 + 1; n != m0 + q; ++ n) {
       if (Px [n] == undef) {
+        Px [n] = p_node;
         P0 [p_node] = n;
-        Px [n] = p_node ++;
+        ++ p_node;
         Y_rotate (x [Px [n - 1]], x [Px [n]]);
       }
       if (Rx [n] == undef) {
+        Rx [n] = r_node;
         R0 [r_node] = n;
-        Rx [n] = r_node ++;
+        ++ r_node;
         Y_rotate (z [Rx [n - 1]], z [Rx [n]]);
       }
     }
