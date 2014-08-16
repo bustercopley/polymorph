@@ -36,11 +36,11 @@ base_CXXFLAGS=$(common_CXXFLAGS)
 base_LDFLAGS=$(common_LDFLAGS) -s
 base_LDLIBS=$(common_LDLIBS)
 
-tiny_CPPFLAGS=$(common_CPPFLAGS) -DTINY
-tiny_CFLAGS=$(common_CFLAGS) -flto -Os -fno-asynchronous-unwind-tables
-tiny_CXXFLAGS=$(common_CXXFLAGS)
-tiny_LDFLAGS=$(common_LDFLAGS) -s -nostdlib --entry=$(PLATFORM_ENTRY_POINT) -Wl,--disable-runtime-pseudo-reloc
-tiny_LDLIBS=$(common_LDLIBS) -lgdi32 -ladvapi32 -luser32 -lkernel32
+tiny_CPPFLAGS=$(base_CPPFLAGS) -DTINY
+tiny_CFLAGS=$(base_CFLAGS) -fno-asynchronous-unwind-tables
+tiny_CXXFLAGS=$(base_CXXFLAGS)
+tiny_LDFLAGS=$(base_LDFLAGS) -nostdlib -Wl,--disable-runtime-pseudo-reloc --entry=$(PLATFORM_ENTRY_POINT)
+tiny_LDLIBS=$(base_LDLIBS) -lgdi32 -ladvapi32 -luser32 -lkernel32
 
 debug_CPPFLAGS=$(common_CPPFLAGS)
 debug_CFLAGS=$(common_CFLAGS) -g -ggdb
