@@ -150,12 +150,11 @@ void initialize_systems (float (& abc) [system_count] [8] [4],
     copy (t.xyz, xyz [select]);
     copy (t.abc, abc [select]);
     cramer::inverse_transpose (xyz [select], xyzinvt [select]);
-    unsigned p = 2;
-    unsigned N = 2 * p*q*r / (q*r + r*p + p*q - p*q*r);
+    unsigned p = 2, N = 2 * p * q * r / (q * r + r * p + p * q - p * q * r);
     unsigned indices [60] [6];
-    ALIGNED16 float xyz [62] [4];
-    make_system (q, r, t.xyz, xyz, indices);
-    vao_ids [select] = make_vao (N, xyz, indices);
+    ALIGNED16 float nodes [62] [4];
+    make_system (q, r, t.xyz, nodes, indices);
+    vao_ids [select] = make_vao (N, nodes, indices);
     primitive_count [select] = N;
   };
 

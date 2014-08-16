@@ -1,59 +1,45 @@
 #include "make_system.h"
-#include "vector.h"
 #include "rotor.h"
 #include "memory.h"
 
 // Did I mention that 'make_system' works by magic?
 
-void make_system (unsigned q, unsigned r, const float (& xyz_in) [3] [4], float (* xyz) [4], unsigned (* indices) [6])
+void make_system (unsigned q, unsigned r, const float (& xyz_in) [3] [4], float (* nodes) [4], unsigned (* indices) [6])
 {
-  unsigned * P, * Q, * R;     // Permutations taking black triangles around nodes.
-  unsigned * Px, * Qx, * Rx;  // Take a triangle to its P-, Q- or R-node.
-  unsigned * P0, * R0;        // One of the triangles around each P- and R- node.
+  // This is quite a lot to be allocating on the stack.
+  std::uint8_t memory [350];
 
-  // This is too much memory to allocate on the stack in one go under -nostdlib.
-  void * const memory = allocate_internal (410 * sizeof (unsigned));
-  unsigned * memp = (unsigned *) memory;
+  std::uint8_t * P, * Q, * R; // Permutations taking black triangles around nodes.
+  std::uint8_t * Px, * Rx;    // Map a triangle to its P- or R-node.
+  std::uint8_t * P0, * R0;    // Map a P- or R-node to one of its triangles.
+
+  std::uint8_t * memp = memory;
   P = memp; memp += 60;
   Q = memp; memp += 60;
   R = memp; memp += 60;
   Px = memp; memp += 60;
-  Qx = memp; memp += 60;
   Rx = memp; memp += 60;
   P0 = memp; memp += 30;
   R0 = memp; // memp += 20;
 
-  const unsigned p = 2, N = 2 * p*q*r / (q*r + r*p + p*q - p*q*r), Np = N / p, Nq = N / q, Nr = N / r;
+  const std::uint8_t undef = 0xff;
+  const unsigned p = 2, N = 2 * p * q * r / (q * r + r * p + p * q - p * q * r);
+  for (unsigned n = 0; n != 350; ++ n) memory [n] = undef;
+  for (unsigned n = 0; n != N; ++ n) n [Q] = n - n % q + (n + 1) % q;
+  for (unsigned n = 0; n != q; ++ n) {
+    Px [n] = n;
+    Rx [n] = n;
+    P0 [n] = n;
+    R0 [n] = n;
+  }
 
-  float (* x) [4] = xyz;
-  float (* y) [4] = x + Np;
-  float (* z) [4] = y + Nq;
+  float (* x) [4] = nodes;
+  float (* y) [4] = x + N / p;
+  float (* z) [4] = y + N / q;
 
   store4f (x [0], load4f (xyz_in [0]));
   store4f (y [0], load4f (xyz_in [1]));
   store4f (z [0], load4f (xyz_in [2]));
-
-  for (unsigned n = 0; n != N; ++ n) {
-    n [P] = N;
-    n [Q] = n - n % q + (n + 1) % q;
-    n [R] = N;
-
-    Qx [n] = n / q;
-
-    if (n < q) {
-      Px [n] = n;
-      Rx [n] = n;
-      P0 [n] = n;
-      R0 [n] = n;
-    }
-    else
-    {
-      Px [n] = Np;
-      Rx [n] = Nr;
-      if (n < Np) P0 [n] = N;
-      if (n < Nr) R0 [n] = N;
-    }
-  }
 
   float two_pi = 0x1.921fb6P2;
   float A = two_pi / p;
@@ -68,9 +54,9 @@ void make_system (unsigned q, unsigned r, const float (& xyz_in) [3] [4], float 
 
   unsigned n0 = 0, p_node = q, r_node = q;
   for (unsigned m0 = q; m0 != N; m0 += q) {
-    while (n0 [P] != N) ++ n0;
+    while (n0 [P] != undef) ++ n0;
 
-    // Triangles m and n share a P-node.
+    // Attach triangle m0 to triangle n0's dangling P-node.
     Px [m0] = Px [n0];
 
     // At this point we learn the co-ordinates of the next Q-node.
@@ -80,28 +66,23 @@ void make_system (unsigned q, unsigned r, const float (& xyz_in) [3] [4], float 
     // and which are new.
 
     rotor_t X_rotate (x [Px [n0]], A);
-    X_rotate (y [Qx [n0]], y [Qx [m0]]);
+    X_rotate (y [n0 / q], y [m0 / q]);
 
     // Work out the consequences of identifying the two P-nodes.
-    // This is where the magic happens.
+    // Invariant: n [P] = m if and only if m [Q] [R] = n, for all m, n < N.
 
     unsigned n = n0, m = m0;
     do {
       n [P] = m;
       m = m [Q];
       m [R] = n;
-      if (Rx [m] == Nr) {
-        Rx [m] = Rx [n];
-      }
-      else if (Rx [n] == Nr) {
-        Rx [n] = Rx [m];
-      }
+      Rx [m] = Rx [n] = Rx [m] & Rx [n];
       unsigned d = 1;
-      while (d != r && n [R] != N) {
+      while (d != r && n [R] != undef) {
         n = n [R];
         ++ d;
       }
-      while (d != r && m [P] != N) {
+      while (d != r && m [P] != undef) {
         m = m [P] [Q];
         ++ d;
       }
@@ -109,32 +90,26 @@ void make_system (unsigned q, unsigned r, const float (& xyz_in) [3] [4], float 
         n [R] = m;
         n = n - n % q + (n + q - 1) % q;
         m [P] = n;
-
-        if (Px [m] == Np) {
-          Px [m] = Px [n];
-        }
-        else if (Px [n] == Np) {
-          Px [n] = Px [m];
-        }
+        Px [m] = Px [n] = Px [m] & Px [n];
       }
-      if (n [P] != N) {
+      if (n [P] != undef) {
         n = m0;
         m = n0;
       }
-    } while (n [P] == N);
+    } while (n [P] == undef);
 
     // Now all the nodes that our new triangles share with old triangles
     // are identified with nodes that are already labelled, so we can give
     // new labels to the remaining nodes and compute their vectors.
 
-    rotor_t Y_rotate (y [Qx [m0]], B);
+    rotor_t Y_rotate (y [m0 / q], B);
     for (unsigned n = m0 + 1; n != m0 + q; ++ n) {
-      if (Px [n] == Np) {
+      if (Px [n] == undef) {
         P0 [p_node] = n;
         Px [n] = p_node ++;
         Y_rotate (x [Px [n - 1]], x [Px [n]]);
       }
-      if (Rx [n] == Nr) {
+      if (Rx [n] == undef) {
         R0 [r_node] = n;
         Rx [n] = r_node ++;
         Y_rotate (z [Rx [n - 1]], z [Rx [n]]);
@@ -147,12 +122,10 @@ void make_system (unsigned q, unsigned r, const float (& xyz_in) [3] [4], float 
     unsigned j = i [R];
     unsigned k = j [P];
     indices [n] [0] = Px [j];
-    indices [n] [1] = Qx [j] + N / p;
+    indices [n] [1] = j / q + N / p;
     indices [n] [2] = Rx [i] + N / p + N / q;
     indices [n] [3] = Px [i];
-    indices [n] [4] = Qx [k] + N / p;
+    indices [n] [4] = k / q + N / p;
     indices [n] [5] = Rx [k] + N / p + N / q;
   }
-
-  deallocate (memory);
 }
