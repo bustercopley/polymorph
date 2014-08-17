@@ -27,15 +27,18 @@ INT_PTR CALLBACK DialogProc (HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
     ::SetWindowLongPtr (hdlg, DWLP_USER, (LONG_PTR) ds);
     HFONT font = ::CreateFont (16, 0, 0, 0, FW_DONTCARE, TRUE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
                                CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, VARIABLE_PITCH | FF_ROMAN, TEXT ("Segoe UI"));
-    ::SendMessage (::GetDlgItem (hdlg, IDC_MESSAGE), WM_SETFONT, (WPARAM) font, 0);
+    HWND hwnd_message = ::GetDlgItem (hdlg, IDC_MESSAGE);
     HWND hwnd_count_trackbar = ::GetDlgItem (hdlg, IDC_COUNT_TRACKBAR);
     HWND hwnd_speed_trackbar = ::GetDlgItem (hdlg, IDC_SPEED_TRACKBAR);
+    ::SendMessage (hwnd_message, WM_SETFONT, (WPARAM) font, 0);
     ::SendMessage (hwnd_count_trackbar, TBM_SETPOS, (WPARAM) TRUE, (LPARAM) ds->settings->count);
     ::SendMessage (hwnd_speed_trackbar, TBM_SETPOS, (WPARAM) TRUE, (LPARAM) ds->settings->speed);
-    ::SendMessage (hwnd_count_trackbar, TBM_SETBUDDY, (WPARAM) FALSE, (LPARAM) ::GetDlgItem (hdlg, IDC_MAX_COUNT_STATIC));
-    ::SendMessage (hwnd_count_trackbar, TBM_SETBUDDY, (WPARAM) TRUE, (LPARAM) ::GetDlgItem (hdlg, IDC_MIN_COUNT_STATIC));
-    ::SendMessage (hwnd_speed_trackbar, TBM_SETBUDDY, (WPARAM) FALSE, (LPARAM) ::GetDlgItem (hdlg, IDC_MAX_SPEED_STATIC));
-    ::SendMessage (hwnd_speed_trackbar, TBM_SETBUDDY, (WPARAM) TRUE, (LPARAM) ::GetDlgItem (hdlg, IDC_MIN_SPEED_STATIC));
+    for (unsigned i = 0; i != buddy_count; ++ i) {
+      HWND hwnd_buddy = ::GetDlgItem (hdlg, buddies [i] [0]);
+      HWND hwnd_trackbar = ::GetDlgItem (hdlg, buddies [i] [1]);
+      WPARAM buddy_side = (WPARAM) buddies [i] [2];
+      ::SendMessage (hwnd_trackbar, TBM_SETBUDDY, buddy_side, (LPARAM) hwnd_buddy);
+    }
     reposition_window (hdlg);
     // Override the Z order specified by the ownership relationship.
     ::SetWindowPos (hdlg, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOOWNERZORDER);
@@ -48,8 +51,10 @@ INT_PTR CALLBACK DialogProc (HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
 
   case WM_COMMAND: {
     const UINT id = LOWORD (wParam);
-    ds->settings->count = (DWORD) ::SendMessage (::GetDlgItem (hdlg, IDC_COUNT_TRACKBAR), TBM_GETPOS, 0, 0);
-    ds->settings->speed = (DWORD) ::SendMessage (::GetDlgItem (hdlg, IDC_SPEED_TRACKBAR), TBM_GETPOS, 0, 0);
+    HWND hwnd_count_trackbar = ::GetDlgItem (hdlg, IDC_COUNT_TRACKBAR);
+    HWND hwnd_speed_trackbar = ::GetDlgItem (hdlg, IDC_SPEED_TRACKBAR);
+    ds->settings->count = (DWORD) ::SendMessage (hwnd_count_trackbar, TBM_GETPOS, 0, 0);
+    ds->settings->speed = (DWORD) ::SendMessage (hwnd_speed_trackbar, TBM_GETPOS, 0, 0);
     if (id == IDOK) save_settings (* ds->settings);
     if (id != IDC_PREVIEW_BUTTON) ::DestroyWindow (hdlg);
     if (id == IDC_PREVIEW_BUTTON) ::ShowWindow (ds->hwnd, SW_SHOW);
