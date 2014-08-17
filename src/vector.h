@@ -85,9 +85,14 @@ inline v4f normalize (v4f v)
   return v * rsqrt (dot (v, v));
 }
 
+inline v4f sqrt_nonzero (v4f k)
+{
+  return k * rsqrt (k);
+}
+
 inline v4f sqrt (v4f k)
 {
-  return k * _mm_and_ps (_mm_cmpneq_ps (k, _mm_setzero_ps ()), rsqrt (k));
+  return _mm_and_ps (_mm_cmpneq_ps (k, _mm_setzero_ps ()), sqrt_nonzero (k));
 }
 
 // Apply the 3x3 matrix m to the column vector x.

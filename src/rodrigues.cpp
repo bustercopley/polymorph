@@ -64,7 +64,7 @@ namespace
     }
     else {
       // Quadrants 2 and 3 (pi/2 <= x < 3pi/2).
-      v4f x = sqrt (xsq);                    // x x * * (approx)
+      v4f x = sqrt_nonzero (xsq);            // x x * * (approx)
       // Let t = x - pi. Then sin(t) = -sin(x) and cos(t) = -cos(x).
       v4f pi = { +0x1.921fb6P1f, +0x1.921fb6P1f, 0.0f, 0.0f, }; // pi pi 0 0
       v4f sc1 = sincos_internal (x - pi);    // -sin(x) 1+cos(x) -sin(x) 1+cos(x)
@@ -95,7 +95,7 @@ namespace
     else {
       // Quadrants 2, 3 and 4 (pi/2 <= x < 2pi).
       // Let t = x/2 - pi/2. Then sin(t) = -cos(x/2) and cos(t) = sin(x/2).
-      v4f hx = half * sqrt (xsq);              // x/2 x/2 x/2 x/2 (approx)
+      v4f hx = half * sqrt_nonzero (xsq);      // x/2 x/2 x/2 x/2 (approx)
       v4f sc = sincos_internal (hx - hpi);     // -cos(x/2) 1-sin(x/2) -cos(x/2) 1-sin(x/2)
       v4f oioi = { 0.0f, 1.0f, 0.0f, 1.0f, };
       v4f cs = oioi - sc;                      // cos(x/2) sin(x/2) cos(x/2) sin(x/2)
@@ -270,5 +270,5 @@ v4f arccos (v4f x)
   // Minimax polynomial for (acos(x))^2 on [+0x1.8c97f0P-1f, +0x1.fb5486P-1f].
   // Remes error +-0x1.460d54P-21f, max ulp error +-446.
   const v4f p = { +0x1.37b24aP1f, -0x1.7cb23cP1f, +0x1.494690P-1f, -0x1.aa37e2P-4f, };
-  return sqrt (polyeval (x, p, p));
+  return sqrt_nonzero (polyeval (x, p, p));
 }
