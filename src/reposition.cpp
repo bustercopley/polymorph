@@ -36,8 +36,8 @@ void reposition_window (HWND hwnd)
   int cx = window_rect.right - window_rect.left;
   int cy = window_rect.bottom - window_rect.top;
   HINSTANCE hInstance = (HINSTANCE) ::GetWindowLongPtr (hwnd, GWLP_HINSTANCE);
-  WNDCLASS wndclass = { 0, & RepositionWndProc, 0, 0, hInstance, NULL, NULL, NULL, NULL, WC_REPOSWND };
-  ::RegisterClass (& wndclass);
+  WNDCLASSEX wndclass = { sizeof (WNDCLASSEX), 0, & RepositionWndProc, 0, 0, hInstance, NULL, NULL, NULL, NULL, WC_REPOSWND, NULL };
+  ::RegisterClassEx (& wndclass);
   ::CreateWindowEx (0, WC_REPOSWND, TEXT (""), 0,
                     CW_USEDEFAULT, CW_USEDEFAULT, cx, cy,
                     NULL, NULL, hInstance, (LPVOID) hwnd);
