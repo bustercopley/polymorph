@@ -28,7 +28,7 @@ common_CPPFLAGS=-DUNICODE -D_UNICODE
 common_CFLAGS=-msse3 -mfpmath=sse -fno-ident
 common_CXXFLAGS=-fno-rtti -fno-exceptions -ffast-math
 common_LDFLAGS=-mwindows -municode
-common_LDLIBS=-lopengl32
+common_LDLIBS=-lopengl32 -lcomctl32 -lshell32
 
 base_CPPFLAGS=$(common_CPPFLAGS)
 base_CFLAGS=$(common_CFLAGS) -flto -Os

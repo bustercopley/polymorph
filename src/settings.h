@@ -9,11 +9,10 @@
 
 struct settings_t
 {
-  DWORD count;
-  DWORD speed;
+  DWORD trackbar_pos [3];
 };
 
-extern const settings_t default_settings;
+static const unsigned trackbar_count = 3;
 
 void load_settings (settings_t & settings);
 void save_settings (const settings_t & settings);

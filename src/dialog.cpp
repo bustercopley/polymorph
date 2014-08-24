@@ -2,17 +2,13 @@
 #include "resources.h"
 #include "settings.h"
 #include "reposition.h"
-
-const UINT buddies [] [3] = {
-  { IDC_MAX_COUNT_STATIC, IDC_COUNT_TRACKBAR, FALSE, },
-  { IDC_MIN_COUNT_STATIC, IDC_COUNT_TRACKBAR, TRUE,  },
-  { IDC_MAX_SPEED_STATIC, IDC_SPEED_TRACKBAR, FALSE, },
-  { IDC_MIN_SPEED_STATIC, IDC_SPEED_TRACKBAR, TRUE,  },
-};
-const unsigned buddy_count = sizeof buddies / sizeof * buddies;
+#include <shellapi.h>
 
 HWND create_dialog (HINSTANCE hInstance, dialog_struct_t * ds)
 {
+  INITCOMMONCONTROLSEX icc = { sizeof (INITCOMMONCONTROLSEX), ICC_BAR_CLASSES | ICC_LINK_CLASS | ICC_STANDARD_CLASSES };
+  ::InitCommonControlsEx (& icc);
+
   return ::CreateDialogParam (hInstance, MAKEINTRESOURCE (IDD_CONFIGURE), ds->hwnd, DialogProc, (LPARAM) ds);
 }
 
@@ -25,19 +21,18 @@ INT_PTR CALLBACK DialogProc (HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
   case WM_INITDIALOG: {
     ds = (dialog_struct_t *) lParam;
     ::SetWindowLongPtr (hdlg, DWLP_USER, (LONG_PTR) ds);
+    HWND hwnd_message = ::GetDlgItem (hdlg, IDC_MESSAGE);
     HFONT font = ::CreateFont (16, 0, 0, 0, FW_DONTCARE, TRUE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
                                CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, VARIABLE_PITCH | FF_ROMAN, TEXT ("Segoe UI"));
-    HWND hwnd_message = ::GetDlgItem (hdlg, IDC_MESSAGE);
-    HWND hwnd_count_trackbar = ::GetDlgItem (hdlg, IDC_COUNT_TRACKBAR);
-    HWND hwnd_speed_trackbar = ::GetDlgItem (hdlg, IDC_SPEED_TRACKBAR);
     ::SendMessage (hwnd_message, WM_SETFONT, (WPARAM) font, 0);
-    ::SendMessage (hwnd_count_trackbar, TBM_SETPOS, (WPARAM) TRUE, (LPARAM) ds->settings->count);
-    ::SendMessage (hwnd_speed_trackbar, TBM_SETPOS, (WPARAM) TRUE, (LPARAM) ds->settings->speed);
-    for (unsigned i = 0; i != buddy_count; ++ i) {
-      HWND hwnd_buddy = ::GetDlgItem (hdlg, buddies [i] [0]);
-      HWND hwnd_trackbar = ::GetDlgItem (hdlg, buddies [i] [1]);
-      WPARAM buddy_side = (WPARAM) buddies [i] [2];
-      ::SendMessage (hwnd_trackbar, TBM_SETBUDDY, buddy_side, (LPARAM) hwnd_buddy);
+    // The id of trackbar n is IDC_TRACKBARS_START + 4 * n, and its buddies have the two succeeding ids.
+    for (unsigned i = 0; i != trackbar_count; ++ i) {
+      HWND hwnd_trackbar = ::GetDlgItem (hdlg, IDC_TRACKBARS_START + 4 * i);
+      ::SendMessage (hwnd_trackbar, TBM_SETPOS, (WPARAM) TRUE, (LPARAM) ds->settings.trackbar_pos [i]);
+      for (unsigned j = 0; j != 2; ++ j) {
+        HWND hwnd_buddy = ::GetDlgItem (hdlg, IDC_TRACKBARS_START + 4 * i + 1 + j);
+        ::SendMessage (hwnd_trackbar, TBM_SETBUDDY, (WPARAM) j, (LPARAM) hwnd_buddy);
+      }
     }
     reposition_window (hdlg);
     // Override the Z order specified by the ownership relationship.
@@ -51,43 +46,47 @@ INT_PTR CALLBACK DialogProc (HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
 
   case WM_COMMAND: {
     const UINT id = LOWORD (wParam);
-    HWND hwnd_count_trackbar = ::GetDlgItem (hdlg, IDC_COUNT_TRACKBAR);
-    HWND hwnd_speed_trackbar = ::GetDlgItem (hdlg, IDC_SPEED_TRACKBAR);
-    ds->settings->count = (DWORD) ::SendMessage (hwnd_count_trackbar, TBM_GETPOS, 0, 0);
-    ds->settings->speed = (DWORD) ::SendMessage (hwnd_speed_trackbar, TBM_GETPOS, 0, 0);
-    if (id == IDOK) save_settings (* ds->settings);
+    for (unsigned i = 0; i != trackbar_count; ++ i) {
+      HWND hwnd_trackbar = ::GetDlgItem (hdlg, IDC_TRACKBARS_START + 4 * i);
+      ds->settings.trackbar_pos [i] = (DWORD) ::SendMessage (hwnd_trackbar, TBM_GETPOS, 0, 0);
+    }
+    if (id == IDOK) save_settings (ds->settings);
     if (id != IDC_PREVIEW_BUTTON) ::DestroyWindow (hdlg);
     if (id == IDC_PREVIEW_BUTTON) ::ShowWindow (ds->hwnd, SW_SHOW);
     return TRUE;
   }
 
+  case WM_NOTIFY: {
+    LPNMHDR notify = (LPNMHDR) lParam;
+    if (notify->idFrom == IDC_SYSLINK && (notify->code == NM_CLICK || notify->code == NM_RETURN)) {
+      PNMLINK link_notify = (PNMLINK) lParam;
+      ::ShellExecute (NULL, TEXT ("open"), link_notify->item.szUrl, NULL, NULL, SW_SHOW);
+    }
+    return FALSE;
+  }
+
   case WM_DRAWITEM: {
     // Draw trackbar buddy labels with baseline aligned to the bottom of the channel.
     DRAWITEMSTRUCT * drawitem = (DRAWITEMSTRUCT *) lParam;
-    const UINT id = drawitem->CtlID;
-    // Search for the trackbar of which this item is a buddy control.
-    unsigned i = 0;
-    while (i != buddy_count && buddies [i] [0] != id) ++ i;
-    if (i != buddy_count) {
-      // Found it!
-      HWND hwnd_trackbar = ::GetDlgItem (hdlg, buddies [i] [1]);
-      HWND hwnd_buddy = drawitem->hwndItem;
-      BOOL buddy_side = buddies [i] [2];
-      // Compute the reference point in the buddy's client co-ordinates.
-      RECT buddy_rect, trackbar_rect, channel_rect;
-      ::GetWindowRect (hwnd_trackbar, & trackbar_rect);
-      ::GetWindowRect (hwnd_buddy, & buddy_rect);
-      ::SendMessage (hwnd_trackbar, TBM_GETCHANNELRECT, 0, (LPARAM) & channel_rect);
-      int x = (buddy_side ? buddy_rect.right : buddy_rect.left) - buddy_rect.left;
-      int y = trackbar_rect.top + channel_rect.bottom - buddy_rect.top;
-      // Retrieve the buddy's text.
-      const WPARAM buffer_size = 64;
-      TCHAR buffer [buffer_size];
-      UINT length = (UINT) ::SendMessage (hwnd_buddy, WM_GETTEXT, buffer_size, (LPARAM) buffer);
-      // Render the text.
-      ::SetTextAlign (drawitem->hDC, (buddy_side ? TA_RIGHT : TA_LEFT) | TA_BASELINE | TA_NOUPDATECP);
-      ::ExtTextOut (drawitem->hDC, x, y, 0, NULL, buffer, length, NULL);
-    }
+    const UINT buddy_id = drawitem->CtlID;
+    const UINT trackbar_id = buddy_id & ~3;
+    HWND hwnd_buddy = drawitem->hwndItem;
+    HWND hwnd_trackbar = ::GetDlgItem (hdlg, trackbar_id);
+    BOOL buddy_side = (buddy_id & 3) - 1;
+    // Compute the reference point in the buddy's client co-ordinates.
+    RECT buddy_rect, trackbar_rect, channel_rect;
+    ::GetWindowRect (hwnd_trackbar, & trackbar_rect);
+    ::GetWindowRect (hwnd_buddy, & buddy_rect);
+    ::SendMessage (hwnd_trackbar, TBM_GETCHANNELRECT, 0, (LPARAM) & channel_rect);
+    int x = (buddy_side ? buddy_rect.right : buddy_rect.left) - buddy_rect.left;
+    int y = trackbar_rect.top + channel_rect.bottom - buddy_rect.top;
+    // Retrieve the buddy's text.
+    const WPARAM buffer_size = 64;
+    TCHAR buffer [buffer_size];
+    UINT length = (UINT) ::SendMessage (hwnd_buddy, WM_GETTEXT, buffer_size, (LPARAM) buffer);
+    // Render the text.
+    ::SetTextAlign (drawitem->hDC, (buddy_side ? TA_RIGHT : TA_LEFT) | TA_BASELINE | TA_NOUPDATECP);
+    ::ExtTextOut (drawitem->hDC, x, y, 0, NULL, buffer, length, NULL);
     return TRUE;
   }
 

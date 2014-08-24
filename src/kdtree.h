@@ -16,7 +16,7 @@ struct kdtree_t
   bool compute (unsigned * index, const float (* x) [4], unsigned count);
   void search (unsigned * index, const float (* x) [4], unsigned count,
                const float (* walls) [2] [4],  float max_radius,
-               object_t * objects, const float (* r), float (* v) [4], float (* w) [4]) const;
+               object_t * objects, float (* v) [4], float (* w) [4]) const;
 private:
   float * split;
   std::size_t capacity;

@@ -24,20 +24,29 @@ EXSTYLE WS_EX_APPWINDOW
 CAPTION "Polymorph"
 FONT 9, "Segoe UI", 0, 0, 0x1
 BEGIN
-  ICON           IDI_APPICON, IDC_STATIC,                                          30,         22,          0,          0
+  ICON           IDI_APPICON, IDC_STATIC,                                          30,           22,          0,          0
   LTEXT          "And the ratios of their numbers, motions, and other properties, everywhere God, as far as necessity allowed or gave consent, has exactly perfected, and harmonised in due proportion.",
-                 IDC_MESSAGE,                                                      80,         14,        140,         36
-  CTEXT          "TIMAEUS, Plato.", IDC_STATIC,                                    80,         50,        140,         10
+                 IDC_MESSAGE,                                                      80,           14,        140,         36
+  CTEXT          "TIMAEUS, Plato.", IDC_STATIC,                                    80,           50,        140,         10
 
-  LTEXT          "Fewer", IDC_MIN_COUNT_STATIC,                                     0,          0,         50,         14, SS_OWNERDRAW
-  LTEXT          "More", IDC_MAX_COUNT_STATIC,                                      0,          0,         50,         14, SS_OWNERDRAW
-  CONTROL        "", IDC_COUNT_TRACKBAR, TRACKBAR_CLASS, TRACKBAR_STYLE,           76,         72,        146,         14
+  // The id of trackbar n is IDC_TRACKBARS_START + 4 * n, and its buddies have the two succeeding ids.
+  // This numbering is assumed in "dialog.cpp".
 
-  LTEXT          "Slower", IDC_MIN_SPEED_STATIC,                                    0,          0,         50,         14, SS_OWNERDRAW
-  LTEXT          "Faster", IDC_MAX_SPEED_STATIC,                                    0,          0,         50,         14, SS_OWNERDRAW
-  CONTROL        "", IDC_SPEED_TRACKBAR, TRACKBAR_CLASS, TRACKBAR_STYLE,           76,         88,        146,         14
+  LTEXT          "Fewer",       IDC_TRACKBARS_START + 4 * 0 + 2,                    0,            0,         50,         14, SS_OWNERDRAW
+  LTEXT          "More",        IDC_TRACKBARS_START + 4 * 0 + 1,                    0,            0,         50,         14, SS_OWNERDRAW
+  CONTROL        "", IDC_TRACKBARS_START + 4 * 0, TRACKBAR_CLASS, TRACKBAR_STYLE,  76,  64 + 0 * 16,        146,         14
 
-  LTEXT          "© 2005-2014 Buster Copley", IDC_STATIC,                           8,  DLGH - 36,  DLGW - 16,         10
+  LTEXT          "Colder",      IDC_TRACKBARS_START + 4 * 1 + 2,                    0,            0,         50,         14, SS_OWNERDRAW
+  LTEXT          "Hotter",      IDC_TRACKBARS_START + 4 * 1 + 1,                    0,            0,         50,         14, SS_OWNERDRAW
+  CONTROL        "", IDC_TRACKBARS_START + 4 * 1, TRACKBAR_CLASS, TRACKBAR_STYLE,  76,  64 + 1 * 16,        146,         14
+
+  LTEXT          "Slower",       IDC_TRACKBARS_START + 4 * 2 + 2,                   0,            0,         50,         14, SS_OWNERDRAW
+  LTEXT          "Faster",       IDC_TRACKBARS_START + 4 * 2 + 1,                   0,            0,         50,         14, SS_OWNERDRAW
+  CONTROL        "", IDC_TRACKBARS_START + 4 * 2, TRACKBAR_CLASS, TRACKBAR_STYLE,  76,  64 + 2 * 16,        146,         14
+
+  CONTROL        "<a href=""http://buster.me.uk"">buster.me.uk</a>", IDC_SYSLINK, "SysLink", WS_TABSTOP,
+                                                                                    8,  DLGH - 36, DLGW - 16,         10
+
   LTEXT          "", IDC_BUTTONS_STATIC,                                            0,  DLGH - 26,       DLGW,         26
   DEFPUSHBUTTON  "OK", IDOK,                                               DLGW - 164,  DLGH - 20,         50,         14
   PUSHBUTTON     "Cancel", IDCANCEL,                                       DLGW - 110,  DLGH - 20,         50,         14

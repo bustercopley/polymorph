@@ -62,7 +62,7 @@ ALIGN_STACK LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LP
       // Remember initial cursor position to detect mouse movement.
       ::GetCursorPos (& ws->initial_cursor_position);
       // (Re-)start the simulation.
-      ws->model.start (windowpos->cx, windowpos->cy, * ws->settings);
+      ws->model.start (windowpos->cx, windowpos->cy, ws->settings);
       ws->model.draw_next ();
     }
     break;

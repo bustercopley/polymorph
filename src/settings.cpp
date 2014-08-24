@@ -1,10 +1,19 @@
 #include "settings.h"
 #include "resources.h"
 
-const settings_t default_settings = { 50, 50, };
+struct settings_definition_t
+{
+  const TCHAR * registry_value_name;
+  DWORD default_value;
+};
 
-#define COUNT_VALUE TEXT ("Count")
-#define SPEED_VALUE TEXT ("Speed")
+const settings_definition_t settings_definitions [trackbar_count] =
+{
+  { TEXT ("count"), 50, },
+  { TEXT ("heat"), 50, },
+  { TEXT ("speed"), 50, },
+};
+
 #define CONFIG_REGISTRY_KEYNAME TEXT ("SOFTWARE\\Buster\\Polymorph")
 
 inline void load (HKEY key, LPCTSTR value_name, DWORD & setting, DWORD maximum)
@@ -17,11 +26,17 @@ inline void load (HKEY key, LPCTSTR value_name, DWORD & setting, DWORD maximum)
 
 void load_settings (settings_t & settings)
 {
+  for (unsigned i = 0; i != trackbar_count; ++ i) {
+    settings.trackbar_pos [i] = settings_definitions [i].default_value;
+  }
+
   HKEY key;
   LONG error = ::RegOpenKeyEx (HKEY_CURRENT_USER, CONFIG_REGISTRY_KEYNAME, 0, KEY_READ, & key);
   if (error == ERROR_SUCCESS) {
-    load (key, COUNT_VALUE, settings.count, 100);
-    load (key, SPEED_VALUE, settings.speed, 100);
+    for (unsigned i = 0; i != trackbar_count; ++ i) {
+      const TCHAR * name = settings_definitions [i].registry_value_name;
+      load (key, name, settings.trackbar_pos [i], 100);
+    }
     ::RegCloseKey (key);
   }
 }
@@ -31,8 +46,10 @@ void save_settings (const settings_t & settings)
   HKEY key;
   LONG error = ::RegCreateKeyEx (HKEY_CURRENT_USER, CONFIG_REGISTRY_KEYNAME, 0, NULL, 0, KEY_WRITE, NULL, & key, NULL);
   if (error == ERROR_SUCCESS) {
-    ::RegSetValueEx (key, COUNT_VALUE, 0, REG_DWORD, (const BYTE *) & settings.count, sizeof (DWORD));
-    ::RegSetValueEx (key, SPEED_VALUE, 0, REG_DWORD, (const BYTE *) & settings.speed, sizeof (DWORD));
+    for (unsigned i = 0; i != trackbar_count; ++ i) {
+      const TCHAR * name = settings_definitions [i].registry_value_name;
+      ::RegSetValueEx (key, name, 0, REG_DWORD, (const BYTE *) & settings.trackbar_pos [i], sizeof (DWORD));
+    }
     ::RegCloseKey (key);
   }
 }

@@ -14,10 +14,9 @@
 
 struct object_t
 {
-  float m, l;
+  float m, l, r;
   float hue;
   float animation_time;
-  float locus_end [4];
   float locus_length;
   unsigned starting_point;
   polyhedron_select_t target;
@@ -34,7 +33,7 @@ struct model_t
 private:
   bool set_capacity (std::size_t new_capacity);
   void add_object (const float (& view) [4], float temperature);
-  void recalculate_locus (object_t & A);
+  void recalculate_locus (unsigned index);
   void draw (unsigned begin, unsigned count);
 
   ALIGNED16 float walls [6] [2] [4];
@@ -44,16 +43,21 @@ private:
   ALIGNED16 bumps_t bumps;
   ALIGNED16 step_t step;
 
-  float max_radius;
-
   void * memory;
   object_t * objects;
   unsigned * kdtree_index;
-  float (* r);      // circumradius
   float (* x) [4];  // position
   float (* v) [4];  // velocity
   float (* u) [4];  // angular position
   float (* w) [4];  // angular velocity
+  float (* e) [4];  // locus end
+
+  program_t programs [2];
+  kdtree_t kdtree;
+  rng_t rng;
+
+  float max_radius;
+  float animation_speed_constant;
 
   std::size_t capacity;
   unsigned count;
@@ -61,9 +65,6 @@ private:
   std::uint32_t vao_ids [system_count];
   uniform_buffer_t uniform_buffer;
 
-  program_t programs [2];
-  kdtree_t kdtree;
-  rng_t rng;
 };
 
 #endif

@@ -8,7 +8,7 @@
 
 struct dialog_struct_t
 {
-  settings_t * settings;
+  settings_t & settings;
   HWND hwnd;
 };
 

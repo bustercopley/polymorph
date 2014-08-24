@@ -11,12 +11,12 @@ namespace usr
 // Maybe apply equal and opposite impulses to objects ix and iy.
 inline void bounce (unsigned ix, unsigned iy,
                     object_t * RESTRICT objects,
-                    const float (* RESTRICT r), const float (* RESTRICT x) [4],
+                    const float (* RESTRICT x) [4],
                     float (* RESTRICT v) [4], float (* RESTRICT w) [4])
 {
   const object_t & A = objects [ix];
   const object_t & B = objects [iy];
-  v4f s = { r [ix] + r [iy], 0.0f, 0.0f, 0.0f, };
+  v4f s = { A.r + B.r, 0.0f, 0.0f, 0.0f, };
   v4f ssq = s * s;
   v4f dx = load4f (x [iy]) - load4f (x [ix]);
   v4f dxsq = dot (dx, dx);
@@ -26,8 +26,8 @@ inline void bounce (unsigned ix, unsigned iy,
     v4f zero = _mm_setzero_ps ();
     if (_mm_comilt_ss (dxdv, zero)) { // Spheres approach?
       v4f dxn = normalize (dx);
-      v4f rw = _mm_set1_ps (r [ix]) * load4f (w [ix])
-      + _mm_set1_ps (r [iy]) * load4f (w [iy]);
+      v4f rw = _mm_set1_ps (A.r) * load4f (w [ix])
+             + _mm_set1_ps (B.r) * load4f (w [iy]);
       v4f unn = dx * dxdv / dxsq;
       v4f rub = cross (rw, dxn) + unn - dv;
       v4f kf = _mm_set1_ps (usr::balls_friction);
@@ -41,7 +41,7 @@ inline void bounce (unsigned ix, unsigned iy,
       v4f top = km2 * (dot (u, dv) - dot (dxu, rw));
       v4f usq = dot (u, u);
       v4f dxusq = dot (dxu, dxu);
-      v4f R = { 1.0f, 1.0f, r [ix], r [iy], };
+      v4f R = { 1.0f, 1.0f, A.r, B.r, };
       v4f urdxu_sq = _mm_movehl_ps (R * R * dxusq, usq);
       v4f divisors = { A.m, B.m, A.l, B.l, };
       v4f quotients = urdxu_sq / divisors;
@@ -62,14 +62,14 @@ inline void bounce (unsigned ix, unsigned iy,
 inline void bounce (unsigned iw, unsigned ix,
                     const float (* RESTRICT walls) [2] [4],
                     object_t * RESTRICT objects,
-                    const float (* RESTRICT r), const float (* RESTRICT x) [4],
+                    const float (* RESTRICT x) [4],
                     float (* RESTRICT v) [4], float (* RESTRICT w) [4])
 {
   object_t & A = objects [ix];
   v4f anchor = load4f (walls [iw] [0]);
   v4f normal = load4f (walls [iw] [1]);
   v4f s = dot (load4f (x [ix]) - anchor, normal);
-  v4f R = _mm_set1_ps (r [ix]);
+  v4f R = _mm_set1_ps (A.r);
   if (_mm_comilt_ss (s, R)) { // Sphere penetrates plane?
     v4f vn = dot (load4f (v [ix]), normal);
     v4f zero = _mm_setzero_ps ();

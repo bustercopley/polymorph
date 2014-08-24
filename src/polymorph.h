@@ -11,7 +11,7 @@
 struct window_struct_t
 {
   model_t model;
-  settings_t * settings;
+  settings_t settings;
   run_mode_t mode;
   POINT initial_cursor_position;
   HGLRC hglrc;

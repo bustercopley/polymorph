@@ -22,7 +22,7 @@ namespace usr {
   // Container characteristics.
   static const float tank_distance = 120.0f;  // Distancia del ojo a la pantalla.
   static const float tank_depth = 22.0f;      // Tank depth in simulation units.
-  static const float tank_height = 22.0f;     // Height of screen / tank front.
+  static const float tank_side = 22.0f;       // Small dimension of front wall of tank.
 
   // Parameters for material-colour animation timings.
 
@@ -90,14 +90,20 @@ model_t::model_t () : memory (nullptr), capacity (0), count (0) { }
 
 bool model_t::start (int width, int height, const settings_t & settings)
 {
-  float aspect_ratio = float (width) / height;
-  unsigned total_count;
-  if (settings.count < 2) total_count = settings.count + 1;
-  else total_count = (unsigned) (3 + 4 * aspect_ratio * (settings.count - 2));
+  int small = width < height ? width : height;
+  int large = width < height ? height : width;
+
+  // Trackbar positions 0, 1, 2 specify 1, 2, 3 objects respectively.
+  // subsequently the number of objects increases linearly with position.
+  unsigned pos = settings.trackbar_pos [0];
+  unsigned total_count = pos < 2 ? pos + 1 : 3 + 4 * large * (pos - 2) / small;
   if (! set_capacity (total_count)) return false;
 
-  float tz = usr::tank_distance, td = usr::tank_depth, th = usr::tank_height;
-  ALIGNED16 float view [4] = { -tz, -tz-td, (th/2) * aspect_ratio, (th/2), };
+  float scale = 1.0f / small;
+  float tz = usr::tank_distance, td = usr::tank_depth, ts = usr::tank_side;
+  float tw = 0.5f * ts * width * scale;
+  float th = 0.5f * ts * height * scale;
+  ALIGNED16 float view [4] = { -tz, -tz - td, tw, th, };
   set_view (programs, view, width, height);
 
   // Calculate wall planes to exactly fill the front of the viewing frustum.
@@ -128,7 +134,8 @@ bool model_t::start (int width, int height, const settings_t & settings)
 
   count = 0;
   max_radius = 0.0f;
-  for (unsigned n = 0; n != total_count; ++ n) add_object (view, 8.0f * settings.speed);
+  unsigned temperature = 8.0f * settings.trackbar_pos [1];
+  for (unsigned n = 0; n != total_count; ++ n) add_object (view, temperature);
   for (unsigned n = 0; n != count; ++ n) kdtree_index [n] = n;
 
   float phase = 0.0f;
@@ -144,6 +151,35 @@ bool model_t::start (int width, int height, const settings_t & settings)
     objects [n].animation_time = animation_time;
     phase += 1.0f / total_count;
   }
+
+  // Take the animation-speed setting, s, a whole number in the range 0 to 100, inclusive;
+  // every frame, the morph/fade animation time is advanced by the time interval kT, where
+  // k is an increasing continuous function of s, and the constant T is the default frame time.
+  DWORD s = settings.trackbar_pos [2];
+  float k = s <= 50 ? 0.02f * s : 0.00000016f * (s * s * s * s); // Boost sensitivity in upper range.
+  animation_speed_constant = k;
+
+  // Inititalize bump function object for the lightness and saturation fading animation.
+  ALIGNED16 bump_specifier_t s_bump = usr::hsv_s_bump;
+  ALIGNED16 bump_specifier_t v_bump = usr::hsv_v_bump;
+  if (s > 50) {
+    // At higher animation speed, progressively suppress fading.
+    DWORD s1 = 100 - s;
+    float g = 0.02f * s1;                // Saturation fading decreases linearly.
+    float h = 8.0e-6f * (s1 * s1 * s1);  // Lightness fading falls off more rapidly.
+    s_bump.v0 = g * s_bump.v0 + (1.0f - g) * s_bump.v1;
+    v_bump.v0 = h * v_bump.v0 + (1.0f - h) * v_bump.v1;
+  }
+  if (s < 50) {
+    // At low speed, offset the attack-begin and attack-end times
+    // of the lightness and saturation independently to give a white
+    // warning flash effect.
+    s_bump.t0 += 0.10f;
+    s_bump.t1 += 0.25f;
+    v_bump.t1 -= 0.15f;
+  }
+  bumps.initialize (s_bump, v_bump);
+
   return true;
 }
 
@@ -152,7 +188,6 @@ bool model_t::initialize (std::uint64_t seed)
   if (! uniform_buffer.initialize ()) return false;
   if (! initialize_programs (programs)) return false;
   rng.initialize (seed);
-  bumps.initialize (usr::hsv_s_bump, usr::hsv_v_bump);
   step.initialize (usr::morph_start, usr::morph_finish);
   initialize_systems (abc, xyz, xyzinvt, primitive_count, vao_ids);
   return true;
@@ -180,7 +215,7 @@ model_t::~model_t ()
 bool model_t::set_capacity (std::size_t new_capacity)
 {
   return reallocate_aligned_arrays (memory, capacity, new_capacity,
-                                    & r, & x, & v, & u, & w,
+                                    & x, & v, & u, & w, & e,
                                     & kdtree_index,
                                     & objects);
 }
@@ -193,7 +228,7 @@ void model_t::add_object (const float (& view) [4], float temperature)
 
   object_t & A = objects [count];
   float R = get_float (rng, usr::min_radius, usr::max_radius);
-  r [count] = R;
+  A.r = R;
   if (max_radius < R) max_radius = R;
   A.m = usr::density * R * R;
   A.l = 0.4f * A.m * R * R;
@@ -232,18 +267,22 @@ void model_t::add_object (const float (& view) [4], float temperature)
   ++ count;
 }
 
-void model_t::recalculate_locus (object_t & object)
+void model_t::recalculate_locus (unsigned index)
 {
+  object_t & object = objects [index];
+  float (& locus_end) [4] = e [index];
+
   system_select_t sselect = object.target.system;
   v4f g0 = load4f (abc [sselect] [object.starting_point]); // g0: Coefficients for T0 in terms of xyz.
   v4f g1 = load4f (abc [sselect] [object.target.point]);   // g1: Coefficients for T1 in terms of xyz.
   v4f T0 = tmapply (xyz [sselect], g0);                    // T0: Beginning of locus (unit vector).
   v4f T1 = tmapply (xyz [sselect], g1);                    // T1: End of locus (also a unit vector).
+  // Find a unit vector T2 perpendicular to T0 and and an angle s such that T1 = (cos s) T0 + (sin s) T2.
   v4f d = dot (T0, T1);                                    // d:  Dot product of T0 and T1 (cos s, where s is the arc-length T0-T1).
   v4f T2 = normalize (T1 - d * T0);                        // T2: Take the component of T1 perpendicular to T0, then normalize.
   v4f g2 = mapply (xyzinvt [sselect], T2);                 // g2: Coefficents for T2 in terms of xyz.
   // Any point T = (cos t) T0 + (cos t) T2 (where 0 <= t <= s) on the arc T0-T1 has coefficients (cos t) g0 + (sin t) g2.
-  store4f (object.locus_end, g2);
+  store4f (locus_end, g2);
   // Calculate the arc-length s = arccos(d) of the great circular arc T0-T1.
   // Note: for allowed transitions we have d in [7.74596691e-001, 9.90879238e-001].
   object.locus_length = _mm_cvtss_f32 (arccos (d));
@@ -258,8 +297,7 @@ void model_t::recalculate_locus (object_t & object)
 void model_t::draw_next ()
 {
   //Advance.
-
-  const float dt = usr::frame_time;
+  const float dt = usr::frame_time * animation_speed_constant;
 
   for (unsigned n = 0; n != count; ++ n) {
     object_t & A = objects [n];
@@ -268,7 +306,7 @@ void model_t::draw_next ()
       t -= usr::cycle_duration;
       // We must perform a Markov transition.
       transition (rng, u [n], A.target, A.starting_point);
-      recalculate_locus (A);
+      recalculate_locus (n);
 #if PRINT_ENABLED
       ++ polyhedron_counts [polyhedra [(int) A.target.system] [A.target.point] - 1];
 #endif
@@ -279,7 +317,7 @@ void model_t::draw_next ()
   if (count) {
     // The behaviour of kdtree_t::compute is undefined if count is zero.
     kdtree.compute (kdtree_index, x, count);
-    kdtree.search (kdtree_index, x, count, walls, max_radius, objects, r, v, w);
+    kdtree.search (kdtree_index, x, count, walls, max_radius, objects, v, w);
     advance_linear (x, v, count);
     advance_angular (u, w, count);
   }
@@ -309,28 +347,27 @@ void model_t::draw (unsigned begin, unsigned count)
   // Set the modelview matrix, m.
   compute (reinterpret_cast <char *> (& uniform_buffer [0].m), uniform_buffer.stride (), & x [begin], & u [begin], count);
 
-  // Set the circumradius, r.
-  for (unsigned n = 0; n != count; ++ n) {
-    uniform_block_t & block = uniform_buffer [n];
-    block.r [0] = r [begin + n];
-  }
-
-  // Set the diffuse material reflectance, d.
   const v4f alpha = { 0.0f, 0.0f, 0.0f, 0.85f, };
   for (unsigned n = 0; n != count; ++ n) {
-    uniform_block_t & block = uniform_buffer [n];
     const object_t & object = objects [begin + n];
+    uniform_block_t & block = uniform_buffer [n];
+
+    // Set the circumradius, r.
+    block.r [0] = object.r;
+
+    // Set the diffuse material reflectance, d.
     v4f satval = bumps (object.animation_time);
     v4f sat = _mm_moveldup_ps (satval);
     v4f val = _mm_movehdup_ps (satval);
     _mm_stream_ps (block.d, hsv_to_rgb (object.hue, sat, val, alpha));
 
+    // Set the vertex coefficients g.
     system_select_t sselect = object.target.system;
     v4f t = step (object.animation_time) * _mm_set1_ps (object.locus_length);
     v4f sc = sincos (t);
     v4f s = _mm_moveldup_ps (sc);
     v4f c = _mm_movehdup_ps (sc);
-    v4f g = c * load4f (abc [sselect] [object.starting_point]) + s * load4f (object.locus_end);
+    v4f g = c * load4f (abc [sselect] [object.starting_point]) + s * load4f (e [begin + n]);
     _mm_stream_ps (block.g, g);
 
     // Precompute triangle altitudes, h (for non-snubs only).
@@ -369,7 +406,10 @@ void model_t::draw (unsigned begin, unsigned count)
       for (unsigned i = 0; i != 3; ++ i) {
         unsigned j = mod3 [i + 1];
         unsigned k = mod3 [i + 2];
-        _mm_stream_ps (block.h [i], sqrt (transversal0 (asq [i] - q * usq [j], asq [i] - q * usq [k], usq [k] - vwsq [i] * rcp (usq [j]), usq [j] - vwsq [i] * rcp (usq [k]))));
+        _mm_stream_ps (block.h [i], sqrt (transversal0 (asq [i] - q * usq [j],
+                                                        asq [i] - q * usq [k],
+                                                        usq [k] - vwsq [i] * rcp (usq [j]),
+                                                        usq [j] - vwsq [i] * rcp (usq [k]))));
       }
     }
   }

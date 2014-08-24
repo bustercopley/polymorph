@@ -105,7 +105,7 @@ bool kdtree_t::compute (unsigned * RESTRICT index, const float (* RESTRICT x) [4
 
 void kdtree_t::search (unsigned * RESTRICT index, const float (* RESTRICT x) [4], unsigned count,
                        const float (* walls) [2] [4],  float max_radius,
-                       object_t * objects, const float (* r), float (* v) [4], float (* w) [4]) const
+                       object_t * objects, float (* v) [4], float (* w) [4]) const
 {
   // Enough stack to traverse a tree with more than 2^32 nodes.
   ALIGNED16 float stack_corner [32] [4]; // Critical corner of a node, used in the wall search phase.
@@ -146,7 +146,7 @@ void kdtree_t::search (unsigned * RESTRICT index, const float (* RESTRICT x) [4]
         unsigned end = (position + 1) * count / level_node_count;
         for (unsigned n = begin; n != end; ++ n) {
           if (index [n] > target) {
-            bounce (target, index [n], objects, r, x, v, w);
+            bounce (target, index [n], objects, x, v, w);
           }
         }
       }
@@ -212,7 +212,7 @@ void kdtree_t::search (unsigned * RESTRICT index, const float (* RESTRICT x) [4]
       unsigned node_points_begin = node_position * count / level_node_count;
       unsigned node_points_end = (node_position + 1) * count / level_node_count;
       for (unsigned n = node_points_begin; n != node_points_end; ++ n) {
-        bounce (iw, index [n], walls, objects, r, x, v, w);
+        bounce (iw, index [n], walls, objects, x, v, w);
       }
     }
   }

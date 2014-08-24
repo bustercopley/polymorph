@@ -18,26 +18,23 @@ int WINAPI _tWinMain (HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
   LPCTSTR display_name;
   ::LoadString (hInstance, 1, (LPTSTR) (& display_name), 0);
 
-  arguments_t arguments (::GetCommandLine ());
-
-  settings_t settings = default_settings;
-  load_settings (settings);
-
-  // Create the main window.
   ALIGNED16 window_struct_t ws;
+
+  arguments_t arguments (::GetCommandLine ());
   ws.mode = arguments.mode;
-  ws.settings = & settings;
+
+  load_settings (ws.settings);
+
+  // Create the screen saver window.
   register_class (hInstance);
   HWND hwnd = create_window (hInstance, arguments.parent, display_name, & ws);
 
   // Create the configure dialog if in configure mode.
-  dialog_struct_t ds;
-  ds.settings = & settings;
-  ds.hwnd = hwnd;
+  dialog_struct_t ds = { ws.settings, hwnd, };
   HWND hdlg = arguments.mode == configure ? create_dialog (hInstance, & ds) : NULL;
 
   // Show the main window, or the configure dialog if in configure mode.
-  ::ShowWindow (arguments.mode == configure ? hdlg : hwnd, SW_SHOW);
+  ::ShowWindow (hdlg ? hdlg : hwnd, SW_SHOW);
 
   // Enter the main loop.
   MSG msg;
