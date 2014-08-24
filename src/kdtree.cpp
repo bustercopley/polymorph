@@ -6,6 +6,7 @@
 #include "compiler.h"
 #include "vector.h"
 #include "bsr.h"
+#include <cstdint>
 
 // Simplified kd-tree of fixed dimension k = 3,
 // using an implicit binary tree of constant depth.
@@ -40,7 +41,7 @@
 // Levels
 //   There are K+1 levels, numbered 0, 1, 2, ..., K; the nodes on level K are the leaf nodes.
 //   For each k, level k contains the 2^k nodes in the range [2^k-1, 2^(k+1)-1).
-//   Therefore the total number of non-leaf nodes is M = 2^K-1.
+//   Therefore the total number of non-leaf nodes is 2^K-1.
 //   Node m is in level k = logb(m+2)-1 at position i = m+1-2^k.
 //   If k<K then node m has two child nodes, which are in level k+1 at positions 2i and 2i+1.
 // Points
@@ -60,6 +61,11 @@
 //   the d co-ordinate is less than or equal to w, and for points in [mid, end),
 //   the d co-ordinate is greater than or equal to w, where d === k (mod 3), and
 //   where w is the co-ordinate value associated with the non-leaf node.
+
+namespace
+{
+  static const std::uint8_t mod3 [] = { 0, 1, 2, 0, 1, };
+}
 
 inline unsigned nonleaf_nodes_required (unsigned n)
 {
@@ -81,8 +87,6 @@ bool kdtree_t::compute (unsigned * RESTRICT index, const float (* RESTRICT x) [4
     split = (float *) allocate_internal (capacity * sizeof (float));
     if (! split) return false;
   }
-
-  static const unsigned mod3 [] = { 0, 1, 2, 0, 1, };
 
   unsigned node = 0;
   unsigned level_node_count = 1;
@@ -110,8 +114,6 @@ void kdtree_t::search (unsigned * RESTRICT index, const float (* RESTRICT x) [4]
   // Enough stack to traverse a tree with more than 2^32 nodes.
   ALIGNED16 float stack_corner [32] [4]; // Critical corner of a node, used in the wall search phase.
   unsigned stack_node [32];              // Node index
-
-  static const unsigned mod3 [] = { 0, 1, 2, 0, 1, };
 
   for (unsigned target = 0; target != count; ++ target) {
     // Visit every node whose box intersects the search cube.
