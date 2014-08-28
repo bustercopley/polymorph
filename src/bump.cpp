@@ -1,60 +1,70 @@
 #include "bump.h"
 #include <limits>
 
-void step_t::initialize (float start, float finish)
+void step_t::initialize (float t0, float t1)
 {
-  // Precompute the four coefficents of the cubic polynomial for the smoothstep region.
-  v4f temp = {
-    start * start * (3.0f * finish - start),
-    -6.0f * start * finish,
-    +3.0f * (start + finish),
-    -2.0f,
-  };
-  v4f dt = _mm_set1_ps (finish - start);
-  store4f (c, temp / (dt * dt * dt));
-  T [0] = start;
-  T [1] = finish;
-  T [2] = 0.0f; // unused
-  T [3] = 0.0f; // unused
+  // Precompute the coefficents c of the cubic polynomial f
+  // such that f(t0)=0, f(t1)=1, f'(t0)=0 and f'(t0)=1.
+  float d = t1 - t0;
+  float a = t1 + t0;
+  c [0] = t0 * t0 * (a + d + d);
+  c [1] = -6 * t0 * t1;
+  c [2] = 3 * a;
+  c [3] = -2;
+
+  // Divide c [] by d^3.
+  v4f dt = _mm_set1_ps (d);
+  store4f (c, load4f (c) / (dt * dt * dt));
+
+  T [0] = t0;
+  T [1] = t1;
+  T [2] = t1;
+  T [3] = std::numeric_limits <float>::infinity ();
 }
 
 v4f step_t::operator () (float t) const
 {
-  // Evaluate the polynomial by Estrin's method.
-  // Mask in 0, 1 or the value according to the region to which t belongs.
-  static const float inf = std::numeric_limits <float>::infinity ();
+  // Evaluate the polynomial f by Estrin's method.
+  // Mask in 0, f(t) or 1 respectively if t<t0, t0<=t<t1 or t1<t.
   v4f c4 = load4f (c);
   v4f one = { 1.0f, 1.0f, 1.0f, 1.0f, };
-  v4f ttt = _mm_set1_ps (t);
-  v4f tt = _mm_unpacklo_ps (one, ttt); // 1 t 1 t
-  v4f f0 = c4 * tt;                    // c0 c1*t c2 c3*t
+  v4f tttt = _mm_set1_ps (t);           // t t t t
+  v4f tt = _mm_unpacklo_ps (one, tttt); // 1 t 1 t
+  v4f f0 = c4 * tt;                     // c0 c1*t c2 c3*t
   v4f ha = _mm_hadd_ps (f0, f0) * tt * tt;
-  v4f f = _mm_hadd_ps (ha, ha);        // f f f f
-  v4f f1 = _mm_unpacklo_ps (f, one);   // f 1 * *
-  v4f lo = load4f (T);
-  v4f hi = { T [1], +inf, -inf, -inf, };
-  v4f select = _mm_and_ps (_mm_cmpge_ps (ttt, lo), _mm_cmplt_ps (ttt, hi));
-  v4f values = _mm_and_ps (select, f1);
-  v4f step = _mm_hadd_ps (values, values);
-  return _mm_unpacklo_ps (step, step);
+  v4f f = _mm_hadd_ps (ha, ha);         // f f f f
+  v4f f1 = _mm_unpacklo_ps (f, one);    // f 1 f 1
+  v4f tx = load4f (T);                  // t0   t1  t1  inf
+  v4f lo = _mm_movelh_ps (tx, tx);      // t0   t1  t0   t1
+  v4f hi = _mm_movehl_ps (tx, tx);      // t1  inf  t1  inf
+  v4f sel = _mm_and_ps (_mm_cmpge_ps (tttt, lo), _mm_cmplt_ps (tttt, hi));
+  v4f val = _mm_and_ps (sel, f1);       // f? 1? f? 1?
+  return _mm_hadd_ps (val, val);        // x x x x, where x = t<t0 ? 0 : t<t1 ? f(t) : 1
 }
 
 void bumps_t::initialize (bump_specifier_t b0, bump_specifier_t b1)
 {
   // Precompute the coefficients of four cubic polynomials in t, giving
   // the two smoothstep regions of the each of the two bump functions.
-  v4f S = { b0.t0, b0.t2, b1.t0, b1.t2, };
-  v4f T = { b0.t1, b0.t3, b1.t1, b1.t3, };
-  v4f U = { b0.v0, 0.0f, b1.v0, 0.0f, };
-  v4f V = { b0.v1, b0.v0 - b0.v1, b1.v1, b1.v0 - b1.v1 };
-  v4f ntwo = { -2.0f, -2.0f, -2.0f, -2.0f, };
+  v4f b0t = _mm_load_ps (& b0.t0); // b0.t0 b0.t1 b0.t2 b0.t2
+  v4f b1t = _mm_load_ps (& b1.t0); // b1.t0 b1.t1 b1.t2 b1.t2
+  v4f b0v = _mm_movelh_ps (_mm_load_ps (& b0.v0), _mm_setzero_ps ()); // b0.v0 b0.v1 0 0
+  v4f b1v = _mm_movelh_ps (_mm_load_ps (& b1.v0), _mm_setzero_ps ()); // b1.v0 b1.v1 0 0
+  v4f S = _mm_shuffle_ps (b0t, b1t, SHUFFLE (0, 2, 0, 2)); // b0.t0 b0.t2 b1.t0 b1.t2
+  v4f T = _mm_shuffle_ps (b0t, b1t, SHUFFLE (1, 3, 1, 3)); // b0.t1 b0.t3 b1.t1 b1.t3
+  v4f U = _mm_shuffle_ps (b0v, b1v, SHUFFLE (0, 2, 0, 2)); // b0.v0 0 b1.v0 0
+  v4f V1 = _mm_shuffle_ps (b0v, b1v, SHUFFLE (1, 0, 1, 0)); // b0.v1 b0.v0 b1.v1 b1.v0
+  v4f V2 = _mm_shuffle_ps (b0v, b1v, SHUFFLE (2, 1, 2, 1)); // 0 b0.v1 0 b1.v1
+  v4f V = V1 - V2;
+  v4f negative_two = { -2.0f, -2.0f, -2.0f, -2.0f, };
   v4f three = { 3.0f, 3.0f, 3.0f, 3.0f, };
-  v4f dt = T - S;
-  v4f m = (V - U) / (dt * dt * dt);
-  store4f (c [0], U + m * S * S * (three * T - S));
-  store4f (c [1], ntwo * three * m * S * T);
-  store4f (c [2], three * m * (S + T));
-  store4f (c [3], ntwo * m);
+  v4f d = T - S;
+  v4f a = T + S;
+  v4f m = (V - U) / (d * d * d);
+  store4f (c [0], U + m * S * S * (a + d + d));
+  store4f (c [1], negative_two * three * m * S * T);
+  store4f (c [2], three * m * a);
+  store4f (c [3], negative_two * m);
   store4f (S0, S);
   store4f (T0, T);
   store4f (U0, U);

@@ -19,7 +19,7 @@
 
 struct step_t
 {
-  v4f operator () (float t) const;
+  v4f operator () (float t) const; // Returns { r, r, r, r }, where r = step (t);
   void initialize (float t0, float t1);
 private:
   float c [4], T [4];
@@ -39,7 +39,7 @@ private:
 
 struct bump_specifier_t
 {
-  float v0, v1, t0, t1, t2, t3;
+  float t0, t1, t2, t3, v0, v1;
 };
 
 struct bumps_t

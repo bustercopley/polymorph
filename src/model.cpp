@@ -36,9 +36,9 @@ namespace usr {
   // v0 +XXXX----------+----+----------XXXX-->
   //        t0        t1    t2        t3      t
 
-  //                                            v0     v1     t0     t1     t2     t3
-  static const bump_specifier_t hsv_s_bump = { 0.00f, 0.25f, 1.50f, 1.75f, 3.75f, 4.25f, };
-  static const bump_specifier_t hsv_v_bump = { 0.25f, 1.00f, 1.50f, 1.75f, 3.75f, 4.25f, };
+  //                                             t0     t1     t2     t3     v0     v1
+  static const bump_specifier_t hsv_s_bump = { 1.50f, 1.75f, 3.75f, 4.25f, 0.00f, 0.25f, };
+  static const bump_specifier_t hsv_v_bump = { 1.50f, 1.75f, 3.75f, 4.25f, 0.25f, 1.00f, };
 
   // Parameters for morph animation timings.
   static const float morph_start = 1.75f;
