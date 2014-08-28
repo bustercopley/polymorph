@@ -167,10 +167,11 @@ bool model_t::start (int width, int height, const settings_t & settings)
     DWORD s1 = 100 - s;
     float g = 0.02f * s1;                // Saturation fading decreases linearly.
     float h = 8.0e-6f * (s1 * s1 * s1);  // Lightness fading falls off more rapidly.
+    if (s >= 75) { g = 0; h = 0; }        // No fading at all above 75% speed.
     s_bump.v0 = g * s_bump.v0 + (1.0f - g) * s_bump.v1;
     v_bump.v0 = h * v_bump.v0 + (1.0f - h) * v_bump.v1;
   }
-  if (s < 50) {
+  if (s <= 30) {
     // At low speed, offset the attack-begin and attack-end times
     // of the lightness and saturation independently to give a white
     // warning flash effect.
