@@ -297,7 +297,7 @@ void model_t::recalculate_locus (unsigned index)
 
 void model_t::draw_next ()
 {
-  //Advance.
+  // Advance the simulation by one frame.
   const float dt = usr::frame_time * animation_speed_constant;
 
   for (unsigned n = 0; n != count; ++ n) {
@@ -322,7 +322,6 @@ void model_t::draw_next ()
     advance_linear (x, v, count);
     advance_angular (u, w, count);
   }
-  // Draw.
 
   clear ();
   // Draw all the shapes, one uniform buffer at a time.

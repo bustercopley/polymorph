@@ -76,8 +76,8 @@ namespace
     }
   }
 
-  // Total derivative of f at 0, where f is the continuous function R->R^3 such that
-  // e^{\hat{f}(t)} = e^{\hat{u}} e^{t\hat{w} for all real t, and f(0) = u.
+  // Total derivative of f at 0, where f is the continuous function R->R^3 such
+  // that f(0) = u and for all real t, e^{\hat{f}(t)} = e^{\hat{u}} e^{t\hat{w}.
   inline v4f tangent (v4f u, v4f w)
   {
     v4f one = { 1.0f, 1.0f, 1.0f, 1.0f, };
