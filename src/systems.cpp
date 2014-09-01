@@ -15,49 +15,55 @@ struct triangle_t
   float abc [8] [4]; // Coefficients A, B, C for the generator T = AX + BY + CZ.
 };
 
-// The fundamental triangle of the tiling has angles A = pi/p,
-// B = pi/q, C = pi/r and sides a = Y1 Z1, b = Z1 X1, c = X1 Y1.
+// The fundamental triangle of the tiling has angles
+// A = pi/p, B = pi/q, C = pi/r and sides a, b, c.
 
-//     X2
-//    /  \    d = X1 X2         The angles d, e, f, h and k
-//   Z1--Y1   e = Y1 Y2         are the arc-lengths separating
-//   |\  /|   f = Z1 Z2         certain pairs of nodes in the
-//   | X1 |   h = X2 Y2         tiling of the sphere generated
-//   |/  \|   k = X2 Z2         by our spherical triangle.
-//   Y2--Z2
-//
+// By the spherical cosine rule,
+// cosa = (cosA + cosB * cosC) / (sinB * sinC),
+// cosb = (cosB + cosC * cosA) / (sinC * sinA),
+// cosc = (cosC + cosA * cosB) / (sinA * sinB).
 
-// triangle_t t =
-// {
-//   { { 1, 0, 0, },                         // X-node 0.
-//     { cosc, sinc, 0, },                   // Y-node 0.
-//     { cosb, sinb * cosA, sinb * sinA, },  // Z-node 0.
-//   },
-//   { { 1, 0, 0, },             Point X.
-//     { 0, 1, 0, },             Point Y.
-//     { 0, 0, 1, },             Point Z.
-//     { 0, sinb, sinc, },       Intersection of YZ with the angular bisector of X.
-//     { sina, 0, sinc, },       Intersection of ZX with the angular bisector of Y.
-//     { sina, sinb, 0, },       Intersection of YZ with the angular bisector of Z.
-//     { sinA, sinB, sinC, },    Incentre (intersection of the bisectors).
-//     { alpha, beta, gamma, },  Snub generator.
-//   },
-// };
+// We assume p = 2, so cosA = 0 and sinA = 1. Therefore,
+// cosa = (cosB * cosC) / (sinB * sinC),
+// cosb = cosB / sinC,
+// cosc = cosC / sinB.
 
-// The angles d, e, f, h, k are only needed for the snubs.
-// Seek alpha, beta and gamma such that the three points
-//   T1 = alpha * (X2 + beta * Y1 + gamma * Z1)
-//   T2 = alpha * (X1 + beta * Y2 + gamma * Z1)
-//   T3 = alpha * (X1 + beta * Y1 + gamma * Z2)
+// A triple (alpha, beta, gamma) identifies a point T relative to the
+// spherical triangle XYZ, by the formula
+// T = alpha * X + beta * Y + gamma * Z.
+// Certain points on the triangle generate uniform polyhedra:
+
+// { 1, 0, 0, },             Point X.
+// { 0, 1, 0, },             Point Y.
+// { 0, 0, 1, },             Point Z.
+// { 0, sinb, sinc, },       Intersection of YZ with the angular bisector of X.
+// { sina, 0, sinc, },       Intersection of ZX with the angular bisector of Y.
+// { sina, sinb, 0, },       Intersection of YZ with the angular bisector of Z.
+// { sinA, sinB, sinC, },    Incentre (intersection of the bisectors).
+// { alpha, beta, gamma, },  Snub generator.
+
+//     X1
+//    /  \
+//   Z0--Y0
+//   |\  /|
+//   | X0 |
+//   |/  \|
+//   Y1  Z1
+
+// For the snub generator, the three points (see diagram)
+//   TX = alpha * X2 + beta * Y1 + gamma * Z1
+//   TY = alpha * X1 + beta * Y2 + gamma * Z1
+//   TZ = alpha * X1 + beta * Y1 + gamma * Z2
 // are the vertices of an equilateral spherical triangle.
-// We find that beta satisfies the quartic equation
-//   c0 + c1.x + c2.x^2 + c4.x^4 = 0
+// Assuming p = 2 and q = 3, the ratio beta/alpha satisfies the
+// quartic equation
+//   c4*x^4 + c2*x^2 + c1*x + c0 = 0
 // where
-//   s = - (1 - cosf) / ((cosb - cosk) * (cosb - cosk));
-//   c0 = 1 - cosd + s * sq (1 - cosd);
-//   c1 = cosc - cosh;
-//   c2 = - 2 * s * (1 - cosd) * (1 - cose);
-//   c4 = s * sq (1 - cose).
+//   c4 = 64 * sinb * sinb
+//   c2 = -96 * sinb * sinb
+//   c1 = -54 * cosc * sina * sina
+//   c0 = 36 * sinb * sinb - 27 * sina * sina
+// and gamma/alpha = (sinC / 3) * (4 * (beta / alpha)^2 - 3),
 
 triangle_t triangles [3] ALIGNED16 =
 {
