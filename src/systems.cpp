@@ -43,8 +43,8 @@ struct triangle_t
 // { alpha, beta, gamma, },  Snub generator.
 
 //     X1
-//    /  \
-//   Z0--Y0
+//    /  \    A portion of the tiling of the sphere, showing
+//   Z0--Y0   the triangle X0-Y0-Z0 and the adjacent triangles.
 //   |\  /|
 //   | X0 |
 //   |/  \|
