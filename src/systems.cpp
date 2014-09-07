@@ -23,47 +23,39 @@ struct triangle_t
 // cosb = (cosB + cosC * cosA) / (sinC * sinA),
 // cosc = (cosC + cosA * cosB) / (sinA * sinB).
 
-// We assume p = 2, so cosA = 0 and sinA = 1. Therefore,
+// We assume p = 2; thus cosA = 0 and sinA = 1. Therefore,
 // cosa = (cosB * cosC) / (sinB * sinC),
 // cosb = cosB / sinC,
 // cosc = cosC / sinB.
 
-// A triple (alpha, beta, gamma) identifies a point T relative to the
-// spherical triangle XYZ, by the formula
+// Any triple (alpha, beta, gamma) identifies a point T relative to
+// the spherical triangle XYZ, by the formula
 // T = alpha * X + beta * Y + gamma * Z.
-// Certain points on the triangle generate uniform polyhedra:
+// For certain triples, replicating the point T in each triangle
+// of the tiling gives the vertices of a uniform polyhedron:
 
 // { 1, 0, 0, },             Point X.
 // { 0, 1, 0, },             Point Y.
 // { 0, 0, 1, },             Point Z.
-// { 0, sinb, sinc, },       Intersection of YZ with the angular bisector of X.
-// { sina, 0, sinc, },       Intersection of ZX with the angular bisector of Y.
-// { sina, sinb, 0, },       Intersection of YZ with the angular bisector of Z.
-// { sinA, sinB, sinC, },    Incentre (intersection of the bisectors).
+// { 0, sinb, sinc, },       Intersection of YZ with the angular bisector of corner X.
+// { sina, 0, sinc, },       Intersection of ZX with the angular bisector of corner Y.
+// { sina, sinb, 0, },       Intersection of YZ with the angular bisector of corner Z.
+// { sinA, sinB, sinC, },    Incentre (intersection of the three bisectors).
 // { alpha, beta, gamma, },  Snub generator.
 
 //     X1
-//    /  \    A portion of the tiling of the sphere, showing
+//    /  \    Part of the tiling of the sphere, showing
 //   Z0--Y0   the triangle X0-Y0-Z0 and the adjacent triangles.
 //   |\  /|
 //   | X0 |
 //   |/  \|
 //   Y1  Z1
 
-// For the snub generator, the three points (see diagram)
-//   TX = alpha * X2 + beta * Y1 + gamma * Z1
-//   TY = alpha * X1 + beta * Y2 + gamma * Z1
-//   TZ = alpha * X1 + beta * Y1 + gamma * Z2
-// are the vertices of an equilateral spherical triangle.
-// Assuming p = 2 and q = 3, the ratio beta/alpha satisfies the
-// quartic equation
-//   c4*x^4 + c2*x^2 + c1*x + c0 = 0
-// where
-//   c4 = 64 * sinb * sinb
-//   c2 = -96 * sinb * sinb
-//   c1 = -54 * cosc * sina * sina
-//   c0 = 36 * sinb * sinb - 27 * sina * sina
-// and gamma/alpha = (sinC / 3) * (4 * (beta / alpha)^2 - 3),
+// For the snub generator, the three points
+//   TX = alpha * X1 + beta * Y0 + gamma * Z0
+//   TY = alpha * X0 + beta * Y1 + gamma * Z0
+//   TZ = alpha * X0 + beta * Y0 + gamma * Z1
+// (see diagram) are the vertices of an equilateral spherical triangle.
 
 triangle_t triangles [3] ALIGNED16 =
 {
