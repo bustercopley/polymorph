@@ -65,15 +65,15 @@ triangle_t triangles [3] ALIGNED16 =
       { +0x1.279a74P-1f, +0x1.a20bd8P-1f, +0x0.000000P+0f, 0.0f, },
       { +0x1.279a74P-1f, +0x0.000000P+0f, +0x1.a20bd8P-1f, 0.0f, },
     },
-    { { +0x1.000000P+0f, +0x0.000000P+0f, +0x0.000000P+0f, 0.0f, },
-      { +0x0.000000P+0f, +0x1.000000P+0f, +0x0.000000P+0f, 0.0f, },
-      { +0x0.000000P+0f, +0x0.000000P+0f, +0x1.000000P+0f, 0.0f, },
-      { +0x0.000000P+0f, +0x1.3988e2P-1f, +0x1.3988e2P-1f, 0.0f, },
-      { +0x1.34bf64P-1f, +0x0.000000P+0f, +0x1.0b621eP-1f, 0.0f, },
-      { +0x1.34bf64P-1f, +0x1.0b621eP-1f, +0x0.000000P+0f, 0.0f, },
-      { +0x1.c9f25cP-2f, +0x1.8c97f0P-2f, +0x1.8c97f0P-2f, 0.0f, },
+    { { +0x1.000000P+0f, +0x0.000000P+0f, +0x0.000000P+0f, 0.0f, }, // Octahedron
+      { +0x0.000000P+0f, +0x1.000000P+0f, +0x0.000000P+0f, 0.0f, }, // Tetrahedron
+      { +0x0.000000P+0f, +0x0.000000P+0f, +0x1.000000P+0f, 0.0f, }, // Tetrahedron
+      { +0x0.000000P+0f, +0x1.3988e2P-1f, +0x1.3988e2P-1f, 0.0f, }, // Cuboctahedron
+      { +0x1.34bf64P-1f, +0x0.000000P+0f, +0x1.0b621eP-1f, 0.0f, }, // Truncated tetrahedron
+      { +0x1.34bf64P-1f, +0x1.0b621eP-1f, +0x0.000000P+0f, 0.0f, }, // Truncated tetrahedron
+      { +0x1.c9f25cP-2f, +0x1.8c97f0P-2f, +0x1.8c97f0P-2f, 0.0f, }, // Truncated octahedron
       { +0x1.4cb7c0P-2f, +0x1.d2393eP-2f, +0x1.d2393eP-2f, 0.0f, }, // Icosahedron
-      //{ -0x1.605a90P+0f, +0x1.792eceP-1f, +0x1.792eceP-1f, 0.0f, }, // Great icosahedron
+      // { -0x1.605a90P+0f, +0x1.792eceP-1f, +0x1.792eceP-1f, 0.0f, }, // Great icosahedron
     },
   },
   // Octahedral, <2, 4, 3>.
@@ -82,15 +82,15 @@ triangle_t triangles [3] ALIGNED16 =
     { { +0x1.6a09e6P-1f, +0x1.000000P-1f, +0x1.000000P-1f, 0.0f, },
       { +0x1.000000P+0f, +0x0.000000P+0f, +0x0.000000P+0f, 0.0f, },
       { +0x1.279a74P-1f, +0x1.a20bd8P-1f, +0x0.000000P+0f, 0.0f, },
-    },
-    { { +0x1.000000P+0f, +0x0.000000P+0f, +0x0.000000P+0f, 0.0f, },
-      { +0x0.000000P+0f, +0x1.000000P+0f, +0x0.000000P+0f, 0.0f, },
-      { +0x0.000000P+0f, +0x0.000000P+0f, +0x1.000000P+0f, 0.0f, },
-      { +0x0.000000P+0f, +0x1.02ca46P-1f, +0x1.3cf3aeP-1f, 0.0f, },
-      { +0x1.1fd4a6P-1f, +0x0.000000P+0f, +0x1.f28990P-2f, 0.0f, },
-      { +0x1.43d136P-1f, +0x1.c9f25cP-2f, +0x0.000000P+0f, 0.0f, },
-      { +0x1.b9d594P-2f, +0x1.386c8eP-2f, +0x1.7ea3c6P-2f, 0.0f, },
-      { +0x1.31816eP-2f, +0x1.8d5502P-2f, +0x1.bdd092P-2f, 0.0f, },
+
+    { { +0x1.000000P+0f, +0x0.000000P+0f, +0x0.000000P+0f, 0.0f, }, // Cuboctahedron
+      { +0x0.000000P+0f, +0x1.000000P+0f, +0x0.000000P+0f, 0.0f, }, // Octahedron
+      { +0x0.000000P+0f, +0x0.000000P+0f, +0x1.000000P+0f, 0.0f, }, // Cube
+      { +0x0.000000P+0f, +0x1.02ca46P-1f, +0x1.3cf3aeP-1f, 0.0f, }, // Rhombicuboctahedron
+      { +0x1.1fd4a6P-1f, +0x0.000000P+0f, +0x1.f28990P-2f, 0.0f, }, // Truncated cube
+      { +0x1.43d136P-1f, +0x1.c9f25cP-2f, +0x0.000000P+0f, 0.0f, }, // Truncated octahedron
+      { +0x1.b9d594P-2f, +0x1.386c8eP-2f, +0x1.7ea3c6P-2f, 0.0f, }, // Rhombitruncated cuboctahedron
+      { +0x1.31816eP-2f, +0x1.8d5502P-2f, +0x1.bdd092P-2f, 0.0f, }, // Snub cube
     },
   },
   // Icosahedral, <2, 5, 3>.
@@ -99,14 +99,14 @@ triangle_t triangles [3] ALIGNED16 =
       { +0x1.b38880P-1f, +0x1.0d2ca0P-1f, +0x0.000000P+0f, 0.0f, },
       { +0x1.de4bd6P-1f, +0x0.0000000P+0, +0x1.6d62c6P-2f, 0.0f, },
     },
-    { { +0x1.000000P+0f, +0x0.000000P+0f, +0x0.000000P+0f, 0.0f, },
-      { +0x0.000000P+0f, +0x1.000000P+0f, +0x0.000000P+0f, 0.0f, },
-      { +0x0.000000P+0f, +0x0.000000P+0f, +0x1.000000P+0f, 0.0f, },
-      { +0x0.000000P+0f, +0x1.b4242aP-2f, +0x1.414c80P-1f, 0.0f, },
-      { +0x1.16fc4eP-1f, +0x0.000000P+0f, +0x1.e33798P-2f, 0.0f, },
-      { +0x1.4e5014P-1f, +0x1.890220P-2f, +0x0.000000P+0f, 0.0f, },
-      { +0x1.b3be36P-2f, +0x1.001f92P-2f, +0x1.795d50P-2f, 0.0f, },
-      { +0x1.287f1eP-2f, +0x1.52a52eP-2f, +0x1.b882c6P-2f, 0.0f, },
+    { { +0x1.000000P+0f, +0x0.000000P+0f, +0x0.000000P+0f, 0.0f, }, // Icosidodecahedron
+      { +0x0.000000P+0f, +0x1.000000P+0f, +0x0.000000P+0f, 0.0f, }, // Icosahedron
+      { +0x0.000000P+0f, +0x0.000000P+0f, +0x1.000000P+0f, 0.0f, }, // Dodecahedron
+      { +0x0.000000P+0f, +0x1.b4242aP-2f, +0x1.414c80P-1f, 0.0f, }, // Rhombicosidodecahedron
+      { +0x1.16fc4eP-1f, +0x0.000000P+0f, +0x1.e33798P-2f, 0.0f, }, // Truncated dodecahedron
+      { +0x1.4e5014P-1f, +0x1.890220P-2f, +0x0.000000P+0f, 0.0f, }, // Truncated icosahedron
+      { +0x1.b3be36P-2f, +0x1.001f92P-2f, +0x1.795d50P-2f, 0.0f, }, // Rhombitruncated icosidodecahedron
+      { +0x1.287f1eP-2f, +0x1.52a52eP-2f, +0x1.b882c6P-2f, 0.0f, }, // Snub dodecahedron
     },
   }
 };
