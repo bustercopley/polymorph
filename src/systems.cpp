@@ -72,7 +72,8 @@ triangle_t triangles [3] ALIGNED16 =
       { +0x1.34bf64P-1f, +0x0.000000P+0f, +0x1.0b621eP-1f, 0.0f, },
       { +0x1.34bf64P-1f, +0x1.0b621eP-1f, +0x0.000000P+0f, 0.0f, },
       { +0x1.c9f25cP-2f, +0x1.8c97f0P-2f, +0x1.8c97f0P-2f, 0.0f, },
-      { +0x1.4cb7c0P-2f, +0x1.d2393eP-2f, +0x1.d2393eP-2f, 0.0f, },
+      { +0x1.4cb7c0P-2f, +0x1.d2393eP-2f, +0x1.d2393eP-2f, 0.0f, }, // Icosahedron
+      //{ -0x1.605a90P+0f, +0x1.792eceP-1f, +0x1.792eceP-1f, 0.0f, }, // Great icosahedron
     },
   },
   // Octahedral, <2, 4, 3>.
