@@ -82,7 +82,7 @@ triangle_t triangles [3] ALIGNED16 =
     { { +0x1.6a09e6P-1f, +0x1.000000P-1f, +0x1.000000P-1f, 0.0f, },
       { +0x1.000000P+0f, +0x0.000000P+0f, +0x0.000000P+0f, 0.0f, },
       { +0x1.279a74P-1f, +0x1.a20bd8P-1f, +0x0.000000P+0f, 0.0f, },
-
+    },
     { { +0x1.000000P+0f, +0x0.000000P+0f, +0x0.000000P+0f, 0.0f, }, // Cuboctahedron
       { +0x0.000000P+0f, +0x1.000000P+0f, +0x0.000000P+0f, 0.0f, }, // Octahedron
       { +0x0.000000P+0f, +0x0.000000P+0f, +0x1.000000P+0f, 0.0f, }, // Cube
@@ -108,7 +108,7 @@ triangle_t triangles [3] ALIGNED16 =
       { +0x1.b3be36P-2f, +0x1.001f92P-2f, +0x1.795d50P-2f, 0.0f, }, // Rhombitruncated icosidodecahedron
       { +0x1.287f1eP-2f, +0x1.52a52eP-2f, +0x1.b882c6P-2f, 0.0f, }, // Snub dodecahedron
     },
-  }
+  },
 };
 
 // Turn a PQR triangle into a PRQ triangle.
