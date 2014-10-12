@@ -159,7 +159,7 @@ bool model_t::start (int width, int height, const settings_t & settings)
   float k = s <= 50 ? 0.02f * s : 0.00000016f * (s * s * s * s); // Boost sensitivity in upper range.
   animation_speed_constant = k;
 
-  // Inititalize bump function object for the lightness and saturation fading animation.
+  // Initialize bump function object for the lightness and saturation fading animation.
   ALIGNED16 bump_specifier_t s_bump = usr::hsv_s_bump;
   ALIGNED16 bump_specifier_t v_bump = usr::hsv_v_bump;
   if (s > 50) {
@@ -373,43 +373,36 @@ void model_t::draw (unsigned begin, unsigned count)
     // Precompute triangle altitudes, h (for non-snubs only).
     if (object.starting_point != 7 && object.target.point != 7) {
       const float (& X) [3] [4] = xyz [sselect];
-      v4f one = { 1.0f, 1.0f, 1.0f, 1.0f, };
+
+      ALIGNED16 float crs_invsq [4];
       v4f crs [3];
       for (unsigned i = 0; i != 3; ++ i) {
         v4f Y = load4f (X [mod3 [i + 1]]);
         v4f Z = load4f (X [mod3 [i + 2]]);
         crs [i] = cross (Y, Z);
+        crs_invsq [i] = _mm_cvtss_f32 (rcp (dot (crs [i], crs [i])));
       }
 
-      v4f tX = dot (load4f (X [0]), crs [0]); // triple product
-      v4f abc [3], UT [3], usq [3];
-      UNPACK3 (g, abc [0], abc [1], abc [2]);
-      for (unsigned i = 0; i != 3; ++ i) {
-        v4f a = abc [i];
-        v4f yz = crs [i];
-        v4f cscsq = rcp (dot (yz, yz));
-        UT [i] = (a + a) * tX * yz * cscsq;
-        usq [i] = dot (UT [i], UT [i]);
-      }
-
+      ALIGNED16 float usq [4];
+      ALIGNED16 float asq [4];
       v4f T = tmapply (X, g);
+      v4f TX = mapply (X, T);
+      v4f abc_xyz = g * dot (load4f (X [0]), crs [0]);
+      _mm_store_ps (asq, 1.0f - TX * TX);
+      _mm_store_ps (usq, abc_xyz * abc_xyz * load4f (crs_invsq));
 
-      v4f asq [3], vwsq [3];
-      for (unsigned i = 0; i != 3; ++ i) {
-        v4f tx = dot (T, load4f (X [i]));
-        asq [i] = one - tx * tx;
-        v4f vw = dot (UT [mod3 [i + 1]], UT [mod3 [i + 2]]);
-        vwsq [i] = vw * vw;
-      }
+      float vw = _mm_cvtss_f32 (dot (crs [1], crs [2]));
+      float sinsq_A = 4.0f - (vw + vw) * (vw + vw) * crs_invsq [1] * crs_invsq [2];
 
-      v4f q = { 0.25f, 0.25f, 0.25f, 0.25f, };
       for (unsigned i = 0; i != 3; ++ i) {
         unsigned j = mod3 [i + 1];
         unsigned k = mod3 [i + 2];
-        _mm_stream_ps (block.h [i], sqrt (transversal0 (asq [i] - q * usq [j],
-                                                        asq [i] - q * usq [k],
-                                                        usq [k] - vwsq [i] * rcp (usq [j]),
-                                                        usq [j] - vwsq [i] * rcp (usq [k]))));
+        ALIGNED16 float hsq [4];
+        hsq [0] = asq [i] - usq [j];
+        hsq [1] = asq [i] - usq [k];
+        hsq [2] = sinsq_A * usq [j];
+        hsq [3] = sinsq_A * usq [k];
+        _mm_stream_ps (block.h [i], sqrt (load4f (hsq)));
       }
     }
   }
