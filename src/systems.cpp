@@ -11,7 +11,7 @@
 
 struct triangle_t
 {
-  float xyz [3] [4]; // Co-ordinates for a single triangle XYZ of the Moebius tiling.
+  float xyz [3] [4]; // Coordinates for a single triangle XYZ of the Moebius tiling.
   float abc [8] [4]; // Coefficients A, B, C for the generator T = AX + BY + CZ.
 };
 

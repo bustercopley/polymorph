@@ -44,7 +44,7 @@ void make_system (unsigned q, unsigned r, const float (& xyz_in) [3] [4], float 
   float A = two_pi / p;
   float B = two_pi / q;
 
-  // We know the co-ordinates of the P- and R-nodes around Q-node 0.
+  // We know the coordinates of the P- and R-nodes around Q-node 0.
   rotor_t Y_rotate (y [0], B);
   for (unsigned k = 1; k != q; ++ k) {
     Y_rotate (x [P0 [k - 1]], x [P0 [k]]);
@@ -58,7 +58,7 @@ void make_system (unsigned q, unsigned r, const float (& xyz_in) [3] [4], float 
     // Attach triangle m0 to triangle n0's dangling P-node.
     Px [m0] = Px [n0];
 
-    // At this point we learn the co-ordinates of the next Q-node.
+    // At this point we learn the coordinates of the next Q-node.
     // We can't yet say much about its surrounding P- and R-nodes,
     // because we don't know which of them should be identified
     // with nodes which are already known (from earlier Q-nodes)

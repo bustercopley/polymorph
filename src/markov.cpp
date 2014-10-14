@@ -91,7 +91,7 @@ namespace
         starting_point = j == 3 ? current.point : replacements [m / 3 + j].after.point;
       }
       else {
-        // Apply a rotation in object co-ordinates.
+        // Apply a rotation in object coordinates.
         v4f rotation = load4f (rotations [m - 6]);
         if (duality) rotation = - rotation;
         store4f (u, rotate (load4f (u), rotation));
