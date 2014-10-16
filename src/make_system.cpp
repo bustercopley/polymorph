@@ -38,17 +38,26 @@ void make_system (unsigned q, unsigned r, const float (& xyz_in) [3] [4], float 
   float A = two_pi / p;
   float B = two_pi / q;
 
-  // Calculate the coordinates of the P- and R-nodes in the other q-1 triangles around Q-node 0.
-  ALIGNED16 rotor_t Y_rotate (nodes [0], B);
-  for (unsigned n = 1; n != q; ++ n) {
-    Px [n] = next_node ++;
-    Y_rotate (nodes [Px [n - 1]], nodes [Px [n]]);
-    Rx [n] = next_node ++;
-    Y_rotate (nodes [Rx [n - 1]], nodes [Rx [n]]);
-  }
+  unsigned n0 = 0, m0 = 0;
 
-  unsigned n0 = 0;
-  for (unsigned m0 = q; m0 != N; m0 += q) {
+  while ([& m0, Px, Rx, q, r, nodes, & next_node, N, B] () -> bool {
+    // Calculate the coordinates of any remaining unknown P- and R-nodes around Q-node m0.
+    ALIGNED16 rotor_t Y_rotate (nodes [m0 / q], B);
+    for (unsigned n = m0 + 1; n != m0 + q; ++ n) {
+      if (Px [n] == undef) {
+        Px [n] = next_node;
+        Y_rotate (nodes [Px [n - 1]], nodes [next_node]);
+        ++ next_node;
+      }
+      if (Rx [n] == undef) {
+        Rx [n] = next_node;
+        Y_rotate (nodes [Rx [n - 1]], nodes [next_node]);
+        ++ next_node;
+      }
+    }
+    m0 += q;
+    return m0 != N;
+  } ()) {
     while (n0 [P] != undef) ++ n0;
 
     // Attach triangle m0 to triangle n0's dangling P-node.
@@ -92,24 +101,6 @@ void make_system (unsigned q, unsigned r, const float (& xyz_in) [3] [4], float 
         m = n0;
       }
     } while (n [P] == undef);
-
-    // Now all the nodes that our new triangles share with old triangles
-    // are identified with nodes that are already labelled, so we can give
-    // new labels to the remaining nodes and compute their vectors.
-
-    ALIGNED16 rotor_t Y_rotate (nodes [m0 / q], B);
-    for (unsigned n = m0 + 1; n != m0 + q; ++ n) {
-      if (Px [n] == undef) {
-        Px [n] = next_node;
-        Y_rotate (nodes [Px [n - 1]], nodes [next_node]);
-        ++ next_node;
-      }
-      if (Rx [n] == undef) {
-        Rx [n] = next_node;
-        Y_rotate (nodes [Rx [n - 1]], nodes [next_node]);
-        ++ next_node;
-      }
-    }
   }
 
   for (unsigned n = 0; n != N; ++ n) {
