@@ -20,32 +20,34 @@ void make_system (unsigned q, unsigned r, const float (& xyz_in) [3] [4], float 
   const unsigned p = 2, N = 2 * p * q * r / (q * r + r * p + p * q - p * q * r);
   for (unsigned n = 0; n != sizeof memory; ++ n) memory [n] = undef;
   for (unsigned n = 0; n != N; ++ n) n [Q] = n - n % q + (n + 1) % q;
-  for (unsigned n = 0; n != q; ++ n) {
-    Px [n] = n;
-    Rx [n] = n;
-  }
 
-  float (* const x) [4] = nodes;
-  float (* const y) [4] = x + N / p;
-  float (* const z) [4] = y + N / q;
+  unsigned next_node = N / q;
 
   // We are given the coordinates of the P-, Q- and R-nodes in triangle 0.
-  store4f (x [0], load4f (xyz_in [0]));
-  store4f (y [0], load4f (xyz_in [1]));
-  store4f (z [0], load4f (xyz_in [2]));
+  Px [0] = next_node;
+  store4f (nodes [next_node], load4f (xyz_in [0]));
+  ++ next_node;
+
+  store4f (nodes [0], load4f (xyz_in [1]));
+
+  Rx [0] = next_node;
+  store4f (nodes [next_node], load4f (xyz_in [2]));
+  ++ next_node;
 
   float two_pi = 0x1.921fb6P2;
   float A = two_pi / p;
   float B = two_pi / q;
 
   // Calculate the coordinates of the P- and R-nodes in the other q-1 triangles around Q-node 0.
-  ALIGNED16 rotor_t Y_rotate (y [0], B);
+  ALIGNED16 rotor_t Y_rotate (nodes [0], B);
   for (unsigned n = 1; n != q; ++ n) {
-    Y_rotate (x [n - 1], x [n]);
-    Y_rotate (z [n - 1], z [n]);
+    Px [n] = next_node ++;
+    Y_rotate (nodes [Px [n - 1]], nodes [Px [n]]);
+    Rx [n] = next_node ++;
+    Y_rotate (nodes [Rx [n - 1]], nodes [Rx [n]]);
   }
 
-  unsigned n0 = 0, p_node = q, r_node = q;
+  unsigned n0 = 0;
   for (unsigned m0 = q; m0 != N; m0 += q) {
     while (n0 [P] != undef) ++ n0;
 
@@ -58,8 +60,8 @@ void make_system (unsigned q, unsigned r, const float (& xyz_in) [3] [4], float 
     // with nodes which are already known (from earlier Q-nodes)
     // and which are new.
 
-    ALIGNED16 rotor_t X_rotate (x [Px [n0]], A);
-    X_rotate (y [n0 / q], y [m0 / q]);
+    ALIGNED16 rotor_t X_rotate (nodes [Px [n0]], A);
+    X_rotate (nodes [n0 / q], nodes [m0 / q]);
 
     // Work out the consequences of identifying the two P-nodes.
     // Invariant: n [P] = m if and only if m [Q] [R] = n, for all m, n < N.
@@ -95,17 +97,17 @@ void make_system (unsigned q, unsigned r, const float (& xyz_in) [3] [4], float 
     // are identified with nodes that are already labelled, so we can give
     // new labels to the remaining nodes and compute their vectors.
 
-    ALIGNED16 rotor_t Y_rotate (y [m0 / q], B);
+    ALIGNED16 rotor_t Y_rotate (nodes [m0 / q], B);
     for (unsigned n = m0 + 1; n != m0 + q; ++ n) {
       if (Px [n] == undef) {
-        Px [n] = p_node;
-        ++ p_node;
-        Y_rotate (x [Px [n - 1]], x [Px [n]]);
+        Px [n] = next_node;
+        Y_rotate (nodes [Px [n - 1]], nodes [next_node]);
+        ++ next_node;
       }
       if (Rx [n] == undef) {
-        Rx [n] = r_node;
-        ++ r_node;
-        Y_rotate (z [Rx [n - 1]], z [Rx [n]]);
+        Rx [n] = next_node;
+        Y_rotate (nodes [Rx [n - 1]], nodes [next_node]);
+        ++ next_node;
       }
     }
   }
@@ -115,10 +117,10 @@ void make_system (unsigned q, unsigned r, const float (& xyz_in) [3] [4], float 
     unsigned j = i [R];
     unsigned k = j [P];
     indices [n] [0] = Px [j];
-    indices [n] [1] = j / q + N / p;
-    indices [n] [2] = Rx [i] + N / p + N / q;
+    indices [n] [1] = j / q;
+    indices [n] [2] = Rx [i];
     indices [n] [3] = Px [i];
-    indices [n] [4] = k / q + N / p;
-    indices [n] [5] = Rx [k] + N / p + N / q;
+    indices [n] [4] = k / q;
+    indices [n] [5] = Rx [k];
   }
 }
