@@ -90,7 +90,6 @@ model_t::model_t () : memory (nullptr), capacity (0), count (0) { }
 
 bool model_t::start (int width, int height, const settings_t & settings)
 {
-  rng.initialize (42);
   int small = width < height ? width : height;
   int large = width < height ? height : width;
 
