@@ -90,6 +90,7 @@ model_t::model_t () : memory (nullptr), capacity (0), count (0) { }
 
 bool model_t::start (int width, int height, const settings_t & settings)
 {
+  rng.initialize (42);
   int small = width < height ? width : height;
   int large = width < height ? height : width;
 
@@ -374,25 +375,31 @@ void model_t::draw (unsigned begin, unsigned count)
     if (object.starting_point != 7 && object.target.point != 7) {
       const float (& X) [3] [4] = xyz [sselect];
 
-      ALIGNED16 float crs_invsq [4];
       v4f crs [3];
+      ALIGNED16 float crs_invsq [4];
+      ALIGNED16 float sinsq_A [4];
+
       for (unsigned i = 0; i != 3; ++ i) {
-        v4f Y = load4f (X [mod3 [i + 1]]);
-        v4f Z = load4f (X [mod3 [i + 2]]);
-        crs [i] = cross (Y, Z);
+        unsigned j = mod3 [i + 1];
+        unsigned k = mod3 [i + 2];
+        crs [i] = cross (load4f (X [j]), load4f (X [k]));
         crs_invsq [i] = _mm_cvtss_f32 (rcp (dot (crs [i], crs [i])));
+      }
+
+      for (unsigned i = 0; i != 3; ++ i) {
+        unsigned j = mod3 [i + 1];
+        unsigned k = mod3 [i + 2];
+        float vw = _mm_cvtss_f32 (dot (crs [j], crs [k]));
+        sinsq_A [i] = 4.0f - (vw + vw) * (vw + vw) * crs_invsq [j] * crs_invsq [k];
       }
 
       ALIGNED16 float usq [4];
       ALIGNED16 float asq [4];
-      v4f T = tmapply (X, g);
-      v4f TX = mapply (X, T);
+      v4f T = tmapply (X, g); // Generator point, T, in spherical triangle X.
+      v4f TX = mapply (X, T); // Inner product of T with each node of X.
       v4f abc_xyz = g * dot (load4f (X [0]), crs [0]);
       _mm_store_ps (asq, 1.0f - TX * TX);
       _mm_store_ps (usq, abc_xyz * abc_xyz * load4f (crs_invsq));
-
-      float vw = _mm_cvtss_f32 (dot (crs [1], crs [2]));
-      float sinsq_A = 4.0f - (vw + vw) * (vw + vw) * crs_invsq [1] * crs_invsq [2];
 
       for (unsigned i = 0; i != 3; ++ i) {
         unsigned j = mod3 [i + 1];
@@ -400,8 +407,8 @@ void model_t::draw (unsigned begin, unsigned count)
         ALIGNED16 float hsq [4];
         hsq [0] = asq [i] - usq [j];
         hsq [1] = asq [i] - usq [k];
-        hsq [2] = sinsq_A * usq [j];
-        hsq [3] = sinsq_A * usq [k];
+        hsq [2] = sinsq_A [i] * usq [j];
+        hsq [3] = sinsq_A [i] * usq [k];
         _mm_stream_ps (block.h [i], sqrt (load4f (hsq)));
       }
     }
