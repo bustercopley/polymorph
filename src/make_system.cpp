@@ -6,33 +6,32 @@
 void make_system (unsigned q, unsigned r, const float (& xyz_in) [3] [4], float (* nodes) [4], unsigned (* indices) [6])
 {
   std::uint8_t * P, * Q, * R; // Permutations taking black triangles around nodes.
+  std::uint8_t * Qi;          // Inverse of the permutation Q.
   std::uint8_t * Px, * Rx;    // Map a triangle to its P- or R-node.
 
-  std::uint8_t memory [300];
+  std::uint8_t memory [360];
   std::uint8_t * memp = memory;
   P = memp; memp += 60;
   Q = memp; memp += 60;
   R = memp; memp += 60;
+  Qi = memp; memp += 60;
   Px = memp; memp += 60;
   Rx = memp; // memp += 60;
 
   const std::uint8_t undef = 0xff;
   const unsigned p = 2, N = 2 * p * q * r / (q * r + r * p + p * q - p * q * r);
   for (unsigned n = 0; n != sizeof memory; ++ n) memory [n] = undef;
-  for (unsigned n = 0; n != N; ++ n) n [Q] = n - n % q + (n + 1) % q;
+  for (unsigned n = 0; n != N; ++ n) {
+    n [Q] = n - n % q + (n + 1) % q;
+    n [Q] [Qi] = n;
+  }
 
   unsigned next_node = N / q;
 
   // We are given the coordinates of the P-, Q- and R-nodes in triangle 0.
-  Px [0] = next_node;
-  store4f (nodes [next_node], load4f (xyz_in [0]));
-  ++ next_node;
-
+  store4f (nodes [Px [0] = next_node ++], load4f (xyz_in [0]));
   store4f (nodes [0], load4f (xyz_in [1]));
-
-  Rx [0] = next_node;
-  store4f (nodes [next_node], load4f (xyz_in [2]));
-  ++ next_node;
+  store4f (nodes [Rx [0] = next_node ++], load4f (xyz_in [2]));
 
   float two_pi = 0x1.921fb6P2;
   float A = two_pi / p;
@@ -92,7 +91,7 @@ void make_system (unsigned q, unsigned r, const float (& xyz_in) [3] [4], float 
       }
       if (d == r - 1) {
         n [R] = m;
-        n = n - n % q + (n + q - 1) % q;
+        n = n [Qi];
         m [P] = n;
         Px [m] = Px [n] = Px [m] & Px [n];
       }
