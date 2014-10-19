@@ -60,20 +60,13 @@ void make_system (unsigned q, unsigned r, const float (& xyz_in) [3] [4], float 
     while (n0 [P] != undef) ++ n0;
 
     // Attach triangle m0 to triangle n0's dangling P-node.
-    Px [m0] = Px [n0];
-
     // At this point we learn the coordinates of the next Q-node.
-    // We can't yet say much about its surrounding P- and R-nodes,
-    // because we don't know which of them should be identified
-    // with nodes which are already known (from earlier Q-nodes)
-    // and which are new.
-
+    Px [m0] = Px [n0];
     ALIGNED16 rotor_t X_rotate (nodes [Px [n0]], A);
     X_rotate (nodes [n0 / q], nodes [m0 / q]);
 
-    // Work out the consequences of identifying the two P-nodes.
+    // Work out the consequences of attaching the new triangle.
     // Invariant: n [P] = m if and only if m [Q] [R] = n, for all m, n < N.
-
     unsigned n = n0, m = m0;
     do {
       n [P] = m;
