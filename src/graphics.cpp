@@ -37,7 +37,7 @@ namespace
     get_resource_data (id2, text [1], size [1]);
 
     GLint id = glCreateShader (type);
-    glShaderSource (id, 2, const_cast <const char **> (text), size);
+    glShaderSource (id, 2, text, size);
     glCompileShader (id);
     GLint status = 0;
     glGetShaderiv (id, GL_COMPILE_STATUS, & status);
