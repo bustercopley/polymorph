@@ -1,14 +1,14 @@
 #include "arguments.h"
 #include <cstdint>
 
-std::uintptr_t from_string (const TCHAR * s)
+HWND hwnd_from_string (const TCHAR * s)
 {
-  std::uintptr_t result = 0;
+  UINT_PTR result = 0;
   while (TEXT ('0') <= * s && * s <= TEXT ('9')) {
     result = 10 * result + (* s - TEXT ('0'));
     ++ s;
   }
-  return result;
+  return reinterpret_cast <HWND> (result);
 }
 
 arguments_t::arguments_t (const TCHAR * s)
@@ -35,6 +35,6 @@ arguments_t::arguments_t (const TCHAR * s)
     else if (c == TEXT ('P') || c == TEXT ('L')) mode = parented;
     else goto repeat;
     while (* s == TEXT (' ') || * s == TEXT (':')) ++ s;
-    parent = reinterpret_cast <HWND> (from_string (s));
+    parent = hwnd_from_string (s);
   }
 }
