@@ -43,7 +43,7 @@ namespace
   }
 
   // Argument x x * *, result sin(x) 1-cos(x) sin(x) 1-cos(x).
-  // Range [0, 1.57079632] (pi/2).
+  // Range [-pi/2, pi/2].
   inline v4f sincos_internal (const v4f x)
   {
     v4f xsq = x * x;                           // x^2 x^2 * *
@@ -53,7 +53,7 @@ namespace
   }
 
   // Evaluate f and g at xsq.
-  // Range [0, 22.206610] (((3/2)*pi)^2).
+  // Range [0, ((3/2)*pi)^2].
   // Argument x^2 x^2 * *, result f0(x) g0(x) f0(x) g0(x).
   inline v4f fg (const v4f xsq)
   {
@@ -76,8 +76,8 @@ namespace
     }
   }
 
-  // Total derivative of f at 0, where f is the continuous function R->R^3 such
-  // that f(0) = u and for all real t, e^{\hat{f}(t)} = e^{\hat{u}} e^{t\hat{w}.
+  // Total derivative of f(t) at 0, where f is the continuous function R->R^3
+  // such that f(0) = u and for all real t, e^{\hat{f}(t)} = e^{\hat{u}} e^{t\hat{w}}.
   inline v4f tangent (v4f u, v4f w)
   {
     v4f one = { 1.0f, 1.0f, 1.0f, 1.0f, };
