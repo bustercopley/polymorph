@@ -334,12 +334,6 @@ void model_t::draw_next ()
   draw (begin, count - begin);
 }
 
-// Returns { a [0], b [0], c [0], d [0], };
-inline v4f transversal0 (v4f a, v4f b, v4f c, v4f d)
-{
-  return _mm_movelh_ps (_mm_unpacklo_ps (a, b), _mm_unpacklo_ps (c, d));
-}
-
 void model_t::draw (unsigned begin, unsigned count)
 {
   static const unsigned mod3 [] = { 0, 1, 2, 0, 1, };
