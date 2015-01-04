@@ -57,7 +57,7 @@ struct triangle_t
 //   TZ = alpha * X0 + beta * Y0 + gamma * Z1
 // (see diagram) are the vertices of an equilateral spherical triangle.
 
-triangle_t triangles [3] ALIGNED16 =
+ALIGNED16 triangle_t triangles [3] =
 {
   // Tetrahedral, <2, 3, 3>.
   {
