@@ -71,7 +71,6 @@ unsigned make_vao (unsigned N, const float (* vertices) [4], const unsigned (* i
   glBufferData (GL_ELEMENT_ARRAY_BUFFER, 6 * N * sizeof (unsigned), indices, GL_STATIC_DRAW);
   glVertexAttribPointer (attribute_id_x, 4, GL_FLOAT, GL_FALSE, 0, 0);
   glEnableVertexAttribArray (attribute_id_x);
-  //glBindVertexArray (0);
   return vao_id;
 }
 
