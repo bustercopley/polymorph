@@ -77,7 +77,7 @@ triangle_t triangles [3] ALIGNED16 =
     },
   },
   // Octahedral, <2, 4, 3>.
-  // Aligned so that two octahedral triangles cover one tetrahedral triangle.
+  // Oriented so that two octahedral triangles cover one tetrahedral triangle.
   {
     { { +0x1.6a09e6P-1f, +0x1.000000P-1f, +0x1.000000P-1f, 0.0f, },
       { +0x1.000000P+0f, +0x0.000000P+0f, +0x0.000000P+0f, 0.0f, },
