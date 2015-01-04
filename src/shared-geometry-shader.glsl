@@ -18,7 +18,7 @@ layout (std140) uniform H {
 };
 
 in vec3 S [6];
-out flat vec3 N;
+out flat vec4 N;
 out noperspective vec3 E;
 
 void color (vec3 x)
@@ -26,7 +26,7 @@ void color (vec3 x)
   vec3 n = (m * vec4 (x, 0)).xyz;
   vec3 p = (m * vec4 (r * x, 1)).xyz;
   vec3 a = normalize (p - l);
-  N = (d.xyz * max (0, -dot (a, n)) + 0.3 * pow (max (0, -dot (normalize (p), reflect (a, n))), 10)) * f [1] * (p [2] - f [0]);
+  N = vec4 ((d.xyz * max (0, -dot (a, n)) + 0.3 * pow (max (0, -dot (normalize (p), reflect (a, n))), 10)) * f [1] * (p [2] - f [0]), d.w);
 }
 
 void vertex (vec4 X, vec3 e)

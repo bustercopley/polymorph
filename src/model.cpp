@@ -136,7 +136,10 @@ bool model_t::start (int width, int height, const settings_t & settings)
   max_radius = 0.0f;
   unsigned temperature = 8.0f * settings.trackbar_pos [1];
   for (unsigned n = 0; n != total_count; ++ n) add_object (view, temperature);
-  for (unsigned n = 0; n != count; ++ n) kdtree_index [n] = n;
+  for (unsigned n = 0; n != count; ++ n) {
+    kdtree_index [n] = n;
+    object_order [n] = n;
+  }
 
   float phase = 0.0f;
   float global_time_offset = get_float (rng, 0.0f, usr::cycle_duration);
@@ -218,7 +221,8 @@ bool model_t::set_capacity (std::size_t new_capacity)
   return reallocate_aligned_arrays (memory, capacity, new_capacity,
                                     & x, & v, & u, & w, & e,
                                     & kdtree_index,
-                                    & objects);
+                                    & objects,
+                                    & object_order);
 }
 
 void model_t::add_object (const float (& view) [4], float temperature)
@@ -324,7 +328,11 @@ void model_t::draw_next ()
   }
 
   clear ();
-  // Draw all the shapes, one uniform buffer at a time.
+  // Draw all the shapes, one uniform buffer at a time, in painter's-algorithm order.
+  // On the second and subsequent frames, insertion sort is quite efficient (roughly
+  // O(n)) because the objects are already in almost-sorted order.
+  // The first time's dead slow of course (O(n^2)).
+  insertion_sort (object_order, x, 2, 0, count);
   unsigned begin = 0, end = (unsigned) uniform_buffer.count ();
   while (end < count) {
     draw (begin, end - begin);
@@ -339,11 +347,12 @@ void model_t::draw (unsigned begin, unsigned count)
   static const unsigned mod3 [] = { 0, 1, 2, 0, 1, };
 
   // Set the modelview matrix, m.
-  compute (reinterpret_cast <char *> (& uniform_buffer [0].m), uniform_buffer.stride (), & x [begin], & u [begin], count);
+  compute (reinterpret_cast <char *> (& uniform_buffer [0].m), uniform_buffer.stride (), x, u, & (object_order [begin]), count);
 
-  const v4f alpha = { 0.0f, 0.0f, 0.0f, 0.85f, };
+  const v4f alpha = { 0.0f, 0.0f, 0.0f, 0.95f, };
   for (unsigned n = 0; n != count; ++ n) {
-    const object_t & object = objects [begin + n];
+    unsigned m = object_order [begin + n];
+    const object_t & object = objects [m];
     uniform_block_t & block = uniform_buffer [n];
 
     // Set the circumradius, r.
@@ -361,7 +370,7 @@ void model_t::draw (unsigned begin, unsigned count)
     v4f sc = sincos (t);
     v4f s = _mm_moveldup_ps (sc);
     v4f c = _mm_movehdup_ps (sc);
-    v4f g = c * load4f (abc [sselect] [object.starting_point]) + s * load4f (e [begin + n]);
+    v4f g = c * load4f (abc [sselect] [object.starting_point]) + s * load4f (e [m]);
     _mm_stream_ps (block.g, g);
 
     // Precompute triangle altitudes, h (for non-snubs only).
@@ -410,7 +419,8 @@ void model_t::draw (unsigned begin, unsigned count)
   uniform_buffer.update ();
 
   for (unsigned n = 0; n != count; ++ n) {
-    const object_t & object = objects [begin + n];
+    unsigned m = object_order [begin + n];
+    const object_t & object = objects [m];
     system_select_t sselect = object.target.system;
     unsigned program_select = object.starting_point == 7 || object.target.point == 7 ? 1 : 0;
 

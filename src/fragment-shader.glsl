@@ -2,7 +2,7 @@
 
 #version 420
 
-in flat vec3 N;
+in flat vec4 N;
 in noperspective vec3 E;
 out vec4 c;
 
@@ -15,5 +15,5 @@ float amplify (float d)
 void main ()
 {
   float d = min (min (E [0], E [1]), E [2]);
-  c = vec4 (amplify (d) * N, 1);
+  c = vec4 (amplify (d) * N.xyz, N.w);
 }

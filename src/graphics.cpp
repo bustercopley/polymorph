@@ -42,7 +42,13 @@ namespace
     GLint status = 0;
     glGetShaderiv (id, GL_COMPILE_STATUS, & status);
     if (! status) {
-      print ("Shader compilation failed: ", 1000 * id1 + id2);
+      switch (id2 ? id2 : id1) {
+      case IDR_VERTEX_SHADER: print ("Vertex shader compilation failed:"); break;
+      case IDR_FRAGMENT_SHADER: print ("Fragment shader compilation failed:"); break;
+      case IDR_GEOMETRY_SHADER: print ("Default geometry shader compilation failed:"); break;
+      case IDR_SNUB_GEOMETRY_SHADER: print ("Snub geometry shader compilation failed:"); break;
+      default: ;
+      }
       PRINT_INFO_LOG (id, glGetShaderiv, glGetShaderInfoLog);
       return 0;
     }
@@ -113,8 +119,6 @@ void uniform_buffer_t::update ()
 
 bool initialize_programs (program_t (& programs) [2])
 {
-  glEnable (GL_DEPTH_TEST);
-  glDepthRange (1.0, 0.0);
   glEnable (GL_CULL_FACE);
   glEnable (GL_BLEND);
   glBlendFunc (GL_DST_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -193,7 +197,7 @@ bool program_t::initialize (unsigned gshader2)
 
 void clear ()
 {
-  glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glClear (GL_COLOR_BUFFER_BIT);
 }
 
 void paint (unsigned N,
@@ -206,7 +210,8 @@ void paint (unsigned N,
   glUseProgram (program.id);
   glBindVertexArray (vao_id);
   glBindBufferRange (GL_UNIFORM_BUFFER, 0, uniform_buffer_id, uniform_buffer_offset, size);
+  //glCullFace (GL_FRONT);
+  //glDrawElements (GL_TRIANGLES_ADJACENCY, N * 6, GL_UNSIGNED_INT, nullptr);
+  glCullFace (GL_BACK);
   glDrawElements (GL_TRIANGLES_ADJACENCY, N * 6, GL_UNSIGNED_INT, nullptr);
-  //glBindVertexArray (0);
-  //glUseProgram (0);
 }

@@ -45,6 +45,7 @@ private:
 
   void * memory;
   object_t * objects;
+  unsigned * object_order;
   unsigned * kdtree_index;
   float (* x) [4];  // position
   float (* v) [4];  // velocity
