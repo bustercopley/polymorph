@@ -6,7 +6,6 @@
 #include "make_system.h"
 #include "cramer.h"
 #include "graphics.h"
-#include "memory.h"
 #include <cstdint>
 
 struct triangle_t
