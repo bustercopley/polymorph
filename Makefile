@@ -30,7 +30,7 @@ common_CXXFLAGS=-fno-rtti -fno-exceptions -ffast-math
 common_LDFLAGS=-mwindows -municode
 common_LDLIBS=-lopengl32 -lcomctl32 -lshell32
 
-base_CPPFLAGS=$(common_CPPFLAGS)
+base_CPPFLAGS=$(common_CPPFLAGS) -DENABLE_PRINT
 base_CFLAGS=$(common_CFLAGS) -flto -Os
 base_CXXFLAGS=$(common_CXXFLAGS)
 base_LDFLAGS=$(common_LDFLAGS) -s
@@ -42,7 +42,7 @@ tiny_CXXFLAGS=$(base_CXXFLAGS)
 tiny_LDFLAGS=$(base_LDFLAGS) -nostdlib -Wl,--disable-runtime-pseudo-reloc --entry=$(PLATFORM_ENTRY_POINT)
 tiny_LDLIBS=$(base_LDLIBS) -lgdi32 -ladvapi32 -luser32 -lkernel32
 
-debug_CPPFLAGS=$(common_CPPFLAGS)
+debug_CPPFLAGS=$(common_CPPFLAGS) -DENABLE_PRINT
 debug_CFLAGS=$(common_CFLAGS) -g -ggdb
 debug_CXXFLAGS=$(common_CXXFLAGS)
 debug_LDFLAGS=$(common_LDFLAGS)
@@ -80,7 +80,7 @@ test: all
 	$(polymorph_FILENAME)
 
 debug: all
-	$(PLATFORM_PATH)\gdb --quiet --batch -ex run -ex bt full -ex quit --args $(polymorph_FILENAME) -x
+	$(PLATFORM_PATH)\gdb --quiet --batch -ex run -ex bt full -ex quit --args $(polymorph_FILENAME)
 
 SHADER_RESOURCES=\
 .obj/polymorph/vertex-shader.glsl.mini \
