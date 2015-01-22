@@ -99,6 +99,7 @@ bool uniform_buffer_t::initialize ()
 
   m_size = size;
   m_memory = allocate_internal (m_size + align);
+  if (! m_memory) return false;
   align_up (m_begin, m_memory, align);
   align_up (m_stride, sizeof (uniform_block_t), align);
 
@@ -161,24 +162,31 @@ void set_view (program_t (& programs) [2], const float (& view) [4], int width, 
 
 bool program_t::initialize (unsigned gshader2)
 {
-  id = glCreateProgram ();
+  GLint status = 0;
   GLuint vshader_id = make_shader (GL_VERTEX_SHADER, IDR_VERTEX_SHADER, 0);
   GLuint gshader_id = make_shader (GL_GEOMETRY_SHADER, IDR_SHARED_GEOMETRY_SHADER, gshader2);
   GLuint fshader_id = make_shader (GL_FRAGMENT_SHADER, IDR_FRAGMENT_SHADER, 0);
-  if (vshader_id == 0 || gshader_id == 0 || fshader_id == 0) {
-    return false;
+  if (vshader_id && gshader_id && fshader_id) {
+    id = glCreateProgram ();
+    if (id) {
+      glAttachShader (id, vshader_id);
+      glAttachShader (id, gshader_id);
+      glAttachShader (id, fshader_id);
+      glBindAttribLocation (id, attribute_id_x, "x");
+      glLinkProgram (id);
+      // Check status.
+      glGetProgramiv (id, GL_LINK_STATUS, & status);
+      if (! status) {
+        PRINT_INFO_LOG (id, glGetProgramiv, glGetProgramInfoLog);
+        // Don't bother to delete the program. We're closing down.
+      }
+    }
   }
+  if (vshader_id) glDeleteShader (vshader_id);
+  if (gshader_id) glDeleteShader (gshader_id);
+  if (fshader_id) glDeleteShader (fshader_id);
 
-  glAttachShader (id, vshader_id);
-  glAttachShader (id, gshader_id);
-  glAttachShader (id, fshader_id);
-  glBindAttribLocation (id, attribute_id_x, "x");
-  glLinkProgram (id);
-
-  GLint status;
-  glGetProgramiv (id, GL_LINK_STATUS, & status);
   if (! status) {
-    PRINT_INFO_LOG (id, glGetProgramiv, glGetProgramInfoLog);
     return false;
   }
 

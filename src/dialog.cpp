@@ -40,10 +40,6 @@ INT_PTR CALLBACK DialogProc (HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
     return TRUE;
   }
 
-  case WM_DESTROY:
-    ::PostQuitMessage (0);
-    return FALSE;
-
   case WM_COMMAND: {
     const UINT id = LOWORD (wParam);
     for (unsigned i = 0; i != trackbar_count; ++ i) {
@@ -51,7 +47,7 @@ INT_PTR CALLBACK DialogProc (HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
       ds->settings.trackbar_pos [i] = (DWORD) ::SendMessage (hwnd_trackbar, TBM_GETPOS, 0, 0);
     }
     if (id == IDOK) save_settings (ds->settings);
-    if (id != IDC_PREVIEW_BUTTON) ::DestroyWindow (hdlg);
+    if (id != IDC_PREVIEW_BUTTON) ::DestroyWindow (ds->hwnd);
     if (id == IDC_PREVIEW_BUTTON) ::ShowWindow (ds->hwnd, SW_SHOW);
     return TRUE;
   }

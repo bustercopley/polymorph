@@ -319,27 +319,30 @@ void model_t::draw_next ()
     A.animation_time = t;
   }
 
+  clear ();
+
+  // Both kdtree_t::compute and insertion_sort have undefined behaviour if count is zero.
   if (count) {
-    // The behaviour of kdtree_t::compute is undefined if count is zero.
+    // Do collision detection.
     kdtree.compute (kdtree_index, x, count);
     kdtree.search (kdtree_index, x, count, walls, max_radius, objects, v, w);
+
+    // Do inertial motion.
     advance_linear (x, v, count);
     advance_angular (u, w, count);
-  }
 
-  clear ();
-  // Draw all the shapes, one uniform buffer at a time, in painter's-algorithm order.
-  // On the second and subsequent frames, insertion sort is quite efficient (roughly
-  // O(n)) because the objects are already in almost-sorted order.
-  // The first time's dead slow of course (O(n^2)).
-  insertion_sort (object_order, x, 2, 0, count);
-  unsigned begin = 0, end = (unsigned) uniform_buffer.count ();
-  while (end < count) {
-    draw (begin, end - begin);
-    begin = end;
-    end = begin + (unsigned) uniform_buffer.count ();
+    // Draw all the shapes, one uniform buffer at a time, in reverse depth order.
+    // The insertion sort is slow the first time, but faster for subsequent frames
+    // because the index is already almost sorted.
+    insertion_sort (object_order, x, 2, 0, count);
+    unsigned begin = 0, end = (unsigned) uniform_buffer.count ();
+    while (end < count) {
+      draw (begin, end - begin);
+      begin = end;
+      end = begin + (unsigned) uniform_buffer.count ();
+    }
+    draw (begin, count - begin);
   }
-  draw (begin, count - begin);
 }
 
 void model_t::draw (unsigned begin, unsigned count)

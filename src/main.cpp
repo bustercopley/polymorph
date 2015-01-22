@@ -18,11 +18,11 @@ int WINAPI _tWinMain (HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
   LPCTSTR display_name;
   ::LoadString (hInstance, 1, (LPTSTR) (& display_name), 0);
 
-  ALIGNED16 window_struct_t ws;
-
   arguments_t arguments (::GetCommandLine ());
-  ws.mode = arguments.mode;
 
+  ALIGNED16 window_struct_t ws;
+  ws.hglrc = 0;
+  ws.mode = arguments.mode;
   load_settings (ws.settings);
 
   // Create the screen saver window.

@@ -21,18 +21,10 @@ ALIGN_STACK LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LP
 
   switch (msg) {
   case WM_CREATE: {
-    result = -1; // Abort window creation.
-
     // Store the window-struct pointer in the window userdata.
     CREATESTRUCT * cs = (CREATESTRUCT *) lParam;
     ws = (window_struct_t *) cs->lpCreateParams;
     ::SetWindowLongPtr (hwnd, GWLP_USERDATA, reinterpret_cast <LONG_PTR> (ws));
-
-    ws->hglrc = install_rendering_context (hwnd);
-    if (ws->hglrc) {
-      ws->model.initialize (qpc ());
-      result = 0; // Allow window creation to continue.
-    }
     break;
   }
 
@@ -61,9 +53,21 @@ ALIGN_STACK LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LP
     if (windowpos->flags & SWP_SHOWWINDOW) {
       // Remember initial cursor position to detect mouse movement.
       ::GetCursorPos (& ws->initial_cursor_position);
-      // (Re-)start the simulation.
-      ws->model.start (windowpos->cx, windowpos->cy, ws->settings);
-      ws->model.draw_next ();
+
+      // If not already successfully initialized, attempt to do so now.
+      // Initialization is only attempted once. If it fails, the process exits.
+      if (! ws->hglrc) {
+        ws->hglrc = install_rendering_context (hwnd);
+        if (! ws->hglrc || ! ws->model.initialize (qpc ())) {
+          ws->hglrc = 0;
+          ::DestroyWindow (hwnd);
+        }
+      }
+      if (ws->hglrc) {
+        // (Re-)start the simulation.
+        ws->model.start (windowpos->cx, windowpos->cy, ws->settings);
+        ws->model.draw_next ();
+      }
     }
     break;
   }
@@ -74,12 +78,14 @@ ALIGN_STACK LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LP
     break;
 
   case WM_PAINT: {
-    PAINTSTRUCT ps;
-    ::BeginPaint (hwnd, & ps);
-    ::SwapBuffers (ps.hdc);
-    ::EndPaint (hwnd, & ps);
-    ::PostMessage (hwnd, WM_APP, 0, 0);
-    break;
+    if (ws->hglrc) {
+      PAINTSTRUCT ps;
+      ::BeginPaint (hwnd, & ps);
+      ::SwapBuffers (ps.hdc);
+      ::EndPaint (hwnd, & ps);
+      ::PostMessage (hwnd, WM_APP, 0, 0);
+      break;
+    }
   }
 
   case WM_SETCURSOR:

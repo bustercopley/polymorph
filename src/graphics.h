@@ -38,7 +38,7 @@ struct uniform_block_t
 
 struct uniform_buffer_t
 {
-  inline uniform_buffer_t () : m_begin (0) { };
+  inline uniform_buffer_t () : m_memory (nullptr) { };
   inline std::size_t count () const { return m_size / m_stride; }
   inline std::size_t stride () const { return m_stride; }
   inline std::uint32_t id () const { return m_id; }

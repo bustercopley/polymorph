@@ -65,7 +65,6 @@ private:
   unsigned primitive_count [system_count]; // = { 12, 24, 60, }
   std::uint32_t vao_ids [system_count];
   uniform_buffer_t uniform_buffer;
-
 };
 
 #endif
