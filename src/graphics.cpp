@@ -119,6 +119,7 @@ void uniform_buffer_t::update ()
 
 bool initialize_programs (program_t (& programs) [2])
 {
+  glEnable (GL_DEPTH_CLAMP);
   glEnable (GL_CULL_FACE);
   glEnable (GL_BLEND);
   glBlendFunc (GL_DST_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
