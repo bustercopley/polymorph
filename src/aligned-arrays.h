@@ -26,14 +26,9 @@ inline bool reallocate_aligned_arrays (void * & memory, std::size_t & length, st
 
 namespace internal
 {
-  inline void * align_up (void * p)
+  template <typename T> inline T align_up (T p)
   {
-    return (void *) ((((std::intptr_t) p) + 63) & -64);
-  }
-
-  inline std::size_t pad (std::size_t p)
-  {
-    return (std::size_t) ((((std::ptrdiff_t) p) + 63) & -64);
+    return (T) ((((std::intptr_t) p) + 63) & -64);
   }
 
   inline std::size_t bytes_needed (std::size_t)
@@ -46,7 +41,7 @@ namespace internal
   template <typename T, typename ... P>
   inline std::size_t bytes_needed (std::size_t count, T **, P ... p)
   {
-    return pad (count * sizeof (T)) + bytes_needed (count, p ...);
+    return align_up (count * sizeof (T)) + bytes_needed (count, p ...);
   }
 
   inline void replace (void *, std::size_t, std::size_t)
