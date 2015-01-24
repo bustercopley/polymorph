@@ -24,8 +24,6 @@ $(objdir)/%.o: $(source_prefix)%.c | $(objdir)
 	$(CC) $(DEPFLAGS) $(cppflags) $(ccflags) $$< -c -o $$@
 $(objdir)/%-res.o: $(source_prefix)%.rc | $(objdir)
 	windres $(resflags) $$< $$@
-$(objdir):
-	-md $(subst /,\,$(objdir))
 ifdef $(program)_FILENAME
 $(name): $(objects)
 	$(CXX) $(cflags) $(cxxflags) $(ldflags) $(objects) $(ldlibs) -o $(name)
