@@ -45,7 +45,7 @@ struct bump_specifier_t
 struct bumps_t
 {
   v4f operator () (float t) const;
-  void initialize (bump_specifier_t b0, bump_specifier_t b1);
+  void initialize (const bump_specifier_t & b0, const bump_specifier_t & b1);
 private:
   float c [4] [4], S0 [4], T0 [4], U0 [4], V0 [4];
 };

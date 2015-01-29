@@ -42,7 +42,7 @@ v4f step_t::operator () (float t) const
   return _mm_hadd_ps (val, val);        // x x x x, where x = t<t0 ? 0 : t<t1 ? f(t) : 1
 }
 
-void bumps_t::initialize (bump_specifier_t b0, bump_specifier_t b1)
+void bumps_t::initialize (const bump_specifier_t & b0, const bump_specifier_t & b1)
 {
   // Precompute the coefficients of four cubic polynomials in t, giving
   // the two smoothstep regions of the each of the two bump functions.
