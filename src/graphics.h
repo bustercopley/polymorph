@@ -17,6 +17,8 @@ namespace uniforms
     p, // mat4,      projection matrix
     l, // vec3,      light position
     f, // float [2], fog coefficients
+    w, // int,       pixel width
+    h, // int,       pixel height
     count
   };
 }
@@ -30,11 +32,9 @@ struct program_t
 
 struct uniform_block_t
 {
-  GLfloat m [4] [4];  // mat4,  modelview matrix
-  GLfloat g [4];      // vec4,  uniform coefficients
-  GLfloat h [3] [4];  // vec4,  triangle altitudes
   GLfloat d [4];      // vec4,  diffuse reflectance
-  GLfloat r;          // float, circumradius
+  GLfloat g [4];      // vec4,  uniform coefficients
+  GLfloat m [4] [4];  // mat4,  modelview matrix
   GLboolean s;        // bool,  snub?
 };
 
@@ -60,7 +60,7 @@ private:
   GLuint m_id;
 };
 
-bool initialize_program (program_t & program);
+bool initialize_graphics (program_t & program);
 void set_view (const float (& view) [4], int width, int height, GLuint * uniform_locations);
 
 void paint (unsigned N,

@@ -6,112 +6,169 @@ layout (triangles_adjacency) in;
 layout (triangle_strip, max_vertices = 18) out;
 
 uniform mat4 p;
-uniform vec3 l;
-uniform float f [2];
+uniform int w;
+uniform int h;
 
-layout (std140) uniform H {
-  mat4 m;
-  vec4 g;
-  vec4 h [3];
+layout (std140) uniform H
+{
   vec4 d;
-  float r;
+  vec4 g;
+  mat4 m;
   bool s;
 };
 
-in vec3 S [6];
-out flat vec4 N;
+in vec3 Q [6];
+
+out vec3 X;
+out flat vec3 N;
 out noperspective vec3 E;
 
-void color (vec3 x)
-{
-  vec3 n = (m * vec4 (x, 0)).xyz;
-  vec3 p = (m * vec4 (r * x, 1)).xyz;
-  vec3 a = normalize (p - l);
-  N = vec4 ((d.xyz * max (0, -dot (a, n)) + 0.3 * pow (max (0, -dot (normalize (p), reflect (a, n))), 10)) * f [1] * (p [2] - f [0]), d.w);
-}
+vec3 O = m [3].xyz;
 
-void vertex (vec4 X, vec3 e)
+
+void vertex (vec3 x, vec4 p, vec3 e)
 {
   E = e;
-  gl_Position = X;
+  X = x;
+  gl_Position = p;
   EmitVertex ();
 }
 
-void segment (vec4 A, vec4 V, vec4 W, float h, float k, float l)
+void triangle (vec3 A, vec3 B, vec3 C, vec4 x, vec4 y, vec4 z, mat3 e)
 {
-  vertex (A, vec3 (h, k, k));
-  vertex (V, vec3 (0, 0, l));
-  vertex (W, vec3 (0, l, 0));
+  vertex (A, x, e [0]);
+  vertex (B, y, e [1]);
+  vertex (C, z, e [2]);
   EndPrimitive ();
 }
 
-void aspect (vec4 A, vec4 T, vec4 V, vec4 W, vec3 S, vec4 h)
+vec4 project (vec3 x)
 {
-  color (S);
-  segment (A, V, T, h [0], h [1], h [2]);
-  segment (A, T, W, h [1], h [0], h [3]);
+  return p * vec4 (x, 1);
 }
 
-void segment (vec3 S, vec4 A, vec4 V, vec4 W, float h)
+vec2 pdivide (vec4 s)
 {
-  color (S);
-  vertex (A, vec3 (h));
-  vertex (V, vec3 (0));
-  vertex (W, vec3 (0));
+  return vec2 (w * s.x / s.w, h * s.y / s.w);
+}
+
+vec2 raster (vec3 x)
+{
+  return pdivide (project (x));
+}
+
+vec2 perp (vec2 a, vec2 b)
+{
+  return normalize (vec2 (a.y - b.y, b.x - a.x));
+}
+
+float dist (vec2 x, vec2 a, vec2 b)
+{
+  return dot (perp (a, b), x - b);
+}
+
+vec2 flip (vec3 A, vec3 U, vec3 V)
+{
+  vec3 e = U - A;
+  vec3 v = V - U;
+  return raster (U - v + (2 * dot (v, e) / dot (e, e)) * e);
+}
+
+void segment (vec3 A, vec3 W, vec3 X, vec4 c, vec4 d, vec4 e, vec2 a, vec2 u, vec2 v, vec2 w, vec2 x, vec2 y, vec2 z)
+{
+  vec2 k, l;
+  if (dot (w - v, w - v) < 1) {
+    k = perp (u, v);
+    l = perp (y, z);
+  }
+  else {
+    k = perp (v, w);
+    l = perp (x, y);
+  }
+  triangle (A, W, X, c, d, e,
+            mat3 (dot (k, a - v), dist (a, w, x), dot (l, a - y),
+                  0, 0, dot (l, w - y),
+                  dot (k, x - v), 0, 0));
+}
+
+void snub_segment (vec3 Q, vec3 U, vec3 V, vec4 y, vec4 z)
+{
+  N = Q;
+  vec3 C = O + dot (U - O, Q) * Q;
+  vec4 x = project (C);
+  vec2 c = pdivide (x);
+  vec2 t = flip (C, U, V);
+  vec2 u = pdivide (y);
+  vec2 v = pdivide (z);
+  vec2 w = flip (C, V, U);
+  vec2 k = perp (t, u);
+  vec2 l = perp (v, w);
+  triangle (C, U, V, x, y, z,
+            mat3 (dot (k, c - u), dist (c, u, v), dot (l, c - w),
+                  0, 0, dot (l, u - w),
+                  dot (k, v - u), 0, 0));
   EndPrimitive ();
+}
+
+void aspect (vec3 Q, vec3 T, vec3 V, vec3 W, vec4 h, vec4 i, vec4 j, vec2 t, vec2 v, vec2 w)
+{
+  vec3 A = O + dot (T - O, Q) * Q;
+  vec3 y = W - A;
+  vec3 z = V - A;
+  vec3 d = T - 2 * A;
+  vec3 e = d + V;
+  vec3 f = d + W;
+  vec3 E = e * (2 / dot (e, e));
+  vec3 F = f * (2 / dot (f, f));
+  vec3 X = dot (e, y) * E - y;
+  vec3 U = dot (f, z) * F - z;
+  vec4 g = project (A);
+  vec2 a = pdivide (g);
+  vec2 x = raster (A + X);
+  vec2 u = raster (A + U);
+  vec2 r = raster (A + dot (e, U) * E - U);
+  vec2 s = raster (A + dot (f, X) * F - X);
+  N = Q;
+  segment (A, V, T, g, i, h, a, r, x, v, t, w, u);
+  segment (A, T, W, g, h, j, a, x, v, t, w, u, s);
 }
 
 void main ()
 {
-  vec3 G = r * g.xyz;
-  vec3 x = G [0] * S [0];
-  vec3 Y = G [1] * S [1];
-  vec3 z = G [2] * S [2];
-  vec3 X = G [0] * S [3];
-  vec3 y = G [1] * S [4];
-  vec3 Z = G [2] * S [5];
+  vec3 x = g.x * Q [0];
+  vec3 Y = g.y * Q [1];
+  vec3 z = g.z * Q [2];
+  vec3 X = g.x * Q [3];
+  vec3 y = g.y * Q [4];
+  vec3 Z = g.z * Q [5];
 
-  vec3 u = X + y + z;
-  vec3 v = x + Y + z;
-  vec3 w = x + y + Z;
+  vec3 U = O + X + y + z;
+  vec3 V = O + x + Y + z;
+  vec3 W = O + x + y + Z;
 
-  mat4 q = p * m;
+  vec4 h = project (U);
+  vec4 i = project (V);
+  vec4 j = project (W);
 
-  vec4 U = q * vec4 (u, 1);
-  vec4 V = q * vec4 (v, 1);
-  vec4 W = q * vec4 (w, 1);
+  vec2 u = pdivide (h);
+  vec2 v = pdivide (i);
+  vec2 w = pdivide (j);
 
   if (s) {
-    vec3 P = w - v;
-    vec3 Q = u - w;
-    vec3 R = v - u;
-
-    float A = dot (P, P);
-    float B = dot (Q, Q);
-    float C = dot (R, R);
-
-    float D = dot (Q, R);
-    float E = dot (R, P);
-    float F = dot (P, Q);
-
-    float s = dot (S [4], u);
-    float t = dot (S [2], u);
-
-    color (normalize (cross (v - u, u - w)));
-    vertex (W, vec3 (0, 0, sqrt (B - D * D / C)));
-    vertex (V, vec3 (0, sqrt (A - F * F / B), 0));
-    vertex (U, vec3 (sqrt (C - E * E / A), 0, 0));
-    EndPrimitive ();
-
-    segment (S [4], q * vec4 (s * S [4], 1), W, U, sqrt (r * r - s * s - B / 4));
-    segment (S [2], q * vec4 (t * S [2], 1), U, V, sqrt (r * r - t * t - C / 4));
+    N = normalize (cross (W - U, V - U));
+    triangle (W, V, U, j, i, h,
+              mat3 (0, 0, dist (w, v, u),
+                    0, dist (v, u, w), 0,
+                    dist (u, w, v), 0, 0));
+    snub_segment (Q [4], W, U, j, h);
+    snub_segment (Q [2], U, V, h, i);
   }
   else {
-    vec3 t = x + y + z;
-    mat4 q = p * m;
-    vec4 T = q * vec4 (t, 1);
-    aspect (q * vec4 (dot (S [0], t) * S [0], 1), T, V, W, S [0], r * h [0]);
-    aspect (q * vec4 (dot (S [4], t) * S [4], 1), T, W, U, S [4], r * h [1]);
-    aspect (q * vec4 (dot (S [2], t) * S [2], 1), T, U, V, S [2], r * h [2]);
+    vec3 T = O + x + y + z;
+    vec4 g = project (T);
+    vec2 t = pdivide (g);
+    aspect (Q [0], T, V, W, g, i, j, t, v, w);
+    aspect (Q [4], T, W, U, g, j, h, t, w, u);
+    aspect (Q [2], T, U, V, g, h, i, t, u, v);
   }
 }

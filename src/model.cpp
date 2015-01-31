@@ -20,9 +20,9 @@ namespace usr {
   static const float density = 100.0f;        // Density of a ball.
 
   // Container characteristics.
-  static const float tank_distance = 120.0f;  // Distancia del ojo a la pantalla.
-  static const float tank_depth = 22.0f;      // Tank depth in simulation units.
-  static const float tank_side = 22.0f;       // Small dimension of front wall of tank.
+  static const float tank_distance = 80.0f;   // Distancia del ojo a la pantalla.
+  static const float tank_depth = 20.0f;      // Tank depth in simulation units.
+  static const float tank_side = 20.0f;       // Small dimension of front wall of tank.
 
   // Parameters for material-colour animation timings.
 
@@ -38,7 +38,7 @@ namespace usr {
 
   //                                             t0     t1     t2     t3     v0     v1
   static const bump_specifier_t hsv_s_bump = { 1.50f, 1.75f, 3.75f, 4.25f, 0.00f, 0.25f, };
-  static const bump_specifier_t hsv_v_bump = { 1.50f, 1.75f, 3.75f, 4.25f, 0.25f, 1.00f, };
+  static const bump_specifier_t hsv_v_bump = { 1.50f, 1.75f, 3.75f, 4.25f, 0.07f, 0.25f, };
 
   // Parameters for morph animation timings.
   static const float morph_start = 1.75f;
@@ -100,9 +100,9 @@ bool model_t::start (int width, int height, const settings_t & settings)
   if (! set_capacity (total_count)) return false;
 
   float scale = 1.0f / small;
-  float tz = usr::tank_distance, td = usr::tank_depth, ts = usr::tank_side;
-  float tw = 0.5f * ts * width * scale;
-  float th = 0.5f * ts * height * scale;
+  float tz = usr::tank_distance, td = usr::tank_depth, ts = 0.5 * usr::tank_side;
+  float tw = ts * width * scale;
+  float th = ts * height * scale;
   ALIGNED16 float view [4] = { -tz, -tz - td, tw, th, };
   set_view (view, width, height, program.uniform_locations);
 
@@ -113,8 +113,6 @@ bool model_t::start (int width, int height, const settings_t & settings)
   float y1 = view [3];
   float x2 = x1 * z2 / z1;
   float y2 = y1 * z2 / z1;
-  // Now push the front wall back a little (avoids visual artifacts on some machines).
-  z1 -= 0.1f;
 
   ALIGNED16 const float temp [6] [2] [4] = {
     { { 0.0f, 0.0f, z1, 0.0f, }, { 0.0f, 0.0f, -1.0f, 0.0f, }, },
@@ -159,7 +157,7 @@ bool model_t::start (int width, int height, const settings_t & settings)
   // every frame, the morph/fade animation time is advanced by the time interval kT, where
   // k is an increasing continuous function of s, and the constant T is the default frame time.
   DWORD s = settings.trackbar_pos [2];
-  float k = s <= 50 ? 0.02f * s : 0.00000016f * (s * s * s * s); // Boost sensitivity in upper range.
+  float k = s <= 50 ? 0.02f * s : 0.00000016f * ((s * s) * (s * s)); // Boost sensitivity in upper range.
   animation_speed_constant = k;
 
   // Initialize bump function object for the lightness and saturation fading animation.
@@ -170,7 +168,7 @@ bool model_t::start (int width, int height, const settings_t & settings)
     DWORD s1 = 100 - s;
     float g = 0.02f * s1;                // Saturation fading decreases linearly.
     float h = 8.0e-6f * (s1 * s1 * s1);  // Lightness fading falls off more rapidly.
-    if (s >= 75) { g = 0; h = 0; }        // No fading at all above 75% speed.
+    if (s >= 75) { g = 0; h = 0; }       // No fading at all above 75% speed.
     s_bump.v0 = g * s_bump.v0 + (1.0f - g) * s_bump.v1;
     v_bump.v0 = h * v_bump.v0 + (1.0f - h) * v_bump.v1;
   }
@@ -190,7 +188,7 @@ bool model_t::start (int width, int height, const settings_t & settings)
 bool model_t::initialize (std::uint64_t seed)
 {
   if (! uniform_buffer.initialize ()) return false;
-  if (! initialize_program (program)) return false;
+  if (! initialize_graphics (program)) return false;
   rng.initialize (seed);
   step.initialize (usr::morph_start, usr::morph_finish);
   initialize_systems (abc, xyz, xyzinvt, primitive_count, vao_ids);
@@ -301,7 +299,7 @@ void model_t::recalculate_locus (unsigned index)
 
 void model_t::draw_next ()
 {
-  // Advance the simulation by one frame.
+  // Advance the animation by one frame.
   const float dt = usr::frame_time * animation_speed_constant;
 
   for (unsigned n = 0; n != count; ++ n) {
@@ -319,36 +317,38 @@ void model_t::draw_next ()
     A.animation_time = t;
   }
 
-  clear ();
-
-  // Both kdtree_t::compute and insertion_sort have undefined behaviour if count is zero.
+  // Advance the simulation.
   if (count) {
     // Do collision detection.
-    kdtree.compute (kdtree_index, x, count);
+    kdtree.compute (kdtree_index, x, count); // undefined behaviour if count == 0.
     kdtree.search (kdtree_index, x, count, walls, max_radius, objects, v, w);
-
-    // Do inertial motion.
-    advance_linear (x, v, count);
-    advance_angular (u, w, count);
-
-    // Draw all the shapes, one uniform buffer at a time, in reverse depth order.
-    // The insertion sort is slow the first time, but faster for subsequent frames
-    // because the index is already almost sorted.
-    insertion_sort (object_order, x, 2, 0, count);
-    unsigned begin = 0, end = (unsigned) uniform_buffer.count ();
-    while (end < count) {
-      draw (begin, end - begin);
-      begin = end;
-      end = begin + (unsigned) uniform_buffer.count ();
-    }
-    draw (begin, count - begin);
   }
+
+  // Do inertial motion.
+  advance_linear (x, v, count);
+  advance_angular (u, w, count);
+
+  // Sort objects into reverse depth order. Insertion sort is slow the
+  // first time, but faster for subsequent frames because the index is
+  // already almost sorted.
+  if (count) {
+    insertion_sort (object_order, x, 2, 0, count); // undefined behaviour if count == 0.
+  }
+
+  clear ();
+
+  // Draw all the shapes, one uniform buffer at a time, in reverse depth order.
+  unsigned begin = 0, end = (unsigned) uniform_buffer.count ();
+  while (end < count) {
+    draw (begin, end - begin);
+    begin = end;
+    end = begin + (unsigned) uniform_buffer.count ();
+  }
+  draw (begin, count - begin);
 }
 
 void model_t::draw (unsigned begin, unsigned count)
 {
-  static const unsigned mod3 [] = { 0, 1, 2, 0, 1, };
-
   // Set the modelview matrix, m.
   compute (reinterpret_cast <char *> (& uniform_buffer [0].m), uniform_buffer.stride (), x, u, & (object_order [begin]), count);
 
@@ -357,9 +357,6 @@ void model_t::draw (unsigned begin, unsigned count)
     unsigned m = object_order [begin + n];
     const object_t & object = objects [m];
     uniform_block_t & block = uniform_buffer [n];
-
-    // Set the circumradius, r.
-    block.r = object.r;
 
     // Snub?
     block.s = object.starting_point == 7 || object.target.point == 7;
@@ -377,49 +374,7 @@ void model_t::draw (unsigned begin, unsigned count)
     v4f s = _mm_moveldup_ps (sc);
     v4f c = _mm_movehdup_ps (sc);
     v4f g = c * load4f (abc [sselect] [object.starting_point]) + s * load4f (e [m]);
-    _mm_stream_ps (block.g, g);
-
-    // Precompute triangle altitudes, h (for non-snubs only).
-    if (object.starting_point != 7 && object.target.point != 7) {
-      const float (& X) [3] [4] = xyz [sselect];
-
-      v4f crs [3];
-      ALIGNED16 float crs_invsq [4];
-      ALIGNED16 float sinsq_A [4];
-
-      for (unsigned i = 0; i != 3; ++ i) {
-        unsigned j = mod3 [i + 1];
-        unsigned k = mod3 [i + 2];
-        crs [i] = cross (load4f (X [j]), load4f (X [k]));
-        crs_invsq [i] = _mm_cvtss_f32 (rcp (dot (crs [i], crs [i])));
-      }
-
-      for (unsigned i = 0; i != 3; ++ i) {
-        unsigned j = mod3 [i + 1];
-        unsigned k = mod3 [i + 2];
-        float vw = _mm_cvtss_f32 (dot (crs [j], crs [k]));
-        sinsq_A [i] = 4.0f - (vw + vw) * (vw + vw) * crs_invsq [j] * crs_invsq [k];
-      }
-
-      ALIGNED16 float usq [4];
-      ALIGNED16 float asq [4];
-      v4f T = tmapply (X, g); // Generator point, T, in spherical triangle X.
-      v4f TX = mapply (X, T); // Inner product of T with each node of X.
-      v4f abc_xyz = g * dot (load4f (X [0]), crs [0]);
-      _mm_store_ps (asq, 1.0f - TX * TX);
-      _mm_store_ps (usq, abc_xyz * abc_xyz * load4f (crs_invsq));
-
-      for (unsigned i = 0; i != 3; ++ i) {
-        unsigned j = mod3 [i + 1];
-        unsigned k = mod3 [i + 2];
-        ALIGNED16 float hsq [4];
-        hsq [0] = asq [i] - usq [j];
-        hsq [1] = asq [i] - usq [k];
-        hsq [2] = sinsq_A [i] * usq [j];
-        hsq [3] = sinsq_A [i] * usq [k];
-        _mm_stream_ps (block.h [i], sqrt (load4f (hsq)));
-      }
-    }
+    _mm_stream_ps (block.g, _mm_set1_ps (object.r) * g);
   }
 
   uniform_buffer.update ();

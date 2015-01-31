@@ -50,7 +50,7 @@ namespace
     case IDR_GEOMETRY_SHADER: std::cout << "Geometry "; break;
     default: ;
     }
-    std::cout << "Shader compilation " << (status ? "succeeded.\n" : "failed.\n");
+    std::cout << "Shader compilation " << (status ? "succeeded." : "failed.") << std::endl;
     PRINT_INFO_LOG (id, glGetShaderiv, glGetShaderInfoLog);
 #endif
     return status ? id : 0;
@@ -118,7 +118,7 @@ void uniform_buffer_t::update ()
   glBufferSubData (GL_UNIFORM_BUFFER, 0, m_size, m_begin);
 }
 
-bool initialize_program (program_t & program)
+bool initialize_graphics (program_t & program)
 {
   glEnable (GL_DEPTH_CLAMP);
   glEnable (GL_CULL_FACE);
@@ -130,31 +130,37 @@ bool initialize_program (program_t & program)
 void set_view (const float (& view) [4], int width, int height, GLuint * uniform_locations)
 {
   glViewport (0, 0, width, height);
-  float z1 = view [0];
-  float z2 = view [1];
-  float x1 = view [2];
-  float y1 = view [3];
-  float zd = z2-z1;
+  float z1 = view [0];  // z coord of screen (front of tank) (a negative number)
+  float z2 = view [1];  // z coord of back of tank (a negative number) (|z2| > |z1|)
+  float x1 = view [2];  // x coord of right edge of screen (and of front-right edge of tank)
+  float y1 = view [3];  // y coord of top edge of screen (and of front-top edge of tank)
+  float zd = z1 - z2;   // tank depth
 
   float projection_matrix [16] = {
-   -z1/x1,    0,       0,           0,
-    0,       -z1/y1,   0,           0,
-    0,        0,      (z1+z2)/zd,  -1,
-    0,        0,     -2*z1*z2/zd,   0,
+   -z1/x1,     0,       0,          0,
+      0,    -z1/y1,     0,          0,
+      0,       0,    -(z1+z2)/zd,  -1,
+      0,       0,     2*z1*z2/zd,   0,
   };
 
   float light_position [] [3] = {
-    { 0.0f, 0.0f, 2 * z1 / 3, },
+    { -0.6f * x1, -0.2f * y1, z1 + y1, },
+    { -0.2f * x1, +0.6f * y1, z1 + x1, },
+    { +0.2f * x1, -0.6f * y1, z1 + y1, },
+    { +0.6f * x1, +0.2f * y1, z1 + x1, },
   };
 
   GLsizei light_count = sizeof light_position / sizeof * light_position;
 
-  float fog_coefficients [] = { z2, -1.0f / zd, };
+  float fog_coefficients [] = { z2, 1.0f / zd, };
 
   // Values in the default uniform block.
   glUniformMatrix4fv (uniform_locations [uniforms::p], 1, GL_FALSE, projection_matrix);
   glUniform3fv (uniform_locations [uniforms::l], light_count, & light_position [0] [0]);
   glUniform1fv (uniform_locations [uniforms::f], 2, fog_coefficients);
+  // The factor of 2 is because normalized device coordinates occupy the interval [-1, 1] which has length 2.
+  glUniform1i (uniform_locations [uniforms::w], GLint (width / 2));
+  glUniform1i (uniform_locations [uniforms::h], GLint (height / 2));
 }
 
 bool program_t::initialize ()
@@ -173,21 +179,25 @@ bool program_t::initialize ()
       glLinkProgram (id);
       glGetProgramiv (id, GL_LINK_STATUS, & status);
 #if PRINT_ENABLED
-      std::cout << "Shader program linking " << (status ? "succeeded.\n" : "failed.\n");
+      std::cout << "Shader program linking " << (status ? "succeeded." : "failed.") << std::endl;
       PRINT_INFO_LOG (id, glGetProgramiv, glGetProgramInfoLog);
 #endif
+      glDetachShader (id, fshader_id);
+      glDetachShader (id, gshader_id);
+      glDetachShader (id, vshader_id);
     }
   }
-  if (vshader_id) glDeleteShader (vshader_id);
-  if (gshader_id) glDeleteShader (gshader_id);
   if (fshader_id) glDeleteShader (fshader_id);
+  if (gshader_id) glDeleteShader (gshader_id);
+  if (vshader_id) glDeleteShader (vshader_id);
 
   if (! status) {
+    //if (id) glDeleteProgram (id);
     return false;
   }
 
   for (unsigned k = 0; k != uniforms::count; ++ k) {
-    const char * names = "p\0l\0f\0";
+    const char * names = "p\0l\0f\0w\0h\0";
     uniform_locations [k] = glGetUniformLocation (id, names + 2 * k);
   }
 

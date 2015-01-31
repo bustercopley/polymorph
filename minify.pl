@@ -13,93 +13,105 @@ open my $out, ">", $outfile or die "Can't open output file \"$outfile\": $!";
 
 binmode $out;
 
-my $buffer = "";
-my $oldtype;
-my $oldvars;
-my $bol = 1;
-
-# Shorten certain identifiers.
 my %abbrevs = (
-  "segment" => "I",  # 4 or 6 arguments
-  "amplify" => "I",  # 1 argument
-  "aspect" => "I",   # 5 arguments
-  "vertex" => "I",   # 2 arguments
-  "color" => "J",    # 1 argument
+  # Fragment shader
+  amplify       => "I",  # () -> float
+  # Geometry shader
+  project       => "I",  # (vec3 x) -> vec4
+  pdivide       => "I",  # (vec4 s) -> vec2
+  raster        => "J",  # (vec3 x) -> vec2
+  perp          => "I",  # (vec2 a, vec2 b) -> vec2
+  dist          => "I",  # (vec2 x, vec2 a, vec2 b) -> float
+  flip          => "I",  # (vec3 A, vec3 U, vec3 V) -> vec2
+  vertex        => "I",  # (vec3 x, vec4 p, vec3 e) -> void
+  triangle      => "I",  # (vec3 A, vec3 B, vec3 C, vec4 x, vec4 y, vec4 z, mat3 e) -> void
+  segment       => "I",  # (vec3 A, vec3 W, vec3 X, vec4 c, vec4 d, vec4 e, vec2 a, vec2 u, vec2 v, vec2 w, vec2 x, vec2 y, vec2 z) -> void
+  snub_segment  => "I",  # (vec3 Q, vec3 U, vec3 V, vec4 y, vec4 z) -> void
+  aspect        => "I",  # (vec3 Q, vec3 T, vec3 V, vec3 W, vec4 h, vec4 i, vec4 j, vec2 t, vec2 v, vec2 w) -> void
 );
 
 %abbrevs = map { qr/\b$_\b/ => $abbrevs {$_} } keys %abbrevs;
 
-while (defined (my $line = <$in>))
+my $limit = 900;
+
+sub minify
 {
-  $line =~ s{^\s+}{};   # trim leading space
-  $line =~ s{//.*$}{};  # strip comment
-  $line =~ s{\s+$}{};   # trim trailing space
-  $line =~ s{\s+}{ };   # squeeze repeated space
-  next if $line eq "";  # skip blank line
+  my ($buffer, $bol) = @_;
 
-  # Coalesce consecutive declarations that share a common type into one declaration.
+  # Abbreviate the specified words.
+  $buffer =~ s/$_/$abbrevs{$_}/g for keys %abbrevs;
 
-  # Print directive on a separate line.
-  if ($line =~ m/^#/)
-  {
+  # Keep space only if it separates two words.
+  $buffer =~ s{\B }{}g; # strip space not after a word
+  $buffer =~ s{ \B}{}g; # strip space not before a word
+  $buffer =~ m{ \B} and die "That didn't do what I expected";
+
+  # Delete unnecessary zeros from floating-point literals.
+  $buffer =~ s{(\d\.\d*)0+\b}{$1}g;
+  $buffer =~ s{\b0\.(\d)}{.$1}g;
+  while ($limit and $buffer ne "") {
+    # Zero or more declarations.
+    # Coalesce consecutive declarations that share a common type into one declaration.
+    my $oldtype;
+    my $oldvars;
+    my $v = qr/\w+(?:\[\w+\])?(?:=[^;]+)?/;
+    while ($limit and $buffer =~ s/^((?:\w+ )+)($v(?:,$v)*);//) {
+      my ($type, $vars) = ($1, $2);
+      -- $limit if $limit;
+      if ((defined $oldtype) && ($type eq $oldtype)) {
+        $oldvars .= ",$vars";
+      }
+      else {
+        if (defined $oldtype) {
+          print $out "$oldtype$oldvars;";
+          $bol = 0;
+        }
+        $oldtype = $type;
+        $oldvars = $vars;
+      }
+    }
     if (defined $oldtype)
     {
       print $out "$oldtype$oldvars;";
       undef $oldtype;
       $bol = 0;
     }
-    print $out "\n" if ! $bol;
+    # A statement that isn't a declaration.
+    if ($buffer =~ s/^([^;{}]*(?:[;{}]+|$))//) {
+      my $statement = $1;
+      print $out $statement;
+      $bol = 0;
+    }
+    -- $limit if $limit;
+  }
+
+  return $bol;
+}
+
+my $buffer = "";
+my $bol = 1;
+while (defined (my $line = <$in>))
+{
+  $line =~ s{^\s+}{};         # trim leading space
+  $line =~ s{//.*$}{};        # strip comment
+  $line =~ s{\s+$}{};         # trim trailing space
+  $line =~ s{\s+}{ };         # squeeze repeated space
+  next if $line eq "";        # skip blank line
+
+  # Print directive on a separate line.
+  if ($line =~ m/^#/)
+  {
+    $bol = minify $buffer, $bol;
+    $buffer = "";
+    print $out "\n" unless $bol;
     print $out "$line\n";
     $bol = 1;
-    next;
   }
   else
   {
-    $line =~ s/$_/$abbrevs{$_}/ for keys %abbrevs;
-
     $buffer = "$buffer $line";
-
-    # Keep space only if it separates two words.
-    $buffer =~ s{\B }{}g; # strip space not after a word
-    $buffer =~ s{ \B}{}g; # strip space not before a word
-
-    # Delete unnecessary zeros from floating-point literals.
-    $buffer =~ s{(\d\.\d*)0+\b}{$1}g;
-    $buffer =~ s{\b0\.(\d)}{.$1}g;
-
-    my $v = qr/\w+(?:\[\w+\])?(?:=[^;]+)?/;
-    while ($buffer =~ m/\G((?:\w+ )+)($v(?:,$v)*);/g)
-    {
-      my $type = $1;
-      my $vars = $2;
-      $buffer = $3;
-
-      if ((defined $oldtype) && ($type eq $oldtype))
-      {
-        $oldvars .= ",$vars";
-      }
-      else
-      {
-        if (defined $oldtype)
-        {
-          print $out "$oldtype$oldvars;";
-          #$bol = 0;  # not needed
-        }
-        $oldtype = $type;
-        $oldvars = $vars;
-      }
-    }
-    if ($buffer ne "")
-    {
-      if (defined $oldtype)
-      {
-        print $out "$oldtype$oldvars;";
-      }
-      undef $oldtype;
-      print $out $buffer;
-      $buffer = "";
-      $bol = 0;
-    }
-    next;
   }
 }
+
+$bol = minify $buffer, $bol;
+#print $out "\n" unless $bol;
