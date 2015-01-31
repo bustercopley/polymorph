@@ -31,6 +31,7 @@ struct model_t
   bool start (int width, int height, const settings_t & settings);
   void draw_next ();
 private:
+  void nodraw_next ();
   bool set_capacity (std::size_t new_capacity);
   void add_object (const float (& view) [4], float temperature);
   void recalculate_locus (unsigned index);

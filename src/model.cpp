@@ -100,7 +100,7 @@ bool model_t::start (int width, int height, const settings_t & settings)
   if (! set_capacity (total_count)) return false;
 
   float scale = 1.0f / small;
-  float tz = usr::tank_distance, td = usr::tank_depth, ts = 0.5 * usr::tank_side;
+  float tz = usr::tank_distance, td = usr::tank_depth, ts = 0.5f * usr::tank_side;
   float tw = ts * width * scale;
   float th = ts * height * scale;
   ALIGNED16 float view [4] = { -tz, -tz - td, tw, th, };
@@ -181,6 +181,9 @@ bool model_t::start (int width, int height, const settings_t & settings)
     v_bump.t1 -= 0.15f;
   }
   bumps.initialize (s_bump, v_bump);
+
+  // Allow the balls to jostle for space.
+  for (unsigned n = 0; n != 60; ++ n) nodraw_next ();
 
   return true;
 }
@@ -297,8 +300,24 @@ void model_t::recalculate_locus (unsigned index)
 #endif
 }
 
+void model_t::nodraw_next ()
+{
+  // Advance the simulation without updating the angular position.
+  if (count) {
+    // Collision detection.
+    kdtree.compute (kdtree_index, x, count); // undefined behaviour if count == 0.
+    kdtree.search (kdtree_index, x, count, walls, max_radius, objects, v, w);
+  }
+
+  advance_linear (x, v, count);
+}
+
 void model_t::draw_next ()
 {
+  // Advance the simulation including the angular position.
+  nodraw_next ();
+  advance_angular (u, w, count);
+
   // Advance the animation by one frame.
   const float dt = usr::frame_time * animation_speed_constant;
 
@@ -316,17 +335,6 @@ void model_t::draw_next ()
     }
     A.animation_time = t;
   }
-
-  // Advance the simulation.
-  if (count) {
-    // Do collision detection.
-    kdtree.compute (kdtree_index, x, count); // undefined behaviour if count == 0.
-    kdtree.search (kdtree_index, x, count, walls, max_radius, objects, v, w);
-  }
-
-  // Do inertial motion.
-  advance_linear (x, v, count);
-  advance_angular (u, w, count);
 
   // Sort objects into reverse depth order. Insertion sort is slow the
   // first time, but faster for subsequent frames because the index is
