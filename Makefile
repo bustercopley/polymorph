@@ -91,7 +91,7 @@ test: all
 debug: all
 	$(PLATFORM_PATH)\gdb --quiet --batch -ex run -ex bt full -ex quit --args $(polymorph_FILENAME)
 
-SHADER_NAMES=vertex-shader.glsl shared-geometry-shader.glsl geometry-shader.glsl snub-geometry-shader.glsl fragment-shader.glsl
+SHADER_NAMES=vertex-shader.glsl geometry-shader.glsl fragment-shader.glsl
 SHADER_DIRECTORY=$($(CONFIG_SHADERS)_SHADER_DIRECTORY)
 SHADER_RESOURCES=$($(CONFIG_SHADERS)_SHADER_RESOURCES)
 RESOURCES=$(SHADER_RESOURCES) src/polymorph.scr.manifest

@@ -104,7 +104,7 @@ bool model_t::start (int width, int height, const settings_t & settings)
   float tw = 0.5f * ts * width * scale;
   float th = 0.5f * ts * height * scale;
   ALIGNED16 float view [4] = { -tz, -tz - td, tw, th, };
-  set_view (programs, view, width, height);
+  set_view (view, width, height, program.uniform_locations);
 
   // Calculate wall planes to exactly fill the front of the viewing frustum.
   float z1 = view [0];
@@ -190,7 +190,7 @@ bool model_t::start (int width, int height, const settings_t & settings)
 bool model_t::initialize (std::uint64_t seed)
 {
   if (! uniform_buffer.initialize ()) return false;
-  if (! initialize_programs (programs)) return false;
+  if (! initialize_program (program)) return false;
   rng.initialize (seed);
   step.initialize (usr::morph_start, usr::morph_finish);
   initialize_systems (abc, xyz, xyzinvt, primitive_count, vao_ids);
@@ -359,7 +359,10 @@ void model_t::draw (unsigned begin, unsigned count)
     uniform_block_t & block = uniform_buffer [n];
 
     // Set the circumradius, r.
-    block.r [0] = object.r;
+    block.r = object.r;
+
+    // Snub?
+    block.s = object.starting_point == 7 || object.target.point == 7;
 
     // Set the diffuse material reflectance, d.
     v4f satval = bumps (object.animation_time);
@@ -425,11 +428,9 @@ void model_t::draw (unsigned begin, unsigned count)
     unsigned m = object_order [begin + n];
     const object_t & object = objects [m];
     system_select_t sselect = object.target.system;
-    unsigned program_select = object.starting_point == 7 || object.target.point == 7 ? 1 : 0;
 
     paint (primitive_count [sselect],
            vao_ids [sselect],
-           programs [program_select],
            uniform_buffer.id (),
            (std::uint32_t) (n * uniform_buffer.stride ()));
   }

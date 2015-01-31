@@ -5,6 +5,9 @@
 #include "glinit.h"
 #include "print.h"
 
+#include <cstddef>
+#include <cstdint>
+
 namespace
 {
 #if PRINT_ENABLED
@@ -20,7 +23,7 @@ namespace
       if (log) {
         glGet__InfoLog (object, log_length, NULL, log);
         log [log_length] = '\0';
-        print (log);
+        if (log [0]) print (log);
         deallocate (log);
       }
     }
@@ -29,30 +32,28 @@ namespace
 #define PRINT_INFO_LOG(a, b, c)
 #endif
 
-  GLuint make_shader (GLenum type, int id1, int id2)
+  GLuint make_shader (GLenum type, int resource_id)
   {
-    const char * text [2];
-    GLint size [2];
-    get_resource_data (id1, text [0], size [0]);
-    get_resource_data (id2, text [1], size [1]);
+    const char * text;
+    GLint size;
+    get_resource_data (resource_id, text, size);
 
     GLint id = glCreateShader (type);
-    glShaderSource (id, 2, text, size);
+    glShaderSource (id, 1, & text, & size);
     glCompileShader (id);
     GLint status = 0;
     glGetShaderiv (id, GL_COMPILE_STATUS, & status);
-    if (! status) {
-      switch (id2 ? id2 : id1) {
-      case IDR_VERTEX_SHADER: print ("Vertex shader compilation failed:"); break;
-      case IDR_FRAGMENT_SHADER: print ("Fragment shader compilation failed:"); break;
-      case IDR_GEOMETRY_SHADER: print ("Default geometry shader compilation failed:"); break;
-      case IDR_SNUB_GEOMETRY_SHADER: print ("Snub geometry shader compilation failed:"); break;
-      default: ;
-      }
-      PRINT_INFO_LOG (id, glGetShaderiv, glGetShaderInfoLog);
-      return 0;
+#if PRINT_ENABLED
+    switch (resource_id) {
+    case IDR_VERTEX_SHADER: std::cout << "Vertex "; break;
+    case IDR_FRAGMENT_SHADER: std::cout << "Fragment "; break;
+    case IDR_GEOMETRY_SHADER: std::cout << "Geometry "; break;
+    default: ;
     }
-    return id;
+    std::cout << "Shader compilation " << (status ? "succeeded.\n" : "failed.\n");
+    PRINT_INFO_LOG (id, glGetShaderiv, glGetShaderInfoLog);
+#endif
+    return status ? id : 0;
   }
 }
 
@@ -117,18 +118,16 @@ void uniform_buffer_t::update ()
   glBufferSubData (GL_UNIFORM_BUFFER, 0, m_size, m_begin);
 }
 
-bool initialize_programs (program_t (& programs) [2])
+bool initialize_program (program_t & program)
 {
   glEnable (GL_DEPTH_CLAMP);
   glEnable (GL_CULL_FACE);
   glEnable (GL_BLEND);
   glBlendFunc (GL_DST_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  return
-    programs [0].initialize (IDR_GEOMETRY_SHADER) &&
-    programs [1].initialize (IDR_SNUB_GEOMETRY_SHADER);
+  return program.initialize ();
 }
 
-void set_view (program_t (& programs) [2], const float (& view) [4], int width, int height)
+void set_view (const float (& view) [4], int width, int height, GLuint * uniform_locations)
 {
   glViewport (0, 0, width, height);
   float z1 = view [0];
@@ -148,25 +147,22 @@ void set_view (program_t (& programs) [2], const float (& view) [4], int width, 
     { 0.0f, 0.0f, 2 * z1 / 3, },
   };
 
+  GLsizei light_count = sizeof light_position / sizeof * light_position;
+
   float fog_coefficients [] = { z2, -1.0f / zd, };
 
-  for (unsigned i = 0; i != 2; ++ i)
-  {
-    program_t p = programs [i];
-    // Values in the default uniform block.
-    glUseProgram (p.id);
-    glUniformMatrix4fv (p.uniform_locations [uniforms::p], 1, GL_FALSE, projection_matrix);
-    glUniform3fv (p.uniform_locations [uniforms::l], 1, & light_position [0] [0]);
-    glUniform1fv (p.uniform_locations [uniforms::f], 2, fog_coefficients);
-  }
+  // Values in the default uniform block.
+  glUniformMatrix4fv (uniform_locations [uniforms::p], 1, GL_FALSE, projection_matrix);
+  glUniform3fv (uniform_locations [uniforms::l], light_count, & light_position [0] [0]);
+  glUniform1fv (uniform_locations [uniforms::f], 2, fog_coefficients);
 }
 
-bool program_t::initialize (unsigned gshader2)
+bool program_t::initialize ()
 {
   GLint status = 0;
-  GLuint vshader_id = make_shader (GL_VERTEX_SHADER, IDR_VERTEX_SHADER, 0);
-  GLuint gshader_id = make_shader (GL_GEOMETRY_SHADER, IDR_SHARED_GEOMETRY_SHADER, gshader2);
-  GLuint fshader_id = make_shader (GL_FRAGMENT_SHADER, IDR_FRAGMENT_SHADER, 0);
+  GLuint vshader_id = make_shader (GL_VERTEX_SHADER, IDR_VERTEX_SHADER);
+  GLuint gshader_id = make_shader (GL_GEOMETRY_SHADER, IDR_GEOMETRY_SHADER);
+  GLuint fshader_id = make_shader (GL_FRAGMENT_SHADER, IDR_FRAGMENT_SHADER);
   if (vshader_id && gshader_id && fshader_id) {
     id = glCreateProgram ();
     if (id) {
@@ -175,12 +171,11 @@ bool program_t::initialize (unsigned gshader2)
       glAttachShader (id, fshader_id);
       glBindAttribLocation (id, attribute_id_x, "x");
       glLinkProgram (id);
-      // Check status.
       glGetProgramiv (id, GL_LINK_STATUS, & status);
-      if (! status) {
-        PRINT_INFO_LOG (id, glGetProgramiv, glGetProgramInfoLog);
-        // Don't bother to delete the program. We're closing down.
-      }
+#if PRINT_ENABLED
+      std::cout << "Shader program linking " << (status ? "succeeded.\n" : "failed.\n");
+      PRINT_INFO_LOG (id, glGetProgramiv, glGetProgramInfoLog);
+#endif
     }
   }
   if (vshader_id) glDeleteShader (vshader_id);
@@ -199,6 +194,7 @@ bool program_t::initialize (unsigned gshader2)
   // Binding for Uniform block "H".
   GLuint uniform_block_index = glGetUniformBlockIndex (id, "H");
   glUniformBlockBinding (id, uniform_block_index, 0);
+  glUseProgram (id);
 
   return true;
 }
@@ -210,12 +206,10 @@ void clear ()
 
 void paint (unsigned N,
             unsigned vao_id,
-            const program_t & program,
-            std::uint32_t uniform_buffer_id,
+            GLuint uniform_buffer_id,
             std::ptrdiff_t uniform_buffer_offset)
 {
   const unsigned size = sizeof (uniform_block_t);
-  glUseProgram (program.id);
   glBindVertexArray (vao_id);
   glBindBufferRange (GL_UNIFORM_BUFFER, 0, uniform_buffer_id, uniform_buffer_offset, size);
   //glCullFace (GL_FRONT);

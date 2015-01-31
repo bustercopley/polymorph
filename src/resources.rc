@@ -9,9 +9,7 @@ END
 IDI_APPICON ICON "polyhedron.ico"
 
 IDR_VERTEX_SHADER RCDATA "vertex-shader.glsl"
-IDR_SHARED_GEOMETRY_SHADER RCDATA "shared-geometry-shader.glsl"
 IDR_GEOMETRY_SHADER RCDATA "geometry-shader.glsl"
-IDR_SNUB_GEOMETRY_SHADER RCDATA "snub-geometry-shader.glsl"
 IDR_FRAGMENT_SHADER RCDATA "fragment-shader.glsl"
 
 #define DLGW 300

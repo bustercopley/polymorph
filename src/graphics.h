@@ -4,7 +4,8 @@
 #define graphics_h
 
 #include <cstddef>
-#include <cstdint>
+#include "mswin.h"
+#include <GL/gl.h>
 
 void clear ();
 
@@ -22,18 +23,19 @@ namespace uniforms
 
 struct program_t
 {
-  std::uint32_t id;
-  std::uint32_t uniform_locations [uniforms::count];
-  bool initialize (unsigned gshader_resource_id);
+  GLuint id;
+  GLuint uniform_locations [uniforms::count];
+  bool initialize ();
 };
 
 struct uniform_block_t
 {
-  float m [4] [4]; // mat4,    modelview matrix
-  float g [4];     // vec4,    uniform coefficients
-  float h [3] [4]; // vec4[3], triangle altitudes
-  float d [4];     // vec4,    diffuse reflectance
-  float r [4];     // float,   circumradius
+  GLfloat m [4] [4];  // mat4,  modelview matrix
+  GLfloat g [4];      // vec4,  uniform coefficients
+  GLfloat h [3] [4];  // vec4,  triangle altitudes
+  GLfloat d [4];      // vec4,  diffuse reflectance
+  GLfloat r;          // float, circumradius
+  GLboolean s;        // bool,  snub?
 };
 
 struct uniform_buffer_t
@@ -41,7 +43,7 @@ struct uniform_buffer_t
   inline uniform_buffer_t () : m_memory (nullptr) { };
   inline std::size_t count () const { return m_size / m_stride; }
   inline std::size_t stride () const { return m_stride; }
-  inline std::uint32_t id () const { return m_id; }
+  inline GLuint id () const { return m_id; }
   inline uniform_block_t & operator [] (std::size_t index) const
   {
     return * ((uniform_block_t *) (m_begin + index * m_stride));
@@ -55,16 +57,15 @@ private:
   void * m_memory;
   char * m_begin;
   std::ptrdiff_t m_stride;
-  std::uint32_t m_id;
+  GLuint m_id;
 };
 
-bool initialize_programs (program_t (& programs) [2]);
-void set_view (program_t (& programs) [2], const float (& view) [4], int width, int height);
+bool initialize_program (program_t & program);
+void set_view (const float (& view) [4], int width, int height, GLuint * uniform_locations);
 
 void paint (unsigned N,
             unsigned vao_id,
-            const program_t & program,
-            std::uint32_t uniform_buffer_id,
+            GLuint uniform_buffer_id,
             std::ptrdiff_t uniform_buffer_offset);
 
 #endif

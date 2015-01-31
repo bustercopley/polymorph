@@ -53,7 +53,7 @@ private:
   float (* w) [4];  // angular velocity
   float (* e) [4];  // locus end
 
-  program_t programs [2];
+  program_t program;
   kdtree_t kdtree;
   rng_t rng;
 
