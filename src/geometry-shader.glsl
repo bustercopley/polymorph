@@ -25,7 +25,6 @@ out noperspective vec3 E;
 
 vec3 O = m [3].xyz;
 
-
 void vertex (vec3 x, vec4 p, vec3 e)
 {
   E = e;
@@ -67,13 +66,6 @@ float dist (vec2 x, vec2 a, vec2 b)
   return dot (perp (a, b), x - b);
 }
 
-vec2 flip (vec3 A, vec3 U, vec3 V)
-{
-  vec3 e = U - A;
-  vec3 v = V - U;
-  return raster (U - v + (2 * dot (v, e) / dot (e, e)) * e);
-}
-
 void segment (vec3 A, vec3 W, vec3 X, vec4 c, vec4 d, vec4 e, vec2 a, vec2 u, vec2 v, vec2 w, vec2 x, vec2 y, vec2 z)
 {
   vec2 k, l;
@@ -95,12 +87,15 @@ void snub_segment (vec3 Q, vec3 U, vec3 V, vec4 y, vec4 z)
 {
   N = Q;
   vec3 C = O + dot (U - O, Q) * Q;
+  vec3 i = U - C;
+  vec3 j = V - C;
   vec4 x = project (C);
+  float d = dot (i, j);
+  vec2 t = raster (C - j + (2 * d / dot (i, i)) * i);
+  vec2 w = raster (C - i + (2 * d / dot (j, j)) * j);
   vec2 c = pdivide (x);
-  vec2 t = flip (C, U, V);
   vec2 u = pdivide (y);
   vec2 v = pdivide (z);
-  vec2 w = flip (C, V, U);
   vec2 k = perp (t, u);
   vec2 l = perp (v, w);
   triangle (C, U, V, x, y, z,
