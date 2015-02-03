@@ -88,6 +88,9 @@ all: $(polymorph_FILENAME)
 test: all
 	$(polymorph_FILENAME)
 
+testx: all
+	$(polymorph_FILENAME) x
+
 debug: all
 	$(PLATFORM_PATH)\gdb --quiet --batch -ex run -ex bt full -ex quit --args $(polymorph_FILENAME)
 
