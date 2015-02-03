@@ -24,6 +24,9 @@ namespace usr {
   static const float tank_depth = 20.0f;      // Tank depth in simulation units.
   static const float tank_side = 20.0f;       // Small dimension of front wall of tank.
 
+  // Miscellaneous shader parameters.
+  static const float line_width = 1.25f;      // Line thickness, in pixels.
+
   // Parameters for material-colour animation timings.
 
   //  r ^                        r = bump (t)
@@ -104,7 +107,7 @@ bool model_t::start (int width, int height, const settings_t & settings)
   float tw = ts * width * scale;
   float th = ts * height * scale;
   ALIGNED16 float view [4] = { -tz, -tz - td, tw, th, };
-  set_view (view, width, height, program.uniform_locations);
+  set_view (view, width, height, usr::line_width, program.uniform_locations);
 
   // Calculate wall planes to exactly fill the front of the viewing frustum.
   float z1 = view [0];

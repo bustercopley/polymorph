@@ -3,7 +3,7 @@
 #version 420
 
 uniform vec3 l [4];
-uniform float f [2];
+uniform vec3 f;
 
 layout (std140) uniform H
 {
@@ -18,12 +18,6 @@ in smooth vec3 X;
 in flat vec3 N;
 out vec4 c;
 
-float amplify ()
-{
-  float d = clamp (1 - min (E [0], min (E [1], E [2])), 0, 1);
-  return 1.33 * (exp2 (-2 * d * d) - .25);
-}
-
 void main ()
 {
   vec3 C = vec3 (0.02);
@@ -32,5 +26,6 @@ void main ()
     float F = max (0, dot (L, N));
     C += d.xyz * F + 0.125 * pow (max (0, dot (L - 2 * F * N, normalize (X))), 32);
   }
-  c = vec4 (amplify () * f [1] * (X [2] - f [0]) * C, d.w);
+  float e = clamp (f.x - min (min (E.x, E.y), E.z), 0, 1);
+  c = vec4 (1.33 * (exp2 (- 2 * e * e) - 0.25) * f.y * (X.z - f.z) * C, d.w);
 }

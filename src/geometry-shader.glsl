@@ -6,8 +6,7 @@ layout (triangles_adjacency) in;
 layout (triangle_strip, max_vertices = 18) out;
 
 uniform mat4 p;
-uniform int w;
-uniform int h;
+uniform vec3 q;
 
 layout (std140) uniform H
 {
@@ -48,7 +47,7 @@ vec4 project (vec3 x)
 
 vec2 pdivide (vec4 s)
 {
-  return vec2 (w * s.x / s.w, h * s.y / s.w);
+  return vec2 (q.x * s.x / s.w, q.y * s.y / s.w);
 }
 
 vec2 raster (vec3 x)
@@ -69,18 +68,12 @@ float dist (vec2 x, vec2 a, vec2 b)
 void segment (vec3 A, vec3 W, vec3 X, vec4 c, vec4 d, vec4 e, vec2 a, vec2 u, vec2 v, vec2 w, vec2 x, vec2 y, vec2 z)
 {
   vec2 k, l;
-  if (dot (w - v, w - v) < 1) {
-    k = perp (u, v);
-    l = perp (y, z);
-  }
-  else {
-    k = perp (v, w);
-    l = perp (x, y);
-  }
+  k = dot (w - v, w - v) < q.z ? perp (u, v) : perp (v, w);
+  l = dot (x - y, x - y) < q.z ? perp (y, z) : perp (x, y);
   triangle (A, W, X, c, d, e,
             mat3 (dot (k, a - v), dist (a, w, x), dot (l, a - y),
-                  0, 0, dot (l, w - y),
-                  dot (k, x - v), 0, 0));
+                  dot (k, w - v), 0, dot (l, w - y),
+                  dot (k, x - v), 0, dot (l, x - y)));
 }
 
 void snub_segment (vec3 Q, vec3 U, vec3 V, vec4 y, vec4 z)

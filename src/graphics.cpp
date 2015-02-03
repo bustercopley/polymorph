@@ -127,7 +127,7 @@ bool initialize_graphics (program_t & program)
   return program.initialize ();
 }
 
-void set_view (const float (& view) [4], int width, int height, GLuint * uniform_locations)
+void set_view (const float (& view) [4], float width, float height, float line_width, GLuint * uniform_locations)
 {
   glViewport (0, 0, width, height);
   float z1 = view [0];  // z coord of screen (front of tank) (a negative number)
@@ -136,31 +136,39 @@ void set_view (const float (& view) [4], int width, int height, GLuint * uniform
   float y1 = view [3];  // y coord of top edge of screen (and of front-top edge of tank)
   float zd = z1 - z2;   // tank depth
 
-  float projection_matrix [16] = {
+  GLfloat projection_matrix [16] = {
    -z1/x1,     0,       0,          0,
       0,    -z1/y1,     0,          0,
       0,       0,    -(z1+z2)/zd,  -1,
       0,       0,     2*z1*z2/zd,   0,
   };
 
-  float light_position [] [3] = {
+  GLfloat light_position [] [3] = {
     { -0.6f * x1, -0.2f * y1, z1 + y1, },
     { -0.2f * x1, +0.6f * y1, z1 + x1, },
     { +0.2f * x1, -0.6f * y1, z1 + y1, },
     { +0.6f * x1, +0.2f * y1, z1 + x1, },
   };
 
-  GLsizei light_count = sizeof light_position / sizeof * light_position;
+  GLfloat geometry_params [3] = {
+    width / 2.0f,             // viewport semiwidth in pixels
+    height / 2.0f,            // viewport semiheight in pixels
+    line_width * line_width,  // squared line width
+  };
 
-  float fog_coefficients [] = { z2, 1.0f / zd, };
+  GLfloat fragment_params [3] = {
+    line_width,  // line width
+    1.0f / zd,   // fog parameter 0
+    z2,          // fog parameter 1
+  };
+
+  GLsizei light_count = sizeof light_position / sizeof * light_position;
 
   // Values in the default uniform block.
   glUniformMatrix4fv (uniform_locations [uniforms::p], 1, GL_FALSE, projection_matrix);
   glUniform3fv (uniform_locations [uniforms::l], light_count, & light_position [0] [0]);
-  glUniform1fv (uniform_locations [uniforms::f], 2, fog_coefficients);
-  // The factor of 2 is because normalized device coordinates occupy the interval [-1, 1] which has length 2.
-  glUniform1i (uniform_locations [uniforms::w], GLint (width / 2));
-  glUniform1i (uniform_locations [uniforms::h], GLint (height / 2));
+  glUniform3fv (uniform_locations [uniforms::q], 1, geometry_params);
+  glUniform3fv (uniform_locations [uniforms::f], 1, fragment_params);
 }
 
 bool program_t::initialize ()
@@ -197,7 +205,7 @@ bool program_t::initialize ()
   }
 
   for (unsigned k = 0; k != uniforms::count; ++ k) {
-    const char * names = "p\0l\0f\0w\0h\0";
+    const char * names = "p\0q\0l\0f\0";
     uniform_locations [k] = glGetUniformLocation (id, names + 2 * k);
   }
 

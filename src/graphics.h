@@ -15,10 +15,9 @@ namespace uniforms
 {
   enum index_t {
     p, // mat4,      projection matrix
+    q, // vec3,      geometry shader parameters
     l, // vec3,      light position
-    f, // float [2], fog coefficients
-    w, // int,       pixel width
-    h, // int,       pixel height
+    f, // vec3,      fragment shader parameters
     count
   };
 }
@@ -61,7 +60,7 @@ private:
 };
 
 bool initialize_graphics (program_t & program);
-void set_view (const float (& view) [4], int width, int height, GLuint * uniform_locations);
+void set_view (const float (& view) [4], float width, float height, float line_width, GLuint * uniform_locations);
 
 void paint (unsigned N,
             unsigned vao_id,
