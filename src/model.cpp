@@ -287,7 +287,7 @@ void model_t::recalculate_locus (unsigned index)
   v4f T0 = tmapply (xyz [sselect], g0);                    // T0: Beginning of locus (unit vector).
   v4f T1 = tmapply (xyz [sselect], g1);                    // T1: End of locus (also a unit vector).
   // Find a unit vector T2 perpendicular to T0 and and an angle s such that T1 = (cos s) T0 + (sin s) T2.
-  v4f d = dot (T0, T1);                                    // d:  Dot product of T0 and T1 (cos s, where s is the arc-length T0-T1).
+  v4f d = dot (T0, T1);                                    // d:  Dot product of T0 and T1 (i.e., cos s, where s is the arc-length T0-T1).
   v4f T2 = normalize (T1 - d * T0);                        // T2: Take the component of T1 perpendicular to T0, then normalize.
   v4f g2 = mapply (xyzinvt [sselect], T2);                 // g2: Coefficents for T2 in terms of xyz.
   // Any point T = (cos t) T0 + (cos t) T2 (where 0 <= t <= s) on the arc T0-T1 has coefficients (cos t) g0 + (sin t) g2.
@@ -370,7 +370,7 @@ void model_t::draw (unsigned begin, unsigned count)
     uniform_block_t & block = uniform_buffer [n];
 
     // Snub?
-    block.s = object.starting_point == 7 || object.target.point == 7;
+    block.s = (GLuint) (object.starting_point == 7 || object.target.point == 7);
 
     // Set the diffuse material reflectance, d.
     v4f satval = bumps (object.animation_time);
