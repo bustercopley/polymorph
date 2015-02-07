@@ -34,7 +34,7 @@ struct uniform_block_t
   GLfloat d [4];      // vec4,  diffuse reflectance
   GLfloat g [4];      // vec4,  uniform coefficients
   GLfloat m [4] [4];  // mat4,  modelview matrix
-  GLboolean s;        // bool,  snub?
+  GLuint s;           // bool,  snub?
 };
 
 struct uniform_buffer_t
