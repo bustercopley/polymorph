@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-#version 420
+#version 430
 
 layout (std140) uniform H
 {

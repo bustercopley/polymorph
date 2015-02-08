@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-#version 420
+#version 430
 
 layout (triangles_adjacency) in;
 layout (triangle_strip, max_vertices = 18) out;
@@ -20,11 +20,11 @@ in vec3 Q [6];
 
 out vec3 X;
 out flat vec3 N;
-out noperspective vec3 E;
+out noperspective float E [5];
 
 vec3 O = m [3].xyz;
 
-void vertex (vec3 x, vec4 p, vec3 e)
+void vertex (vec3 x, vec4 p, float e [5])
 {
   E = e;
   X = x;
@@ -32,11 +32,11 @@ void vertex (vec3 x, vec4 p, vec3 e)
   EmitVertex ();
 }
 
-void triangle (vec3 A, vec3 B, vec3 C, vec4 x, vec4 y, vec4 z, mat3 e)
+void triangle (vec3 A, vec3 B, vec3 C, vec4 x, vec4 y, vec4 z, float e [5], float f [5], float g [5])
 {
-  vertex (A, x, e [0]);
-  vertex (B, y, e [1]);
-  vertex (C, z, e [2]);
+  vertex (A, x, e);
+  vertex (B, y, f);
+  vertex (C, z, g);
   EndPrimitive ();
 }
 
@@ -65,17 +65,6 @@ float dist (vec2 x, vec2 a, vec2 b)
   return dot (perp (a, b), x - b);
 }
 
-void segment (vec3 A, vec3 W, vec3 X, vec4 c, vec4 d, vec4 e, vec2 a, vec2 u, vec2 v, vec2 w, vec2 x, vec2 y, vec2 z)
-{
-  vec2 k, l;
-  k = dot (w - v, w - v) < q.z ? perp (u, v) : perp (v, w);
-  l = dot (x - y, x - y) < q.z ? perp (y, z) : perp (x, y);
-  triangle (A, W, X, c, d, e,
-            mat3 (dot (k, a - v), dist (a, w, x), dot (l, a - y),
-                  dot (k, w - v), 0, dot (l, w - y),
-                  dot (k, x - v), 0, dot (l, x - y)));
-}
-
 void snub_segment (vec3 Q, vec3 U, vec3 V, vec4 y, vec4 z)
 {
   N = Q;
@@ -92,33 +81,46 @@ void snub_segment (vec3 Q, vec3 U, vec3 V, vec4 y, vec4 z)
   vec2 k = perp (t, u);
   vec2 l = perp (v, w);
   triangle (C, U, V, x, y, z,
-            mat3 (dot (k, c - u), dist (c, u, v), dot (l, c - w),
-                  0, 0, dot (l, u - w),
-                  dot (k, v - u), 0, 0));
-  EndPrimitive ();
+            float [5] (dot (k, c - u), dist (c, u, v), dot (l, c - w), 1e9, 1e9),
+            float [5] (0, 0, dot (l, u - w), 1e9, 1e9),
+            float [5] (dot (k, v - u), 0, 0, 1e9, 1e9));
 }
 
-void aspect (vec3 Q, vec3 T, vec3 V, vec3 W, vec4 h, vec4 i, vec4 j, vec2 t, vec2 v, vec2 w)
+void aspect (vec3 Q, vec3 V, vec3 W, vec3 X, vec4 h, vec4 i, vec4 j, vec2 v, vec2 w, vec2 x)
 {
-  vec3 A = O + dot (T - O, Q) * Q;
-  vec3 y = W - A;
-  vec3 z = V - A;
-  vec3 d = T - 2 * A;
-  vec3 e = d + V;
-  vec3 f = d + W;
-  vec3 E = e * (2 / dot (e, e));
-  vec3 F = f * (2 / dot (f, f));
-  vec3 X = dot (e, y) * E - y;
-  vec3 U = dot (f, z) * F - z;
-  vec4 g = project (A);
-  vec2 a = pdivide (g);
-  vec2 x = raster (A + X);
-  vec2 u = raster (A + U);
-  vec2 r = raster (A + dot (e, U) * E - U);
-  vec2 s = raster (A + dot (f, X) * F - X);
   N = Q;
-  segment (A, V, T, g, i, h, a, r, x, v, t, w, u);
-  segment (A, T, W, g, h, j, a, x, v, t, w, u, s);
+  vec3 A = O + dot (W - O, Q) * Q;
+  vec3 k = X - A;
+  vec3 l = V - A;
+  vec3 d = W - 2 * A;
+  vec3 e = d + V;
+  vec3 f = d + X;
+  vec3 E = e *  (2 / dot (e, e));
+  vec3 F = f *  (2 / dot (f, f));
+  vec3 U = dot (e, k) * E - k;
+  vec3 Y = dot (f, l) * F - l;
+
+  vec4 m [6];
+  vec4 g = project (A);
+
+  vec2 a = pdivide (g);
+  vec2 q [7] = { raster (A + dot (e, Y) * E - Y), raster (A + U), v, w, x, raster (A + Y), raster (A + dot (f, U) * F - U) };
+
+  mat4x2 M = mat4x2 (a, v, w, x);
+  for (uint i = 0; i < 6; ++ i) {
+    vec2 c = q [i];
+    vec2 d = q [i + 1] - c;
+    float l = dot (d, d);
+    m [i] = l < 1e-2 ? vec4 (1e9) : inversesqrt (l) * vec2 (-d.y, d.x) * (M - mat4x2 (c, c, c, c));
+  }
+
+  float G [4] [5];
+
+  for (uint j = 0; j < 4; ++ j) for (uint i = 0; i < 5; ++ i) G [j] [i] = m [i] [j];
+  triangle (A, V, W, g, h, i, G [0], G [1], G [2]);
+
+  for (uint j = 0; j < 4; ++ j) G [j] [0] = m [5] [j];
+  triangle (A, W, X, g, i, j, G [0], G [2], G [3]);
 }
 
 void main ()
@@ -145,9 +147,9 @@ void main ()
   if (s) {
     N = normalize (cross (W - U, V - U));
     triangle (W, V, U, j, i, h,
-              mat3 (0, 0, dist (w, v, u),
-                    0, dist (v, u, w), 0,
-                    dist (u, w, v), 0, 0));
+       float [5] (dist (w, v, u), 0, 0, 1e9, 1e9),
+       float [5] (0, dist (v, u, w), 0, 1e9, 1e9),
+       float [5] (0, 0, dist (u, w, v), 1e9, 1e9));
     snub_segment (Q [4], W, U, j, h);
     snub_segment (Q [2], U, V, h, i);
   }
@@ -155,8 +157,8 @@ void main ()
     vec3 T = O + x + y + z;
     vec4 g = project (T);
     vec2 t = pdivide (g);
-    aspect (Q [0], T, V, W, g, i, j, t, v, w);
-    aspect (Q [4], T, W, U, g, j, h, t, w, u);
-    aspect (Q [2], T, U, V, g, h, i, t, u, v);
+    aspect (Q [0], V, T, W, i, g, j, v, t, w);
+    aspect (Q [4], W, T, U, j, g, h, w, t, u);
+    aspect (Q [2], U, T, V, h, g, i, u, t, v);
   }
 }

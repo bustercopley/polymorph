@@ -14,20 +14,16 @@ open my $out, ">", $outfile or die "Can't open output file \"$outfile\": $!";
 binmode $out;
 
 my %abbrevs = (
-  # Fragment shader
-  amplify       => "I",  # () -> float
   # Geometry shader
   project       => "I",  # (vec3 x) -> vec4
   pdivide       => "I",  # (vec4 s) -> vec2
   raster        => "J",  # (vec3 x) -> vec2
   perp          => "I",  # (vec2 a, vec2 b) -> vec2
   dist          => "I",  # (vec2 x, vec2 a, vec2 b) -> float
-  flip          => "I",  # (vec3 A, vec3 U, vec3 V) -> vec2
-  vertex        => "I",  # (vec3 x, vec4 p, vec3 e) -> void
-  triangle      => "I",  # (vec3 A, vec3 B, vec3 C, vec4 x, vec4 y, vec4 z, mat3 e) -> void
-  segment       => "I",  # (vec3 A, vec3 W, vec3 X, vec4 c, vec4 d, vec4 e, vec2 a, vec2 u, vec2 v, vec2 w, vec2 x, vec2 y, vec2 z) -> void
+  vertex        => "I",  # (vec3 x, vec4 p, float e [5]) -> void
+  triangle      => "I",  # (vec3 A, vec3 B, vec3 C, vec4 x, vec4 y, vec4 z, float e [5], float f [5], float g [5]) -> void
   snub_segment  => "I",  # (vec3 Q, vec3 U, vec3 V, vec4 y, vec4 z) -> void
-  aspect        => "I",  # (vec3 Q, vec3 T, vec3 V, vec3 W, vec4 h, vec4 i, vec4 j, vec2 t, vec2 v, vec2 w) -> void
+  aspect        => "I",  # (vec3 Q, vec3 V, vec3 W, vec3 X, vec4 h, vec4 i, vec4 j, vec2 v, vec2 w, vec2 x) -> void
 );
 
 %abbrevs = map { qr/\b$_\b/ => $abbrevs {$_} } keys %abbrevs;

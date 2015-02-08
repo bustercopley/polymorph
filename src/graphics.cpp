@@ -127,9 +127,8 @@ bool initialize_graphics (program_t & program)
   return program.initialize ();
 }
 
-void set_view (const float (& view) [4], float width, float height, float line_width, GLuint * uniform_locations)
+void set_view (const float (& view) [4], float width, float height, float line_scale, float line_adjust, GLuint * uniform_locations)
 {
-  glViewport (0, 0, width, height);
   float z1 = view [0];  // z coord of screen (front of tank) (a negative number)
   float z2 = view [1];  // z coord of back of tank (a negative number) (|z2| > |z1|)
   float x1 = view [2];  // x coord of right edge of screen (and of front-right edge of tank)
@@ -150,25 +149,28 @@ void set_view (const float (& view) [4], float width, float height, float line_w
     { +0.6f * x1, +0.2f * y1, z1 + x1, },
   };
 
-  GLfloat geometry_params [3] = {
-    width / 2.0f,             // viewport semiwidth in pixels
-    height / 2.0f,            // viewport semiheight in pixels
-    line_width * line_width,  // squared line width
-  };
-
-  GLfloat fragment_params [3] = {
-    line_width,  // line width
-    1.0f / zd,   // fog parameter 0
-    z2,          // fog parameter 1
-  };
-
   GLsizei light_count = sizeof light_position / sizeof * light_position;
+
+  GLfloat geometry_params [3] = {
+    width / 2.0f,   // viewport semiwidth in pixels
+    height / 2.0f,  // viewport semiheight in pixels
+    0,              // not used
+  };
+
+  GLfloat fragment_params [4] = {
+    line_adjust,  // line width parameters
+    line_scale,
+    -z2 / zd,     // fog parameters
+    1.0f / zd,
+  };
+
+  glViewport (0, 0, width, height);
 
   // Values in the default uniform block.
   glUniformMatrix4fv (uniform_locations [uniforms::p], 1, GL_FALSE, projection_matrix);
   glUniform3fv (uniform_locations [uniforms::l], light_count, & light_position [0] [0]);
   glUniform3fv (uniform_locations [uniforms::q], 1, geometry_params);
-  glUniform3fv (uniform_locations [uniforms::f], 1, fragment_params);
+  glUniform4fv (uniform_locations [uniforms::f], 1, fragment_params);
 }
 
 bool program_t::initialize ()

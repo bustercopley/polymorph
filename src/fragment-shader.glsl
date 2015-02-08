@@ -1,9 +1,9 @@
 // -*- C++ -*-
 
-#version 420
+#version 430
 
 uniform vec3 l [4];
-uniform vec3 f;
+uniform vec4 f;
 
 layout (std140) uniform H
 {
@@ -13,9 +13,10 @@ layout (std140) uniform H
   bool s;
 };
 
-in noperspective vec3 E;
+in noperspective float E [5];
 in smooth vec3 X;
 in flat vec3 N;
+
 out vec4 c;
 
 void main ()
@@ -26,6 +27,6 @@ void main ()
     float F = max (0, dot (L, N));
     C += d.xyz * F + 0.125 * pow (max (0, dot (L - 2 * F * N, normalize (X))), 32);
   }
-  float e = clamp (f.x - min (min (E.x, E.y), E.z), 0, 1);
-  c = vec4 (1.33 * (exp2 (- 2 * e * e) - 0.25) * f.y * (X.z - f.z) * C, d.w);
+  float e = clamp (f.x + f.y * min (min (min (E [0], E [1]), min (E [2], E [3])), E [4]), 0, 1);
+  c = vec4 (1.33 * (1 - exp2 (-2 * e * e)) * (f.z + f.w * X.z) * C, d.w);
 }
