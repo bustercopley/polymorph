@@ -75,7 +75,7 @@ inline void bounce (unsigned iw, unsigned ix,
     v4f zero = _mm_setzero_ps ();
     if (_mm_comilt_ss (vn, zero)) { // Sphere approaches plane?
       // A comprehensible version is left as an exercise to the reader.
-      // vN is the normal component of v. (The normal is a unit vector).
+      // vN is the normal component of v. (The normal is a unit vector.)
       // vF is the tangential contact velocity, composed of glide and spin.
       v4f vN = vn * normal;
       v4f rn = R * normal;
