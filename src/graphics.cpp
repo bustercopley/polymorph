@@ -127,7 +127,10 @@ bool initialize_graphics (program_t & program)
   return program.initialize ();
 }
 
-void set_view (const float (& view) [4], float width, float height, float line_scale, float line_adjust, GLuint * uniform_locations)
+void set_view (const float (& view) [4],
+               float width, float height,
+               float l0, float l1,
+               GLuint * uniform_locations)
 {
   float z1 = view [0];  // z coord of screen (front of tank) (a negative number)
   float z2 = view [1];  // z coord of back of tank (a negative number) (|z2| > |z1|)
@@ -157,11 +160,18 @@ void set_view (const float (& view) [4], float width, float height, float line_s
     0,              // not used
   };
 
+  float fogn = 1.0f;  // Fog factor at near plane.
+  float fogf = 0.2f;  // Fog factor at far plane.
+  float fogd = fogn - fogf;
+  float fog1 = fogd / zd;
+  float fog0 = fogf - fog1 * z2;
+
+
   GLfloat fragment_params [4] = {
-    line_adjust,  // line width parameters
-    line_scale,
-    -z2 / zd,     // fog parameters
-    1.0f / zd,
+    l0,    // line width parameters
+    l1,
+    fog0,  // fog parameters
+    fog1,
   };
 
   glViewport (0, 0, width, height);

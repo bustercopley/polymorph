@@ -13,20 +13,20 @@
 #include "hsv-to-rgb.h"
 #include "print.h"
 
+#include <algorithm>
+
 namespace usr {
   // Physical parameters.
   static const float min_radius = 1.0f;
   static const float max_radius = 1.0f;
-  static const float density = 100.0f;        // Density of a ball.
+  static const float density = 100.0f;   // Density of a ball.
 
-  // Container characteristics.
-  static const float tank_distance = 120.0f;  // Distancia del ojo a la pantalla.
-  static const float tank_depth = 20.0f;      // Tank depth in simulation units.
-  static const float tank_side = 20.0f;       // Small dimension of front wall of tank.
+  // Pixels per logical distance unit (at front of tank).
+  static const float scale = 50.0f;
 
   // Line thickness parameters.
   static const float line_scale = 1.0f;
-  static const float line_adjust = 0.0f;
+  static const float line_adjust = -0.125f;
 
   // Parameters for material-colour animation timings.
 
@@ -94,21 +94,29 @@ model_t::model_t () : memory (nullptr), capacity (0), count (0) { }
 
 bool model_t::start (int width, int height, const settings_t & settings)
 {
-  int small = width < height ? width : height;
-  int large = width < height ? height : width;
+  float tr = usr::max_radius;
+  float ts = std::min (2 * usr::scale, std::min (width, height) / (4 * tr));
+  float tw = width / ts;
+  float th = height / ts;
+  float td = std::min (tw, th) + 2 * tr;
+  float tz = 4 * std::max (tw, th);    // Distancia del ojo a la pantalla.
+
+  float root_scale = _mm_cvtss_f32 (_mm_sqrt_ss (_mm_set_ss (2 * usr::scale / ts)));
+  float l0 = root_scale * usr::line_adjust;
+  float l1 = root_scale * usr::line_scale;
 
   // Trackbar positions 0, 1, 2 specify 1, 2, 3 objects respectively.
   // subsequently the number of objects increases linearly with position.
   unsigned pos = settings.trackbar_pos [0];
-  unsigned total_count = pos < 2 ? pos + 1 : 3 + 4 * large * (pos - 2) / small;
+  unsigned max_count = std::max (3u, unsigned ((tw / (2 * tr) + 1) *
+                                               (th / (2 * tr) + 1) *
+                                               (td / (2 * tr) + 1)));
+  unsigned total_count = pos < 2 ? pos + 1 : 2 + (max_count - 2) * (pos - 2) / 98;
+
   if (! set_capacity (total_count)) return false;
 
-  float scale = 1.0f / small;
-  float tz = usr::tank_distance, td = usr::tank_depth, ts = 0.5f * usr::tank_side;
-  float tw = ts * width * scale;
-  float th = ts * height * scale;
   ALIGNED16 float view [4] = { -tz, -tz - td, tw, th, };
-  set_view (view, width, height, usr::line_scale, usr::line_adjust, program.uniform_locations);
+  set_view (view, width, height, l0, l1, program.uniform_locations);
 
   // Calculate wall planes to exactly fill the front of the viewing frustum.
   float z1 = view [0];

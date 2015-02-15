@@ -60,7 +60,10 @@ private:
 };
 
 bool initialize_graphics (program_t & program);
-void set_view (const float (& view) [4], float width, float height, float line_scale, float line_adjust, GLuint * uniform_locations);
+void set_view (const float (& view) [4],
+               float width, float height,
+               float l0, float l1,
+               GLuint * uniform_locations);
 
 void paint (unsigned N,
             unsigned vao_id,
