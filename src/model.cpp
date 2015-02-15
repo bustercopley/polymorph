@@ -372,7 +372,7 @@ void model_t::draw (unsigned begin, unsigned count)
   // Set the modelview matrix, m.
   compute (reinterpret_cast <char *> (& uniform_buffer [0].m), uniform_buffer.stride (), x, u, & (object_order [begin]), count);
 
-  const v4f alpha = { 0.0f, 0.0f, 0.0f, 0.95f, };
+  const v4f alpha = { 0.0f, 0.0f, 0.0f, 0.90f, };
   for (unsigned n = 0; n != count; ++ n) {
     unsigned m = object_order [begin + n];
     const object_t & object = objects [m];

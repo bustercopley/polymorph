@@ -242,8 +242,8 @@ void paint (unsigned N,
   const unsigned size = sizeof (uniform_block_t);
   glBindVertexArray (vao_id);
   glBindBufferRange (GL_UNIFORM_BUFFER, 0, uniform_buffer_id, uniform_buffer_offset, size);
-  //glCullFace (GL_FRONT);
-  //glDrawElements (GL_TRIANGLES_ADJACENCY, N * 6, GL_UNSIGNED_INT, nullptr);
+  glCullFace (GL_FRONT);
+  glDrawElements (GL_TRIANGLES_ADJACENCY, N * 6, GL_UNSIGNED_INT, nullptr);
   glCullFace (GL_BACK);
   glDrawElements (GL_TRIANGLES_ADJACENCY, N * 6, GL_UNSIGNED_INT, nullptr);
 }
