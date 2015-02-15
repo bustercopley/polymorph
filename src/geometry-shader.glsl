@@ -106,20 +106,19 @@ void aspect (vec3 Q, vec3 V, vec3 W, vec3 X, vec4 h, vec4 i, vec4 j, vec2 v, vec
   vec2 a = pdivide (g);
   vec2 q [7] = { raster (A + dot (e, Y) * E - Y), raster (A + U), v, w, x, raster (A + Y), raster (A + dot (f, U) * F - U) };
 
-  mat4x2 M = mat4x2 (a, v, w, x);
-  for (uint i = 0; i < 6; ++ i) {
+  for (int i = 0; i < 6; ++ i) {
     vec2 c = q [i];
     vec2 d = q [i + 1] - c;
     float l = dot (d, d);
-    m [i] = l < 1e-2 ? vec4 (1e9) : inversesqrt (l) * vec2 (-d.y, d.x) * (M - mat4x2 (c, c, c, c));
+    m [i] = l < 1e-3 ? vec4 (1e9) : inversesqrt (l) * vec2 (-d.y, d.x) * mat4x2 (a - c, v - c, w - c, x - c);
   }
 
   float G [4] [5];
 
-  for (uint j = 0; j < 4; ++ j) for (uint i = 0; i < 5; ++ i) G [j] [i] = m [i] [j];
+  for (int j = 0; j < 4; ++ j) for (int i = 0; i < 5; ++ i) G [j] [i] = m [i] [j];
   triangle (A, V, W, g, h, i, G [0], G [1], G [2]);
 
-  for (uint j = 0; j < 4; ++ j) G [j] [0] = m [5] [j];
+  for (int j = 0; j < 4; ++ j) G [j] [0] = m [5] [j];
   triangle (A, W, X, g, i, j, G [0], G [2], G [3]);
 }
 
