@@ -127,10 +127,13 @@ bool initialize_graphics (program_t & program)
   return program.initialize ();
 }
 
-void set_view (const float (& view) [4],
-               float width, float height,
-               float l0, float l1,
-               GLuint * uniform_locations)
+void program_t::set_view (const float (& view) [4],
+                          float width, float height,
+                          const float (& background) [3],
+                          const float (& ambient) [3],
+                          const float (& line_color) [3],
+                          float fog_near, float fog_far,
+                          float line_width_extra, float line_sharpness)
 {
   float z1 = view [0];  // z coord of screen (front of tank) (a negative number)
   float z2 = view [1];  // z coord of back of tank (a negative number) (|z2| > |z1|)
@@ -160,27 +163,31 @@ void set_view (const float (& view) [4],
     0,              // not used
   };
 
-  float fogn = 1.0f;  // Fog factor at near plane.
-  float fogf = 0.2f;  // Fog factor at far plane.
+  // Fog is linear in z-distance.
+  float fogn = 1.0f - fog_near;
+  float fogf = 1.0f - fog_far;
   float fogd = fogn - fogf;
   float fog1 = fogd / zd;
   float fog0 = fogf - fog1 * z2;
 
+  float l0 = - 0.5f * line_width_extra * line_sharpness;
+  float l1 = line_sharpness;
 
   GLfloat fragment_params [4] = {
-    l0,    // line width parameters
-    l1,
-    fog0,  // fog parameters
-    fog1,
+    l0, l1, fog0, fog1,
   };
 
   glViewport (0, 0, width, height);
+  glClearColor (background [0], background [1], background [2], 0.0f);
 
   // Values in the default uniform block.
   glUniformMatrix4fv (uniform_locations [uniforms::p], 1, GL_FALSE, projection_matrix);
   glUniform3fv (uniform_locations [uniforms::l], light_count, & light_position [0] [0]);
   glUniform3fv (uniform_locations [uniforms::q], 1, geometry_params);
   glUniform4fv (uniform_locations [uniforms::f], 1, fragment_params);
+  glUniform3fv (uniform_locations [uniforms::a], 1, ambient);
+  glUniform3fv (uniform_locations [uniforms::b], 1, background);
+  glUniform3fv (uniform_locations [uniforms::c], 1, line_color);
 }
 
 bool program_t::initialize ()
@@ -217,7 +224,7 @@ bool program_t::initialize ()
   }
 
   for (unsigned k = 0; k != uniforms::count; ++ k) {
-    const char * names = "p\0q\0l\0f\0";
+    const char * names = UNIFORM_NAME_STRINGS;
     uniform_locations [k] = glGetUniformLocation (id, names + 2 * k);
   }
 

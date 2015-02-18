@@ -14,19 +14,32 @@ unsigned make_vao (unsigned N, const float (* vertices) [4], const unsigned (* i
 namespace uniforms
 {
   enum index_t {
-    p, // mat4,      projection matrix
-    q, // vec3,      geometry shader parameters
-    l, // vec3,      light position
-    f, // vec3,      fragment shader parameters
+    p,  // mat4,  projection matrix
+    q,  // vec3,  geometry shader parameters
+    f,  // vec3,  light position
+    l,  // vec3,  fragment shader parameters
+    a,  // vec3,  ambient reflection
+    b,  // vec3,  background
+    c,  // vec3,  line colour
     count
   };
 }
+
+// Warning: we make use of the fact that the names are all one letter long.
+#define UNIFORM_NAME_STRINGS "p\0" "q\0" "f\0" "l\0" "a\0" "b\0" "c\0";
 
 struct program_t
 {
   GLuint id;
   GLuint uniform_locations [uniforms::count];
   bool initialize ();
+  void set_view (const float (& view) [4],
+                 float width, float height,
+                 const float (& background) [3],
+                 const float (& ambient) [3],
+                 const float (& line_color) [3],
+                 float fog_near, float fog_far,
+                 float line_width_extra, float line_sharpness);
 };
 
 struct uniform_block_t
@@ -60,10 +73,6 @@ private:
 };
 
 bool initialize_graphics (program_t & program);
-void set_view (const float (& view) [4],
-               float width, float height,
-               float l0, float l1,
-               GLuint * uniform_locations);
 
 void paint (unsigned N,
             unsigned vao_id,

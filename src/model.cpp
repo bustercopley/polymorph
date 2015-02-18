@@ -24,9 +24,19 @@ namespace usr {
   // Pixels per logical distance unit (at front of tank).
   static const float scale = 50.0f;
 
-  // Line thickness parameters.
-  static const float line_scale = 1.0f;
-  static const float line_adjust = -0.125f;
+  // Logical time units per frame.
+  static const float frame_time = 1.0f / 60.0f;
+
+  // Graphics parameters.
+  static const float background [3] = { 0.0f, 0.0f, 0.0f, };
+  static const float ambient [3] = { 0.02f, 0.02f, 0.02f, };
+  static const float alpha = 0.90f;      // Alpha of output fragments.
+  static const float fog_near = 0.0f;    // Fog blend factor at near plane.
+  static const float fog_far = 0.8f;     // Fog blend factor at far plane.
+
+  static const float line_color [3] = { 0.0f, 0.0f, 0.0f, };
+  static const float line_width_extra = 0.125f;
+  static const float line_sharpness = 1.0f;
 
   // Parameters for material-colour animation timings.
 
@@ -48,9 +58,6 @@ namespace usr {
   static const float morph_start = 1.75f;
   static const float morph_finish = 3.50f;
   static const float cycle_duration = 4.25f;
-
-  // Simulation speed.
-  static const float frame_time = 1.0f / 60;
 }
 
 #if PRINT_ENABLED
@@ -99,11 +106,7 @@ bool model_t::start (int width, int height, const settings_t & settings)
   float tw = width / ts;
   float th = height / ts;
   float td = std::min (tw, th) + 2 * tr;
-  float tz = 4 * std::max (tw, th);    // Distancia del ojo a la pantalla.
-
-  float root_scale = _mm_cvtss_f32 (_mm_sqrt_ss (_mm_set_ss (2 * usr::scale / ts)));
-  float l0 = root_scale * usr::line_adjust;
-  float l1 = root_scale * usr::line_scale;
+  float tz = 3.0f * std::max (tw, th);    // Distancia del ojo a la pantalla.
 
   // Trackbar positions 0, 1, 2 specify 1, 2, 3 objects respectively.
   // subsequently the number of objects increases linearly with position.
@@ -116,7 +119,19 @@ bool model_t::start (int width, int height, const settings_t & settings)
   if (! set_capacity (total_count)) return false;
 
   ALIGNED16 float view [4] = { -tz, -tz - td, tw, th, };
-  set_view (view, width, height, l0, l1, program.uniform_locations);
+
+  // If the window rect is small relative to the requested object
+  // radius, the actual object radius is reduced (see the definition
+  // of ts above). Scale the line width in proportion, up to a point.
+  // This is to support parented mode on small windows, e.g., in the
+  // Windows screensaver property sheet.
+
+  float scale = 2 * usr::scale / ts;
+
+  program.set_view (view, width, height,
+                    usr::background, usr::ambient, usr::line_color,
+                    usr::fog_near, usr::fog_far,
+                    usr::line_width_extra, std::min (2.0f, scale * usr::line_sharpness));
 
   // Calculate wall planes to exactly fill the front of the viewing frustum.
   float z1 = view [0];
@@ -331,7 +346,7 @@ void model_t::draw_next ()
   advance_angular (u, w, count);
 
   // Advance the animation by one frame.
-  const float dt = usr::frame_time * animation_speed_constant;
+  const float dt = animation_speed_constant * usr::frame_time;
 
   for (unsigned n = 0; n != count; ++ n) {
     object_t & A = objects [n];
@@ -372,7 +387,7 @@ void model_t::draw (unsigned begin, unsigned count)
   // Set the modelview matrix, m.
   compute (reinterpret_cast <char *> (& uniform_buffer [0].m), uniform_buffer.stride (), x, u, & (object_order [begin]), count);
 
-  const v4f alpha = { 0.0f, 0.0f, 0.0f, 0.90f, };
+  const v4f alpha = { 0.0f, 0.0f, 0.0f, usr::alpha, };
   for (unsigned n = 0; n != count; ++ n) {
     unsigned m = object_order [begin + n];
     const object_t & object = objects [m];

@@ -115,10 +115,10 @@ void aspect (vec3 Q, vec3 V, vec3 W, vec3 X, vec4 h, vec4 i, vec4 j, vec2 v, vec
 
   float G [4] [5];
 
-  for (int j = 0; j < 4; ++ j) for (int i = 0; i < 5; ++ i) G [j] [i] = m [i] [j];
+  for (int j = 0; j < 4; ++ j) for (int i = 0; i < 5; ++ i) G [j] [i] = abs (m [i] [j]);
   triangle (A, V, W, g, h, i, G [0], G [1], G [2]);
 
-  for (int j = 0; j < 4; ++ j) G [j] [0] = m [5] [j];
+  for (int j = 0; j < 4; ++ j) G [j] [0] = abs (m [5] [j]);
   triangle (A, W, X, g, i, j, G [0], G [2], G [3]);
 }
 
