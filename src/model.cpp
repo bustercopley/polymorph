@@ -28,14 +28,19 @@ namespace usr {
   static const float frame_time = 1.0f / 60.0f;
 
   // Graphics parameters.
-  static const float background [3] = { 0.0f, 0.0f, 0.0f, };
-  static const float ambient [3] = { 0.02f, 0.02f, 0.02f, };
-  static const float alpha = 0.90f;      // Alpha of output fragments.
-  static const float fog_near = 0.0f;    // Fog blend factor at near plane.
-  static const float fog_far = 0.8f;     // Fog blend factor at far plane.
+  static const float colours [] [4] =
+  {
+    { 0.02f, 0.02f, 0.02f, 0.00f, },   // Ambient reflection (xyz: rgb, w: ignored)
+    { 0.00f, 0.00f, 0.00f, 0.00f, },   // Background colour (xyz: rgb, w: ignored)
+    { 0.00f, 0.00f, 0.00f, 1.00f, },   // Line colour (rgba)
+    { 0.25f, 0.25f, 0.25f, 32.0f, },   // Specular reflection (xyz: rgb, w: exponent)
+  };
 
-  static const float line_color [3] = { 0.0f, 0.0f, 0.0f, };
-  static const float line_width_extra = 0.125f;
+  static const float alpha = 0.95f;    // Alpha of output fragments.
+  static const float fog_near = 0.0f;  // Fog blend factor at near plane.
+  static const float fog_far = 0.8f;   // Fog blend factor at far plane.
+
+  static const float line_width_extra = 0.0f;
   static const float line_sharpness = 1.0f;
 
   // Parameters for material-colour animation timings.
@@ -129,8 +134,7 @@ bool model_t::start (int width, int height, const settings_t & settings)
   float scale = 2 * usr::scale / ts;
 
   program.set_view (view, width, height,
-                    usr::background, usr::ambient, usr::line_color,
-                    usr::fog_near, usr::fog_far,
+                    usr::colours, usr::fog_near, usr::fog_far,
                     usr::line_width_extra, std::min (2.0f, scale * usr::line_sharpness));
 
   // Calculate wall planes to exactly fill the front of the viewing frustum.
@@ -217,7 +221,6 @@ bool model_t::start (int width, int height, const settings_t & settings)
 
 bool model_t::initialize (std::uint64_t seed)
 {
-  if (! uniform_buffer.initialize ()) return false;
   if (! initialize_graphics (program)) return false;
   rng.initialize (seed);
   step.initialize (usr::morph_start, usr::morph_finish);
@@ -373,17 +376,20 @@ void model_t::draw_next ()
   clear ();
 
   // Draw all the shapes, one uniform buffer at a time, in reverse depth order.
-  unsigned begin = 0, end = (unsigned) uniform_buffer.count ();
+  unsigned buffer_count = (unsigned) program.uniform_buffer.count ();
+  unsigned begin = 0, end = buffer_count;
   while (end < count) {
     draw (begin, end - begin);
     begin = end;
-    end = begin + (unsigned) uniform_buffer.count ();
+    end = begin + buffer_count;
   }
   draw (begin, count - begin);
 }
 
 void model_t::draw (unsigned begin, unsigned count)
 {
+  uniform_buffer_t & uniform_buffer = program.uniform_buffer;
+
   // Set the modelview matrix, m.
   compute (reinterpret_cast <char *> (& uniform_buffer [0].m), uniform_buffer.stride (), x, u, & (object_order [begin]), count);
 
@@ -391,7 +397,7 @@ void model_t::draw (unsigned begin, unsigned count)
   for (unsigned n = 0; n != count; ++ n) {
     unsigned m = object_order [begin + n];
     const object_t & object = objects [m];
-    uniform_block_t & block = uniform_buffer [n];
+    object_data_t & block = uniform_buffer [n];
 
     // Snub?
     block.s = (GLuint) (object.starting_point == 7 || object.target.point == 7);

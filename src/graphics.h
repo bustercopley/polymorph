@@ -11,40 +11,9 @@ void clear ();
 
 unsigned make_vao (unsigned N, const float (* vertices) [4], const unsigned (* indices) [6]);
 
-namespace uniforms
+struct object_data_t
 {
-  enum index_t {
-    p,  // mat4,  projection matrix
-    q,  // vec3,  geometry shader parameters
-    f,  // vec3,  light position
-    l,  // vec3,  fragment shader parameters
-    a,  // vec3,  ambient reflection
-    b,  // vec3,  background
-    c,  // vec3,  line colour
-    count
-  };
-}
-
-// Warning: we make use of the fact that the names are all one letter long.
-#define UNIFORM_NAME_STRINGS "p\0" "q\0" "f\0" "l\0" "a\0" "b\0" "c\0";
-
-struct program_t
-{
-  GLuint id;
-  GLuint uniform_locations [uniforms::count];
-  bool initialize ();
-  void set_view (const float (& view) [4],
-                 float width, float height,
-                 const float (& background) [3],
-                 const float (& ambient) [3],
-                 const float (& line_color) [3],
-                 float fog_near, float fog_far,
-                 float line_width_extra, float line_sharpness);
-};
-
-struct uniform_block_t
-{
-  GLfloat d [4];      // vec4,  diffuse reflectance
+  GLfloat d [4];      // vec4,  diffuse reflection
   GLfloat g [4];      // vec4,  uniform coefficients
   GLfloat m [4] [4];  // mat4,  modelview matrix
   GLuint s;           // bool,  snub?
@@ -56,13 +25,14 @@ struct uniform_buffer_t
   inline std::size_t count () const { return m_size / m_stride; }
   inline std::size_t stride () const { return m_stride; }
   inline GLuint id () const { return m_id; }
-  inline uniform_block_t & operator [] (std::size_t index) const
+  inline object_data_t & operator [] (std::size_t index) const
   {
-    return * ((uniform_block_t *) (m_begin + index * m_stride));
+    return * ((object_data_t *) (m_begin + index * m_stride));
   }
 
   ~uniform_buffer_t ();
   bool initialize ();
+  void bind ();
   void update ();
 private:
   std::size_t m_size;
@@ -70,6 +40,18 @@ private:
   char * m_begin;
   std::ptrdiff_t m_stride;
   GLuint m_id;
+};
+
+struct program_t
+{
+  GLuint id;
+  uniform_buffer_t uniform_buffer;
+  bool initialize ();
+  void set_view (const float (& view) [4],
+                 float width, float height,
+                 const float (& colours) [4] [4],
+                 float fog_near, float fog_far,
+                 float line_width_extra, float line_sharpness);
 };
 
 bool initialize_graphics (program_t & program);

@@ -5,8 +5,11 @@
 layout (triangles_adjacency) in;
 layout (triangle_strip, max_vertices = 18) out;
 
-uniform mat4 p;
-uniform vec3 q;
+layout (std140) uniform G
+{
+  mat4 p;
+  vec3 q;
+};
 
 layout (std140) uniform H
 {
@@ -62,7 +65,7 @@ vec2 perp (vec2 a, vec2 b)
 
 float dist (vec2 x, vec2 a, vec2 b)
 {
-  return dot (perp (a, b), x - b);
+  return abs (dot (perp (a, b), x - b));
 }
 
 void snub_segment (vec3 Q, vec3 U, vec3 V, vec4 y, vec4 z)
@@ -81,9 +84,9 @@ void snub_segment (vec3 Q, vec3 U, vec3 V, vec4 y, vec4 z)
   vec2 k = perp (t, u);
   vec2 l = perp (v, w);
   triangle (C, U, V, x, y, z,
-            float [5] (dot (k, c - u), dist (c, u, v), dot (l, c - w), 1e9, 1e9),
-            float [5] (0, 0, dot (l, u - w), 1e9, 1e9),
-            float [5] (dot (k, v - u), 0, 0, 1e9, 1e9));
+            float [5] (abs (dot (k, c - u)), dist (c, u, v), abs (dot (l, c - w)), 1e9, 1e9),
+            float [5] (0, 0, abs (dot (l, u - w)), 1e9, 1e9),
+            float [5] (abs (dot (k, v - u)), 0, 0, 1e9, 1e9));
 }
 
 void aspect (vec3 Q, vec3 V, vec3 W, vec3 X, vec4 h, vec4 i, vec4 j, vec2 v, vec2 w, vec2 x)
@@ -95,8 +98,8 @@ void aspect (vec3 Q, vec3 V, vec3 W, vec3 X, vec4 h, vec4 i, vec4 j, vec2 v, vec
   vec3 d = W - 2 * A;
   vec3 e = d + V;
   vec3 f = d + X;
-  vec3 E = e *  (2 / dot (e, e));
-  vec3 F = f *  (2 / dot (f, f));
+  vec3 E = e * (2 / dot (e, e));
+  vec3 F = f * (2 / dot (f, f));
   vec3 U = dot (e, k) * E - k;
   vec3 Y = dot (f, l) * F - l;
 
@@ -146,9 +149,9 @@ void main ()
   if (s) {
     N = normalize (cross (W - U, V - U));
     triangle (W, V, U, j, i, h,
-       float [5] (dist (w, v, u), 0, 0, 1e9, 1e9),
-       float [5] (0, dist (v, u, w), 0, 1e9, 1e9),
-       float [5] (0, 0, dist (u, w, v), 1e9, 1e9));
+              float [5] (dist (w, v, u), 0, 0, 1e9, 1e9),
+              float [5] (0, dist (v, u, w), 0, 1e9, 1e9),
+              float [5] (0, 0, dist (u, w, v), 1e9, 1e9));
     snub_segment (Q [4], W, U, j, h);
     snub_segment (Q [2], U, V, h, i);
   }

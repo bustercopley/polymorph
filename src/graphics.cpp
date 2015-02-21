@@ -3,10 +3,13 @@
 #include "memory.h"
 #include "resources.h"
 #include "glinit.h"
+#include "vector.h"
 #include "print.h"
 
 #include <cstddef>
 #include <cstdint>
+
+#define OBJECT_UNIFORM_BINDING_INDEX 0
 
 namespace
 {
@@ -87,27 +90,29 @@ namespace
 
 uniform_buffer_t::~uniform_buffer_t ()
 {
+  //glDeleteBuffers (1, & m_id);
   deallocate (m_memory);
 }
 
 bool uniform_buffer_t::initialize ()
 {
-  GLint size, align;
-  glGetIntegerv (GL_MAX_UNIFORM_BLOCK_SIZE, & size);
+  GLint max_size, align;
+  glGetIntegerv (GL_MAX_UNIFORM_BLOCK_SIZE, & max_size);
   glGetIntegerv (GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, & align);
   // Align client-side buffer to at least 64 bytes, to avoid straddling cache lines.
   align = align > 64 ? align : 64;
-
-  m_size = size;
+  m_size = max_size;
   m_memory = allocate_internal (m_size + align);
   if (! m_memory) return false;
   align_up (m_begin, m_memory, align);
-  align_up (m_stride, sizeof (uniform_block_t), align);
-
+  align_up (m_stride, sizeof (object_data_t), align);
   glGenBuffers (1, & m_id);
-  glBindBuffer (GL_UNIFORM_BUFFER, m_id);
-
   return true;
+}
+
+void uniform_buffer_t::bind ()
+{
+  glBindBuffer (GL_UNIFORM_BUFFER, m_id);
 }
 
 void uniform_buffer_t::update ()
@@ -129,39 +134,24 @@ bool initialize_graphics (program_t & program)
 
 void program_t::set_view (const float (& view) [4],
                           float width, float height,
-                          const float (& background) [3],
-                          const float (& ambient) [3],
-                          const float (& line_color) [3],
+                          const float (& colours) [4] [4],
                           float fog_near, float fog_far,
                           float line_width_extra, float line_sharpness)
 {
+  glViewport (0, 0, width, height);
+
+  const float (& ambient) [4] = colours [0];
+  const float (& background) [4] = colours [1];
+  const float (& line_colour) [4] = colours [2];
+  const float (& specular) [4] = colours [3];
+
+  glClearColor (background [0], background [1], background [2], 0.0f);
+
   float z1 = view [0];  // z coord of screen (front of tank) (a negative number)
   float z2 = view [1];  // z coord of back of tank (a negative number) (|z2| > |z1|)
   float x1 = view [2];  // x coord of right edge of screen (and of front-right edge of tank)
   float y1 = view [3];  // y coord of top edge of screen (and of front-top edge of tank)
   float zd = z1 - z2;   // tank depth
-
-  GLfloat projection_matrix [16] = {
-   -z1/x1,     0,       0,          0,
-      0,    -z1/y1,     0,          0,
-      0,       0,    -(z1+z2)/zd,  -1,
-      0,       0,     2*z1*z2/zd,   0,
-  };
-
-  GLfloat light_position [] [3] = {
-    { -0.6f * x1, -0.2f * y1, z1 + y1, },
-    { -0.2f * x1, +0.6f * y1, z1 + x1, },
-    { +0.2f * x1, -0.6f * y1, z1 + y1, },
-    { +0.6f * x1, +0.2f * y1, z1 + x1, },
-  };
-
-  GLsizei light_count = sizeof light_position / sizeof * light_position;
-
-  GLfloat geometry_params [3] = {
-    width / 2.0f,   // viewport semiwidth in pixels
-    height / 2.0f,  // viewport semiheight in pixels
-    0,              // not used
-  };
 
   // Fog is linear in z-distance.
   float fogn = 1.0f - fog_near;
@@ -170,28 +160,107 @@ void program_t::set_view (const float (& view) [4],
   float fog1 = fogd / zd;
   float fog0 = fogf - fog1 * z2;
 
-  float l0 = - 0.5f * line_width_extra * line_sharpness;
-  float l1 = line_sharpness;
+  float line0 = -0.5f * line_width_extra * line_sharpness;
+  float line1 = line_sharpness;
 
-  GLfloat fragment_params [4] = {
-    l0, l1, fog0, fog1,
+  // Data blocks in layout std140.
+
+  struct fragment_data_t
+  {
+    GLfloat l [4] [4];  // vec3 [4],  light positions
+    GLfloat a [4];      // vec3,      ambient reflection (rgb)
+    GLfloat b [4];      // vec3,      background (rgb)
+    GLfloat c [4];      // vec4,      line colour (rgba)
+    GLfloat r [4];      // vec4,      xyz: specular reflection (rgb); w: exponent
+    GLfloat f [4];      // vec4,      coefficients for line width and fog
   };
 
-  glViewport (0, 0, width, height);
-  glClearColor (background [0], background [1], background [2], 0.0f);
+  struct geometry_data_t
+  {
+    GLfloat p [4] [4];  // mat4,      projection matrix
+    GLfloat q [4];      // vec3,      pixel scale of normalized device coordinates
+  };
 
-  // Values in the default uniform block.
-  glUniformMatrix4fv (uniform_locations [uniforms::p], 1, GL_FALSE, projection_matrix);
-  glUniform3fv (uniform_locations [uniforms::l], light_count, & light_position [0] [0]);
-  glUniform3fv (uniform_locations [uniforms::q], 1, geometry_params);
-  glUniform4fv (uniform_locations [uniforms::f], 1, fragment_params);
-  glUniform3fv (uniform_locations [uniforms::a], 1, ambient);
-  glUniform3fv (uniform_locations [uniforms::b], 1, background);
-  glUniform3fv (uniform_locations [uniforms::c], 1, line_color);
+  ALIGNED16 fragment_data_t fragment_data = {
+    {
+      { -0.6f * x1, -0.2f * y1, z1 + y1, 0.0f, },
+      { -0.2f * x1, +0.6f * y1, z1 + x1, 0.0f, },
+      { +0.2f * x1, -0.6f * y1, z1 + y1, 0.0f, },
+      { +0.6f * x1, +0.2f * y1, z1 + x1, 0.0f, },
+    },
+    { 0, 0, 0, 0, },
+    { 0, 0, 0, 0, },
+    { 0, 0, 0, 0, },
+    { 0, 0, 0, 0, },
+    { line0, line1, fog0, fog1, }
+  };
+
+  store4f (fragment_data.a, load4f (ambient));
+  store4f (fragment_data.b, load4f (background));
+  store4f (fragment_data.c, load4f (line_colour));
+  store4f (fragment_data.r, load4f (specular));
+
+  ALIGNED16 geometry_data_t geometry_data = {
+    {
+      { -z1/x1,     0,       0,          0, },
+      {    0,    -z1/y1,     0,          0, },
+      {    0,       0,    -(z1+z2)/zd,  -1, },
+      {    0,       0,     2*z1*z2/zd,   0, },
+    },
+    { width / 2.0f, height / 2.0f, 0, 0, },
+  };
+
+  // Descriptions of the data blocks.
+
+  struct block_descriptor_t
+  {
+    const char * name;
+    GLvoid * data;
+    GLsizeiptr size;
+  };
+
+  block_descriptor_t blocks [] = {
+    { "F", & fragment_data, sizeof fragment_data, },
+    { "G", & geometry_data, sizeof geometry_data, },
+  };
+  GLuint block_count = sizeof blocks / sizeof blocks [0];
+
+  // Create a uniform buffer big enough for all the data blocks.
+
+  GLuint max_block_size = 0;
+  for (std::size_t n = 0; n != block_count; ++ n)
+    if (max_block_size < blocks [n].size)
+      max_block_size = blocks [n].size;
+
+  GLint align;
+  glGetIntegerv (GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, & align);
+
+  GLuint buffer_size, buffer_stride;
+  align_up (buffer_stride, max_block_size, align);
+  buffer_size = block_count * buffer_stride;
+
+  GLuint buf_id;
+  glGenBuffers (1, & buf_id);
+  glBindBuffer (GL_UNIFORM_BUFFER, buf_id);
+  glBufferData (GL_UNIFORM_BUFFER, buffer_size, nullptr, GL_STATIC_DRAW);
+
+  // Copy each data block to a buffer range and bind the range to the named shader uniform block.
+
+  for (std::size_t n = 0; n != block_count; ++ n) {
+    glBufferSubData (GL_UNIFORM_BUFFER, n * buffer_stride, blocks [n].size, blocks [n].data);
+    GLuint block_index = glGetUniformBlockIndex (id, blocks [n].name);
+    GLuint binding_index = n + 1;
+    glUniformBlockBinding (id, block_index, binding_index);
+    glBindBufferRange (GL_UNIFORM_BUFFER, binding_index, buf_id, n * buffer_stride, blocks [n].size);
+  }
+
+  uniform_buffer.bind ();
 }
 
 bool program_t::initialize ()
 {
+  if (! uniform_buffer.initialize ()) return false;
+
   GLint status = 0;
   GLuint vshader_id = make_shader (GL_VERTEX_SHADER, IDR_VERTEX_SHADER);
   GLuint gshader_id = make_shader (GL_GEOMETRY_SHADER, IDR_GEOMETRY_SHADER);
@@ -223,14 +292,9 @@ bool program_t::initialize ()
     return false;
   }
 
-  for (unsigned k = 0; k != uniforms::count; ++ k) {
-    const char * names = UNIFORM_NAME_STRINGS;
-    uniform_locations [k] = glGetUniformLocation (id, names + 2 * k);
-  }
-
   // Binding for Uniform block "H".
-  GLuint uniform_block_index = glGetUniformBlockIndex (id, "H");
-  glUniformBlockBinding (id, uniform_block_index, 0);
+  GLuint object_uniform_block_index = glGetUniformBlockIndex (id, "H");
+  glUniformBlockBinding (id, object_uniform_block_index, OBJECT_UNIFORM_BINDING_INDEX);
   glUseProgram (id);
 
   return true;
@@ -246,9 +310,9 @@ void paint (unsigned N,
             GLuint uniform_buffer_id,
             std::ptrdiff_t uniform_buffer_offset)
 {
-  const unsigned size = sizeof (uniform_block_t);
+  const unsigned block_size = sizeof (object_data_t);
   glBindVertexArray (vao_id);
-  glBindBufferRange (GL_UNIFORM_BUFFER, 0, uniform_buffer_id, uniform_buffer_offset, size);
+  glBindBufferRange (GL_UNIFORM_BUFFER, OBJECT_UNIFORM_BINDING_INDEX, uniform_buffer_id, uniform_buffer_offset, block_size);
   glCullFace (GL_FRONT);
   glDrawElements (GL_TRIANGLES_ADJACENCY, N * 6, GL_UNSIGNED_INT, nullptr);
   glCullFace (GL_BACK);
