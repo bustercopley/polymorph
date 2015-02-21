@@ -128,7 +128,7 @@ bool initialize_graphics (program_t & program)
   glEnable (GL_DEPTH_CLAMP);
   glEnable (GL_CULL_FACE);
   glEnable (GL_BLEND);
-  glBlendFunc (GL_DST_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   return program.initialize ();
 }
 
