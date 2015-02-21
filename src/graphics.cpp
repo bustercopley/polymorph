@@ -227,7 +227,7 @@ void program_t::set_view (const float (& view) [4],
 
   // Create a uniform buffer big enough for all the data blocks.
 
-  GLuint max_block_size = 0;
+  GLsizeiptr max_block_size = 0;
   for (std::size_t n = 0; n != block_count; ++ n)
     if (max_block_size < blocks [n].size)
       max_block_size = blocks [n].size;
