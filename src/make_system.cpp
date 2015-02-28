@@ -3,7 +3,7 @@
 
 // Did I mention that 'make_system' works by magic?
 
-void make_system (unsigned q, unsigned r, const float (& xyz_in) [3] [4], float (* nodes) [4], unsigned (* indices) [6])
+void make_system (unsigned q, unsigned r, const float (& xyz_in) [3] [4], float (* nodes) [4], std::uint8_t (* indices) [6])
 {
   std::uint8_t * P, * Q, * R; // Permutations taking black triangles around nodes.
   std::uint8_t * Qi;          // Inverse of the permutation Q.

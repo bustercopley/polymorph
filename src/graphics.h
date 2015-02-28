@@ -4,12 +4,13 @@
 #define graphics_h
 
 #include <cstddef>
+#include <cstdint>
 #include "mswin.h"
 #include <GL/gl.h>
 
 void clear ();
 
-unsigned make_vao (unsigned N, const float (* vertices) [4], const unsigned (* indices) [6]);
+unsigned make_vao (unsigned N, const float (* vertices) [4], const std::uint8_t (* indices) [6]);
 
 struct object_data_t
 {
