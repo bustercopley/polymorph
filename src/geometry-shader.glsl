@@ -89,6 +89,14 @@ void snub_segment (vec3 Q, vec3 U, vec3 V, vec4 y, vec4 z)
             float [5] (abs (dot (k, v - u)), 0, 0, 1e9, 1e9));
 }
 
+bool nondegenerate (vec2 a, vec2 b, vec2 c)
+{
+  vec2 d = b - a;
+  vec2 e = c - a;
+  float A = d.x * e.y - d.y * e.x;
+  return abs (A) > 0.01;
+}
+
 void aspect (vec3 Q, vec3 V, vec3 W, vec3 X, vec4 h, vec4 i, vec4 j, vec2 v, vec2 w, vec2 x)
 {
   N = Q;
@@ -119,10 +127,12 @@ void aspect (vec3 Q, vec3 V, vec3 W, vec3 X, vec4 h, vec4 i, vec4 j, vec2 v, vec
   float G [4] [5];
 
   for (int j = 0; j < 4; ++ j) for (int i = 0; i < 5; ++ i) G [j] [i] = abs (m [i] [j]);
-  triangle (A, V, W, g, h, i, G [0], G [1], G [2]);
+  if (nondegenerate (a, v, w))
+    triangle (A, V, W, g, h, i, G [0], G [1], G [2]);
 
   for (int j = 0; j < 4; ++ j) G [j] [0] = abs (m [5] [j]);
-  triangle (A, W, X, g, i, j, G [0], G [2], G [3]);
+  if (nondegenerate (a, w, x))
+    triangle (A, W, X, g, i, j, G [0], G [2], G [3]);
 }
 
 void main ()

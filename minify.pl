@@ -22,6 +22,7 @@ my %abbrevs = (
   dist          => "I",  # (vec2 x, vec2 a, vec2 b) -> float
   vertex        => "I",  # (vec3 x, vec4 p, float e [5]) -> void
   triangle      => "I",  # (vec3 A, vec3 B, vec3 C, vec4 x, vec4 y, vec4 z, float e [5], float f [5], float g [5]) -> void
+  nondegenerate => "J",  # (vec2 a, vec2 b, vec2 c) -> bool
   snub_segment  => "I",  # (vec3 Q, vec3 U, vec3 V, vec4 y, vec4 z) -> void
   aspect        => "I",  # (vec3 Q, vec3 V, vec3 W, vec3 X, vec4 h, vec4 i, vec4 j, vec2 v, vec2 w, vec2 x) -> void
 );
