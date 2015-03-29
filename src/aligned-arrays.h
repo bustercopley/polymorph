@@ -9,7 +9,8 @@
 
 // p is a list of N addresses of pointers-to-elements.
 // Allocate memory for a list of N arrays, each of new_length elements.
-// Copy and deallocate the previous arrays if old_length is nonzero.
+// Copy and deallocate the previous arrays if old_length is nonzero
+// (note: the copying functionality is not currently used and is commented out).
 // Store the N pointers-to-first-element in the addresses p.
 // The start of each array is aligned on a 64-byte boundary.
 // The end of each array is padded with unused space to a 64-byte boundary.
