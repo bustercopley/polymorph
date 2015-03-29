@@ -7,8 +7,6 @@
 #include "mswin.h"
 #include <immintrin.h>
 
-// Interface.
-
 typedef __m128 v4f;
 
 #define SHUFFLE(a, b, c, d) ((a) | ((b) << 2) | ((c) << 4) | ((d) << 6))
