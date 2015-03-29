@@ -60,6 +60,7 @@ INT_PTR CALLBACK DialogProc (HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
     LPNMHDR notify = (LPNMHDR) lParam;
     if (notify->idFrom == IDC_SYSLINK && (notify->code == NM_CLICK || notify->code == NM_RETURN)) {
       PNMLINK link_notify = (PNMLINK) lParam;
+      // Since szUrl is an array of WCHAR we must use the Unicode version of ShellExecute.
       ::ShellExecuteW (NULL, L"open", link_notify->item.szUrl, NULL, NULL, SW_SHOW);
     }
     return FALSE;
