@@ -91,6 +91,7 @@ INT_PTR CALLBACK DialogProc (HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
   }
 
   case WM_CTLCOLORSTATIC: case WM_CTLCOLORDLG: {
+    // It would make more sense to use GetDlgCtrlID, but we save a few bytes by not importing that function.
     COLORREF color = (HWND) lParam == ::GetDlgItem (hdlg, IDC_BUTTONS_STATIC) ? COLOR_BTNFACE : COLOR_WINDOW;
     return (INT_PTR) ::GetSysColorBrush (color);
   }
