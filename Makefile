@@ -1,3 +1,4 @@
+SHELL=cmd
 PROGRAMS=polymorph
 PLATFORM=x64
 CONFIG=tiny
