@@ -82,11 +82,14 @@ HGLRC install_rendering_context (HWND hwnd)
   UINT pfcount;
   HDC hdc = ::GetDC (hwnd);
   wglChoosePixelFormatARB (hdc, pf_attribs, NULL, 1, & pf, & pfcount);
-  ::SetPixelFormat (hdc, pf, NULL);
+  if (pfcount == 0 || ! ::SetPixelFormat (hdc, pf, NULL)) return 0;
   HGLRC hglrc = wglCreateContextAttribsARB (hdc, NULL, context_attribs);
-  ::wglMakeCurrent (hdc, hglrc);
+  if (hglrc && ! ::wglMakeCurrent (hdc, hglrc)) {
+    ::wglDeleteContext (hglrc);
+    hglrc = 0;
+  }
   ::ReleaseDC (hwnd, hdc);
 
-  get_glprocs ();
+  if (hglrc) get_glprocs ();
   return hglrc;
 }

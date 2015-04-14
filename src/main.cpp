@@ -7,9 +7,22 @@
 #include "polymorph.h"
 #include "settings.h"
 #include "dialog.h"
+#include "qpc.h"
 #include <tchar.h>
 #include <windowsx.h>
 #include <cstdint>
+
+NOINLINE int message_loop (HWND hdlg)
+{
+  MSG msg;
+  while (::GetMessage (& msg, NULL, 0, 0)) {
+    if (! hdlg || ! ::IsDialogMessage (hdlg, & msg)) {
+      ::TranslateMessage (& msg);
+      ::DispatchMessage (& msg);
+    }
+  }
+  return (int) msg.wParam;
+}
 
 int WINAPI _tWinMain (HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
 {
@@ -26,9 +39,18 @@ int WINAPI _tWinMain (HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
   load_settings (ws.settings);
 
   // Create the screen saver window.
+  // Retry once on failure (works around sporadic SetPixelFormat
+  // failure observed on Intel integrated graphics on Windows 7).
   register_class (hInstance);
-  HWND hwnd = create_window (hInstance, arguments.parent, display_name, & ws);
+  HWND hwnd;
+  for (unsigned retries = 0; retries != 2; ++ retries) {
+    hwnd = create_window (hInstance, arguments.parent, display_name, & ws);
+    // Pump messages and throw away the WM_QUIT.
+    if (! hwnd) message_loop (0);
+  }
+
   if (! hwnd) return 1;
+  if (! ws.model.initialize (qpc ())) return 1;
 
   // Create the configure dialog if in configure mode.
   dialog_struct_t ds = { ws.settings, hwnd, };
@@ -37,15 +59,7 @@ int WINAPI _tWinMain (HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
   // Show the main window, or the configure dialog if in configure mode.
   ::ShowWindow (hdlg ? hdlg : hwnd, SW_SHOW);
 
-  // Enter the main loop.
-  MSG msg;
-  while (::GetMessage (& msg, NULL, 0, 0)) {
-    if (! hdlg || ! ::IsDialogMessage (hdlg, & msg)) {
-      ::TranslateMessage (& msg);
-      ::DispatchMessage (& msg);
-    }
-  }
-  return (int) msg.wParam;
+  return message_loop (hdlg);
 }
 
 #ifdef TINY

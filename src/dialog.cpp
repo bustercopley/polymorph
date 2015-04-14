@@ -34,7 +34,7 @@ INT_PTR CALLBACK DialogProc (HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
         ::SendMessage (hwnd_trackbar, TBM_SETBUDDY, (WPARAM) j, (LPARAM) hwnd_buddy);
       }
     }
-    reposition_window (hdlg);
+    //reposition_window (hdlg);
     // Override the Z order specified by the ownership relationship.
     ::SetWindowPos (hdlg, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOOWNERZORDER);
     return TRUE;

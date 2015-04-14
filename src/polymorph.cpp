@@ -6,7 +6,6 @@
 #include "glinit.h"
 #include "model.h"
 #include "aligned-arrays.h"
-#include "qpc.h"
 #include "print.h"
 
 #define WC_MAIN TEXT ("M")
@@ -21,19 +20,12 @@ ALIGN_STACK LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LP
 
   switch (msg) {
   case WM_CREATE: {
-    result = -1; // Abort window creation.
-
     // Store the window-struct pointer in the window userdata.
     CREATESTRUCT * cs = (CREATESTRUCT *) lParam;
     ws = (window_struct_t *) cs->lpCreateParams;
     ::SetWindowLongPtr (hwnd, GWLP_USERDATA, reinterpret_cast <LONG_PTR> (ws));
-
     ws->hglrc = install_rendering_context (hwnd);
-    if (ws->hglrc) {
-      if (ws->model.initialize (qpc ())) {
-        result = 0; // Allow window creation to continue.
-      }
-    }
+    result = ! ws->hglrc; // Allow window creation to continue if and only if context creation succeed.
     break;
   }
 
@@ -156,7 +148,7 @@ void register_class (HINSTANCE hInstance)
 HWND create_window (HINSTANCE hInstance, HWND parent, LPCTSTR display_name, window_struct_t * ws)
 {
   // Create the main window. See MainWndProc for details.
-  DWORD style = ws->mode == parented ? WS_CHILD : WS_POPUP;
+  DWORD style = (ws->mode == parented ? WS_CHILD : WS_POPUP);
   DWORD ex_style =
     (ws->mode == screensaver || ws->mode == configure ? WS_EX_TOPMOST : 0) |
     (ws->mode == persistent ? WS_EX_APPWINDOW : WS_EX_TOOLWINDOW);
