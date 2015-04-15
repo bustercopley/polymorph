@@ -25,7 +25,7 @@ ALIGN_STACK LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LP
     ws = (window_struct_t *) cs->lpCreateParams;
     ::SetWindowLongPtr (hwnd, GWLP_USERDATA, reinterpret_cast <LONG_PTR> (ws));
     ws->hglrc = install_rendering_context (hwnd);
-    result = ! ws->hglrc; // Allow window creation to continue if and only if context creation succeed.
+    result = ws->hglrc ? 0 : -1; // Allow window creation to continue if and only if context creation succeed.
     break;
   }
 
