@@ -45,8 +45,10 @@ int WINAPI _tWinMain (HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
   HWND hwnd;
   for (unsigned retries = 0; retries != 2; ++ retries) {
     hwnd = create_window (hInstance, arguments.parent, display_name, & ws);
+    if (hwnd) break;
+    // Window creation failed (window will be destroyed).
     // Pump messages and throw away the WM_QUIT.
-    if (! hwnd) message_loop (0);
+    message_loop (0);
   }
 
   if (! hwnd) return 1;
