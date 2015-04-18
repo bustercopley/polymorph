@@ -31,12 +31,13 @@ const int context_attribs [] = {
 };
 
 // Get OpenGL function pointers (call with final OpenGL context current).
-void get_glprocs ()
+bool get_glprocs ()
 {
 #define GLPROC_STRINGIZE(a) #a
-#define DO_GLPROC(type, name) (name = (type) ::wglGetProcAddress (GLPROC_STRINGIZE(name)))
+#define DO_GLPROC(type, name) (name = (type) ::wglGetProcAddress (GLPROC_STRINGIZE(name))); if (! name) return false
 #include "glprocs.inc"
 #undef DO_GLPROC
+  return true;
 }
 
 // Get OpenGL function pointers needed for context creation (call with legacy context current).
@@ -78,18 +79,30 @@ bool glinit (HINSTANCE hInstance)
 HGLRC install_rendering_context (HWND hwnd)
 {
   // Set up OpenGL rendering context.
+  HDC hdc = ::GetDC (hwnd);
+  if (! hdc) return NULL;
+
   int pf;
   UINT pfcount;
-  HDC hdc = ::GetDC (hwnd);
-  wglChoosePixelFormatARB (hdc, pf_attribs, NULL, 1, & pf, & pfcount);
-  if (pfcount == 0 || ! ::SetPixelFormat (hdc, pf, NULL)) return 0;
+  if (! wglChoosePixelFormatARB (hdc, pf_attribs, NULL, 1, & pf, & pfcount) ||
+      ! pfcount ||
+      ! ::SetPixelFormat (hdc, pf, NULL)) {
+    return 0;
+  }
+
   HGLRC hglrc = wglCreateContextAttribsARB (hdc, NULL, context_attribs);
-  if (hglrc && ! ::wglMakeCurrent (hdc, hglrc)) {
+  if (hglrc) {
+    if (::wglMakeCurrent (hdc, hglrc)) {
+      if (get_glprocs ()) {
+        wglSwapIntervalEXT (1);
+        goto skip_cleanup;
+      }
+      ::wglMakeCurrent (NULL, NULL);
+    }
     ::wglDeleteContext (hglrc);
     hglrc = 0;
+skip_cleanup: ;
   }
   ::ReleaseDC (hwnd, hdc);
-
-  if (hglrc) get_glprocs ();
   return hglrc;
 }
