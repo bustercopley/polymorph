@@ -5,17 +5,27 @@ dist: clean-all
 	copy /y Polymorph-x86.scr "g:\www\htdocs\polymorph\Polymorph (x86).scr"
 clean-all: clean
 	$(MAKE) all-platforms-all-configs
-all-platforms-all-configs: x64-all-configs x86-all-configs
-x64-all-configs: $(minified_SHADER_RESOURCES) | .obj/x64
-	$(MAKE) PLATFORM=x64 all-configs
-x86-all-configs: $(minified_SHADER_RESOURCES) | .obj/x86
-	$(MAKE) PLATFORM=x86 all-configs
-all-configs: base tiny
-base:
-	$(MAKE) CONFIG=base all
-tiny:
-	$(MAKE) CONFIG=tiny all
+
+all-platforms-all-configs: $(foreach platform,$(PLATFORMS),$(platform)-all-configs)
+
+define platform-targets
+$(platform)-all-configs: $(foreach config,$(CONFIGS),$(platform)-$(config))
+.PHONY: $(platform)-all-configs
+endef
+
+define config-targets
+all-platforms-$(config): $(foreach platform,$(PLATFORMS),$(platform)-$(config))
+.PHONY: all-platforms-$(config)
+endef
+
+define platform-config-targets
+$(platform)-$(config): $($($(config)_SHADERS)_SHADER_RESOURCES) | .obj/$(platform)
+	$(MAKE) PLATFORM=$(platform) CONFIG=$(config) all
+.PHONY: $(platform)-$(config)
+endef
+
+$(foreach config,$(CONFIGS),$(eval $(config-targets)))
+$(foreach platform,$(PLATFORMS),$(eval $(platform-targets)))
+$(foreach platform,$(PLATFORMS),$(foreach config,$(CONFIGS),$(eval $(platform-config-targets))))
 
 .PHONY: dist clean-all all-platforms-all-configs
-.PHONY: x86-all-configs x64-all-configs
-.PHONY: all-configs all-shaders base tiny
