@@ -22,8 +22,17 @@ INT_PTR CALLBACK DialogProc (HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
     ds = (dialog_struct_t *) lParam;
     ::SetWindowLongPtr (hdlg, DWLP_USER, (LONG_PTR) ds);
     HWND hwnd_message = ::GetDlgItem (hdlg, IDC_MESSAGE);
-    HFONT font = ::CreateFont (16, 0, 0, 0, FW_DONTCARE, TRUE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
-                               CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, VARIABLE_PITCH | FF_ROMAN, TEXT ("Segoe UI"));
+    HFONT font = (HFONT) ::SendMessage (hwnd_message, WM_GETFONT, 0, 0);
+    if (font) {
+      ALIGNED16 LOGFONT logfont;
+      if (::GetObject (font, sizeof logfont, & logfont)) {
+        logfont.lfItalic = 1;
+        font = ::CreateFontIndirect (& logfont); // Never deleted.
+        if (font) {
+          ::SendMessage (hwnd_message, WM_SETFONT, (WPARAM) font, 0);
+        }
+      }
+    }
     ::SendMessage (hwnd_message, WM_SETFONT, (WPARAM) font, 0);
     // The id of trackbar n is IDC_TRACKBARS_START + 4 * n, and its buddies have the two succeeding ids.
     for (unsigned i = 0; i != trackbar_count; ++ i) {
