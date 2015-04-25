@@ -4,6 +4,19 @@
 #include "reposition.h"
 #include <shellapi.h>
 
+inline void italicize_control_font (HWND hwnd)
+{
+  if (HFONT font = (HFONT) ::SendMessage (hwnd, WM_GETFONT, 0, 0)) {
+    ALIGNED16 LOGFONT logfont;
+    if (::GetObject (font, sizeof logfont, & logfont)) {
+      logfont.lfItalic = 1;
+      if (HFONT font = ::CreateFontIndirect (& logfont)) { // Never deleted.
+        ::SendMessage (hwnd, WM_SETFONT, (WPARAM) font, 0);
+      }
+    }
+  }
+}
+
 HWND create_dialog (HINSTANCE hInstance, dialog_struct_t * ds)
 {
   INITCOMMONCONTROLSEX icc = { sizeof (INITCOMMONCONTROLSEX), ICC_BAR_CLASSES | ICC_LINK_CLASS | ICC_STANDARD_CLASSES };
@@ -21,19 +34,11 @@ INT_PTR CALLBACK DialogProc (HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
   case WM_INITDIALOG: {
     ds = (dialog_struct_t *) lParam;
     ::SetWindowLongPtr (hdlg, DWLP_USER, (LONG_PTR) ds);
-    HWND hwnd_message = ::GetDlgItem (hdlg, IDC_MESSAGE);
-    HFONT font = (HFONT) ::SendMessage (hwnd_message, WM_GETFONT, 0, 0);
-    if (font) {
-      ALIGNED16 LOGFONT logfont;
-      if (::GetObject (font, sizeof logfont, & logfont)) {
-        logfont.lfItalic = 1;
-        font = ::CreateFontIndirect (& logfont); // Never deleted.
-        if (font) {
-          ::SendMessage (hwnd_message, WM_SETFONT, (WPARAM) font, 0);
-        }
-      }
-    }
-    ::SendMessage (hwnd_message, WM_SETFONT, (WPARAM) font, 0);
+
+    // Optional extras.
+    if (REPOSITION_DIALOG_ENABLED) reposition_window (hdlg);
+    if (ITALICIZE_MESSAGE_FONT_ENABLED) italicize_control_font (::GetDlgItem (hdlg, IDC_MESSAGE));
+
     // The id of trackbar n is IDC_TRACKBARS_START + 4 * n, and its buddies have the two succeeding ids.
     for (unsigned i = 0; i != trackbar_count; ++ i) {
       HWND hwnd_trackbar = ::GetDlgItem (hdlg, IDC_TRACKBARS_START + 4 * i);
@@ -43,7 +48,6 @@ INT_PTR CALLBACK DialogProc (HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
         ::SendMessage (hwnd_trackbar, TBM_SETBUDDY, (WPARAM) j, (LPARAM) hwnd_buddy);
       }
     }
-    //reposition_window (hdlg);
     // Override the Z order specified by the ownership relationship.
     ::SetWindowPos (hdlg, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOOWNERZORDER);
     return TRUE;
@@ -75,6 +79,7 @@ INT_PTR CALLBACK DialogProc (HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
     return FALSE;
   }
 
+#if OWNER_DRAWN_TRACKBAR_BUDDIES_ENABLED
   case WM_DRAWITEM: {
     // Draw trackbar buddy labels with baseline aligned to the bottom of the channel.
     DRAWITEMSTRUCT * drawitem = (DRAWITEMSTRUCT *) lParam;
@@ -88,7 +93,7 @@ INT_PTR CALLBACK DialogProc (HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
     ::GetWindowRect (hwnd_trackbar, & trackbar_rect);
     ::GetWindowRect (hwnd_buddy, & buddy_rect);
     ::SendMessage (hwnd_trackbar, TBM_GETCHANNELRECT, 0, (LPARAM) & channel_rect);
-    int x = (buddy_side ? buddy_rect.right : buddy_rect.left) - buddy_rect.left;
+    int x = buddy_side ? buddy_rect.right - buddy_rect.left : 0;
     int y = trackbar_rect.top + channel_rect.bottom - buddy_rect.top;
     // Retrieve the buddy's text.
     const WPARAM buffer_size = 64;
@@ -99,6 +104,7 @@ INT_PTR CALLBACK DialogProc (HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
     ::ExtTextOut (drawitem->hDC, x, y, 0, NULL, buffer, length, NULL);
     return TRUE;
   }
+#endif
 
   case WM_CTLCOLORSTATIC: case WM_CTLCOLORDLG: {
     // It would make more sense to use GetDlgCtrlID, but we save a few bytes by not importing that function.

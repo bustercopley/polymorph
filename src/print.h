@@ -7,6 +7,11 @@
 
 #if defined (ENABLE_PRINT) && ! defined (TINY)
 #define PRINT_ENABLED 1
+#else
+#define PRINT_ENABLED 0
+#endif
+
+#if PRINT_ENABLED
 #include <cstdlib>
 #include <iostream>
 #include <iomanip>
@@ -66,7 +71,6 @@ inline void pexit ()
 #define pprint(term) print (pp_stringize1 (term), (term))
 
 #else
-#define PRINT_ENABLED 0
 template <typename T, unsigned N> inline void print (const char *, T (&) [N]) { }
 template <typename T> inline void print (const char *, T) { }
 inline void print (const char *) { }

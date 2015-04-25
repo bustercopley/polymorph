@@ -3,6 +3,7 @@
 #ifndef resource_h
 #define resource_h
 
+#include "dialog.h"
 #include "mswin.h"
 
 #define x64_tiny_APPNAME "Polymorph"
@@ -14,7 +15,7 @@
 
 #define APPNAME_CONC0(a,b) a ## b
 #define APPNAME_CONC(a,b) APPNAME_CONC0(a,b)
-#define APPNAME APPNAME_CONC(PLATFORM_CONFIG, _APPNAME)
+#define APPNAME APPNAME_CONC (PLATFORM_CONFIG, _APPNAME)
 
 #define IDI_APPICON 1
 

@@ -108,7 +108,7 @@ $(foreach shaders,full minified,$(eval $(shaders)_SHADER_RESOURCES=$(foreach nam
 $(minified_SHADER_DIRECTORY)/%.glsl: src/%.glsl minify.pl | $(minified_SHADER_DIRECTORY)
 	c:\strawberry\perl\bin\perl minify.pl "$<" "$@"
 
-.obj/$(PLATFORM)/$(CONFIG)/resources-res.o: $(RESOURCES) src/resources.h
+.obj/$(PLATFORM)/$(CONFIG)/resources-res.o: $(RESOURCES) src/resources.h src/mswin.h src/dialog.h
 
 .obj: ; -md .obj
 .obj/minified: | .obj ; -md .obj\minified
