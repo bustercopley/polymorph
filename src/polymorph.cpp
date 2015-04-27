@@ -16,7 +16,7 @@ ALIGN_STACK LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LP
   bool call_def_window_proc = false, close_window = false;
 
   // Retrieve the window-struct pointer from the window userdata.
-  window_struct_t * ws = reinterpret_cast <window_struct_t *> (::GetWindowLongPtr (hwnd, GWLP_USERDATA));
+  window_struct_t * ws = (window_struct_t *) ::GetWindowLongPtr (hwnd, GWLP_USERDATA);
 
   switch (msg) {
   case WM_CREATE: {
@@ -35,7 +35,8 @@ ALIGN_STACK LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LP
   case WM_WINDOWPOSCHANGING: {
     WINDOWPOS * windowpos = (WINDOWPOS *) lParam;
     if (windowpos->flags & SWP_SHOWWINDOW) {
-      if (ws->mode == parented) {
+      windowpos->flags &= ~ (SWP_NOSIZE | SWP_NOMOVE);
+      if (ws->arguments.mode == parented) {
         RECT rect;
         ::GetClientRect (::GetParent (hwnd), & rect);
         windowpos->cx = rect.right;
@@ -47,7 +48,6 @@ ALIGN_STACK LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LP
         windowpos->cx = ::GetSystemMetrics (SM_CXVIRTUALSCREEN);
         windowpos->cy = ::GetSystemMetrics (SM_CYVIRTUALSCREEN);
       }
-      windowpos->flags &= ~ (SWP_NOSIZE | SWP_NOMOVE);
     }
     break;
   }
@@ -79,11 +79,11 @@ ALIGN_STACK LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LP
   }
 
   case WM_SETCURSOR:
-    ::SetCursor (ws->mode == screensaver || ws->mode == configure ? NULL : ::LoadCursor (NULL, IDC_ARROW));
+    ::SetCursor (ws->arguments.mode == screensaver || ws->arguments.mode == configure ? NULL : ::LoadCursor (NULL, IDC_ARROW));
     break;
 
   case WM_MOUSEMOVE:
-    if (ws->mode == screensaver || ws->mode == configure) {
+    if (ws->arguments.mode == screensaver || ws->arguments.mode == configure) {
       // Compare the current mouse position with the one stored in the window struct.
       DWORD pos = ::GetMessagePos ();
       int dx = GET_X_LPARAM (pos) - ws->initial_cursor_position.x;
@@ -93,20 +93,20 @@ ALIGN_STACK LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LP
     break;
 
   case WM_KEYDOWN: case WM_LBUTTONDOWN: case WM_MBUTTONDOWN: case WM_RBUTTONDOWN:
-    close_window = ws->mode != parented;
+    close_window = ws->arguments.mode != parented;
     break;
 
   case WM_ACTIVATE: case WM_ACTIVATEAPP: case WM_NCACTIVATE:
-    close_window = (ws->mode == screensaver || ws->mode == configure) && LOWORD (wParam) == WA_INACTIVE;
+    close_window = (ws->arguments.mode == screensaver || ws->arguments.mode == configure) && LOWORD (wParam) == WA_INACTIVE;
     call_def_window_proc = true;
     break;
 
   case WM_SYSCOMMAND:
-    call_def_window_proc = ! ((ws->mode == screensaver || ws->mode == configure) && wParam == SC_SCREENSAVE);
+    call_def_window_proc = ! ((ws->arguments.mode == screensaver || ws->arguments.mode == configure) && wParam == SC_SCREENSAVE);
     break;
 
   case WM_CLOSE:
-    if (ws->mode == configure) {
+    if (ws->arguments.mode == configure) {
       if (::GetWindowLongPtr (hwnd, GWL_STYLE) & WS_VISIBLE) {
         // Workaround for bug observed on Windows 8.1 where hiding
         // a full-monitor OpenGL window does not remove it from the display:
@@ -151,10 +151,10 @@ void register_class (HINSTANCE hInstance)
 HWND create_window (HINSTANCE hInstance, HWND parent, LPCTSTR display_name, window_struct_t * ws)
 {
   // Create the main window. See MainWndProc for details.
-  DWORD style = (ws->mode == parented ? WS_CHILD : WS_POPUP);
+  DWORD style = (ws->arguments.mode == parented ? WS_CHILD : WS_POPUP);
   DWORD ex_style =
-    (ws->mode == screensaver || ws->mode == configure ? WS_EX_TOPMOST : 0) |
-    (ws->mode == persistent ? WS_EX_APPWINDOW : WS_EX_TOOLWINDOW);
+    (ws->arguments.mode == screensaver || ws->arguments.mode == configure ? WS_EX_TOPMOST : 0) |
+    (ws->arguments.mode == persistent ? WS_EX_APPWINDOW : WS_EX_TOOLWINDOW);
   return ::CreateWindowEx (ex_style, WC_MAIN, display_name, style,
                            0, 0, 0, 0,
                            parent, NULL, hInstance, ws);

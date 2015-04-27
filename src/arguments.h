@@ -12,9 +12,10 @@ enum run_mode_t
 
 struct arguments_t
 {
-  arguments_t (const TCHAR * s);
   run_mode_t mode;
-  HWND parent;
+  UINT_PTR numeric_arg;
 };
+
+void get_arguments (const TCHAR * s, arguments_t & args);
 
 #endif

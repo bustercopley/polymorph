@@ -4,15 +4,15 @@
 #define polymorph_h
 
 #include "mswin.h"
-#include "arguments.h"
 #include "model.h"
+#include "arguments.h"
 #include "settings.h"
 
 struct window_struct_t
 {
   model_t model;
+  arguments_t arguments;
   settings_t settings;
-  run_mode_t mode;
   POINT initial_cursor_position;
   HGLRC hglrc;
 };

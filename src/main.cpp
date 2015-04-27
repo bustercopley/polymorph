@@ -33,9 +33,7 @@ int WINAPI _tWinMain (HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
 
   ALIGNED16 window_struct_t ws;
 
-  arguments_t arguments (::GetCommandLine ());
-  ws.mode = arguments.mode;
-
+  get_arguments (::GetCommandLine (), ws.arguments);
   load_settings (ws.settings);
 
   // Create the screen saver window.
@@ -44,7 +42,8 @@ int WINAPI _tWinMain (HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
   register_class (hInstance);
   HWND hwnd;
   for (unsigned retries = 0; retries != 2; ++ retries) {
-    hwnd = create_window (hInstance, arguments.parent, display_name, & ws);
+    HWND parent = ws.arguments.mode == parented ? (HWND) ws.arguments.numeric_arg : NULL;
+    hwnd = create_window (hInstance, parent, display_name, & ws);
     if (hwnd) break;
     // Window creation failed (window will be destroyed).
     // Pump messages and throw away the WM_QUIT.
@@ -56,7 +55,7 @@ int WINAPI _tWinMain (HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
 
   // Create the configure dialog if in configure mode.
   dialog_struct_t ds = { ws.settings, hwnd, };
-  HWND hdlg = arguments.mode == configure ? create_dialog (hInstance, & ds) : NULL;
+  HWND hdlg = ws.arguments.mode == configure ? create_dialog (hInstance, & ds) : NULL;
 
   // Show the main window, or the configure dialog if in configure mode.
   // We use SetWindowPos because on Windows XP when the main window is
