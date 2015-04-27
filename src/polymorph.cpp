@@ -12,31 +12,37 @@
 
 ALIGN_STACK LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-  LRESULT result = 0;
-  bool call_def_window_proc = false, close_window = false;
-
   // Retrieve the window-struct pointer from the window userdata.
   window_struct_t * ws = (window_struct_t *) ::GetWindowLongPtr (hwnd, GWLP_USERDATA);
 
-  switch (msg) {
-  case WM_CREATE: {
-    // Store the window-struct pointer in the window userdata.
-    CREATESTRUCT * cs = (CREATESTRUCT *) lParam;
-    ws = (window_struct_t *) cs->lpCreateParams;
-    ::SetWindowLongPtr (hwnd, GWLP_USERDATA, reinterpret_cast <LONG_PTR> (ws));
-    ws->hglrc = 0;
-    if (HDC hdc = ::GetDC (hwnd)) {
-      ws->hglrc = install_rendering_context (hdc);
+  if (! ws) {
+    if (msg == WM_CREATE) {
+      // Store the window-struct pointer in the window userdata.
+      CREATESTRUCT * cs = (CREATESTRUCT *) lParam;
+      ws = (window_struct_t *) cs->lpCreateParams;
+      ::SetWindowLongPtr (hwnd, GWLP_USERDATA, reinterpret_cast <LONG_PTR> (ws));
+      ws->hglrc = 0;
+      if (HDC hdc = ::GetDC (hwnd)) {
+        ws->hglrc = install_rendering_context (hdc);
+      }
+      return ws->hglrc ? 0 : -1; // Allow window creation to continue if and only if context creation succeeded.
     }
-    result = ws->hglrc ? 0 : -1; // Allow window creation to continue if and only if context creation succeeded.
-    break;
+    else {
+      return ::DefWindowProc (hwnd, msg, wParam, lParam);
+    }
   }
 
+  LRESULT result = 0;
+  bool call_def_window_proc = false;
+  bool close_window = false;
+  run_mode_t mode = ws->arguments.mode;
+
+  switch (msg) {
   case WM_WINDOWPOSCHANGING: {
     WINDOWPOS * windowpos = (WINDOWPOS *) lParam;
     if (windowpos->flags & SWP_SHOWWINDOW) {
       windowpos->flags &= ~ (SWP_NOSIZE | SWP_NOMOVE);
-      if (ws->arguments.mode == parented) {
+      if (mode == parented) {
         RECT rect;
         ::GetClientRect (::GetParent (hwnd), & rect);
         windowpos->cx = rect.right;
@@ -79,11 +85,11 @@ ALIGN_STACK LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LP
   }
 
   case WM_SETCURSOR:
-    ::SetCursor (ws->arguments.mode == screensaver || ws->arguments.mode == configure ? NULL : ::LoadCursor (NULL, IDC_ARROW));
+    ::SetCursor (mode == screensaver || mode == configure ? NULL : ::LoadCursor (NULL, IDC_ARROW));
     break;
 
   case WM_MOUSEMOVE:
-    if (ws->arguments.mode == screensaver || ws->arguments.mode == configure) {
+    if (mode == screensaver || mode == configure) {
       // Compare the current mouse position with the one stored in the window struct.
       DWORD pos = ::GetMessagePos ();
       int dx = GET_X_LPARAM (pos) - ws->initial_cursor_position.x;
@@ -93,20 +99,20 @@ ALIGN_STACK LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LP
     break;
 
   case WM_KEYDOWN: case WM_LBUTTONDOWN: case WM_MBUTTONDOWN: case WM_RBUTTONDOWN:
-    close_window = ws->arguments.mode != parented;
+    close_window = mode != parented;
     break;
 
   case WM_ACTIVATE: case WM_ACTIVATEAPP: case WM_NCACTIVATE:
-    close_window = (ws->arguments.mode == screensaver || ws->arguments.mode == configure) && LOWORD (wParam) == WA_INACTIVE;
+    close_window = (mode == screensaver || mode == configure) && LOWORD (wParam) == WA_INACTIVE;
     call_def_window_proc = true;
     break;
 
   case WM_SYSCOMMAND:
-    call_def_window_proc = ! ((ws->arguments.mode == screensaver || ws->arguments.mode == configure) && wParam == SC_SCREENSAVE);
+    call_def_window_proc = ! ((mode == screensaver || mode == configure) && wParam == SC_SCREENSAVE);
     break;
 
   case WM_CLOSE:
-    if (ws->arguments.mode == configure) {
+    if (mode == configure) {
       if (::GetWindowLongPtr (hwnd, GWL_STYLE) & WS_VISIBLE) {
         // Workaround for bug observed on Windows 8.1 where hiding
         // a full-monitor OpenGL window does not remove it from the display:
