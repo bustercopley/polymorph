@@ -76,18 +76,15 @@ bool glinit (HINSTANCE hInstance)
   return wglChoosePixelFormatARB && wglCreateContextAttribsARB;
 }
 
-HGLRC install_rendering_context (HWND hwnd)
+HGLRC install_rendering_context (HDC hdc)
 {
   // Set up OpenGL rendering context.
-  HDC hdc = ::GetDC (hwnd);
-  if (! hdc) return NULL;
-
   int pf;
   UINT pfcount;
   if (! wglChoosePixelFormatARB (hdc, pf_attribs, NULL, 1, & pf, & pfcount) ||
       ! pfcount ||
       ! ::SetPixelFormat (hdc, pf, NULL)) {
-    return 0;
+    return NULL;
   }
 
   HGLRC hglrc = wglCreateContextAttribsARB (hdc, NULL, context_attribs);
@@ -95,14 +92,13 @@ HGLRC install_rendering_context (HWND hwnd)
     if (::wglMakeCurrent (hdc, hglrc)) {
       if (get_glprocs ()) {
         wglSwapIntervalEXT (1);
-        goto skip_cleanup;
+        return hglrc;
       }
       ::wglMakeCurrent (NULL, NULL);
     }
     ::wglDeleteContext (hglrc);
     hglrc = 0;
-skip_cleanup: ;
   }
-  ::ReleaseDC (hwnd, hdc);
-  return hglrc;
+
+  return NULL;
 }

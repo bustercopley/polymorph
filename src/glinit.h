@@ -14,6 +14,6 @@
 #undef DO_GLPROC
 
 bool glinit (HINSTANCE hInstance);
-HGLRC install_rendering_context (HWND hwnd);
+HGLRC install_rendering_context (HDC hdc);
 
 #endif
