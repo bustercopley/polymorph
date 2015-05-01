@@ -58,7 +58,7 @@ int WINAPI _tWinMain (HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
   HWND hdlg = ws.arguments.mode == configure ? create_dialog (hInstance, & ds) : NULL;
 
   // Show the main window, or the configure dialog if in configure mode.
-  // We use SetWindowPos because on Windows XP when the main window is
+  // We use SetWindowPos because on Windows 7 when the main window is
   // shown as a child of the screensaver control-panel applet windows,
   // the WM_WINDOWPOSCHANGING doesn't arrive if we use ShowWindow.
   ::SetWindowPos (hdlg ? hdlg : hwnd, NULL, 0, 0, 0, 0,
