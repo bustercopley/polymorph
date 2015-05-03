@@ -3,7 +3,6 @@
 #ifndef resource_h
 #define resource_h
 
-#include "dialog.h"
 #include "mswin.h"
 
 #define x64_tiny_APPNAME "Polymorph"
