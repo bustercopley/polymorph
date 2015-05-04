@@ -10,6 +10,41 @@
 
 #define WC_MAIN TEXT ("M")
 
+#if MONITOR_SELECT_ENABLED
+
+struct monitor_enum_param_t
+{
+  RECT * r;
+  int n;
+};
+
+BOOL CALLBACK monitor_enum_proc (HMONITOR, HDC, LPRECT rect, LPARAM lparam)
+{
+  monitor_enum_param_t * pparam = (monitor_enum_param_t *) lparam;
+  if (pparam->n == 0) * pparam->r = * rect;
+  -- pparam->n;
+  return TRUE;
+}
+
+#endif
+
+bool get_rect (RECT & rect, const arguments_t & arguments)
+{
+  if (arguments.mode == parented) {
+    ::GetClientRect ((HWND) arguments.numeric_arg, & rect);
+    return true;
+  }
+#if MONITOR_SELECT_ENABLED
+  int n = (int) arguments.numeric_arg;
+  if (n >= 1) {
+    monitor_enum_param_t param = { & rect, n - 1 };
+    ::EnumDisplayMonitors (NULL, NULL, & monitor_enum_proc, (LPARAM) & param);
+    if (param.n < 0) return true;
+  }
+#endif
+  return false;
+}
+
 ALIGN_STACK LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   // Retrieve the window-struct pointer from the window userdata.
@@ -24,6 +59,7 @@ ALIGN_STACK LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LP
       ws->hglrc = 0;
       if (HDC hdc = ::GetDC (hwnd)) {
         ws->hglrc = install_rendering_context (hdc);
+        ::ReleaseDC (hwnd, hdc);
       }
       return ws->hglrc ? 0 : -1; // Allow window creation to continue if and only if context creation succeeded.
     }
@@ -42,11 +78,13 @@ ALIGN_STACK LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LP
     WINDOWPOS * windowpos = (WINDOWPOS *) lParam;
     if (windowpos->flags & SWP_SHOWWINDOW) {
       windowpos->flags &= ~ (SWP_NOSIZE | SWP_NOMOVE);
-      if (mode == parented) {
-        RECT rect;
-        ::GetClientRect (::GetParent (hwnd), & rect);
-        windowpos->cx = rect.right;
-        windowpos->cy = rect.bottom;
+
+      RECT rect;
+      if (get_rect (rect, ws->arguments)) {
+        windowpos->x  = rect.left;
+        windowpos->y  = rect.top;
+        windowpos->cx = rect.right - rect.left;
+        windowpos->cy = rect.bottom - rect.top;
       }
       else {
         windowpos->x  = ::GetSystemMetrics (SM_XVIRTUALSCREEN);

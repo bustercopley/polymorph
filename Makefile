@@ -87,10 +87,10 @@ EXTRA_CLEAN=Polymorph*.scr
 all: $(polymorph_FILENAME)
 
 test: all
-	$(polymorph_FILENAME)
+	$(polymorph_FILENAME) $(ARG)
 
 testx: all
-	$(polymorph_FILENAME) x
+	$(polymorph_FILENAME) x $(ARG)
 
 debug: all
 	$(PLATFORM_PATH)\gdb --quiet --batch -ex run -ex bt full -ex quit --args $(polymorph_FILENAME)

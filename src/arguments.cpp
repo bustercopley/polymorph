@@ -1,6 +1,8 @@
 #include "arguments.h"
 #include <cstdint>
 
+#define UPCASE(c) ((c) & ~ TEXT (' '))
+
 UINT_PTR number_from_string (const TCHAR * s)
 {
   UINT_PTR result = 0;
@@ -13,28 +15,32 @@ UINT_PTR number_from_string (const TCHAR * s)
 
 void get_arguments (const TCHAR * s, arguments_t & args)
 {
+  // Default to configure mode if the mode letter is
+  // missing or unrecognised.
+  args.mode = configure;
+
   // Skip the image path, which might be quoted.
   if (* s == TEXT ('"')) {
     ++ s;
     while (* s && * s != TEXT ('"')) ++ s;
-    ++ s;
   }
-  else {
-    while (* s && * s != TEXT (' ')) ++ s;
-  }
+  while (* s && * s != TEXT (' ')) ++ s;
 
-  args.mode = configure;
-  args.numeric_arg = 0;
+  // Skip zero or more spaces.
+  while (* s == TEXT (' ')) ++ s;
 
- repeat:
-  if (TCHAR c = * s) {
+  // Read optional mode letter.
+  TCHAR c = UPCASE (* s);
+  if (TEXT ('A') <= c && c <= TEXT ('Z')) {
     ++ s;
-    c = c & TEXT ('_'); // Convert to upper case.
     if (c == TEXT ('S')) args.mode = screensaver;
     else if (c == TEXT ('X')) args.mode = persistent;
     else if (c == TEXT ('P') || c == TEXT ('L')) args.mode = parented;
-    else goto repeat;
-    while (* s == TEXT (' ') || * s == TEXT (':')) ++ s;
-    args.numeric_arg = number_from_string (s);
   }
+
+  // Skip zero or more spaces or colons.
+  while (* s == TEXT (' ') || * s == TEXT (':')) ++ s;
+
+  // Read optional numeric argument.
+  args.numeric_arg = number_from_string (s);
 }

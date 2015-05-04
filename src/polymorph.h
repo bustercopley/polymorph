@@ -8,6 +8,14 @@
 #include "arguments.h"
 #include "settings.h"
 
+//#define ENABLE_MONITOR_SELECT
+
+#ifdef ENABLE_MONITOR_SELECT
+#define MONITOR_SELECT_ENABLED 1
+#else
+#define MONITOR_SELECT_ENABLED 0
+#endif
+
 struct window_struct_t
 {
   model_t model;
