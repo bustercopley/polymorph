@@ -1,11 +1,12 @@
 #include "arguments.h"
+#include "compiler.h"
 #include <cstdint>
 
 #define UPCASE(c) ((c) & ~ TEXT (' '))
 #define ISUPPER(c) (TEXT ('A') <= (c) && (c) <= TEXT ('Z'))
 #define ISDIGIT(c) (TEXT ('0') <= (c) && (c) <= TEXT ('9'))
 
-UINT_PTR number_from_string (const TCHAR * s)
+ALWAYS_INLINE inline UINT_PTR number_from_string (const TCHAR * s)
 {
   UINT_PTR result = 0;
   while (ISDIGIT (* s)) {
@@ -23,13 +24,12 @@ void get_arguments (const TCHAR * s, arguments_t & args)
   while (c = * s, quoted ^= c == TEXT ('"'), c && (quoted || c != TEXT (' '))) ++ s;
 
   // Skip zero or more non-alphanumeric characters.
-  c = TEXT ('\0');
-  while (* s && (c = UPCASE (* s), ! (ISUPPER (c) || ISDIGIT (c)))) ++ s;
+  while (* s && ! ISDIGIT (* s) && (c = UPCASE (* s), ! ISUPPER (c))) ++ s;
 
   // Read optional mode letter.
   // Default to configure mode if the mode letter is missing or unrecognised.
   args.mode = configure;
-  if (ISUPPER (c)) {
+  if (* s && ! ISDIGIT (* s)) {
     ++ s;
     if (c == TEXT ('S')) args.mode = screensaver;
     else if (c == TEXT ('X')) args.mode = persistent;
