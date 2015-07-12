@@ -25,7 +25,6 @@ struct window_struct_t
   HGLRC hglrc;
 };
 
-void register_class (HINSTANCE hInstance);
-HWND create_window (HINSTANCE hInstance, HWND parent, LPCTSTR display_name, window_struct_t * ws);
+ALIGN_STACK LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 #endif

@@ -38,7 +38,6 @@ struct dialog_struct_t
 };
 
 INT_PTR CALLBACK DialogProc (HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
-HWND create_dialog (HINSTANCE hInstance, dialog_struct_t * ds);
 #endif
 
 #endif

@@ -17,14 +17,6 @@ inline void italicize_control_font (HWND hwnd)
   }
 }
 
-HWND create_dialog (HINSTANCE hInstance, dialog_struct_t * ds)
-{
-  INITCOMMONCONTROLSEX icc = { sizeof (INITCOMMONCONTROLSEX), ICC_BAR_CLASSES | ICC_LINK_CLASS | ICC_STANDARD_CLASSES };
-  ::InitCommonControlsEx (& icc);
-
-  return ::CreateDialogParam (hInstance, MAKEINTRESOURCE (IDD_CONFIGURE), ds->hwnd, DialogProc, (LPARAM) ds);
-}
-
 INT_PTR CALLBACK DialogProc (HWND hdlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
   dialog_struct_t * ds = reinterpret_cast <dialog_struct_t *> (::GetWindowLongPtr (hdlg, DWLP_USER));

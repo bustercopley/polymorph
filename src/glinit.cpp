@@ -1,4 +1,5 @@
 #include "glinit.h"
+#include "compiler.h"
 
 // Define OpenGL function pointer variables.
 #define DO_GLPROC(type,name) type name = nullptr
@@ -31,7 +32,7 @@ const int context_attribs [] = {
 };
 
 // Get OpenGL function pointers (call with final OpenGL context current).
-bool get_glprocs ()
+ALWAYS_INLINE inline bool get_glprocs ()
 {
 #define GLPROC_STRINGIZE(a) #a
 #define DO_GLPROC(type, name) (name = (type) ::wglGetProcAddress (GLPROC_STRINGIZE(name))); if (! name) return false
@@ -41,7 +42,7 @@ bool get_glprocs ()
 }
 
 // Get OpenGL function pointers needed for context creation (call with legacy context current).
-void get_init_glprocs ()
+ALWAYS_INLINE inline void get_init_glprocs ()
 {
   wglChoosePixelFormatARB = (PFNWGLCHOOSEPIXELFORMATARBPROC) ::wglGetProcAddress ("wglChoosePixelFormatARB");
   wglCreateContextAttribsARB = (PFNWGLCREATECONTEXTATTRIBSARBPROC) ::wglGetProcAddress ("wglCreateContextAttribsARB");
@@ -87,8 +88,7 @@ HGLRC install_rendering_context (HDC hdc)
     return NULL;
   }
 
-  HGLRC hglrc = wglCreateContextAttribsARB (hdc, NULL, context_attribs);
-  if (hglrc) {
+  if (HGLRC hglrc = wglCreateContextAttribsARB (hdc, NULL, context_attribs)) {
     if (::wglMakeCurrent (hdc, hglrc)) {
       if (get_glprocs ()) {
         wglSwapIntervalEXT (1);
@@ -97,7 +97,6 @@ HGLRC install_rendering_context (HDC hdc)
       ::wglMakeCurrent (NULL, NULL);
     }
     ::wglDeleteContext (hglrc);
-    hglrc = 0;
   }
 
   return NULL;

@@ -8,8 +8,6 @@
 #include "aligned-arrays.h"
 #include "print.h"
 
-#define WC_MAIN TEXT ("M")
-
 #if MONITOR_SELECT_ENABLED
 
 struct monitor_enum_param_t
@@ -178,28 +176,4 @@ ALIGN_STACK LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LP
   if (call_def_window_proc) result = ::DefWindowProc (hwnd, msg, wParam, lParam);
 
   return result;
-}
-
-void register_class (HINSTANCE hInstance)
-{
-  // The screensaver window has no taskbar button or system menu, but the small
-  // icon is inherited by the (owned) configure dialog and used for the taskbar button.
-  // We could set the dialog's small icon directly, but then it would appear in
-  // the dialog's system menu, which is not the desired effect.
-  HICON icon = (HICON) ::LoadImage (hInstance, MAKEINTRESOURCE (IDI_APPICON), IMAGE_ICON, 0, 0, LR_LOADTRANSPARENT);
-  HICON icon_small = (HICON) ::LoadImage (hInstance, MAKEINTRESOURCE (IDI_APPICON), IMAGE_ICON, 16, 16, LR_LOADTRANSPARENT);
-  WNDCLASSEX wndclass = { sizeof (WNDCLASSEX), 0, & MainWndProc, 0, 0, hInstance, icon, NULL, NULL, NULL, WC_MAIN, icon_small };
-  ::RegisterClassEx (& wndclass);
-}
-
-HWND create_window (HINSTANCE hInstance, HWND parent, LPCTSTR display_name, window_struct_t * ws)
-{
-  // Create the main window. See MainWndProc for details.
-  DWORD style = (ws->arguments.mode == parented ? WS_CHILD : WS_POPUP);
-  DWORD ex_style =
-    (ws->arguments.mode == screensaver || ws->arguments.mode == configure ? WS_EX_TOPMOST : 0) |
-    (ws->arguments.mode == persistent ? WS_EX_APPWINDOW : WS_EX_TOOLWINDOW);
-  return ::CreateWindowEx (ex_style, WC_MAIN, display_name, style,
-                           0, 0, 0, 0,
-                           parent, NULL, hInstance, ws);
 }
