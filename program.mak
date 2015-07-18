@@ -6,9 +6,8 @@ DEPFLAGS=-MMD
 
 name=$($(program)_FILENAME)
 source_prefix=$($(program)_SOURCE_PREFIX)
-extra_objects=$($(program)_EXTRA_OBJECTS)
 objdir=$($(program)_OBJDIR)
-objects=$(extra_objects) $(foreach object,$($(program)_OBJECTS),$(objdir)/$(object))
+objects=$(foreach object,$($(program)_OBJECTS),$(objdir)/$(object))
 depends=$(foreach object,$($(program)_OBJECTS),$(objdir)/$(object:%.o=%.d))
 cppflags=$($(program)_CPPFLAGS) $(CPPFLAGS)
 ccflags=$(CFLAGS) $(CCFLAGS) $($(program)_CFLAGS) $($(program)_CCFLAGS)
@@ -23,6 +22,7 @@ $(objdir)/%.o: $(source_prefix)%.cpp | $(objdir)
 $(objdir)/%.o: $(source_prefix)%.c | $(objdir)
 	$(CC) $(DEPFLAGS) $(cppflags) $(ccflags) $$< -c -o $$@
 $(objdir)/%-res.o: $(source_prefix)%.rc | $(objdir)
+	$(CC) $(cppflags) -MM -MF $$@ -x c $$<
 	windres $(resflags) $$< $$@
 ifdef $(program)_FILENAME
 $(name): $(objects)

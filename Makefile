@@ -24,11 +24,11 @@ polymorph_CXXFLAGS=$(CONFIG_CXXFLAGS)
 polymorph_LDFLAGS=$(CONFIG_LDFLAGS)
 polymorph_LDLIBS=$(CONFIG_LDLIBS)
 polymorph_RESFLAGS=-DPLATFORM_CONFIG=$(PLATFORM)_$(CONFIG) -I$(SHADER_DIRECTORY)
-polymorph_EXTRA_OBJECTS=.obj/$(PLATFORM)/$(CONFIG)/resources-res.o
 polymorph_SOURCE_PREFIX=src/
 polymorph_OBJECTS=\
 arguments.o bump.o dialog.o glinit.o graphics.o kdtree.o main.o markov.o memory.o \
-model.o partition.o polymorph.o random.o reposition.o rodrigues.o settings.o systems.o make_system.o
+model.o partition.o polymorph.o random.o reposition.o resources-res.o rodrigues.o \
+settings.o systems.o make_system.o
 
 common_CPPFLAGS=-DUNICODE -D_UNICODE
 common_CFLAGS=-msse3 -mfpmath=sse -fno-ident
@@ -98,7 +98,7 @@ debug: all
 SHADER_NAMES=vertex-shader.glsl geometry-shader.glsl fragment-shader.glsl
 SHADER_DIRECTORY=$($(CONFIG_SHADERS)_SHADER_DIRECTORY)
 SHADER_RESOURCES=$($(CONFIG_SHADERS)_SHADER_RESOURCES)
-RESOURCES=$(SHADER_RESOURCES) src/polymorph.scr.manifest
+RESOURCES=polyhedron.ico $(SHADER_RESOURCES) src/polymorph.scr.manifest
 
 full_SHADER_DIRECTORY=src
 minified_SHADER_DIRECTORY=.obj/minified
@@ -108,7 +108,7 @@ $(foreach shaders,full minified,$(eval $(shaders)_SHADER_RESOURCES=$(foreach nam
 $(minified_SHADER_DIRECTORY)/%.glsl: src/%.glsl minify.pl | $(minified_SHADER_DIRECTORY)
 	c:\strawberry\perl\bin\perl minify.pl "$<" "$@"
 
-.obj/$(PLATFORM)/$(CONFIG)/resources-res.o: $(RESOURCES) src/resources.h src/mswin.h src/dialog.h
+.obj/$(PLATFORM)/$(CONFIG)/resources-res.o: $(RESOURCES)
 
 .obj: ; -md .obj
 .obj/minified: | .obj ; -md .obj\minified
