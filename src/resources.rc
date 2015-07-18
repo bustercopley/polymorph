@@ -28,33 +28,40 @@ IDR_FRAGMENT_SHADER RCDATA "fragment-shader.glsl"
 #define TRACKBAR_CONTROL(id) CONTROL "", id, TRACKBAR_CLASS, TRACKBAR_STYLE
 
 IDD_CONFIGURE DIALOGEX 24, 24, DLGW, DLGH
+
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "Polymorph"
 FONT 9, "Segoe UI", 0, 0, 0x1
+
 BEGIN
-  ICON           IDI_APPICON, IDC_STATIC,            30,   22,    0,    0
-  LTEXT          "And the ratios of their numbers, motions, and other properties, everywhere God, as far as necessity allowed or gave consent, has exactly perfected, and harmonised in due proportion.",
-                 IDC_MESSAGE,                        80,   14,  150,   36
-  CTEXT          "TIMAEUS, Plato.", IDC_STATIC,      80,   50,  150,   10
+  ICON     IDI_APPICON, IDC_STATIC,            30,   22,    0,    0
 
-  // The id of trackbar n is IDC_TRACKBARS_START + 4 * n, and its buddies have the two succeeding ids.
-  // This numbering is assumed in "dialog.cpp".
+  LTEXT    "And the ratios of their numbers, motions, and other properties, everywhere God, as far as necessity allowed or gave consent, has exactly perfected, and harmonised in due proportion.",
+           IDC_MESSAGE,                        80,   14,  150,   36
 
-  LTEXT          "Fewer",  IDC_TRACKBARS_START + 2,   0,    0,   50,   14, LEFT_BUDDY_STYLE
-  LTEXT          "More",   IDC_TRACKBARS_START + 1,   0,    0,   50,   14, RIGHT_BUDDY_STYLE
-  TRACKBAR_CONTROL (IDC_TRACKBARS_START + 0),        76,   64,  146,   14
+  CTEXT    "TIMAEUS, Plato.", IDC_STATIC,      80,   50,  150,   10
 
-  LTEXT          "Colder", IDC_TRACKBARS_START + 6,   0,    0,   50,   14, LEFT_BUDDY_STYLE
-  LTEXT          "Hotter", IDC_TRACKBARS_START + 5,   0,    0,   50,   14, RIGHT_BUDDY_STYLE
-  TRACKBAR_CONTROL (IDC_TRACKBARS_START + 4),        76,   80,  146,   14
+  // The id of trackbar n is IDC_TRACKBARS_START + 4 * n, and its buddies
+  // have the two succeeding ids (this numbering is assumed in "dialog.cpp").
+  // Statements are ordered so as to label the trackbars "More", "Hotter"
+  // and "Faster" (for accessibility tools).
 
-  LTEXT          "Slower", IDC_TRACKBARS_START + 10,  0,    0,   50,   14, LEFT_BUDDY_STYLE
-  LTEXT          "Faster", IDC_TRACKBARS_START + 9,   0,    0,   50,   14, RIGHT_BUDDY_STYLE
-  TRACKBAR_CONTROL (IDC_TRACKBARS_START + 8),        76,   96,  146,   14
+  LTEXT  "Fewer",   IDC_TRACKBARS_START + 2,    0,    0,   50,   14,  LEFT_BUDDY_STYLE
+  LTEXT  "More",    IDC_TRACKBARS_START + 1,    0,    0,   50,   14,  RIGHT_BUDDY_STYLE
+  TRACKBAR_CONTROL (IDC_TRACKBARS_START + 0),  76,   64,  146,   14
 
-  CONTROL        "<a href=""http://buster.me.uk"">buster.me.uk</a>", IDC_SYSLINK, "SysLink", WS_TABSTOP,
-                                                           8,  DLGH - 36,  DLGW - 16,  10
+  LTEXT  "Colder",  IDC_TRACKBARS_START + 6,    0,    0,   50,   14,  LEFT_BUDDY_STYLE
+  LTEXT  "Hotter",  IDC_TRACKBARS_START + 5,    0,    0,   50,   14,  RIGHT_BUDDY_STYLE
+  TRACKBAR_CONTROL (IDC_TRACKBARS_START + 4),  76,   80,  146,   14
+
+  LTEXT  "Slower",  IDC_TRACKBARS_START + 10,   0,    0,   50,   14,  LEFT_BUDDY_STYLE
+  LTEXT  "Faster",  IDC_TRACKBARS_START + 9,    0,    0,   50,   14,  RIGHT_BUDDY_STYLE
+  TRACKBAR_CONTROL (IDC_TRACKBARS_START + 8),  76,   96,  146,   14
+
+  CONTROL "<a href=""http://buster.me.uk"">buster.me.uk</a>",
+                 IDC_SYSLINK, "SysLink", WS_TABSTOP,       8,  DLGH - 36,  DLGW - 16,  10
+
   LTEXT          "", IDC_BUTTONS_STATIC,                   0,  DLGH - 26,       DLGW,  26
   DEFPUSHBUTTON  "OK", IDOK,                      DLGW - 164,  DLGH - 20,         50,  14
   PUSHBUTTON     "Cancel", IDCANCEL,              DLGW - 110,  DLGH - 20,         50,  14
