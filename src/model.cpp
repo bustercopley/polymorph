@@ -104,6 +104,26 @@ float min_d = 1.0f, max_d = 0.0f;
 
 model_t::model_t () : memory (nullptr), capacity (0), count (0) { }
 
+inline float rainbow_hue (float phase)
+{
+  const float rainbow_ends [] = {
+    -0.32812500f,
+    0.37500000f,
+    0.75000000f,
+    1.21875000f,
+    2.46093750f,
+    3.39843750f,
+    4.59375000f,
+    5.67187500f,
+  };
+  unsigned n = sizeof rainbow_ends / sizeof * rainbow_ends - 1;
+  unsigned i = unsigned (n * phase);
+  passert (i < n);
+  float hue = rainbow_ends [i] + (n * phase - i) * (rainbow_ends [i + 1] - rainbow_ends [i]);
+  if (hue < 0.0f) hue += 6.0f;
+  return hue;
+}
+
 bool model_t::start (int width, int height, const settings_t & settings)
 {
   float tr = usr::max_radius;
@@ -170,18 +190,14 @@ bool model_t::start (int width, int height, const settings_t & settings)
     object_order [n] = n;
   }
 
-  float phase = 0.0f;
   float global_time_offset = get_float (rng, 0.0f, usr::cycle_duration);
   for (unsigned n = 0; n != count; ++ n) {
-    float hue = 6.0f * phase;
-    hue = (hue < 3.0f / 2.0f ? hue * 2.0f / 3.0f : hue * 10.0f / 9.0f - 2.0f / 3.0f); // More orange.
-    objects [n].hue = hue;
-
+    float phase = float (n) / count;
+    objects [n].hue = rainbow_hue (phase);
     // Initial animation_time is in [T, 2T) to force an immediate transition.
     float animation_time = global_time_offset + (1.0f - phase) * usr::cycle_duration;
     if (animation_time < usr::cycle_duration) animation_time += usr::cycle_duration;
     objects [n].animation_time = animation_time;
-    phase += 1.0f / total_count;
   }
 
   // Take the animation-speed setting, s, a whole number in the range 0 to 100, inclusive;
