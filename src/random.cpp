@@ -1,7 +1,11 @@
 #include "random.h"
 #include "compiler.h"
 
-// The algorithm is D1(A1r), aka Ranq1, from Numerical Recipes.
+// The xorshift family of PRNGs was introduced in [1].
+// This particular generator, "xorshift64* A_1(12; 25; 27).M_32", is suggested in [2].
+
+// [1] George Marsaglia (2003) http://www.jstatsoft.org/article/view/v008i14/xorshift.pdf
+// [2] Sebastiano Vigna (2014) http://arxiv.org/abs/1402.6246
 
 void rng_t::initialize (std::uint64_t seed)
 {
@@ -13,9 +17,9 @@ void rng_t::initialize (std::uint64_t seed)
 NOINLINE
 std::uint64_t rng_t::get ()
 {
-  state ^= state >> 21;
-  state ^= state << 35;
-  state ^= state >> 4;
+  state ^= state >> 12;
+  state ^= state << 25;
+  state ^= state >> 27;
   return state * 2685821657736338717ull;
 }
 
