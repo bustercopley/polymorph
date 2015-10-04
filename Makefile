@@ -27,7 +27,7 @@ polymorph_RESFLAGS=-DPLATFORM_CONFIG=$(PLATFORM)_$(CONFIG) -I$(SHADER_DIRECTORY)
 polymorph_SOURCE_PREFIX=src/
 polymorph_OBJECTS=\
 arguments.o bump.o dialog.o glinit.o graphics.o kdtree.o main.o markov.o memory.o \
-model.o partition.o polymorph.o random.o reposition.o resources-res.o rodrigues.o \
+model.o partition.o polymorph.o random.o reposition.o resources.o rodrigues.o \
 settings.o systems.o make_system.o
 
 common_CPPFLAGS=-DUNICODE -D_UNICODE
@@ -108,7 +108,7 @@ $(foreach shaders,full minified,$(eval $(shaders)_SHADER_RESOURCES=$(foreach nam
 $(minified_SHADER_DIRECTORY)/%.glsl: src/%.glsl minify.pl | $(minified_SHADER_DIRECTORY)
 	c:\strawberry\perl\bin\perl minify.pl "$<" "$@"
 
-.obj/$(PLATFORM)/$(CONFIG)/resources-res.o: $(RESOURCES)
+.obj/$(PLATFORM)/$(CONFIG)/resources.o: $(RESOURCES)
 
 .obj: ; -md .obj
 .obj/minified: | .obj ; -md .obj\minified

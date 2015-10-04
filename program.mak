@@ -21,8 +21,8 @@ $(objdir)/%.o: $(source_prefix)%.cpp | $(objdir)
 	$(CXX) $(DEPFLAGS) $(cppflags) $(cxxflags) $$< -c -o $$@
 $(objdir)/%.o: $(source_prefix)%.c | $(objdir)
 	$(CC) $(DEPFLAGS) $(cppflags) $(ccflags) $$< -c -o $$@
-$(objdir)/%-res.o: $(source_prefix)%.rc | $(objdir)
-	$(CC) $(cppflags) -MM -MF $$(@:%.o=%.d) -x c $$<
+$(objdir)/%.o: $(source_prefix)%.rc | $(objdir)
+	$(CC) $(cppflags) -MM -MT $$@ -MF $$(@:%.o=%.d) -x c $$<
 	windres $(resflags) $$< $$@
 ifdef $(program)_FILENAME
 $(name): $(objects)
