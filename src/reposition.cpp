@@ -1,3 +1,4 @@
+#include "mswin.h"
 #include "reposition.h"
 #include "print.h"
 

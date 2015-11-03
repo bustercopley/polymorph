@@ -1,3 +1,4 @@
+#include "mswin.h"
 #include "kdtree.h"
 #include "partition.h"
 #include "bounce.h"

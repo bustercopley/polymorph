@@ -30,7 +30,7 @@ arguments.o bump.o dialog.o glinit.o graphics.o kdtree.o main.o markov.o memory.
 model.o partition.o polymorph.o random.o reposition.o resources.o rodrigues.o \
 settings.o systems.o make_system.o
 
-common_CPPFLAGS=-DUNICODE -D_UNICODE
+common_CPPFLAGS=-DUNICODE
 common_CFLAGS=-msse3 -mfpmath=sse -fno-ident
 common_CXXFLAGS=-fno-rtti -fno-exceptions -ffast-math
 common_LDFLAGS=-mwindows -municode

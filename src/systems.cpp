@@ -1,6 +1,6 @@
+#include "mswin.h"
 #include "systems.h"
 #include "compiler.h"
-#include "mswin.h"
 #include "resources.h"
 #include "vector.h"
 #include "make_system.h"

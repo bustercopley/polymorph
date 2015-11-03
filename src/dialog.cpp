@@ -1,3 +1,4 @@
+#include "mswin.h"
 #include "dialog.h"
 #include "resources.h"
 #include "settings.h"

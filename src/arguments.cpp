@@ -1,3 +1,4 @@
+#include "mswin.h"
 #include "arguments.h"
 #include "compiler.h"
 #include <cstdint>

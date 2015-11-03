@@ -1,5 +1,5 @@
-#include "compiler.h"
 #include "mswin.h"
+#include "compiler.h"
 #include <windowsx.h>
 #include "polymorph.h"
 #include "resources.h"

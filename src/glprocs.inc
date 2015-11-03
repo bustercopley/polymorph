@@ -1,4 +1,5 @@
 // -*- C++ -*-
+
 #include "print.h"
 
 #ifdef PRINT_ENABLED

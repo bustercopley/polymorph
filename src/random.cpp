@@ -1,3 +1,4 @@
+#include "mswin.h"
 #include "random.h"
 #include "compiler.h"
 

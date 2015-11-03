@@ -1,3 +1,4 @@
+#include "mswin.h"
 #include "rodrigues.h"
 #include "compiler.h"
 

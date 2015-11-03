@@ -1,3 +1,4 @@
+#include "mswin.h"
 #include "glinit.h"
 #include "compiler.h"
 

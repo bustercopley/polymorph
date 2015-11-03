@@ -1,3 +1,4 @@
+#include "mswin.h"
 #include "graphics.h"
 #include "compiler.h"
 #include "memory.h"

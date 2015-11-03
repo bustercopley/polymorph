@@ -1,3 +1,4 @@
+#include "mswin.h"
 #include "make_system.h"
 #include "rotor.h"
 

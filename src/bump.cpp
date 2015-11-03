@@ -1,3 +1,4 @@
+#include "mswin.h"
 #include "bump.h"
 #include <limits>
 

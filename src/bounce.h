@@ -1,3 +1,8 @@
+// -*- C++ -*-
+
+#ifndef bounce_h
+#define bounce_h
+
 #include "model.h"
 #include "vector.h"
 
@@ -98,3 +103,5 @@ inline void bounce (unsigned iw, unsigned ix,
     }
   }
 }
+
+#endif

@@ -1,5 +1,5 @@
-#include "compiler.h"
 #include "mswin.h"
+#include "compiler.h"
 #include "resources.h"
 #include "glinit.h"
 #include "model.h"
@@ -8,8 +8,6 @@
 #include "settings.h"
 #include "dialog.h"
 #include "qpc.h"
-#include <tchar.h>
-#include <windowsx.h>
 #include <cstdint>
 
 #define WC_MAIN TEXT ("M")

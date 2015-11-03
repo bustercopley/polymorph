@@ -1,3 +1,4 @@
+#include "mswin.h"
 #include "settings.h"
 #include "resources.h"
 
