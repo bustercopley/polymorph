@@ -1,10 +1,16 @@
 // -*- C++ -*-
 
 #include "print.h"
+#include "glcheck.h"
 
-#ifdef PRINT_ENABLED
+#if PRINT_ENABLED
   DO_GLPROC (PFNGLGETPROGRAMINFOLOGPROC, glGetProgramInfoLog);
   DO_GLPROC (PFNGLGETSHADERINFOLOGPROC, glGetShaderInfoLog);
+#endif
+
+#if GLDEBUG_ENABLED
+  DO_GLPROC (PFNGLDEBUGMESSAGECALLBACKPROC, glDebugMessageCallback);
+  DO_GLPROC (PFNGLDEBUGMESSAGECONTROLPROC, glDebugMessageControl);
 #endif
 
   DO_GLPROC (PFNGLATTACHSHADERPROC, glAttachShader);

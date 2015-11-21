@@ -3,9 +3,9 @@
 #ifndef graphics_h
 #define graphics_h
 
+#include "mswin.h"
 #include <cstddef>
 #include <cstdint>
-#include "mswin.h"
 #include <GL/gl.h>
 
 void clear ();

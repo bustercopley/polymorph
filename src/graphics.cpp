@@ -6,11 +6,32 @@
 #include "glinit.h"
 #include "vector.h"
 #include "print.h"
+#include "glcheck.h"
 
 #include <cstddef>
 #include <cstdint>
 
-#define OBJECT_UNIFORM_BINDING_INDEX 0
+#define UNIFORM_BINDING_INDEX_START 0
+
+#if GLCHECK_ENABLED && PRINT_ENABLED
+inline void gl_check (const char * file, int line) {
+  GLint er = glGetError ();
+  if (GLCHECK_TRACE || er) {
+    std::cout << file << ":" << line << ":";
+    if (er) std::cout << "error " << er;
+    else std::cout << "OK";
+    std::cout << std::endl;
+  }
+  if (er) {
+    ::ExitProcess (er);
+  }
+}
+#define GLCHECK gl_check (__FILE__, __LINE__)
+#elif GLCHECK_ENABLED
+#define GLCHECK do { GLint er = glGetError (); if (er) ::ExitProcess (er); } while (false)
+#else
+#define GLCHECK do { } while (false)
+#endif
 
 #if PRINT_ENABLED
 #define PRINT_INFO_LOG(a, b, c) print_info_log (a, b, c)
@@ -19,17 +40,59 @@ inline void print_info_log (GLuint object,
                             PFNGLGETSHADERINFOLOGPROC glGet__InfoLog)
 {
   GLint log_length;
-  glGet__iv (object, GL_INFO_LOG_LENGTH, & log_length);
+  glGet__iv (object, GL_INFO_LOG_LENGTH, & log_length); GLCHECK;
   char * log = (char *) allocate_internal (log_length + 1);
   if (log) {
-    glGet__InfoLog (object, log_length, NULL, log);
+    glGet__InfoLog (object, log_length, NULL, log); GLCHECK;
     log [log_length] = '\0';
     if (log [0]) print (log);
     deallocate (log);
   }
 }
 #else
-#define PRINT_INFO_LOG(a, b, c)
+#define PRINT_INFO_LOG(a, b, c) do { } while (0)
+#endif
+
+#if GLDEBUG_ENABLED
+void APIENTRY debug_message_callback (GLenum source, GLenum type, GLuint id, GLenum severity,
+                                      GLsizei, const GLchar * message, const void *)
+{
+  std::cout << std::hex << "Source ";
+  switch (source)
+  {
+  case /* 0x8246 */ GL_DEBUG_SOURCE_API:              std::cout << "API"; break;
+  case /* 0x8247 */ GL_DEBUG_SOURCE_WINDOW_SYSTEM:    std::cout << "WINDOW_SYSTEM"; break;
+  case /* 0x8248 */ GL_DEBUG_SOURCE_SHADER_COMPILER:  std::cout << "SHADER_COMPILER"; break;
+  case /* 0x8249 */ GL_DEBUG_SOURCE_THIRD_PARTY:      std::cout << "THIRD_PARTY"; break;
+  case /* 0x824A */ GL_DEBUG_SOURCE_APPLICATION:      std::cout << "APPLICATION"; break;
+  case /* 0x824B */ GL_DEBUG_SOURCE_OTHER:            std::cout << "OTHER"; break;
+  default:                                            std::cout << "unknown (0x" << source << ")"; break;
+  }
+  std::cout << ", type ";
+  switch (type)
+  {
+  case /* 0x824C */ GL_DEBUG_TYPE_ERROR:                std::cout << "ERROR"; break;
+  case /* 0x824D */ GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:  std::cout << "DEPRECATED_BEHAVIOR"; break;
+  case /* 0x824E */ GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:   std::cout << "UNDEFINED_BEHAVIOR"; break;
+  case /* 0x824F */ GL_DEBUG_TYPE_PORTABILITY:          std::cout << "PORTABILITY"; break;
+  case /* 0x8250 */ GL_DEBUG_TYPE_PERFORMANCE:          std::cout << "PERFORMANCE"; break;
+  case /* 0x8251 */ GL_DEBUG_TYPE_OTHER:                std::cout << "OTHER"; break;
+  case /* 0x8268 */ GL_DEBUG_TYPE_MARKER:               std::cout << "MARKER"; break;
+  case /* 0x8269 */ GL_DEBUG_TYPE_PUSH_GROUP:           std::cout << "PUSH_GROUP"; break;
+  case /* 0x826A */ GL_DEBUG_TYPE_POP_GROUP:            std::cout << "POP_GROUP"; break;
+  default:                                              std::cout << "unknown (0x" << type << ")"; break;
+  }
+  std::cout << ", severity ";
+  switch (severity)
+  {
+  case /* 0x826B */ GL_DEBUG_SEVERITY_NOTIFICATION:  std::cout << "NOTIFICATION"; break;
+  case /* 0x9146 */ GL_DEBUG_SEVERITY_HIGH:          std::cout << "HIGH"; break;
+  case /* 0x9147 */ GL_DEBUG_SEVERITY_MEDIUM:        std::cout << "MEDIUM"; break;
+  case /* 0x9148 */ GL_DEBUG_SEVERITY_LOW:           std::cout << "LOW"; break;
+  default:                                           std::cout << "unknown (0x" << severity << ")"; break;
+  }
+  std::cout << std::dec << ", id " << id << ", message \"" << message << "\"" << std::endl;
+}
 #endif
 
 GLuint make_shader (GLenum type, int resource_id)
@@ -38,11 +101,11 @@ GLuint make_shader (GLenum type, int resource_id)
   GLint size;
   get_resource_data (resource_id, text, size);
 
-  GLint id = glCreateShader (type);
-  glShaderSource (id, 1, & text, & size);
-  glCompileShader (id);
+  GLint id = glCreateShader (type); GLCHECK;
+  glShaderSource (id, 1, & text, & size); GLCHECK;
+  glCompileShader (id); GLCHECK;
   GLint status = 0;
-  glGetShaderiv (id, GL_COMPILE_STATUS, & status);
+  glGetShaderiv (id, GL_COMPILE_STATUS, & status); GLCHECK;
 #if PRINT_ENABLED
   switch (resource_id) {
   case IDR_VERTEX_SHADER: std::cout << "Vertex "; break;
@@ -51,7 +114,7 @@ GLuint make_shader (GLenum type, int resource_id)
   default: ;
   }
   std::cout << "Shader compilation " << (status ? "succeeded." : "failed.") << std::endl;
-  PRINT_INFO_LOG (id, glGetShaderiv, glGetShaderInfoLog);
+  PRINT_INFO_LOG (id, glGetShaderiv, glGetShaderInfoLog); GLCHECK;
 #endif
   return status ? id : 0;
 }
@@ -61,16 +124,16 @@ static const int attribute_id_x = 0;
 unsigned make_vao (unsigned N, const float (* vertices) [4], const std::uint8_t (* indices) [6])
 {
   unsigned vao_id;
-  glGenVertexArrays (1, & vao_id);
-  glBindVertexArray (vao_id);
+  glGenVertexArrays (1, & vao_id); GLCHECK;
+  glBindVertexArray (vao_id); GLCHECK;
   GLuint buffer_ids [2];
-  glGenBuffers (2, buffer_ids);
-  glBindBuffer (GL_ARRAY_BUFFER, buffer_ids [0]);
-  glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, buffer_ids [1]);
-  glBufferData (GL_ARRAY_BUFFER, (N + 2) * 4 * sizeof (float), vertices, GL_STATIC_DRAW);
-  glBufferData (GL_ELEMENT_ARRAY_BUFFER, 6 * N * sizeof (std::uint8_t), indices, GL_STATIC_DRAW);
-  glVertexAttribPointer (attribute_id_x, 4, GL_FLOAT, GL_FALSE, 0, 0);
-  glEnableVertexAttribArray (attribute_id_x);
+  glGenBuffers (2, buffer_ids); GLCHECK;
+  glBindBuffer (GL_ARRAY_BUFFER, buffer_ids [0]); GLCHECK;
+  glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, buffer_ids [1]); GLCHECK;
+  glBufferData (GL_ARRAY_BUFFER, (N + 2) * 4 * sizeof (float), vertices, GL_STATIC_DRAW); GLCHECK;
+  glBufferData (GL_ELEMENT_ARRAY_BUFFER, 6 * N * sizeof (std::uint8_t), indices, GL_STATIC_DRAW); GLCHECK;
+  glVertexAttribPointer (attribute_id_x, 4, GL_FLOAT, GL_FALSE, 0, 0); GLCHECK;
+  glEnableVertexAttribArray (attribute_id_x); GLCHECK;
   return vao_id;
 }
 
@@ -83,15 +146,15 @@ inline void align_up (Dest & y, Source x, std::intptr_t alignment)
 
 uniform_buffer_t::~uniform_buffer_t ()
 {
-  //glDeleteBuffers (1, & m_id);
+  //glDeleteBuffers (1, & m_id); GLCHECK;
   deallocate (m_memory);
 }
 
 bool uniform_buffer_t::initialize ()
 {
   GLint max_size, align;
-  glGetIntegerv (GL_MAX_UNIFORM_BLOCK_SIZE, & max_size);
-  glGetIntegerv (GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, & align);
+  glGetIntegerv (GL_MAX_UNIFORM_BLOCK_SIZE, & max_size); GLCHECK;
+  glGetIntegerv (GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, & align); GLCHECK;
   // Align client-side buffer to at least 64 bytes, to avoid straddling cache lines.
   align = align > 64 ? align : 64;
   m_size = max_size;
@@ -99,29 +162,36 @@ bool uniform_buffer_t::initialize ()
   if (! m_memory) return false;
   align_up (m_begin, m_memory, align);
   align_up (m_stride, sizeof (object_data_t), align);
-  glGenBuffers (1, & m_id);
+  glGenBuffers (1, & m_id); GLCHECK;
   return true;
 }
 
 void uniform_buffer_t::bind ()
 {
-  glBindBuffer (GL_UNIFORM_BUFFER, m_id);
+  glBindBuffer (GL_UNIFORM_BUFFER, m_id); GLCHECK;
 }
 
 void uniform_buffer_t::update ()
 {
   // Create a buffer, orphaning any previous buffer.
-  glBufferData (GL_UNIFORM_BUFFER, m_size, nullptr, GL_DYNAMIC_DRAW);
+  glBufferData (GL_UNIFORM_BUFFER, m_size, nullptr, GL_DYNAMIC_DRAW); GLCHECK;
   // Upload the buffer data.
-  glBufferSubData (GL_UNIFORM_BUFFER, 0, m_size, m_begin);
+  glBufferSubData (GL_UNIFORM_BUFFER, 0, m_size, m_begin); GLCHECK;
 }
 
 bool initialize_graphics (program_t & program)
 {
-  glEnable (GL_DEPTH_CLAMP);
-  glEnable (GL_CULL_FACE);
-  glEnable (GL_BLEND);
-  glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glEnable (GL_DEPTH_CLAMP); GLCHECK;
+  glEnable (GL_CULL_FACE); GLCHECK;
+  glEnable (GL_BLEND); GLCHECK;
+  glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); GLCHECK;
+
+#if GLDEBUG_ENABLED
+  glEnable (GL_DEBUG_OUTPUT); GLCHECK;
+  glDebugMessageCallback (debug_message_callback, nullptr); GLCHECK;
+  glDebugMessageControl (GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, 0, GL_TRUE);
+#endif
+
   return program.initialize ();
 }
 
@@ -131,14 +201,14 @@ void program_t::set_view (const float (& view) [4],
                           float fog_near, float fog_far,
                           float line_width_extra, float line_sharpness)
 {
-  glViewport (0, 0, width, height);
+  glViewport (0, 0, width, height); GLCHECK;
 
   const float (& ambient) [4] = colours [0];
   const float (& background) [4] = colours [1];
   const float (& line_colour) [4] = colours [2];
   const float (& specular) [4] = colours [3];
 
-  glClearColor (background [0], background [1], background [2], 0.0f);
+  glClearColor (background [0], background [1], background [2], 0.0f); GLCHECK;
 
   float z1 = view [0];  // z coord of screen (front of tank) (a negative number)
   float z2 = view [1];  // z coord of back of tank (a negative number) (|z2| > |z1|)
@@ -226,25 +296,25 @@ void program_t::set_view (const float (& view) [4],
       max_block_size = blocks [n].size;
 
   GLint align;
-  glGetIntegerv (GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, & align);
+  glGetIntegerv (GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, & align); GLCHECK;
 
   GLuint buffer_size, buffer_stride;
   align_up (buffer_stride, max_block_size, align);
   buffer_size = block_count * buffer_stride;
 
   GLuint buf_id;
-  glGenBuffers (1, & buf_id);
-  glBindBuffer (GL_UNIFORM_BUFFER, buf_id);
-  glBufferData (GL_UNIFORM_BUFFER, buffer_size, nullptr, GL_STATIC_DRAW);
+  glGenBuffers (1, & buf_id); GLCHECK;
+  glBindBuffer (GL_UNIFORM_BUFFER, buf_id); GLCHECK;
+  glBufferData (GL_UNIFORM_BUFFER, buffer_size, nullptr, GL_STATIC_DRAW); GLCHECK;
 
   // Copy each data block to a buffer range and bind the range to the named shader uniform block.
 
   for (std::size_t n = 0; n != block_count; ++ n) {
-    glBufferSubData (GL_UNIFORM_BUFFER, n * buffer_stride, blocks [n].size, blocks [n].data);
-    GLuint block_index = glGetUniformBlockIndex (id, blocks [n].name);
-    GLuint binding_index = n + 1;
-    glUniformBlockBinding (id, block_index, binding_index);
-    glBindBufferRange (GL_UNIFORM_BUFFER, binding_index, buf_id, n * buffer_stride, blocks [n].size);
+    glBufferSubData (GL_UNIFORM_BUFFER, n * buffer_stride, blocks [n].size, blocks [n].data); GLCHECK;
+    GLuint block_index = glGetUniformBlockIndex (id, blocks [n].name); GLCHECK;
+    GLuint binding_index = UNIFORM_BINDING_INDEX_START + n + 1;
+    glUniformBlockBinding (id, block_index, binding_index); GLCHECK;
+    glBindBufferRange (GL_UNIFORM_BUFFER, binding_index, buf_id, n * buffer_stride, blocks [n].size); GLCHECK;
   }
 
   uniform_buffer.bind ();
@@ -259,43 +329,43 @@ bool program_t::initialize ()
   GLuint gshader_id = make_shader (GL_GEOMETRY_SHADER, IDR_GEOMETRY_SHADER);
   GLuint fshader_id = make_shader (GL_FRAGMENT_SHADER, IDR_FRAGMENT_SHADER);
   if (vshader_id && gshader_id && fshader_id) {
-    id = glCreateProgram ();
+    id = glCreateProgram (); GLCHECK;
     if (id) {
-      glAttachShader (id, vshader_id);
-      glAttachShader (id, gshader_id);
-      glAttachShader (id, fshader_id);
-      glBindAttribLocation (id, attribute_id_x, "x");
-      glLinkProgram (id);
-      glGetProgramiv (id, GL_LINK_STATUS, & status);
+      glAttachShader (id, vshader_id); GLCHECK;
+      glAttachShader (id, gshader_id); GLCHECK;
+      glAttachShader (id, fshader_id); GLCHECK;
+      glBindAttribLocation (id, attribute_id_x, "x"); GLCHECK;
+      glLinkProgram (id); GLCHECK;
+      glGetProgramiv (id, GL_LINK_STATUS, & status); GLCHECK;
 #if PRINT_ENABLED
       std::cout << "Shader program linking " << (status ? "succeeded." : "failed.") << std::endl;
-      PRINT_INFO_LOG (id, glGetProgramiv, glGetProgramInfoLog);
+      PRINT_INFO_LOG (id, glGetProgramiv, glGetProgramInfoLog); GLCHECK;
 #endif
-      glDetachShader (id, fshader_id);
-      glDetachShader (id, gshader_id);
-      glDetachShader (id, vshader_id);
+      glDetachShader (id, fshader_id); GLCHECK;
+      glDetachShader (id, gshader_id); GLCHECK;
+      glDetachShader (id, vshader_id); GLCHECK;
     }
   }
-  if (fshader_id) glDeleteShader (fshader_id);
-  if (gshader_id) glDeleteShader (gshader_id);
-  if (vshader_id) glDeleteShader (vshader_id);
+  if (fshader_id) { glDeleteShader (fshader_id); GLCHECK; }
+  if (gshader_id) { glDeleteShader (gshader_id); GLCHECK; }
+  if (vshader_id) { glDeleteShader (vshader_id); GLCHECK; }
 
   if (! status) {
-    //if (id) glDeleteProgram (id);
+    //if (id) { glDeleteProgram (id); GLCHECK; }
     return false;
   }
 
   // Binding for Uniform block "H".
-  GLuint object_uniform_block_index = glGetUniformBlockIndex (id, "H");
-  glUniformBlockBinding (id, object_uniform_block_index, OBJECT_UNIFORM_BINDING_INDEX);
-  glUseProgram (id);
+  GLuint object_uniform_block_index = glGetUniformBlockIndex (id, "H"); GLCHECK;
+  glUniformBlockBinding (id, object_uniform_block_index, UNIFORM_BINDING_INDEX_START); GLCHECK;
+  glUseProgram (id); GLCHECK;
 
   return true;
 }
 
 void clear ()
 {
-  glClear (GL_COLOR_BUFFER_BIT);
+  glClear (GL_COLOR_BUFFER_BIT); GLCHECK;
 }
 
 void paint (unsigned N,
@@ -304,10 +374,10 @@ void paint (unsigned N,
             std::ptrdiff_t uniform_buffer_offset)
 {
   const unsigned block_size = sizeof (object_data_t);
-  glBindVertexArray (vao_id);
-  glBindBufferRange (GL_UNIFORM_BUFFER, OBJECT_UNIFORM_BINDING_INDEX, uniform_buffer_id, uniform_buffer_offset, block_size);
-  glCullFace (GL_FRONT);
-  glDrawElements (GL_TRIANGLES_ADJACENCY, N * 6, GL_UNSIGNED_BYTE, nullptr);
-  glCullFace (GL_BACK);
-  glDrawElements (GL_TRIANGLES_ADJACENCY, N * 6, GL_UNSIGNED_BYTE, nullptr);
+  glBindVertexArray (vao_id); GLCHECK;
+  glBindBufferRange (GL_UNIFORM_BUFFER, UNIFORM_BINDING_INDEX_START, uniform_buffer_id, uniform_buffer_offset, block_size); GLCHECK;
+  glCullFace (GL_FRONT); GLCHECK;
+  glDrawElements (GL_TRIANGLES_ADJACENCY, N * 6, GL_UNSIGNED_BYTE, nullptr); GLCHECK;
+  glCullFace (GL_BACK); GLCHECK;
+  glDrawElements (GL_TRIANGLES_ADJACENCY, N * 6, GL_UNSIGNED_BYTE, nullptr); GLCHECK;
 }

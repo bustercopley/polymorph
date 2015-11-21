@@ -36,21 +36,21 @@ common_CXXFLAGS=-fno-rtti -fno-exceptions -ffast-math
 common_LDFLAGS=-mwindows -municode
 common_LDLIBS=-lopengl32 -lcomctl32 -lshell32
 
-base_CPPFLAGS=$(common_CPPFLAGS) -DENABLE_PRINT
+base_CPPFLAGS=$(common_CPPFLAGS) -DENABLE_PRINT -DENABLE_GLCHECK -DENABLE_GLDEBUG
 base_CFLAGS=$(common_CFLAGS) -flto -Os
 base_CXXFLAGS=$(common_CXXFLAGS)
 base_LDFLAGS=$(common_LDFLAGS) -s
 base_LDLIBS=$(common_LDLIBS)
 base_SHADERS=minified
 
-tiny_CPPFLAGS=$(base_CPPFLAGS) -DTINY
-tiny_CFLAGS=$(base_CFLAGS) -fno-asynchronous-unwind-tables
-tiny_CXXFLAGS=$(base_CXXFLAGS)
-tiny_LDFLAGS=$(base_LDFLAGS) -nostdlib -Wl,--disable-runtime-pseudo-reloc --entry=$(PLATFORM_ENTRY_POINT)
-tiny_LDLIBS=$(base_LDLIBS) -lgdi32 -ladvapi32 -luser32 -lkernel32
+tiny_CPPFLAGS=$(common_CPPFLAGS) -DTINY
+tiny_CFLAGS=$(common_CFLAGS) -flto -Os -fno-asynchronous-unwind-tables
+tiny_CXXFLAGS=$(common_CXXFLAGS)
+tiny_LDFLAGS=$(common_LDFLAGS) -s -nostdlib -Wl,--disable-runtime-pseudo-reloc --entry=$(PLATFORM_ENTRY_POINT)
+tiny_LDLIBS=$(common_LDLIBS) -lgdi32 -ladvapi32 -luser32 -lkernel32
 tiny_SHADERS=minified
 
-debug_CPPFLAGS=$(common_CPPFLAGS) -DENABLE_PRINT
+debug_CPPFLAGS=$(common_CPPFLAGS) -DENABLE_PRINT -DENABLE_GLCHECK -DENABLE_GLDEBUG
 debug_CFLAGS=$(common_CFLAGS) -g -ggdb
 debug_CXXFLAGS=$(common_CXXFLAGS)
 debug_LDFLAGS=$(common_LDFLAGS)
