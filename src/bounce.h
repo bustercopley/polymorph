@@ -3,7 +3,7 @@
 #ifndef bounce_h
 #define bounce_h
 
-#include "model.h"
+#include "object.h"
 #include "vector.h"
 
 namespace usr

@@ -10,17 +10,8 @@
 #include "bump.h"
 #include "markov.h"
 #include "settings.h"
+#include "object.h"
 #include <cstdint>
-
-struct object_t
-{
-  float m, l, r;
-  float hue;
-  float animation_time;
-  float locus_length;
-  unsigned starting_point;
-  polyhedron_select_t target;
-};
 
 struct model_t
 {

@@ -4,7 +4,6 @@
 #include "polymorph.h"
 #include "resources.h"
 #include "glinit.h"
-#include "model.h"
 #include "aligned-arrays.h"
 #include "print.h"
 

@@ -2,7 +2,6 @@
 #include "kdtree.h"
 #include "partition.h"
 #include "bounce.h"
-#include "model.h"
 #include "memory.h"
 #include "compiler.h"
 #include "vector.h"
