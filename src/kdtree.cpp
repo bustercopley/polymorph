@@ -63,10 +63,7 @@
 //   the d co-ordinate is greater than or equal to w, where d === k (mod 3), and
 //   where w is the co-ordinate value associated with the non-leaf node.
 
-namespace
-{
-  static const std::uint8_t mod3 [] = { 0, 1, 2, 0, 1, };
-}
+static const std::uint8_t mod3 [] = { 0, 1, 2, 0, 1, };
 
 inline unsigned nonleaf_nodes_required (unsigned n)
 {

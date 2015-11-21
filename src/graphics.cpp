@@ -12,53 +12,48 @@
 
 #define OBJECT_UNIFORM_BINDING_INDEX 0
 
-namespace
-{
 #if PRINT_ENABLED
 #define PRINT_INFO_LOG(a, b, c) print_info_log (a, b, c)
-  inline void print_info_log (GLuint object,
-                              PFNGLGETSHADERIVPROC glGet__iv,
-                              PFNGLGETSHADERINFOLOGPROC glGet__InfoLog)
-  {
-    if (PRINT_ENABLED) {
-      GLint log_length;
-      glGet__iv (object, GL_INFO_LOG_LENGTH, & log_length);
-      char * log = (char *) allocate_internal (log_length + 1);
-      if (log) {
-        glGet__InfoLog (object, log_length, NULL, log);
-        log [log_length] = '\0';
-        if (log [0]) print (log);
-        deallocate (log);
-      }
-    }
+inline void print_info_log (GLuint object,
+                            PFNGLGETSHADERIVPROC glGet__iv,
+                            PFNGLGETSHADERINFOLOGPROC glGet__InfoLog)
+{
+  GLint log_length;
+  glGet__iv (object, GL_INFO_LOG_LENGTH, & log_length);
+  char * log = (char *) allocate_internal (log_length + 1);
+  if (log) {
+    glGet__InfoLog (object, log_length, NULL, log);
+    log [log_length] = '\0';
+    if (log [0]) print (log);
+    deallocate (log);
   }
+}
 #else
 #define PRINT_INFO_LOG(a, b, c)
 #endif
 
-  GLuint make_shader (GLenum type, int resource_id)
-  {
-    const char * text;
-    GLint size;
-    get_resource_data (resource_id, text, size);
+GLuint make_shader (GLenum type, int resource_id)
+{
+  const char * text;
+  GLint size;
+  get_resource_data (resource_id, text, size);
 
-    GLint id = glCreateShader (type);
-    glShaderSource (id, 1, & text, & size);
-    glCompileShader (id);
-    GLint status = 0;
-    glGetShaderiv (id, GL_COMPILE_STATUS, & status);
+  GLint id = glCreateShader (type);
+  glShaderSource (id, 1, & text, & size);
+  glCompileShader (id);
+  GLint status = 0;
+  glGetShaderiv (id, GL_COMPILE_STATUS, & status);
 #if PRINT_ENABLED
-    switch (resource_id) {
-    case IDR_VERTEX_SHADER: std::cout << "Vertex "; break;
-    case IDR_FRAGMENT_SHADER: std::cout << "Fragment "; break;
-    case IDR_GEOMETRY_SHADER: std::cout << "Geometry "; break;
-    default: ;
-    }
-    std::cout << "Shader compilation " << (status ? "succeeded." : "failed.") << std::endl;
-    PRINT_INFO_LOG (id, glGetShaderiv, glGetShaderInfoLog);
-#endif
-    return status ? id : 0;
+  switch (resource_id) {
+  case IDR_VERTEX_SHADER: std::cout << "Vertex "; break;
+  case IDR_FRAGMENT_SHADER: std::cout << "Fragment "; break;
+  case IDR_GEOMETRY_SHADER: std::cout << "Geometry "; break;
+  default: ;
   }
+  std::cout << "Shader compilation " << (status ? "succeeded." : "failed.") << std::endl;
+  PRINT_INFO_LOG (id, glGetShaderiv, glGetShaderInfoLog);
+#endif
+  return status ? id : 0;
 }
 
 static const int attribute_id_x = 0;
@@ -79,14 +74,11 @@ unsigned make_vao (unsigned N, const float (* vertices) [4], const std::uint8_t 
   return vao_id;
 }
 
-namespace
+// Align x upwards to given alignment (which must be a power of 2). Store the result in y.
+template <typename Dest, typename Source>
+inline void align_up (Dest & y, Source x, std::intptr_t alignment)
 {
-  // Align x upwards to given alignment (which must be a power of 2). Store the result in y.
-  template <typename Dest, typename Source>
-  inline void align_up (Dest & y, Source x, std::intptr_t alignment)
-  {
-    y = (Dest) ((((std::intptr_t) (x)) + (alignment - 1)) & - alignment);
-  }
+  y = (Dest) ((((std::intptr_t) (x)) + (alignment - 1)) & - alignment);
 }
 
 uniform_buffer_t::~uniform_buffer_t ()

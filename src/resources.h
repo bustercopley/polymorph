@@ -36,15 +36,12 @@
 #endif
 
 #ifndef RC_INVOKED
-namespace
+template <typename Size>
+inline void get_resource_data (int id, const char * & data, Size & size)
 {
-  template <typename Size>
-  inline void get_resource_data (int id, const char * & data, Size & size)
-  {
-    HRSRC res = ::FindResource (0, MAKEINTRESOURCE (id), RT_RCDATA);
-    size = ::SizeofResource (0, res);
-    data = (const char *) ::LockResource (::LoadResource (0, res));
-  }
+  HRSRC res = ::FindResource (0, MAKEINTRESOURCE (id), RT_RCDATA);
+  size = ::SizeofResource (0, res);
+  data = (const char *) ::LockResource (::LoadResource (0, res));
 }
 #endif
 
