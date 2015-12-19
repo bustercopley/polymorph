@@ -8,8 +8,7 @@ CONFIGS=tiny base debug
 $(if $(filter $(CONFIG),$(CONFIGS)),,$(error Bad config "$(CONFIG)"))
 $(if $(filter $(PLATFORM),$(PLATFORMS)),,$(error Bad platform "$(PLATFORM)"))
 
-OLDPATH:=$(PATH)
-PATH=$(PLATFORM_PATH);$(OLDPATH)
+PATH=$(PLATFORM_PATH)
 
 CC=gcc
 CXX=g++
@@ -57,10 +56,10 @@ debug_LDFLAGS=$(common_LDFLAGS)
 debug_LDLIBS=$(common_LDLIBS)
 debug_SHADERS=full
 
-x86_PATH=C:\mingw32\bin
+x86_PATH=C:\msys64\mingw32\bin
 x86_ENTRY_POINT=_custom_startup
 
-x64_PATH=C:\mingw64\bin
+x64_PATH=C:\msys64\mingw64\bin
 x64_ENTRY_POINT=custom_startup
 
 x64_base_APPNAME=Polymorph-base
