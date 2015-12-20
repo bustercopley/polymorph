@@ -189,7 +189,7 @@ bool initialize_graphics (program_t & program)
 #if GLDEBUG_ENABLED
   glEnable (GL_DEBUG_OUTPUT); GLCHECK;
   glDebugMessageCallback (debug_message_callback, nullptr); GLCHECK;
-  glDebugMessageControl (GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, 0, GL_TRUE);
+  glDebugMessageControl (GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, 0, GL_TRUE); GLCHECK;
 #endif
 
   return program.initialize ();
