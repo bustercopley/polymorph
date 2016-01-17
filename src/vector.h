@@ -37,8 +37,8 @@ do {                                   \
   (a3) = _mm_movehl_ps (_t1, _t1);     \
 } while (0)
 
-inline v4f load4f (const float * a) { return _mm_load_ps (a); }
-inline void store4f (float * a, v4f v) { _mm_store_ps (a, v); }
+ALWAYS_INLINE inline v4f load4f (const float * a) { return _mm_load_ps (a); }
+ALWAYS_INLINE inline void store4f (float * a, v4f v) { _mm_store_ps (a, v); }
 
 inline v4f dot (v4f u, v4f v)
 {
@@ -78,19 +78,19 @@ inline v4f rsqrt (v4f k)
   return (half * x0) * (three - (x0 * x0) * k);
 }
 
-inline v4f normalize (v4f v)
+ALWAYS_INLINE inline v4f normalize (v4f v)
 {
   return v * rsqrt (dot (v, v));
 }
 
-inline v4f sqrt_nonzero (v4f k)
+ALWAYS_INLINE inline v4f sqrt_nonzero (v4f k)
 {
   return k * rsqrt (k);
 }
 
-inline v4f sqrt (v4f k)
+ALWAYS_INLINE inline v4f sqrt (v4f k)
 {
-  return _mm_and_ps (_mm_cmpneq_ps (k, _mm_setzero_ps ()), sqrt_nonzero (k));
+  return _mm_and_ps (_mm_cmpneq_ps (k, _mm_setzero_ps ()), k * rsqrt (k));
 }
 
 // Apply the 3x3 matrix m to the column vector x.

@@ -53,6 +53,15 @@ namespace
     return xmix * fgfg;                        // sin(x) 1-cos(x) sin(x) 1-cos(x)
   }
 
+  // Argument x x * *, result pi-x pi-x * *.
+  inline v4f subtract_pi (v4f x)
+  {
+    // To 48 binary digits, pi is 1.921FB54442D2P+1.
+    v4f pi_hi = { 0x1.921fb4P+001f, 0x1.921fb4P+001f, 0.0f, 0.0f, };
+    v4f pi_lo = { 0x1.4442d2p-023f, 0x1.4442d2P-023f, 0.0f, 0.0f, };
+    return (x - pi_lo) - pi_hi;
+  }
+
   // Evaluate f and g at xsq.
   // Range [0, ((3/2)*pi)^2].
   // Argument x^2 x^2 * *, result f0(x) g0(x) f0(x) g0(x).
@@ -67,8 +76,8 @@ namespace
       // Quadrants 2 and 3 (pi/2 <= x < 3pi/2).
       v4f x = sqrt_nonzero (xsq);            // x x * * (approx)
       // Let t = x - pi. Then sin(t) = -sin(x) and cos(t) = -cos(x).
-      v4f pi = { +0x1.921fb6P1f, +0x1.921fb6P1f, 0.0f, 0.0f, }; // pi pi 0 0
-      v4f sc1 = sincos_internal (x - pi);    // -sin(x) 1+cos(x) -sin(x) 1+cos(x)
+      v4f xmpi = subtract_pi (x);            // x-pi x-pi * *
+      v4f sc1 = sincos_internal (xmpi);      // -sin(x) 1+cos(x) -sin(x) 1+cos(x)
       v4f o2o2 = { 0.0f, 2.0f, 0.0f, 2.0f, };
       v4f sc2 = o2o2 - sc1;                  // sin(x) 1-cos(x) sin(x) 1-cos(x)
       // Reciprocal-multiply to approximate f and g.
@@ -83,7 +92,6 @@ namespace
   {
     v4f one = { 1.0f, 1.0f, 1.0f, 1.0f, };
     v4f half = { 0.5f, 0.5f, 0.5f, 0.5f, };
-    v4f hpi = { +0x1.921fb6P0f, +0x1.921fb6P0f, 0.0f, 0.0f, }; // pi/2 pi/2 0 0
     v4f lim = { +0x1.3bd3ccP1f, 0.0f, 0.0f, 0.0f, };           // (pi/2)^2 0 0 0
     v4f xsq = dot (u, u);
     v4f g, h;
@@ -96,14 +104,15 @@ namespace
     else {
       // Quadrants 2, 3 and 4 (pi/2 <= x < 2pi).
       // Let t = x/2 - pi/2. Then sin(t) = -cos(x/2) and cos(t) = sin(x/2).
-      v4f hx = half * sqrt_nonzero (xsq);      // x/2 x/2 x/2 x/2 (approx)
-      v4f sc = sincos_internal (hx - hpi);     // -cos(x/2) 1-sin(x/2) -cos(x/2) 1-sin(x/2)
+      v4f x = sqrt_nonzero (xsq);              // x/2 x/2 x/2 x/2 (approx)
+      v4f hxmpi = half * subtract_pi (x);      // 0.5*(x-pi)
+      v4f sc = sincos_internal (hmxpi);        // -cos(x/2) 1-sin(x/2) -cos(x/2) 1-sin(x/2)
       v4f oioi = { 0.0f, 1.0f, 0.0f, 1.0f, };
       v4f cs = oioi - sc;                      // cos(x/2) sin(x/2) cos(x/2) sin(x/2)
       v4f c = _mm_moveldup_ps (cs);
       v4f s = _mm_movehdup_ps (cs);
       // Reciprocal-multiply to approximate (x/2)cot(x/2).
-      g = hx * c * rcp (s);
+      g = half * x * c * rcp (s);
       h = (one - g) * rcp (xsq);
     }
     return dot (u, w) * h * u + g * w - half * cross (u, w);

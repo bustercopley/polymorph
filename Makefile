@@ -31,7 +31,7 @@ settings.o systems.o make_system.o
 
 common_CPPFLAGS=-DUNICODE
 common_CFLAGS=-msse3 -mfpmath=sse -fno-ident
-common_CXXFLAGS=-fno-rtti -fno-exceptions -ffast-math
+common_CXXFLAGS=-fno-rtti -fno-exceptions -fno-fast-math
 common_LDFLAGS=-mwindows -municode
 common_LDLIBS=-lopengl32 -lcomctl32 -lshell32
 
