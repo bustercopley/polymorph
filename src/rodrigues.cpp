@@ -53,13 +53,13 @@ namespace
     return xmix * fgfg;                        // sin(x) 1-cos(x) sin(x) 1-cos(x)
   }
 
-  // Argument x x * *, result pi-x pi-x * *.
+  // Argument x y z w, result x-pi y-pi z-pi w-pi.
   inline v4f subtract_pi (v4f x)
   {
-    // To 48 binary digits, pi is 1.921FB54442D2P+1.
-    v4f pi_hi = { 0x1.921fb4P+001f, 0x1.921fb4P+001f, 0.0f, 0.0f, };
-    v4f pi_lo = { 0x1.4442d2p-023f, 0x1.4442d2P-023f, 0.0f, 0.0f, };
-    return (x - pi_lo) - pi_hi;
+    // To 48 binary digits, pi is 1.921fb54442d2P+001.
+    v4f pi_hi = { 0x1.921fb4P+001f, 0x1.921fb4P+001f, 0x1.921fb4P+001f, 0x1.921fb4P+001f, };
+    v4f pi_lo = { 0x1.4442d2p-023f, 0x1.4442d2p-023f, 0x1.4442d2p-023f, 0x1.4442d2p-023f, };
+    return (x - pi_hi) - pi_lo; // I'm pretty sure
   }
 
   // Evaluate f and g at xsq.
@@ -106,7 +106,7 @@ namespace
       // Let t = x/2 - pi/2. Then sin(t) = -cos(x/2) and cos(t) = sin(x/2).
       v4f x = sqrt_nonzero (xsq);              // x/2 x/2 x/2 x/2 (approx)
       v4f hxmpi = half * subtract_pi (x);      // 0.5*(x-pi)
-      v4f sc = sincos_internal (hmxpi);        // -cos(x/2) 1-sin(x/2) -cos(x/2) 1-sin(x/2)
+      v4f sc = sincos_internal (hxmpi);        // -cos(x/2) 1-sin(x/2) -cos(x/2) 1-sin(x/2)
       v4f oioi = { 0.0f, 1.0f, 0.0f, 1.0f, };
       v4f cs = oioi - sc;                      // cos(x/2) sin(x/2) cos(x/2) sin(x/2)
       v4f c = _mm_moveldup_ps (cs);
