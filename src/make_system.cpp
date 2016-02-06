@@ -34,7 +34,7 @@ void make_system (unsigned q, unsigned r, const float (& xyz_in) [3] [4], float 
   store4f (nodes [0], load4f (xyz_in [1]));
   store4f (nodes [Rx [0] = next_node ++], load4f (xyz_in [2]));
 
-  float two_pi = 0x1.921fb6P2;
+  float two_pi = 0x1.921fb6P+002f;
   float A = two_pi / p;
   float B = two_pi / q;
 

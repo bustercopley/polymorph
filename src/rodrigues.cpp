@@ -22,12 +22,12 @@
 namespace
 {
   // Range [0, 2.467401] ((pi/2)^2).
-  // f: Remes error +-0x1.950326P-21, max ulp error +-14.
-  // g: Remes error +-0x1.4711d0P-24, max ulp error +-4.
-  // h: Remes error +-0x1.e7b99cP-28, max ulp error +-2.
-  const v4f fpoly = { +0x1.ffffe6P-1f, -0x1.55502cP-3f, +0x1.1068acP-7f, -0x1.847be2P-13f, };
-  const v4f gpoly = { +0x1.fffffaP-2f, -0x1.555340P-5f, +0x1.6b8f0cP-10f, -0x1.89e394P-16f, };
-  const v4f hpoly = { +0x1.555554P-4f, +0x1.6c1cd6P-10f, +0x1.13e3e4P-15f, +0x1.f88a10P-21f, };
+  // f: Remes error +-0x1.950326P-021f, max ulp error +-14.
+  // g: Remes error +-0x1.4711d0P-024f, max ulp error +-4.
+  // h: Remes error +-0x1.e7b99cP-028f, max ulp error +-2.
+  const v4f fpoly = { +0x1.ffffe6P-001f, -0x1.55502cP-003f, +0x1.1068acP-007f, -0x1.847be2P-013f, };
+  const v4f gpoly = { +0x1.fffffaP-002f, -0x1.555340P-005f, +0x1.6b8f0cP-010f, -0x1.89e394P-016f, };
+  const v4f hpoly = { +0x1.555554P-004f, +0x1.6c1cd6P-010f, +0x1.13e3e4P-015f, +0x1.f88a10P-021f, };
 
   // Evaluate two cubic polynomials at t by Estrin's method. Requires SSE3 (for haddps).
   // First argument t t * *, result a(t) b(t) a(t) b(t).
@@ -58,7 +58,7 @@ namespace
   {
     // To 48 binary digits, pi is 1.921fb54442d2P+001.
     v4f pi_hi = { 0x1.921fb4P+001f, 0x1.921fb4P+001f, 0x1.921fb4P+001f, 0x1.921fb4P+001f, };
-    v4f pi_lo = { 0x1.4442d2p-023f, 0x1.4442d2p-023f, 0x1.4442d2p-023f, 0x1.4442d2p-023f, };
+    v4f pi_lo = { 0x1.4442d2P-023f, 0x1.4442d2P-023f, 0x1.4442d2P-023f, 0x1.4442d2P-023f, };
     return (x - pi_hi) - pi_lo; // I'm pretty sure
   }
 
@@ -67,7 +67,7 @@ namespace
   // Argument x^2 x^2 * *, result f0(x) g0(x) f0(x) g0(x).
   inline v4f fg (const v4f xsq)
   {
-    v4f lim = { +0x1.3bd3ccP1f, 0.0f, 0.0f, 0.0f, }; // (pi/2)^2
+    v4f lim = { +0x1.3bd3ccP+001f, 0.0f, 0.0f, 0.0f, }; // (pi/2)^2
     if (_mm_comile_ss (xsq, lim)) {
       // Quadrant 1 (0 <= x < pi/2).
       return polyeval (xsq, fpoly, gpoly);
@@ -92,7 +92,7 @@ namespace
   {
     v4f one = { 1.0f, 1.0f, 1.0f, 1.0f, };
     v4f half = { 0.5f, 0.5f, 0.5f, 0.5f, };
-    v4f lim = { +0x1.3bd3ccP1f, 0.0f, 0.0f, 0.0f, };           // (pi/2)^2 0 0 0
+    v4f lim = { +0x1.3bd3ccP+001f, 0.0f, 0.0f, 0.0f, };           // (pi/2)^2 0 0 0
     v4f xsq = dot (u, u);
     v4f g, h;
     // Evaluate g and h at xsq (range [0, (2pi)^2)).
@@ -123,7 +123,7 @@ namespace
   {
     // One step of the classical fourth-order Runge-Kutta method.
     v4f half = { 0.5f, 0.5f, 0.5f, 0.5f, };
-    v4f sixth = { 0x1.555556P-3f, 0x1.555556P-3f, 0x1.555556P-3f, 0x1.555556P-3f, };
+    v4f sixth = { 0x1.555556P-003f, 0x1.555556P-003f, 0x1.555556P-003f, 0x1.555556P-003f, };
     v4f A = tangent (y, x);
     v4f B = tangent (y + half * A, x);
     v4f C = tangent (y + half * B, x);
@@ -197,8 +197,8 @@ void advance_linear (float (* RESTRICT x) [4], const float (* RESTRICT v) [4], u
 void advance_angular (float (* RESTRICT u) [4], float (* RESTRICT w) [4], unsigned count)
 {
   v4f one = { 1.0f, 1.0f, 1.0f, 1.0f, };
-  v4f twopi = { 0x1.921fb6P2f, 0x1.921fb6P2f, 0x1.921fb6P2f, 0x1.921fb6P2f, };
-  v4f lim1 = { +0x1.3c0000P3f, 0.0f, 0.0f, 0.0f, }; // a touch over pi^2 (~ +0x1.3bd3ccP3)
+  v4f twopi = { 0x1.921fb6P+002f, 0x1.921fb6P+002f, 0x1.921fb6P+002f, 0x1.921fb6P+002f, };
+  v4f lim1 = { +0x1.3c0000P+003f, 0.0f, 0.0f, 0.0f, }; // a touch over pi^2 (~ +0x1.3bd3ccP+003f)
   for (unsigned n = 0; n != count; ++ n) {
     v4f u1 = bch2 (load4f (w [n]), load4f (u [n]));
     // If |u|^2 exceeds lim1, scale u in order to adjust its length by -2pi.
@@ -274,12 +274,12 @@ v4f sincos (const v4f x)
   return oioi - sc;                // sin(x) cos(x) sin(x) cos(x)
 }
 
-// Very restricted range [+0x1.8c97f0P-1f, +0x1.fb5486P-1f] ([0.774596691, 0.990879238]).
+// Very restricted range [+0x1.8c97f0P-001f, +0x1.fb5486P-001f] ([0.774596691, 0.990879238]).
 // Argument x x x x, result acos(x) acos(x) acos(x) acos(x).
 v4f arccos (v4f x)
 {
-  // Minimax polynomial for (acos(x))^2 on [+0x1.8c97f0P-1f, +0x1.fb5486P-1f].
-  // Remes error +-0x1.460d54P-21f, max ulp error +-446.
-  const v4f p = { +0x1.37b24aP1f, -0x1.7cb23cP1f, +0x1.494690P-1f, -0x1.aa37e2P-4f, };
+  // Minimax polynomial for (acos(x))^2 on [+0x1.8c97f0P-001f, +0x1.fb5486P-001f].
+  // Remes error +-0x1.460d54P-021f, max ulp error +-446.
+  const v4f p = { +0x1.37b24aP+001f, -0x1.7cb23cP+001f, +0x1.494690P-001f, -0x1.aa37e2P-004f, };
   return sqrt_nonzero (polyeval (x, p, p));
 }

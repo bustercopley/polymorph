@@ -258,7 +258,7 @@ model_t::~model_t ()
 
   std::cout << std::fixed << std::setprecision (2);
   for (unsigned n = 0; n != 18; ++ n) {
-    std::cout << std::setw (10) << (100.0 * polyhedron_counts [n] / total_polyhedron_count) << " % " << names [n] << "\n";
+    std::cout << std::setw (10) << (100.0f * polyhedron_counts [n] / total_polyhedron_count) << " % " << names [n] << "\n";
   }
 #endif
   deallocate (memory);
@@ -309,7 +309,7 @@ void model_t::add_object (const float (& view) [4], float temperature)
   const float action = temperature * usr::frame_time;
   store4f (x [count], t);
   store4f (v [count], get_vector_in_ball (rng, 0.5f * action / A.m));
-  store4f (u [count], get_vector_in_ball (rng, 0x1.921fb4P1f)); // pi
+  store4f (u [count], get_vector_in_ball (rng, 0x1.921fb4P+001f)); // pi
   store4f (w [count], get_vector_in_ball (rng, 0.2f * action / A.l));
 
   std::uint64_t entropy = rng.get ();

@@ -29,7 +29,7 @@ std::uint64_t rng_t::get ()
 // Random floating-point number uniformly distributed on the interval [a, b).
 float get_float (rng_t & rng, float a, float b)
 {
-  return a + 0x1.0p-64f * rng.get () * (b - a);
+  return a + 0x1.000000P-064f * rng.get () * (b - a);
 }
 
 // Return a random vector uniformly distributed in
@@ -41,7 +41,7 @@ v4f get_vector_in_ball (rng_t & rng, float radius)
     std::uint64_t u64 [2];
   };
   v4f v, vsq;
-  v4f lim = { 0x1.0p62f, 0.0f, 0.0f, 0.0f, };
+  v4f lim = { 0x1.000000P+062f, 0.0f, 0.0f, 0.0f, };
   do {
     u64 [0] = rng.get ();
     u64 [1] = rng.get () & 0xffffffffull;
@@ -49,7 +49,7 @@ v4f get_vector_in_ball (rng_t & rng, float radius)
     vsq = dot (v, v);
   }
   while (_mm_comige_ss (vsq, lim));
-  float rs = 0x1.0p-31f * radius;
+  float rs = 0x1.000000P-031f * radius;
   v4f k = { rs, rs, rs, 0.0f, };
   return k * v;
 }
@@ -65,6 +65,6 @@ v4f get_vector_in_box (rng_t & rng)
   u64 [0] = rng.get () & 0x7fffffff7fffffffull;
   u64 [1] = rng.get () & 0x7fffffffull;
   v4f v = _mm_cvtepi32_ps (i128);
-  v4f k = { 0x1.0p-31f, 0x1.0p-31f, 0x1.0p-31f, 0.0f };
+  v4f k = { 0x1.000000P-031f, 0x1.000000P-031f, 0x1.000000P-031f, 0.0f };
   return k * v;
 }

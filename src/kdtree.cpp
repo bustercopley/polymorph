@@ -163,7 +163,7 @@ void kdtree_t::search (unsigned * RESTRICT index, const float (* RESTRICT x) [4]
     unsigned stack_top = 0;
     // The root (outer) node box's corners are at infinity.
     // Don't actually use infinity, in order to work under "-ffinite-math-only".
-    static const v4f big_value = { 0x1.0P+60, 0x1.0P+60, 0x1.0P+60, 0.0f, };
+    static const v4f big_value = { 0x1.000000P+060f, 0x1.000000P+060f, 0x1.000000P+060f, 0.0f, };
     static const v4f sign_bit = { -0.0f, -0.0f, -0.0f, 0.0f, };
     v4f normal_non_negative = _mm_cmpge_ps (normal, _mm_setzero_ps ());
     v4f critical_corner = _mm_xor_ps (_mm_and_ps (normal_non_negative, sign_bit), big_value);
