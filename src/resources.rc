@@ -63,7 +63,7 @@ BEGIN
   RIGHT_BUDDY_TYPE  "Faster",  IDC_TRACKBARS_START + 9,    0,    0,   50,   14,  RIGHT_BUDDY_STYLE
   TRACKBAR_CONTROL (IDC_TRACKBARS_START + 8),  76,   96,  146,   14
 
-  CONTROL "<a href=""http://buster.me.uk"">buster.me.uk</a>",
+  CONTROL "<a href=""https://buster.me.uk"">buster.me.uk</a>",
                  IDC_SYSLINK, "SysLink", WS_TABSTOP,       8,  DLGH - 36,  DLGW - 16,  10
 
   LTEXT          "", IDC_BUTTONS_STATIC,                   0,  DLGH - 26,       DLGW,  26
