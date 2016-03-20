@@ -17,7 +17,7 @@
 // advance_*: do inertial motion for one time unit.
 // rotate: bch (u, v) for small v (roughly, |v| <= pi/4).
 
-void compute (char * buffer, std::size_t stride, const float (* x) [4], const float (* u) [4], unsigned * object_order, unsigned count);
+void compute (char * buffer, std::size_t stride, const float (* x) [4], const float (* u) [4], const unsigned * permutation, unsigned count);
 void advance_linear (float (* x) [4], const float (* v) [4], unsigned count);
 void advance_angular (float (* u) [4], float (* w) [4], unsigned count);
 v4f rotate (v4f u, v4f v);

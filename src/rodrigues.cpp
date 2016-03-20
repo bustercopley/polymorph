@@ -211,7 +211,7 @@ void advance_angular (float (* RESTRICT u) [4], float (* RESTRICT w) [4], unsign
 }
 
 // Compute OpenGL modelview matrices from linear and angular position vectors, x and u.
-void compute (char * RESTRICT buffer, std::size_t stride, const float (* RESTRICT x) [4], const float (* RESTRICT u) [4], unsigned * object_order, unsigned count)
+void compute (char * RESTRICT buffer, std::size_t stride, const float (* RESTRICT x) [4], const float (* RESTRICT u) [4], const unsigned * permutation, unsigned count)
 {
   v4f iiii = { 1.0f, 1.0f, 1.0f, 1.0f, };
 #if __SSE4_1__
@@ -221,7 +221,7 @@ void compute (char * RESTRICT buffer, std::size_t stride, const float (* RESTRIC
 #endif
   char * iter = buffer;
   for (unsigned n = 0; n != count; ++ n, iter += stride) {
-    unsigned m = object_order [n];
+    unsigned m = permutation [n];
     float (& f) [16] = * reinterpret_cast <float (*) [16]> (iter);
     v4f u0 = load4f (u [m]);           // u0 u1 u2 0
     v4f usq = u0 * u0;                 // u0^2 u1^2 u2^2 0

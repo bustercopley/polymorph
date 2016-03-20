@@ -18,8 +18,8 @@ inline rotor_t::rotor_t (const float (& u) [4], float a)
   ALIGNED16 float X [4] = { 0.0f, 0.0f, 0.0f, 0.0f, };
   ALIGNED16 float U [4];
   store4f (U, _mm_set1_ps (a) * _mm_load_ps (u));
-  unsigned dummy_order = 0;
-  compute ((char *) & matrix, 0, & X, & U, & dummy_order, 1);
+  const unsigned permutation [1] = { 0 };
+  compute ((char *) & matrix, 0, & X, & U, permutation, 1);
 }
 
 inline void rotor_t::operator () (const float (& in) [4], float (& out) [4]) const
