@@ -140,7 +140,7 @@ bool model_t::start (int width, int height, const settings_t & settings)
   unsigned max_count = std::max (3u, unsigned ((tw / (2 * tr) + 1) *
                                                (th / (2 * tr) + 1) *
                                                (td / (2 * tr) + 1)));
-  unsigned total_count = pos < 2 ? pos + 1 : 2 + (max_count - 2) * (pos - 2) / 98;
+  unsigned total_count = pos < 2 ? pos + 1 : 3 + (max_count - 3) * (pos - 2) / 98;
 
   if (! set_capacity (total_count)) return false;
 
