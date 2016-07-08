@@ -142,7 +142,7 @@ bool model_t::start (int width, int height, const settings_t & settings)
                                                (td / (2 * tr) + 1)));
   unsigned total_count = pos < 2 ? pos + 1 : 3 + (max_count - 3) * (pos - 2) / 98;
 
-  if (! set_capacity (total_count)) return false;
+  set_capacity (total_count);
 
   ALIGNED16 float view [4] = { -tz, -tz - td, tw, th, };
 
@@ -264,13 +264,13 @@ model_t::~model_t ()
   deallocate (memory);
 }
 
-bool model_t::set_capacity (std::size_t new_capacity)
+void model_t::set_capacity (std::size_t new_capacity)
 {
-  return reallocate_aligned_arrays (memory, capacity, new_capacity,
-                                    & x, & v, & u, & w, & e,
-                                    & kdtree_index,
-                                    & objects,
-                                    & object_order);
+  reallocate_aligned_arrays (memory, capacity, new_capacity,
+                             & x, & v, & u, & w, & e,
+                             & kdtree_index,
+                             & objects,
+                             & object_order);
 }
 
 void model_t::add_object (const float (& view) [4], float temperature)
