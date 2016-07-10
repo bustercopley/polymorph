@@ -184,7 +184,7 @@ bool model_t::start (int width, int height, const settings_t & settings)
 
   count = 0;
   max_radius = 0.0f;
-  unsigned temperature = 8.0f * settings.trackbar_pos [1];
+  float temperature = 8.0f * settings.trackbar_pos [1];
   for (unsigned n = 0; n != total_count; ++ n) add_object (view, temperature);
   for (unsigned n = 0; n != count; ++ n) {
     kdtree_index [n] = n;
