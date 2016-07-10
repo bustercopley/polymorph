@@ -261,7 +261,7 @@ model_t::~model_t ()
     std::cout << std::setw (10) << (100.0f * polyhedron_counts [n] / total_polyhedron_count) << " % " << names [n] << "\n";
   }
 #endif
-  deallocate (memory);
+  //deallocate (memory);
 }
 
 void model_t::set_capacity (std::size_t new_capacity)

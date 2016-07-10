@@ -147,7 +147,7 @@ inline void align_up (Dest & y, Source x, std::intptr_t alignment)
 uniform_buffer_t::~uniform_buffer_t ()
 {
   //glDeleteBuffers (1, & m_id); GLCHECK;
-  deallocate (m_memory);
+  //deallocate (m_memory);
 }
 
 bool uniform_buffer_t::initialize ()

@@ -37,7 +37,7 @@
 //   The bottom level, level K, contains 2^K nodes.
 //   Every node in level K contains either one or two points, and at least one node in level K contains two points.
 //   In other words we have 2^K < N <= 2^(K+1).
-//   Explicitly, K = logb(N)-1, where for all integer n, logb(n) is the greatest integer k such that 2^k <= n.
+//   Explicitly, K = logb(N)-1, where for all n > 0, logb(n) is the greatest integer k such that 2^k <= n.
 // Levels
 //   There are K+1 levels, numbered 0, 1, 2, ..., K; the nodes on level K are the leaf nodes.
 //   For each k, level k contains the 2^k nodes in the range [2^k-1, 2^(k+1)-1).
@@ -71,10 +71,10 @@ inline unsigned nonleaf_nodes_required (unsigned n)
 
 kdtree_t::~kdtree_t ()
 {
-  deallocate (split);
+  //deallocate (split);
 }
 
-bool kdtree_t::compute (unsigned * RESTRICT index, const float (* RESTRICT x) [4], unsigned count)
+void kdtree_t::compute (unsigned * RESTRICT index, const float (* RESTRICT x) [4], unsigned count)
 {
   // Undefined behaviour if count == 0.
   unsigned node_count = nonleaf_nodes_required (count);
@@ -82,7 +82,6 @@ bool kdtree_t::compute (unsigned * RESTRICT index, const float (* RESTRICT x) [4
     deallocate (split);
     capacity = node_count;
     split = (float *) allocate_internal (capacity * sizeof (float));
-    if (! split) return false;
   }
 
   unsigned node = 0;
@@ -101,7 +100,6 @@ bool kdtree_t::compute (unsigned * RESTRICT index, const float (* RESTRICT x) [4
     dim = mod3 [dim + 1];
   }
   first_leaf = node;
-  return true;
 }
 
 void kdtree_t::search (unsigned * RESTRICT index, const float (* RESTRICT x) [4], unsigned count,
