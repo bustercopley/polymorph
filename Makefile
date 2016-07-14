@@ -30,7 +30,7 @@ model.o partition.o polymorph.o random.o reposition.o resources.o rodrigues.o \
 settings.o systems.o make_system.o
 
 common_CPPFLAGS=-DUNICODE
-common_CFLAGS=-msse3 -mfpmath=sse -fno-ident -fno-fast-math
+common_CFLAGS=-g -msse3 -mfpmath=sse -fno-ident -fno-fast-math
 common_CXXFLAGS=-fno-rtti -fno-exceptions
 common_LDFLAGS=-mwindows -municode
 common_LDLIBS=-lopengl32 -lcomctl32 -lshell32
@@ -38,19 +38,19 @@ common_LDLIBS=-lopengl32 -lcomctl32 -lshell32
 base_CPPFLAGS=$(common_CPPFLAGS) -DENABLE_PRINT -DENABLE_GLCHECK -DENABLE_GLDEBUG
 base_CFLAGS=$(common_CFLAGS) -flto -Os
 base_CXXFLAGS=$(common_CXXFLAGS)
-base_LDFLAGS=$(common_LDFLAGS) -s
+base_LDFLAGS=$(common_LDFLAGS)
 base_LDLIBS=$(common_LDLIBS)
 base_SHADERS=minified
 
 tiny_CPPFLAGS=$(common_CPPFLAGS) -DTINY
 tiny_CFLAGS=$(common_CFLAGS) -flto -Os -fno-asynchronous-unwind-tables
 tiny_CXXFLAGS=$(common_CXXFLAGS)
-tiny_LDFLAGS=$(common_LDFLAGS) -s -nostdlib -Wl,--disable-runtime-pseudo-reloc --entry=$(PLATFORM_ENTRY_POINT)
+tiny_LDFLAGS=$(common_LDFLAGS) -nostdlib -Wl,--disable-runtime-pseudo-reloc --entry=$(PLATFORM_ENTRY_POINT)
 tiny_LDLIBS=$(common_LDLIBS) -lgdi32 -ladvapi32 -luser32 -lkernel32
 tiny_SHADERS=minified
 
 debug_CPPFLAGS=$(common_CPPFLAGS) -DENABLE_PRINT -DENABLE_GLCHECK -DENABLE_GLDEBUG
-debug_CFLAGS=$(common_CFLAGS) -g -ggdb
+debug_CFLAGS=$(common_CFLAGS) -Og
 debug_CXXFLAGS=$(common_CXXFLAGS)
 debug_LDFLAGS=$(common_LDFLAGS)
 debug_LDLIBS=$(common_LDLIBS)
@@ -84,8 +84,10 @@ test: all
 testx: all
 	$(polymorph_FILENAME) x $(ARG)
 
-debug: all
-	$(PLATFORM_PATH)\gdb --quiet --batch -ex run -ex bt full -ex quit --args $(polymorph_FILENAME)
+debug: $(objdir)/$(program).exe
+	$(PLATFORM_PATH)\gdb --quiet --batch -ex run -ex bt full -ex quit --args $(program).exe
+
+dump: .obj/$(PLATFORM)/$(CONFIG)/polymorph.dump
 
 SHADERS=$($(CONFIG)_SHADERS)
 SHADER_NAMES=vertex-shader.glsl geometry-shader.glsl fragment-shader.glsl
