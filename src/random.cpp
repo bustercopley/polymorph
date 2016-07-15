@@ -26,15 +26,6 @@ std::uint64_t rng_t::get ()
 
 #include "random-util.h"
 
-  // 18480	  12580	    224	  31284	   7a34	.obj/x64/tiny/polymorph.exe
-  // 19264	  11464	    104	  30832	   7870	.obj/x86/tiny/polymorph.exe
-
-  // 18464	  12580	    224	  31268	   7a24	.obj/x64/tiny/polymorph.exe
-  // 19248	  11464	    104	  30816	   7860	.obj/x86/tiny/polymorph.exe
-
-  // 18448	  12580	    224	  31252	   7a14	.obj/x64/tiny/polymorph.exe
-  // 19236	  11464	    104	  30804	   7854	.obj/x86/tiny/polymorph.exe
-
 // Random floating-point number uniformly distributed on the interval [a, b).
 float get_float (rng_t & rng, float a, float b)
 {
