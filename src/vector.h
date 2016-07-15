@@ -123,4 +123,13 @@ ALWAYS_INLINE inline v4f tmapply (const float (* m) [4], v4f x)
   return x0 * m0 + x1 * m1 + x2 * m2;
 }
 
+// Scalar utility functions
+
+// Convert floating point to integer, with truncation.
+ALWAYS_INLINE inline int truncate (float x)
+{
+  //return (unsigned) x;
+  return _mm_cvttss_si32 (_mm_set_ss (x));
+}
+
 #endif

@@ -118,7 +118,7 @@ inline float rainbow_hue (float phase)
     5.67187500f,
   };
   unsigned n = sizeof rainbow_ends / sizeof * rainbow_ends - 1;
-  unsigned i = unsigned (n * phase);
+  unsigned i = truncate (n * phase);
   passert (i < n);
   float hue = rainbow_ends [i] + (n * phase - i) * (rainbow_ends [i + 1] - rainbow_ends [i]);
   if (hue < 0.0f) hue += 6.0f;
@@ -137,9 +137,9 @@ bool model_t::start (int width, int height, const settings_t & settings)
   // Trackbar positions 0, 1, 2 specify 1, 2, 3 objects respectively.
   // subsequently the number of objects increases linearly with position.
   unsigned pos = settings.trackbar_pos [0];
-  unsigned max_count = std::max (3u, unsigned ((tw / (2 * tr) + 1) *
-                                               (th / (2 * tr) + 1) *
-                                               (td / (2 * tr) + 1)));
+  unsigned max_count = std::max (3, truncate ((tw / (2 * tr) + 1) *
+                                              (th / (2 * tr) + 1) *
+                                              (td / (2 * tr) + 1)));
   unsigned total_count = pos < 2 ? pos + 1 : 3 + (max_count - 3) * (pos - 2) / 98;
 
   set_capacity (total_count);
