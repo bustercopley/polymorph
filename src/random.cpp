@@ -26,10 +26,19 @@ std::uint64_t rng_t::get ()
 
 #include "random-util.h"
 
+  // 18480	  12580	    224	  31284	   7a34	.obj/x64/tiny/polymorph.exe
+  // 19264	  11464	    104	  30832	   7870	.obj/x86/tiny/polymorph.exe
+
+  // 18464	  12580	    224	  31268	   7a24	.obj/x64/tiny/polymorph.exe
+  // 19248	  11464	    104	  30816	   7860	.obj/x86/tiny/polymorph.exe
+
+  // 18448	  12580	    224	  31252	   7a14	.obj/x64/tiny/polymorph.exe
+  // 19236	  11464	    104	  30804	   7854	.obj/x86/tiny/polymorph.exe
+
 // Random floating-point number uniformly distributed on the interval [a, b).
 float get_float (rng_t & rng, float a, float b)
 {
-  return a + 0x1.000000P-064f * rng.get () * (b - a);
+  return a + 0x1.000000P-064f * (b - a) * rng.get ();
 }
 
 // Return a random vector uniformly distributed in
@@ -44,14 +53,12 @@ v4f get_vector_in_ball (rng_t & rng, float radius)
   v4f lim = { 0x1.000000P+062f, 0.0f, 0.0f, 0.0f, };
   do {
     u64 [0] = rng.get ();
-    u64 [1] = rng.get () & 0xffffffffull;
+    u64 [1] = rng.get () & 0xffffffff;
     v = _mm_cvtepi32_ps (i128);
     vsq = dot (v, v);
   }
   while (_mm_comige_ss (vsq, lim));
-  float rs = 0x1.000000P-031f * radius;
-  v4f k = { rs, rs, rs, 0.0f, };
-  return k * v;
+  return _mm_set1_ps (0x1.000000P-31f * radius) * v;
 }
 
 // Return a random vector uniformly distributed in
@@ -62,9 +69,8 @@ v4f get_vector_in_box (rng_t & rng)
     __m128i i128;
     std::uint64_t u64 [2];
   };
-  u64 [0] = rng.get () & 0x7fffffff7fffffffull;
-  u64 [1] = rng.get () & 0x7fffffffull;
+  u64 [0] = rng.get () & 0x7fffffff7fffffff;
+  u64 [1] = rng.get () & 0x7fffffff;
   v4f v = _mm_cvtepi32_ps (i128);
-  v4f k = { 0x1.000000P-031f, 0x1.000000P-031f, 0x1.000000P-031f, 0.0f };
-  return k * v;
+  return _mm_set1_ps (0x1.000000P-031f) * v;
 }
