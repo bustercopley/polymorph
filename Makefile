@@ -30,7 +30,7 @@ model.o partition.o polymorph.o random.o reposition.o resources.o rodrigues.o \
 settings.o systems.o make_system.o
 
 common_CPPFLAGS=-DUNICODE
-common_CFLAGS=-g -msse3 -mfpmath=sse -fno-ident -fno-fast-math
+common_CFLAGS=-g -msse3 -mfpmath=sse -mno-stackrealign -fno-ident -fno-fast-math
 common_CXXFLAGS=-fno-rtti -fno-exceptions
 common_LDFLAGS=-mwindows -municode
 common_LDLIBS=-lopengl32 -lcomctl32 -lshell32
