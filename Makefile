@@ -84,10 +84,10 @@ test: all
 testx: all
 	$(polymorph_FILENAME) x $(ARG)
 
-debug: $(objdir)/$(program).exe
-	$(PLATFORM_PATH)\gdb --quiet --batch -ex run -ex bt full -ex quit --args $(program).exe
+debug: .obj/$(polymorph_FILENAME)
+	$(PLATFORM_PATH)\gdb --quiet --batch -ex run -ex bt full -ex quit --args .obj/$(polymorph_FILENAME)
 
-dump: .obj/$(PLATFORM)/$(CONFIG)/polymorph.dump
+dump: .obj/$(polymorph_FILENAME).dump
 
 SHADERS=$($(CONFIG)_SHADERS)
 SHADER_NAMES=vertex-shader.glsl geometry-shader.glsl fragment-shader.glsl

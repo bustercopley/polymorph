@@ -25,14 +25,15 @@ $(objdir)/%.o: $(source_prefix)%.rc | $(objdir)
 	$(CC) $(cppflags) -MM -MT $$@ -MF $$(@:%.o=%.d) -x c $$<
 	windres $(resflags) $$< $$@
 ifdef $(program)_FILENAME
-$(objdir)/$(program).exe: $(objects)
-	$(CXX) $(cxxflags) $(ldflags) $(objects) $(ldlibs) -o $(objdir)/$(program).exe
-	-@size $(objdir)/$(program).exe
-$(name): $(objdir)/$(program).exe
-	-@copy $(objdir_wpath)\$(program).exe $(name)
+.obj/$(name): $(objects)
+	$(CXX) $(cxxflags) $(ldflags) $(objects) $(ldlibs) -o .obj/$(name)
+	-@size .obj/$(name)
+$(name): .obj/$(name)
+	-@copy .obj\$(name)
 	strip $(name)
-$(objdir)/$(program).dump: $(objdir)/$(program).exe
-	objdump -Mintel -d -C $(objdir)/$(program).exe > $(objdir_wpath)\$(program).dump
+.obj/$(name).dump: .obj/$(name)
+	>.obj\$(name).dump objdump -Mintel -d -C -l --no-show-raw-insn .obj/$(name)
+	>>.obj\$(name).dump objdump -s -j.data .obj/$(name)
 endif
 endef
 
