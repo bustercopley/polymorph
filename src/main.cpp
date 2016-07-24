@@ -8,6 +8,7 @@
 #include "settings.h"
 #include "dialog.h"
 #include "qpc.h"
+#include "vector.h"
 #include <cstdint>
 
 #define WC_MAIN TEXT ("M")
@@ -26,6 +27,8 @@ NOINLINE int message_loop (HWND hdlg)
 
 int WINAPI _tWinMain (HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
 {
+  _mm_setcsr (_mm_getcsr () | (_MM_FLUSH_ZERO_ON | _MM_DENORMALS_ZERO_ON));
+
   if (! glinit (hInstance)) return 1;
 
   INITCOMMONCONTROLSEX icc = { sizeof (INITCOMMONCONTROLSEX), ICC_BAR_CLASSES | ICC_LINK_CLASS | ICC_STANDARD_CLASSES };
