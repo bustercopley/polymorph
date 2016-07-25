@@ -27,41 +27,49 @@ std::uint64_t rng_t::get ()
 #include "random-util.h"
 
 // Random floating-point number uniformly distributed on the interval [a, b).
+// Unspecified result if |a| >= 32767 * |b - a|.
 float get_float (rng_t & rng, float a, float b)
 {
-  return a + 0x1.000000P-064f * (b - a) * rng.get ();
+  if (a < b || a > b) { // Ordered and not equal.
+    // Get 48 random bits, do integer addition, convert to float, then scale.
+    return ((std::int64_t) (rng.get () & 0x0000ffffffffffffull)
+      + (std::int64_t) (0x1.0P+48f * (a / (b - a))))
+    * ((b - a) * 0x1.0P-48f);
+  }
+  else { // Equal or unordered.
+    return a;
+  }
 }
 
-// Return a random vector uniformly distributed in
-// the interior of a sphere centre the origin.
+// Return a random vector uniformly distributed in a ball centre the origin.
 v4f get_vector_in_ball (rng_t & rng, float radius)
 {
   union {
     __m128i i128;
     std::uint64_t u64 [2];
+    std::uint32_t u32 [4];
   };
   v4f v, vsq;
-  v4f lim = { 0x1.000000P+062f, 0.0f, 0.0f, 0.0f, };
   do {
     u64 [0] = rng.get ();
-    u64 [1] = rng.get () & 0xffffffff;
+    u64 [1] = rng.get ();
+    u32 [3] = 0;
     v = _mm_cvtepi32_ps (i128);
     vsq = dot (v, v);
   }
-  while (_mm_comige_ss (vsq, lim));
+  while (_mm_comige_ss (vsq, _mm_set_ss (0x1.0P+62f)));
   return _mm_set1_ps (0x1.000000P-31f * radius) * v;
 }
 
-// Return a random vector uniformly distributed in
-// the box [0,1)^3.
+// Return four random floats uniformly distributed in (-1,1)^4.
 v4f get_vector_in_box (rng_t & rng)
 {
   union {
-    __m128i i128;
     std::uint64_t u64 [2];
+    __m128i i128;
   };
-  u64 [0] = rng.get () & 0x7fffffff7fffffff;
-  u64 [1] = rng.get () & 0x7fffffff;
+  u64 [0] = rng.get ();
+  u64 [1] = rng.get ();
   v4f v = _mm_cvtepi32_ps (i128);
-  return _mm_set1_ps (0x1.000000P-031f) * v;
+  return 0x1.000000P-031f * v;
 }

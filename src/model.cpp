@@ -293,11 +293,11 @@ void model_t::add_object (const float (& view) [4], float temperature)
   float x2 = x1 * z2 / z1;
   float y2 = y1 * z2 / z1;
   v4f R0 = { R, 0.0f, 0.0f, 0.0f, };
-  v4f a = { -x2 + R, -y2 + R, z2 + R, 0.0f, };
-  v4f b = { +x2 - R, +y2 - R, z1 - R, 0.0f, };
-  v4f m = b - a;
+
+  v4f c = { 0.0f, 0.0f, 0.5f * (z1 + z2), 0.0f, };
+  v4f m = { x2 + R, y2 + R, 0.5f * (z2 - z1) + R, 0.0f, };
  loop:
-  v4f t = a + m * get_vector_in_box (rng);
+  v4f t = m * get_vector_in_box (rng) + c;
   for (unsigned k = 0; k != 6; ++ k) {
     v4f anchor = load4f (walls [k] [0]);
     v4f normal = load4f (walls [k] [1]);
