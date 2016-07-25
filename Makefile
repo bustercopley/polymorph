@@ -76,7 +76,7 @@ EXTRA_CLEAN=Polymorph*.scr
 
 .PHONY: all test debug
 
-all: $(polymorph_FILENAME)
+all: $(polymorph_FILENAME) dump
 
 test: all
 	$(polymorph_FILENAME) $(ARG)
