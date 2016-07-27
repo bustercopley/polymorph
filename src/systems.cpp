@@ -117,8 +117,8 @@ void reflect (triangle_t & t)
   v4f y = load4f (t.xyz [1]);
   v4f z = load4f (t.xyz [2]);
 
-  v4f n = normalize (cross (x, y));
-  v4f d = dot (n, z) * n;
+  v4f n = cross (x, y);
+  v4f d = (dot (n, z) / dot (n, n)) * n; // Component of z perpendicular to x and y.
 
   store4f (t.xyz [1], z - (d + d));
   store4f (t.xyz [2], y);
