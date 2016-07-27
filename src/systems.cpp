@@ -7,6 +7,7 @@
 #include "cramer.h"
 #include "graphics.h"
 #include <cstdint>
+#include <cstring>
 
 struct triangle_t
 {
@@ -132,9 +133,7 @@ void reflect (triangle_t & t)
 template <unsigned K>
 ALWAYS_INLINE inline void copy (const float (* from) [4], float (& to) [K] [4])
 {
-  for (unsigned k = 0; k != K; ++ k) {
-    store4f (to [k], load4f (from [k]));
-  }
+  std::memcpy (to, from, K * 4 * sizeof (float));
 }
 
 void initialize_systems (float (& abc) [system_count] [8] [4],
