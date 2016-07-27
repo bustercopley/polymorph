@@ -130,12 +130,6 @@ void reflect (triangle_t & t)
   }
 }
 
-template <unsigned K>
-ALWAYS_INLINE inline void copy (const float (* from) [4], float (& to) [K] [4])
-{
-  std::memcpy (to, from, K * 4 * sizeof (float));
-}
-
 void initialize_systems (float (& abc) [system_count] [8] [4],
                          float (& xyz) [system_count] [3] [4],
                          float (& xyzinvt) [system_count] [3] [4],
@@ -147,8 +141,8 @@ void initialize_systems (float (& abc) [system_count] [8] [4],
 
   auto init = [&] (const triangle_t & t, system_select_t select, unsigned q, unsigned r) -> void
   {
-    copy (t.xyz, xyz [select]);
-    copy (t.abc, abc [select]);
+    std::memcpy (xyz [select], t.xyz, sizeof t.xyz);
+    std::memcpy (abc [select], t.abc, sizeof t.abc);
     cramer::inverse_transpose (xyz [select], xyzinvt [select]);
     unsigned p = 2, N = 2 * p * q * r / (q * r + r * p + p * q - p * q * r);
     make_system (q, r, t.xyz, nodes, indices);
