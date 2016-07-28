@@ -1,6 +1,7 @@
 #include "mswin.h"
 #include "make_system.h"
 #include "rotor.h"
+#include "vector.h"
 
 // Did I mention that 'make_system' works by magic?
 
@@ -35,8 +36,8 @@ void make_system (unsigned q, unsigned r, const float (& xyz_in) [3] [4], float 
   store4f (nodes [Rx [0] = next_node ++], load4f (xyz_in [2]));
 
   float two_pi = 0x1.921fb6P+002f;
-  float A = two_pi / p;
-  float B = two_pi / q;
+  float A = two_pi / ui2f (p);
+  float B = two_pi / ui2f (q);
 
   unsigned n0 = 0, m0 = 0;
 

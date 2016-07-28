@@ -120,7 +120,7 @@ inline float rainbow_hue (float phase)
   unsigned n = sizeof rainbow_ends / sizeof * rainbow_ends - 1;
   unsigned i = truncate (n * phase);
   passert (i < n);
-  float hue = rainbow_ends [i] + (n * phase - i) * (rainbow_ends [i + 1] - rainbow_ends [i]);
+  float hue = rainbow_ends [i] + (ui2f (n) * phase - ui2f (i)) * (rainbow_ends [i + 1] - rainbow_ends [i]);
   if (hue < 0.0f) hue += 6.0f;
   return hue;
 }
@@ -137,9 +137,9 @@ bool model_t::start (int width, int height, const settings_t & settings)
   // Trackbar positions 0, 1, 2 specify 1, 2, 3 objects respectively.
   // subsequently the number of objects increases linearly with position.
   unsigned pos = settings.trackbar_pos [0];
-  unsigned max_count = std::max (3, truncate ((tw / (2 * tr) + 1) *
-                                              (th / (2 * tr) + 1) *
-                                              (td / (2 * tr) + 1)));
+  unsigned max_count = std::max (3u, truncate ((tw / (2 * tr) + 1) *
+                                               (th / (2 * tr) + 1) *
+                                               (td / (2 * tr) + 1)));
   unsigned total_count = pos < 2 ? pos + 1 : 3 + (max_count - 3) * (pos - 2) / 98;
 
   set_capacity (total_count);
@@ -184,7 +184,7 @@ bool model_t::start (int width, int height, const settings_t & settings)
 
   count = 0;
   max_radius = 0.0f;
-  float temperature = 8.0f * settings.trackbar_pos [1];
+  float temperature = 8.0f * ui2f (settings.trackbar_pos [1]);
   for (unsigned n = 0; n != total_count; ++ n) add_object (view, temperature);
   for (unsigned n = 0; n != count; ++ n) {
     kdtree_index [n] = n;
@@ -193,7 +193,7 @@ bool model_t::start (int width, int height, const settings_t & settings)
 
   float global_time_offset = get_float (rng, 0.0f, usr::cycle_duration);
   for (unsigned n = 0; n != count; ++ n) {
-    float phase = float (n) / count;
+    float phase = ui2f (n) / ui2f (count);
     objects [n].hue = rainbow_hue (phase);
     // Initial animation_time is in [T, 2T) to force an immediate transition.
     float animation_time = global_time_offset + (1.0f - phase) * usr::cycle_duration;
@@ -205,7 +205,8 @@ bool model_t::start (int width, int height, const settings_t & settings)
   // every frame, the morph/fade animation time is advanced by the time interval kT, where
   // k is an increasing continuous function of s, and the constant T is the default frame time.
   DWORD s = settings.trackbar_pos [2];
-  float k = s <= 50 ? 0.02f * s : 0.00000016f * ((s * s) * (s * s)); // Boost sensitivity in upper range.
+  // Boost sensitivity in upper range. (Note: 100 to power 4 < 2 to power 27.)
+  float k = s <= 50 ? 0.02f * ui2f (s) : 0.00000016f * ui2f ((s * s) * (s * s));
   animation_speed_constant = k;
 
   // Initialize bump function object for the lightness and saturation fading animation.
@@ -214,9 +215,9 @@ bool model_t::start (int width, int height, const settings_t & settings)
   if (s > 50) {
     // At higher animation speed, progressively suppress fading.
     DWORD s1 = 100 - s;
-    float g = 0.02f * s1;                // Saturation fading decreases linearly.
-    float h = 8.0e-6f * (s1 * s1 * s1);  // Lightness fading falls off more rapidly.
-    if (s >= 75) { g = 0; h = 0; }       // No fading at all above 75% speed.
+    float g = 0.02f * ui2f (s1);              // Saturation fading decreases linearly.
+    float h = 8.0e-6f * ui2f (s1 * s1 * s1);  // Lightness fading falls off more rapidly.
+    if (s >= 75) { g = 0.0f; h = 0.0f; }      // No fading at all above 75% speed.
     s_bump.v0 = g * s_bump.v0 + (1.0f - g) * s_bump.v1;
     v_bump.v0 = h * v_bump.v0 + (1.0f - h) * v_bump.v1;
   }
