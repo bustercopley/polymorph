@@ -5,14 +5,13 @@
 
 #include "compiler.h"
 #include "mswin.h"
-#include <windowsx.h>
+
+static const unsigned trackbar_count = 3;
 
 struct settings_t
 {
-  DWORD trackbar_pos [3];
+  DWORD trackbar_pos [trackbar_count];
 };
-
-static const unsigned trackbar_count = 3;
 
 void load_settings (settings_t & settings);
 void save_settings (const settings_t & settings);
