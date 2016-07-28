@@ -67,8 +67,7 @@ sub minify
         $oldvars = $vars;
       }
     }
-    if (defined $oldtype)
-    {
+    if (defined $oldtype) {
       print $out "$oldtype$oldvars;";
       undef $oldtype;
       $bol = 0;
@@ -87,8 +86,7 @@ sub minify
 
 my $buffer = "";
 my $bol = 1;
-while (defined (my $line = <$in>))
-{
+while (defined (my $line = <$in>)) {
   $line =~ s{^\s+}{};         # trim leading space
   $line =~ s{//.*$}{};        # strip comment
   $line =~ s{\s+$}{};         # trim trailing space
@@ -96,16 +94,14 @@ while (defined (my $line = <$in>))
   next if $line eq "";        # skip blank line
 
   # Print directive on a separate line.
-  if ($line =~ m/^#/)
-  {
+  if ($line =~ m/^#/) {
     $bol = minify $buffer, $bol;
     $buffer = "";
     print $out "\n" unless $bol;
     print $out "$line\n";
     $bol = 1;
   }
-  else
-  {
+  else {
     $buffer = "$buffer $line";
   }
 }
