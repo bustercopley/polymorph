@@ -54,7 +54,7 @@ INT_PTR CALLBACK DialogProc (HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
     const UINT id = LOWORD (wParam);
     for (unsigned i = 0; i != trackbar_count; ++ i) {
       HWND hwnd_trackbar = ::GetDlgItem (hdlg, IDC_TRACKBARS_START + 4 * i);
-      ds->settings.trackbar_pos [i] = (DWORD) ::SendMessage (hwnd_trackbar, TBM_GETPOS, 0, 0);
+      ds->settings.trackbar_pos [i] = ::SendMessage (hwnd_trackbar, TBM_GETPOS, 0, 0);
     }
     if (id == IDOK) save_settings (ds->settings);
     if (id != IDC_PREVIEW_BUTTON) ::DestroyWindow (hdlg);
