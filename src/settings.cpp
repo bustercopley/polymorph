@@ -13,6 +13,7 @@ const settings_definition_t settings_definitions [trackbar_count] =
   { TEXT ("count"), 50, },
   { TEXT ("heat"), 50, },
   { TEXT ("speed"), 50, },
+  { TEXT ("radius"), 50, },
 };
 
 static const TCHAR * key_name = TEXT ("SOFTWARE\\Buster\\Polymorph");

@@ -18,9 +18,7 @@
 
 namespace usr {
   // Physical parameters.
-  static const float min_radius = 1.0f;
-  static const float max_radius = 1.0f;
-  static const float density = 100.0f;   // Density of a ball.
+  static const float mass = 100.0f;    // Density of a ball.
 
   // Pixels per logical distance unit (at front of tank).
   static const float scale = 50.0f;
@@ -127,19 +125,19 @@ inline float rainbow_hue (float phase)
 
 bool model_t::start (int width, int height, const settings_t & settings)
 {
-  float tr = usr::max_radius;
-  float ts = std::min (2 * usr::scale, std::min (width, height) / (4 * tr));
+  radius = 0.5f + 0.01f * ui2f (settings.trackbar_pos [3]);
+  float ts = std::min (2 * usr::scale, std::min (width, height) / (4 * radius));
   float tw = width / ts;
   float th = height / ts;
-  float td = std::min (tw, th) + 2 * tr;
+  float td = std::min (tw, th) + 2 * radius;
   float tz = 3.0f * std::max (tw, th);    // Distancia del ojo a la pantalla.
 
   // Trackbar positions 0, 1, 2 specify 1, 2, 3 objects respectively.
   // subsequently the number of objects increases linearly with position.
   unsigned pos = settings.trackbar_pos [0];
-  unsigned max_count = std::max (3u, truncate ((tw / (2 * tr) + 1) *
-                                               (th / (2 * tr) + 1) *
-                                               (td / (2 * tr) + 1)));
+  unsigned max_count = std::max (3u, truncate ((tw / (2 * radius) + 1) *
+                                               (th / (2 * radius) + 1) *
+                                               (td / (2 * radius) + 1)));
   unsigned total_count = pos < 2 ? pos + 1 : 3 + (max_count - 3) * (pos - 2) / 98;
 
   set_capacity (total_count);
@@ -183,7 +181,6 @@ bool model_t::start (int width, int height, const settings_t & settings)
   }
 
   count = 0;
-  max_radius = 0.0f;
   float temperature = 8.0f * ui2f (settings.trackbar_pos [1]);
   for (unsigned n = 0; n != total_count; ++ n) add_object (view, temperature);
   for (unsigned n = 0; n != count; ++ n) {
@@ -281,11 +278,9 @@ void model_t::add_object (const float (& view) [4], float temperature)
   // }
 
   object_t & A = objects [count];
-  float R = get_float (rng, usr::min_radius, usr::max_radius);
-  A.r = R;
-  if (max_radius < R) max_radius = R;
-  A.m = usr::density * R * R;
-  A.l = 0.4f * A.m * R * R;
+  A.r = radius;
+  A.m = usr::mass;
+  A.l = 0.4f * A.m * radius * radius;
 
   float z1 = view [0];
   float z2 = view [1];
@@ -293,10 +288,10 @@ void model_t::add_object (const float (& view) [4], float temperature)
   float y1 = view [3];
   float x2 = x1 * z2 / z1;
   float y2 = y1 * z2 / z1;
-  v4f R0 = { R, 0.0f, 0.0f, 0.0f, };
+  v4f R0 = { radius, 0.0f, 0.0f, 0.0f, };
 
   v4f c = { 0.0f, 0.0f, 0.5f * (z1 + z2), 0.0f, };
-  v4f m = { x2 + R, y2 + R, 0.5f * (z2 - z1) + R, 0.0f, };
+  v4f m = { x2 + radius, y2 + radius, 0.5f * (z2 - z1) + radius, 0.0f, };
  loop:
   v4f t = m * get_vector_in_box (rng) + c;
   for (unsigned k = 0; k != 6; ++ k) {
@@ -354,7 +349,7 @@ void model_t::nodraw_next ()
   if (count) {
     // Collision detection.
     kdtree.compute (kdtree_index, x, count); // undefined behaviour if count == 0.
-    kdtree.search (kdtree_index, x, count, walls, max_radius, objects, v, w);
+    kdtree.search (kdtree_index, x, count, walls, radius, objects, v, w);
   }
 
   advance_linear (x, v, count);

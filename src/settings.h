@@ -6,7 +6,7 @@
 #include "compiler.h"
 #include "mswin.h"
 
-static const unsigned trackbar_count = 3;
+static const unsigned trackbar_count = 4;
 
 struct settings_t
 {

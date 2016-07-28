@@ -49,7 +49,7 @@ private:
   kdtree_t kdtree;
   rng_t rng;
 
-  float max_radius;
+  float radius;
   float animation_speed_constant;
 
   std::size_t capacity;
