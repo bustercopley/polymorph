@@ -118,7 +118,7 @@ inline float rainbow_hue (float phase)
   unsigned n = sizeof rainbow_ends / sizeof * rainbow_ends - 1;
   unsigned i = truncate (n * phase);
   passert (i < n);
-  float hue = rainbow_ends [i] + (ui2f (n) * phase - ui2f (i)) * (rainbow_ends [i + 1] - rainbow_ends [i]);
+  float hue = rainbow_ends [i] + (n * phase - ui2f (i)) * (rainbow_ends [i + 1] - rainbow_ends [i]);
   if (hue < 0.0f) hue += 6.0f;
   return hue;
 }
