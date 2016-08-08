@@ -27,14 +27,15 @@ std::uint64_t rng_t::get ()
 #include "random-util.h"
 
 // Random floating-point number uniformly distributed on the interval [a, b).
-// Unspecified result if |a| >= 32767 * |b - a|.
+// Undefined behaviour (due to signed integer overflow) if |a| >= 32767 * |b - a|.
 float get_float (rng_t & rng, float a, float b)
 {
   if (a < b || a > b) { // Ordered and not equal.
     // Get 48 random bits, do integer addition, convert to float, then scale.
+    float scale = (b - a) * 0x1.0P-48f;
     return ((std::int64_t) (rng.get () & 0x0000ffffffffffffull)
-      + (std::int64_t) (0x1.0P+48f * (a / (b - a))))
-    * ((b - a) * 0x1.0P-48f);
+      + (std::int64_t) (a / scale))
+    * scale;
   }
   else { // Equal or unordered.
     return a;
