@@ -33,9 +33,9 @@ float get_float (rng_t & rng, float a, float b)
   if (a < b || a > b) { // Ordered and not equal.
     // Get 48 random bits, do integer addition, convert to float, then scale.
     float scale = (b - a) * 0x1.0P-48f;
-    return ((std::int64_t) (rng.get () & 0x0000ffffffffffffull)
-      + (std::int64_t) (a / scale))
-    * scale;
+    std::int64_t offset = a / scale;
+    std::int64_t rand48 = rng.get () & 0xffffffffffffull;
+    return scale * (rand48 + offset);
   }
   else { // Equal or unordered.
     return a;
@@ -62,7 +62,7 @@ v4f get_vector_in_ball (rng_t & rng, float radius)
   return _mm_set1_ps (0x1.000000P-31f * radius) * v;
 }
 
-// Return four random floats uniformly distributed in (-1,1)^4.
+// Return four random floats uniformly distributed in [-1,1)^4.
 v4f get_vector_in_box (rng_t & rng)
 {
   union {
