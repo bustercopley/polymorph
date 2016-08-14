@@ -126,43 +126,25 @@ inline float rainbow_hue (float phase)
 bool model_t::start (int width, int height, const settings_t & settings)
 {
   radius = 0.5f + 0.01f * ui2f (settings.trackbar_pos [3]);
-  float ts = std::min (2 * usr::scale, std::min (width, height) / (4 * radius));
-  float tw = width / ts;
-  float th = height / ts;
-  float td = std::min (tw, th) + 2 * radius;
-  float tz = 3.0f * std::max (tw, th);    // Distancia del ojo a la pantalla.
+  ALIGNED16 float view [4];
 
-  // Trackbar positions 0, 1, 2 specify 1, 2, 3 objects respectively.
-  // subsequently the number of objects increases linearly with position.
-  unsigned pos = settings.trackbar_pos [0];
-  unsigned max_count = std::max (3u, truncate ((tw / (2 * radius) + 1) *
-                                               (th / (2 * radius) + 1) *
-                                               (td / (2 * radius) + 1)));
-  unsigned total_count = pos < 2 ? pos + 1 : 3 + (max_count - 3) * (pos - 2) / 98;
+  float scale = 0.5f / usr::scale;
+  // x1, y1, z1: coordinates of bottom-right-front corner of view frustum.
+  float x1 = view [0] = scale * width;
+  float y1 = view [1] = scale * height;
+  float z1 = view [2] = (float) (-3 * std::max (width, height));
 
-  set_capacity (total_count);
-
-  ALIGNED16 float view [4] = { tw, th, -tz, -tz - td, };
-
-  // If the window rect is small relative to the requested object
-  // radius, the actual object radius is reduced (see the definition
-  // of ts above). Scale the line width in proportion, up to a point.
-  // This is to support parented mode on small windows, e.g., in the
-  // Windows screensaver property sheet.
-
-  float scale = 2 * usr::scale / ts;
+  float zd = std::min (x1, y1); // td: depth of frustum
+  // x2, y2, z2: coordinates of bottom-right-back corner of view frustum.
+  float z2 = view [3] = z1 - zd;
+  float x2 = x1 * (z2 / z1);
+  float y2 = y1 * (z2 / z1);
 
   program.set_view (view, width, height,
                     usr::colours, usr::fog_near, usr::fog_far,
-                    usr::line_width_extra, std::min (2.0f, scale * usr::line_sharpness));
+                    usr::line_width_extra, usr::line_sharpness);
 
   // Calculate wall planes to exactly fill the front of the viewing frustum.
-  float x1 = view [0];
-  float y1 = view [1];
-  float z1 = view [2];
-  float z2 = view [3];
-  float x2 = x1 * z2 / z1;
-  float y2 = y1 * z2 / z1;
 
   ALIGNED16 const float temp [6] [2] [4] = {
     { { 0.0f, 0.0f, z1, 0.0f, }, { 0.0f, 0.0f, -1.0f, 0.0f, }, },
@@ -175,17 +157,56 @@ bool model_t::start (int width, int height, const settings_t & settings)
 
   for (unsigned k = 0; k != 6; ++ k) {
     v4f anchor = load4f (temp [k] [0]);
-    v4f normal = normalize (load4f (temp [k] [1]));
+    v4f normal = load4f (temp [k] [1]);
     store4f (walls [k] [0], anchor);
-    store4f (walls [k] [1], normal);
+    store4f (walls [k] [1], normalize (normal));
   }
 
-  count = 0;
+  // Add objects.
+
   float temperature = 8.0f * ui2f (settings.trackbar_pos [1]);
-  for (unsigned n = 0; n != total_count; ++ n) add_object (view, temperature);
+
+  // Trackbar positions 0, 1, 2 specify 1, 2, 3 objects respectively.
+  // subsequently the number of objects increases linearly with position.
+  unsigned pos = settings.trackbar_pos [0];
+  unsigned max_count = std::max (3u, truncate ((x1 / (2 * radius) + 1) *
+                                               (y1 / (2 * radius) + 1) *
+                                               (zd / (2 * radius) + 1)));
+  count = pos < 2 ? pos + 1 : 3 + (max_count - 3) * (pos - 2) / 98;
+  set_capacity (count);
+
   for (unsigned n = 0; n != count; ++ n) {
     kdtree_index [n] = n;
     object_order [n] = n;
+    object_t & A = objects [n];
+    A.r = radius;
+    A.m = usr::mass;
+    A.l = 0.4f * A.m * radius * radius;
+    v4f c = { 0.0f, 0.0f, 0.5f * (z1 + z2), 0.0f, };
+    v4f m = { x2 + radius, y2 + radius, 0.5f * (z1 - z2) + radius, 0.0f, };
+  loop:
+    // Get a random point in the bounding cuboid of the viewing frustum.
+    v4f t = m * get_vector_in_box (rng) + c;
+    // Discard and try again if distance to any wall is less than radius.
+    for (unsigned k = 0; k != 6; ++ k) {
+      v4f anchor = load4f (walls [k] [0]);
+      v4f normal = load4f (walls [k] [1]);
+      float s = _mm_cvtss_f32 (dot (t - anchor, normal));
+      if (s < radius) {
+        goto loop;
+      }
+    }
+    const float action = temperature * usr::frame_time;
+    store4f (x [n], t);
+    store4f (v [n], get_vector_in_ball (rng, 0.5f * action / A.m));
+    store4f (u [n], get_vector_in_ball (rng, 0x1.921fb4P+001f)); // pi
+    store4f (w [n], get_vector_in_ball (rng, 0.2f * action / A.l));
+
+    std::uint64_t entropy = rng.get ();
+    // Don't use 64-bit modulo in 32-bit environments, as it's provided by libc.
+    A.target.system = (system_select_t) ((std::size_t) (entropy >> 3) % 6);
+    A.target.point = entropy & 7;
+    A.starting_point = A.target.point;
   }
 
   float global_time_offset = get_float (rng, 0.0f, usr::cycle_duration);
@@ -269,51 +290,6 @@ void model_t::set_capacity (std::size_t new_capacity)
                              & kdtree_index,
                              & objects,
                              & object_order);
-}
-
-void model_t::add_object (const float (& view) [4], float temperature)
-{
-  // if (count == capacity) {
-  //   set_capacity (capacity ? 2 * capacity : 128);
-  // }
-
-  object_t & A = objects [count];
-  A.r = radius;
-  A.m = usr::mass;
-  A.l = 0.4f * A.m * radius * radius;
-
-  float x1 = view [0];
-  float y1 = view [1];
-  float z1 = view [2];
-  float z2 = view [3];
-  float x2 = x1 * z2 / z1;
-  float y2 = y1 * z2 / z1;
-  v4f R0 = { radius, 0.0f, 0.0f, 0.0f, };
-
-  v4f c = { 0.0f, 0.0f, 0.5f * (z1 + z2), 0.0f, };
-  v4f m = { x2 + radius, y2 + radius, 0.5f * (z2 - z1) + radius, 0.0f, };
- loop:
-  v4f t = m * get_vector_in_box (rng) + c;
-  for (unsigned k = 0; k != 6; ++ k) {
-    v4f anchor = load4f (walls [k] [0]);
-    v4f normal = load4f (walls [k] [1]);
-    v4f s = dot (t - anchor, normal);
-    if (_mm_comilt_ss (s, R0)) {
-      goto loop;
-    }
-  }
-  const float action = temperature * usr::frame_time;
-  store4f (x [count], t);
-  store4f (v [count], get_vector_in_ball (rng, 0.5f * action / A.m));
-  store4f (u [count], get_vector_in_ball (rng, 0x1.921fb4P+001f)); // pi
-  store4f (w [count], get_vector_in_ball (rng, 0.2f * action / A.l));
-
-  std::uint64_t entropy = rng.get ();
-  // Don't use 64-bit modulo in 32-bit environments, as it's provided by libc.
-  A.target.system = (system_select_t) ((std::size_t) (entropy >> 3) % 6);
-  A.target.point = entropy & 7;
-  A.starting_point = A.target.point;
-  ++ count;
 }
 
 void model_t::recalculate_locus (unsigned index)

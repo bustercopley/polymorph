@@ -24,7 +24,6 @@ struct model_t
 private:
   void nodraw_next ();
   void set_capacity (std::size_t new_capacity);
-  void add_object (const float (& view) [4], float temperature);
   void recalculate_locus (unsigned index);
   void draw (unsigned begin, unsigned count);
 
