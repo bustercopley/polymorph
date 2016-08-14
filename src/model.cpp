@@ -142,7 +142,7 @@ bool model_t::start (int width, int height, const settings_t & settings)
 
   set_capacity (total_count);
 
-  ALIGNED16 float view [4] = { -tz, -tz - td, tw, th, };
+  ALIGNED16 float view [4] = { tw, th, -tz, -tz - td, };
 
   // If the window rect is small relative to the requested object
   // radius, the actual object radius is reduced (see the definition
@@ -157,10 +157,10 @@ bool model_t::start (int width, int height, const settings_t & settings)
                     usr::line_width_extra, std::min (2.0f, scale * usr::line_sharpness));
 
   // Calculate wall planes to exactly fill the front of the viewing frustum.
-  float z1 = view [0];
-  float z2 = view [1];
-  float x1 = view [2];
-  float y1 = view [3];
+  float x1 = view [0];
+  float y1 = view [1];
+  float z1 = view [2];
+  float z2 = view [3];
   float x2 = x1 * z2 / z1;
   float y2 = y1 * z2 / z1;
 
@@ -282,10 +282,10 @@ void model_t::add_object (const float (& view) [4], float temperature)
   A.m = usr::mass;
   A.l = 0.4f * A.m * radius * radius;
 
-  float z1 = view [0];
-  float z2 = view [1];
-  float x1 = view [2];
-  float y1 = view [3];
+  float x1 = view [0];
+  float y1 = view [1];
+  float z1 = view [2];
+  float z2 = view [3];
   float x2 = x1 * z2 / z1;
   float y2 = y1 * z2 / z1;
   v4f R0 = { radius, 0.0f, 0.0f, 0.0f, };

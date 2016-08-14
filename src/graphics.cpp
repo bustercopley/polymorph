@@ -210,10 +210,10 @@ void program_t::set_view (const float (& view) [4],
 
   glClearColor (background [0], background [1], background [2], 0.0f); GLCHECK;
 
-  float z1 = view [0];  // z coord of screen (front of tank) (a negative number)
-  float z2 = view [1];  // z coord of back of tank (a negative number) (|z2| > |z1|)
-  float x1 = view [2];  // x coord of right edge of screen (and of front-right edge of tank)
-  float y1 = view [3];  // y coord of top edge of screen (and of front-top edge of tank)
+  float x1 = view [0];  // x coord of right edge of screen (and of front-right edge of tank)
+  float y1 = view [1];  // y coord of top edge of screen (and of front-top edge of tank)
+  float z1 = view [2];  // z coord of screen (front of tank) (a negative number)
+  float z2 = view [3];  // z coord of back of tank (a negative number) (|z2| > |z1|)
   float zd = z1 - z2;   // tank depth
 
   // Fog is linear in z-distance.
