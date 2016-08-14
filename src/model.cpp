@@ -213,7 +213,7 @@ bool model_t::start (int width, int height, const settings_t & settings)
     // At higher animation speed, progressively suppress fading.
     DWORD s1 = 100 - s;
     float g = 0.02f * ui2f (s1);              // Saturation fading decreases linearly.
-    float h = 8.0e-6f * ui2f (s1 * s1 * s1);  // Lightness fading falls off more rapidly.
+    float h = g * g * g;                      // Lightness fading falls off more rapidly.
     if (s >= 75) { g = 0.0f; h = 0.0f; }      // No fading at all above 75% speed.
     s_bump.v0 = g * s_bump.v0 + (1.0f - g) * s_bump.v1;
     v_bump.v0 = h * v_bump.v0 + (1.0f - h) * v_bump.v1;
