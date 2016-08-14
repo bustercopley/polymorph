@@ -30,8 +30,8 @@ model.o partition.o polymorph.o random.o reposition.o resources.o rodrigues.o \
 settings.o systems.o make_system.o
 
 common_CPPFLAGS=-DUNICODE
-common_CFLAGS=-g -msse3 -mfpmath=sse -mno-stackrealign -fno-ident -fno-fast-math
-common_CXXFLAGS=-fno-rtti -fno-exceptions
+common_CFLAGS=-g -march=core2 -mtune=generic -mfpmath=sse -mno-stackrealign -fno-ident -fno-fast-math
+common_CXXFLAGS=
 common_LDFLAGS=-mwindows -municode
 common_LDLIBS=-lopengl32 -lcomctl32 -lshell32
 
@@ -40,11 +40,11 @@ base_CFLAGS=$(common_CFLAGS) -flto -Os
 base_CXXFLAGS=$(common_CXXFLAGS)
 base_LDFLAGS=$(common_LDFLAGS)
 base_LDLIBS=$(common_LDLIBS)
-base_SHADERS=minified
+base_SHADERS=full
 
 tiny_CPPFLAGS=$(common_CPPFLAGS) -DTINY
 tiny_CFLAGS=$(common_CFLAGS) -flto -Os -fno-asynchronous-unwind-tables
-tiny_CXXFLAGS=$(common_CXXFLAGS)
+tiny_CXXFLAGS=$(common_CXXFLAGS) -fno-rtti -fno-exceptions
 tiny_LDFLAGS=$(common_LDFLAGS) -nostdlib -Wl,--disable-runtime-pseudo-reloc --entry=$(PLATFORM_ENTRY_POINT)
 tiny_LDLIBS=$(common_LDLIBS) -lgdi32 -ladvapi32 -luser32 -lkernel32
 tiny_SHADERS=minified
@@ -81,9 +81,6 @@ all: $(polymorph_FILENAME) dump
 test: all
 	$(polymorph_FILENAME) $(ARG)
 
-testx: all
-	$(polymorph_FILENAME) x $(ARG)
-
 debug: .obj/$(polymorph_FILENAME)
 	$(PLATFORM_PATH)\gdb --quiet --batch -ex run -ex bt full -ex quit --args .obj/$(polymorph_FILENAME)
 
@@ -101,7 +98,7 @@ minified_SHADER_DIRECTORY=.obj/minified
 $(foreach shaders,full minified,$(eval $(shaders)_SHADER_RESOURCES=$(foreach name,$(SHADER_NAMES),$$($(shaders)_SHADER_DIRECTORY)/$(name))))
 
 $(minified_SHADER_DIRECTORY)/%.glsl: src/%.glsl minify.pl | $(minified_SHADER_DIRECTORY)
-	c:\strawberry\perl\bin\perl minify.pl "$<" "$@"
+	c:\strawberry\perl\bin\perl.exe minify.pl "$<" "$@"
 
 .obj/$(PLATFORM)/$(CONFIG)/resources.o: $(RESOURCES)
 
