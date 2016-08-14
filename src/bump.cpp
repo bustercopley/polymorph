@@ -57,15 +57,13 @@ void bumps_t::initialize (const bump_specifier_t & b0, const bump_specifier_t & 
   v4f V1 = _mm_shuffle_ps (b0v, b1v, SHUFFLE (1, 0, 1, 0)); // b0.v1 b0.v0 b1.v1 b1.v0
   v4f V2 = _mm_shuffle_ps (b0v, b1v, SHUFFLE (2, 1, 2, 1)); // 0 b0.v1 0 b1.v1
   v4f V = V1 - V2;
-  v4f negative_two = { -2.0f, -2.0f, -2.0f, -2.0f, };
-  v4f three = { 3.0f, 3.0f, 3.0f, 3.0f, };
   v4f d = T - S;
   v4f a = T + S;
   v4f m = (V - U) / (d * d * d);
   store4f (c [0], U + m * S * S * (a + d + d));
-  store4f (c [1], negative_two * three * m * S * T);
-  store4f (c [2], three * m * a);
-  store4f (c [3], negative_two * m);
+  store4f (c [1], -6.0f * m * S * T);
+  store4f (c [2], +3.0f * m * a);
+  store4f (c [3], -2.0f * m);
   store4f (S0, S);
   store4f (T0, T);
   store4f (U0, U);
