@@ -18,7 +18,7 @@
 
 namespace usr {
   // Physical parameters.
-  static const float mass = 100.0f;    // Density of a ball.
+  static const float density = 100.0f; // Density of a ball.
 
   // Pixels per logical distance unit (at front of tank).
   static const float scale = 50.0f;
@@ -164,8 +164,6 @@ bool model_t::start (int width, int height, const settings_t & settings)
 
   // Add objects.
 
-  float temperature = 8.0f * ui2f (settings.trackbar_pos [1]);
-
   // Trackbar positions 0, 1, 2 specify 1, 2, 3 objects respectively.
   // subsequently the number of objects increases linearly with position.
   unsigned pos = settings.trackbar_pos [0];
@@ -175,13 +173,16 @@ bool model_t::start (int width, int height, const settings_t & settings)
   count = pos < 2 ? pos + 1 : 3 + (max_count - 3) * (pos - 2) / 98;
   set_capacity (count);
 
+  float mass = usr::density * (radius * radius);
+  float moment = 0.4f * usr::density * ((radius * radius) * (radius * radius));
+
   for (unsigned n = 0; n != count; ++ n) {
     kdtree_index [n] = n;
     object_order [n] = n;
     object_t & A = objects [n];
     A.r = radius;
-    A.m = usr::mass;
-    A.l = 0.4f * A.m * radius * radius;
+    A.m = mass;
+    A.l = moment;
     v4f c = { 0.0f, 0.0f, 0.5f * (z1 + z2), 0.0f, };
     v4f m = { x2 + radius, y2 + radius, 0.5f * (z1 - z2) + radius, 0.0f, };
   loop:
@@ -196,11 +197,11 @@ bool model_t::start (int width, int height, const settings_t & settings)
         goto loop;
       }
     }
-    const float action = temperature * usr::frame_time;
+    // Moderately high initial temperature for rapid annealing.
     store4f (x [n], t);
-    store4f (v [n], get_vector_in_ball (rng, 0.5f * action / A.m));
+    store4f (v [n], get_vector_in_ball (rng, 0.25f));
     store4f (u [n], get_vector_in_ball (rng, 0x1.921fb4P+001f)); // pi
-    store4f (w [n], get_vector_in_ball (rng, 0.2f * action / A.l));
+    store4f (w [n], get_vector_in_ball (rng, 0.10f));
 
     std::uint64_t entropy = rng.get ();
     // Don't use 64-bit modulo in 32-bit environments, as it's provided by libc.
@@ -250,8 +251,14 @@ bool model_t::start (int width, int height, const settings_t & settings)
   bumps.initialize (s_bump, v_bump);
 
   // Allow the balls to jostle for space.
-  for (unsigned n = 0; n != 60; ++ n) nodraw_next ();
+  for (unsigned n = 0; n != 24; ++ n) nodraw_next ();
 
+  // Slow down to the configured speed.
+  v4f slowdown = _mm_set1_ps (0.005f * ui2f (settings.trackbar_pos [1]));
+  for (unsigned n = 0; n != count; ++ n) {
+    store4f (v [n], slowdown * load4f (v [n]));
+    store4f (w [n], slowdown * load4f (w [n]));
+  }
   return true;
 }
 
