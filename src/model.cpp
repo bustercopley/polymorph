@@ -184,12 +184,13 @@ bool model_t::start (int width, int height, const settings_t & settings)
     A.m = mass;
     A.l = moment;
     v4f c = { 0.0f, 0.0f, 0.5f * (z1 + z2), 0.0f, };
-    v4f m = { x2 + radius, y2 + radius, 0.5f * (z1 - z2) + radius, 0.0f, };
+    v4f m = { x2 - radius, y2 - radius, 0.5f * (z1 - z2) - radius, 0.0f, };
   loop:
     // Get a random point in the bounding cuboid of the viewing frustum.
     v4f t = m * get_vector_in_box (rng) + c;
     // Discard and try again if distance to any wall is less than radius.
-    for (unsigned k = 0; k != 6; ++ k) {
+    // No need to check the first two walls (the front and rear).
+    for (unsigned k = 2; k != 6; ++ k) {
       v4f anchor = load4f (walls [k] [0]);
       v4f normal = load4f (walls [k] [1]);
       float s = _mm_cvtss_f32 (dot (t - anchor, normal));
