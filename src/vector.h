@@ -125,19 +125,19 @@ ALWAYS_INLINE inline v4f tmapply (const float (* m) [4], v4f x)
 
 // Scalar utility functions
 
-// Convert float to unsigned int, with truncation.
+// Convert non-negative float to unsigned int, rounding down.
 ALWAYS_INLINE inline std::uint32_t truncate (float x)
 {
-  // Force the direct use of cvtss2si (which returns a signed integer).
+  // Allows the use of cvttss2si (which produces a signed integer).
   // Correct casting from float to uint32_t goes via the FPU stack in 32-bit mode.
-  return (std::uint32_t) _mm_cvttss_si32 (_mm_set_ss (x));
+  return (std::uint32_t) (std::int32_t) x;
 }
 
-// Convert unsigned int to float (reinterpret high bit as sign).
+// Convert unsigned int to float (argument's msb must be zero).
 ALWAYS_INLINE inline float ui2f (std::uint32_t x)
 {
-  // Force the direct use of cvtsi2ss (which takes a signed integer).
-  // Casting from uint32_t to float is messy in 32-bit mode.
+  // Allows the use of cvtsi2ss (which takes a signed integer).
+  // Correct casting from uint32_t to float is messy in 32-bit mode.
   return (float) (std::int32_t) x;
 }
 
