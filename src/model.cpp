@@ -26,15 +26,6 @@ namespace usr {
   // Logical time units per frame.
   static const float frame_time = 1.0f / 60.0f;
 
-  // Graphics parameters.
-  static const float colours [] [4] =
-  {
-    { 0.02f, 0.02f, 0.02f, 0.00f, },   // Ambient reflection (xyz: rgb, w: ignored)
-    { 0.00f, 0.00f, 0.00f, 0.00f, },   // Background colour (xyz: rgb, w: ignored)
-    { 0.00f, 0.00f, 0.00f, 1.00f, },   // Line colour (rgba)
-    { 0.25f, 0.25f, 0.25f, 32.0f, },   // Specular reflection (xyz: rgb, w: exponent)
-  };
-
   static const float alpha = 0.95f;    // Alpha of output fragments.
   static const float fog_near = 0.0f;  // Fog blend factor at near plane.
   static const float fog_far = 0.8f;   // Fog blend factor at far plane.
@@ -141,7 +132,7 @@ bool model_t::start (int width, int height, const settings_t & settings)
   float y2 = y1 * (z2 / z1);
 
   program.set_view (view, width, height,
-                    usr::colours, usr::fog_near, usr::fog_far,
+                    usr::fog_near, usr::fog_far,
                     usr::line_width_extra, usr::line_sharpness);
 
   // Calculate wall planes to exactly fill the front of the viewing frustum.

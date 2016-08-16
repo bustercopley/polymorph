@@ -4,12 +4,12 @@
 
 layout (std140) uniform F
 {
-  vec3 l [4];
   vec3 a;
   vec3 b;
   vec4 c;
   vec4 r;
   vec4 f;
+  vec3 l [4];
 };
 
 layout (std140) uniform H

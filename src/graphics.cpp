@@ -197,18 +197,10 @@ bool initialize_graphics (program_t & program)
 
 void program_t::set_view (const float (& view) [4],
                           float width, float height,
-                          const float (& colours) [4] [4],
                           float fog_near, float fog_far,
                           float line_width_extra, float line_sharpness)
 {
   glViewport (0, 0, width, height); GLCHECK;
-
-  const float (& ambient) [4] = colours [0];
-  const float (& background) [4] = colours [1];
-  const float (& line_colour) [4] = colours [2];
-  const float (& specular) [4] = colours [3];
-
-  glClearColor (background [0], background [1], background [2], 0.0f); GLCHECK;
 
   float x1 = view [0];  // x coord of right edge of screen (and of front-right edge of tank)
   float y1 = view [1];  // y coord of top edge of screen (and of front-top edge of tank)
@@ -230,12 +222,12 @@ void program_t::set_view (const float (& view) [4],
 
   struct fragment_data_t
   {
-    GLfloat l [4] [4];  // vec3 [4],  light positions
     GLfloat a [4];      // vec3,      ambient reflection (rgb)
     GLfloat b [4];      // vec3,      background (rgb)
     GLfloat c [4];      // vec4,      line colour (rgba)
     GLfloat r [4];      // vec4,      xyz: specular reflection (rgb); w: exponent
     GLfloat f [4];      // vec4,      coefficients for line width and fog
+    GLfloat l [4] [4];  // vec3 [4],  light positions
   };
 
   struct geometry_data_t
@@ -245,23 +237,18 @@ void program_t::set_view (const float (& view) [4],
   };
 
   ALIGNED16 fragment_data_t fragment_data = {
+    { 0.02f, 0.02f, 0.02f, 0.00f, },
+    { 0.00f, 0.00f, 0.00f, 0.00f, },
+    { 0.00f, 0.00f, 0.00f, 1.00f, },
+    { 0.25f, 0.25f, 0.25f, 32.0f, },
+    { line0, line1, fog0, fog1, },
     {
       { -0.6f * x1, -0.2f * y1, z1 + y1, 0.0f, },
       { -0.2f * x1, +0.6f * y1, z1 + x1, 0.0f, },
       { +0.2f * x1, -0.6f * y1, z1 + y1, 0.0f, },
       { +0.6f * x1, +0.2f * y1, z1 + x1, 0.0f, },
     },
-    { 0, 0, 0, 0, },
-    { 0, 0, 0, 0, },
-    { 0, 0, 0, 0, },
-    { 0, 0, 0, 0, },
-    { line0, line1, fog0, fog1, }
   };
-
-  store4f (fragment_data.a, load4f (ambient));
-  store4f (fragment_data.b, load4f (background));
-  store4f (fragment_data.c, load4f (line_colour));
-  store4f (fragment_data.r, load4f (specular));
 
   ALIGNED16 geometry_data_t geometry_data = {
     {
@@ -270,7 +257,7 @@ void program_t::set_view (const float (& view) [4],
       {    0,       0,    -(z1+z2)/zd,  -1, },
       {    0,       0,     2*z1*z2/zd,   0, },
     },
-    { width / 2.0f, height / 2.0f, 0, 0, },
+    { width / 2, height / 2, 0, 0, },
   };
 
   // Descriptions of the data blocks.
@@ -294,6 +281,9 @@ void program_t::set_view (const float (& view) [4],
   for (std::size_t n = 0; n != block_count; ++ n)
     if (max_block_size < blocks [n].size)
       max_block_size = blocks [n].size;
+
+  const float (& background) [4] = fragment_data.b;
+  glClearColor (background [0], background [1], background [2], 0.0f); GLCHECK;
 
   GLint align;
   glGetIntegerv (GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, & align); GLCHECK;

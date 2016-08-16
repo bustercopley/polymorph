@@ -50,7 +50,6 @@ struct program_t
   bool initialize ();
   void set_view (const float (& view) [4],
                  float width, float height,
-                 const float (& colours) [4] [4],
                  float fog_near, float fog_far,
                  float line_width_extra, float line_sharpness);
 };

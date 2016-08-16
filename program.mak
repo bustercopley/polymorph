@@ -29,7 +29,7 @@ ifdef $(program)_FILENAME
 	$(CXX) $(cxxflags) $(ldflags) $(objects) $(ldlibs) -o .obj/$(name)
 	-@size .obj/$(name)
 .obj/$(name).dump: .obj/$(name)
-	>.obj\$(name).dump ( objdump -Mintel -d -C -l --no-show-raw-insn .obj/$(name) & objdump -s -j.data .obj/$(name) )
+	>.obj\$(name).dump ( objdump -Mintel -d -C -l --no-show-raw-insn .obj/$(name) & objdump -s -j.data .obj/$(name) | objdumpfloats.exe )
 $(name): .obj/$(name)
 	-@copy .obj\$(name)
 	strip $(name)
