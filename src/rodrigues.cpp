@@ -34,20 +34,6 @@ namespace
   // Remes error +-0x1.460d54P-021f, max ulp error +-446.
   const v4f apoly = { +0x1.37b24aP+001f, -0x1.7cb23cP+001f, +0x1.494690P-001f, -0x1.aa37e2P-004f, };
 
-  // Evaluate two cubic polynomials at t by Estrin's method. Requires SSE3 (for haddps).
-  // First argument t t * *, result a(t) b(t) a(t) b(t).
-  ALWAYS_INLINE inline v4f polyeval (const v4f t, const v4f a, const v4f b)
-  {
-    v4f one = _mm_set1_ps (1.0f);        // 1 1 1 1
-    v4f t1 = _mm_unpacklo_ps (one, t);   // 1 t 1 t
-    v4f a1 = a * t1;                     // a0 a1t a2 a3t
-    v4f b1 = b * t1;                     // b0 b1t b2 b3t
-    v4f ab1 = _mm_hadd_ps (a1, b1);      // a0+a1t a2+a3t b0+b1t b2+b3t
-    v4f ab2 = ab1 * (t1 * t1);           // a0+a1t a2t^2+a3t^3 b0+b1t b2t^2+b3t^3
-    v4f abab = _mm_hadd_ps (ab2, ab2);   // a(t) b(t) a(t) b(t)
-    return abab;
-  }
-
   // Argument x x * *, result sin(x) 1-cos(x) sin(x) 1-cos(x).
   // Range [-pi/2, pi/2].
   inline v4f sincos_internal (const v4f x)

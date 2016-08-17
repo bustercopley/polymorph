@@ -123,6 +123,20 @@ ALWAYS_INLINE inline v4f tmapply (const float (* m) [4], v4f x)
   return x0 * m0 + x1 * m1 + x2 * m2;
 }
 
+// Evaluate two cubic polynomials at t by Estrin's method. Requires SSE3 (for haddps).
+// First argument t t * *, result a(t) b(t) a(t) b(t).
+ALWAYS_INLINE inline v4f polyeval (const v4f t, const v4f a, const v4f b)
+{
+  v4f one = _mm_set1_ps (1.0f);        // 1 1 1 1
+  v4f t1 = _mm_unpacklo_ps (one, t);   // 1 t 1 t
+  v4f a1 = a * t1;                     // a0 a1t a2 a3t
+  v4f b1 = b * t1;                     // b0 b1t b2 b3t
+  v4f ab1 = _mm_hadd_ps (a1, b1);      // a0+a1t a2+a3t b0+b1t b2+b3t
+  v4f ab2 = ab1 * (t1 * t1);           // a0+a1t a2t^2+a3t^3 b0+b1t b2t^2+b3t^3
+  v4f abab = _mm_hadd_ps (ab2, ab2);   // a(t) b(t) a(t) b(t)
+  return abab;
+}
+
 // Scalar utility functions
 
 // Convert non-negative float to unsigned int, rounding down.
