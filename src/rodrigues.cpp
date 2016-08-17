@@ -29,16 +29,21 @@ namespace
   const v4f gpoly = { +0x1.fffffaP-002f, -0x1.555340P-005f, +0x1.6b8f0cP-010f, -0x1.89e394P-016f, };
   const v4f hpoly = { +0x1.555554P-004f, +0x1.6c1cd6P-010f, +0x1.13e3e4P-015f, +0x1.f88a10P-021f, };
 
+  // Minimax polynomial for (acos(x))^2.
+  // Very restricted range [+0x1.8c97f0P-001f, +0x1.fb5486P-001f] ([0.774596691, 0.990879238]).
+  // Remes error +-0x1.460d54P-021f, max ulp error +-446.
+  const v4f apoly = { +0x1.37b24aP+001f, -0x1.7cb23cP+001f, +0x1.494690P-001f, -0x1.aa37e2P-004f, };
+
   // Evaluate two cubic polynomials at t by Estrin's method. Requires SSE3 (for haddps).
   // First argument t t * *, result a(t) b(t) a(t) b(t).
-  inline v4f polyeval (const v4f t, const v4f a, const v4f b)
+  ALWAYS_INLINE inline v4f polyeval (const v4f t, const v4f a, const v4f b)
   {
-    v4f one = { +1.0f, +1.0f, +1.0f, +1.0f, };
+    v4f one = _mm_set1_ps (1.0f);        // 1 1 1 1
     v4f t1 = _mm_unpacklo_ps (one, t);   // 1 t 1 t
     v4f a1 = a * t1;                     // a0 a1t a2 a3t
     v4f b1 = b * t1;                     // b0 b1t b2 b3t
     v4f ab1 = _mm_hadd_ps (a1, b1);      // a0+a1t a2+a3t b0+b1t b2+b3t
-    v4f ab2 = ab1 * t1 * t1;             // a0+a1t a2t^2+a3t^3 b0+b1t b2t^2+b3t^3
+    v4f ab2 = ab1 * (t1 * t1);           // a0+a1t a2t^2+a3t^3 b0+b1t b2t^2+b3t^3
     v4f abab = _mm_hadd_ps (ab2, ab2);   // a(t) b(t) a(t) b(t)
     return abab;
   }
@@ -278,8 +283,5 @@ v4f sincos (const v4f x)
 // Argument x x x x, result acos(x) acos(x) acos(x) acos(x).
 v4f arccos (v4f x)
 {
-  // Minimax polynomial for (acos(x))^2 on [+0x1.8c97f0P-001f, +0x1.fb5486P-001f].
-  // Remes error +-0x1.460d54P-021f, max ulp error +-446.
-  const v4f p = { +0x1.37b24aP+001f, -0x1.7cb23cP+001f, +0x1.494690P-001f, -0x1.aa37e2P-004f, };
-  return sqrt_nonzero (polyeval (x, p, p));
+  return sqrt_nonzero (polyeval (x, apoly, apoly));
 }
