@@ -100,7 +100,7 @@ ALWAYS_INLINE inline v4f mapply (const float (* m) [4], v4f x)
   v4f t0 = _mm_dp_ps (load4f (m [0]), x, 0x71);
   v4f t1 = _mm_dp_ps (load4f (m [1]), x, 0x72);
   v4f t2 = _mm_dp_ps (load4f (m [2]), x, 0x74);
-  return _mm_or_ps (t0, _mm_or_ps (t1, t2));
+  return _mm_or_ps (_mm_or_ps (t0, t1), t2);
 #else
   v4f t0 = load4f (m [0]) * x;
   v4f t1 = load4f (m [1]) * x;
@@ -129,12 +129,13 @@ ALWAYS_INLINE inline v4f polyeval (const v4f t, const v4f a, const v4f b)
 {
   v4f one = _mm_set1_ps (1.0f);        // 1 1 1 1
   v4f t1 = _mm_unpacklo_ps (one, t);   // 1 t 1 t
-  v4f a1 = a * t1;                     // a0 a1t a2 a3t
-  v4f b1 = b * t1;                     // b0 b1t b2 b3t
-  v4f ab1 = _mm_hadd_ps (a1, b1);      // a0+a1t a2+a3t b0+b1t b2+b3t
-  v4f ab2 = ab1 * (t1 * t1);           // a0+a1t a2t^2+a3t^3 b0+b1t b2t^2+b3t^3
-  v4f abab = _mm_hadd_ps (ab2, ab2);   // a(t) b(t) a(t) b(t)
-  return abab;
+  v4f t1sq = t1 * t1;
+  v4f c = a * t1;                      // a0 a1t a2 a3t
+  v4f d = b * t1;                      // b0 b1t b2 b3t
+  v4f e = _mm_hadd_ps (c, d);          // a0+a1t a2+a3t b0+b1t b2+b3t
+  v4f f = e * t1sq;                    // a0+a1t a2t^2+a3t^3 b0+b1t b2t^2+b3t^3
+  v4f g = _mm_hadd_ps (f, f);          // a(t) b(t) a(t) b(t)
+  return g;
 }
 
 // Scalar utility functions
