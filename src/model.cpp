@@ -94,22 +94,15 @@ float min_d = 1.0f, max_d = 0.0f;
 
 model_t::model_t () : memory (nullptr), capacity (0), count (0) { }
 
-inline float rainbow_hue (float phase)
+inline float rainbow_hue (float x)
 {
-  const float rainbow_ends [] = {
-    0.94531250f,
-    1.06250000f,
-    1.12500000f,
-    1.20312500f,
-    1.41015625f,
-    1.56640625f,
-    1.76562500f,
-    1.94531250f,
-  };
-  phase -= (int) phase; // fractional part, assuming non-negative
-  int n = (sizeof rainbow_ends / sizeof rainbow_ends [0]) - 1;
-  int i = n * phase;
-  return rainbow_ends [i] + (n * phase - i) * (rainbow_ends [i + 1] - rainbow_ends [i]);
+  // This is the degree-5 minimax polynomial on [0, 1] for
+  // the piecewise linear function on [0,1] joining points
+  // (0, 0.955), (1/2, 1.230), (2/3, 1.420) and (1, 1.955).
+  static const v4f poly_lo = { +0x1.e31f38P-1f, +0x1.3caffeP+0f, -0x1.37390cP+2f, +0x1.9c9bbaP+3f, };
+  static const v4f poly_hi = { -0x1.857638P+3f, +0x1.f3840cP+1f, 0.0f, 0.0f, };
+  x -= (int) x; // fractional part, assuming non-negative
+  return polyeval7 (x, poly_lo, poly_hi);
 }
 
 bool model_t::start (int width, int height, const settings_t & settings)

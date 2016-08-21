@@ -129,13 +129,31 @@ ALWAYS_INLINE inline v4f polyeval (const v4f t, const v4f a, const v4f b)
 {
   v4f one = _mm_set1_ps (1.0f);        // 1 1 1 1
   v4f t1 = _mm_unpacklo_ps (one, t);   // 1 t 1 t
-  v4f t1sq = t1 * t1;
+  v4f t1sq = t1 * t1;                  // squares of t1
   v4f c = a * t1;                      // a0 a1t a2 a3t
   v4f d = b * t1;                      // b0 b1t b2 b3t
   v4f e = _mm_hadd_ps (c, d);          // a0+a1t a2+a3t b0+b1t b2+b3t
   v4f f = e * t1sq;                    // a0+a1t a2t^2+a3t^3 b0+b1t b2t^2+b3t^3
   v4f g = _mm_hadd_ps (f, f);          // a(t) b(t) a(t) b(t)
   return g;
+}
+
+// Evaluate a single degree-7 polynomial at t by Estrin's method. Requires SSE3 (for haddps).
+ALWAYS_INLINE inline float polyeval7 (const float t, const v4f lo, const v4f hi)
+{
+  v4f one = _mm_set1_ps (1.0f);       // 1 1 1 1
+  v4f t0 = _mm_set1_ps (t);           // t t t t
+  v4f t1 = _mm_unpacklo_ps (one, t0); // 1 t 1 t
+  v4f t1sq = t1 * t1;                 // squares of t1
+  v4f t1bq = t1sq * t1sq;             // biquadrates of t1
+  v4f c = lo * t1;                    // l0 l1t l2 l3t
+  v4f d = hi * t1;                    // h0 h1t h2 h3t
+  v4f e = _mm_hadd_ps (c, d);         // l0+l1t l2+l3t h0+h1t h2+h3t
+  v4f f = e * t1sq;                   // l0+l1t l2t^2+l3t^3 h0+h1t h2t^2+h3t^3
+  v4f g = _mm_hadd_ps (f, f);         // l0+l1t+l2t^2+l3t^3 h0+h1t+h2t^2+h3t^3 * *
+  v4f h = g * t1bq;                   // l0+l1t+l2t^2+l3t^3 h0t^4+h1t^5+h2t^6+h3t^7 * *
+  v4f i = _mm_hadd_ps (h, h);         // l0+l1t+l2t^2+l3t^3+h0t^4+h1t^5+h2t^6+h3t^7 * * *
+  return _mm_cvtss_f32 (i);
 }
 
 // Scalar utility functions
