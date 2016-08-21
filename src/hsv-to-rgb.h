@@ -7,10 +7,10 @@
 
 inline v4f hue_vector (float hue)
 {
-  // Offsets 1, 5, 3 give the sequence [red, yellow, green, cyan, blue, magenta, red).
-  const v4f offsets = { 1.0f, 5.0f, 3.0f, 0.0f, };
-  v4f theta = _mm_set1_ps (hue) + offsets;
-  theta -= _mm_and_ps (_mm_cmpge_ps (theta, _mm_set1_ps (6.0f)), _mm_set1_ps (6.0f));
+  // Offsets 1/6, 5/6, 3/6 give the sequence [red, yellow, green, cyan, blue, magenta, red).
+  const v4f offsets = { 0x1.555556p-3f, 0x1.aaaaaap-1f, 0x1.000000p-1f, 0x0.000000p+0f, };
+  v4f temp = _mm_set1_ps (hue) + offsets;
+  v4f theta = 6.0f * (temp - _mm_cvtepi32_ps (_mm_cvttps_epi32 (temp))); // fractional parts
 
   // Apply the function f to each component of theta, where:
   //   f (x) = 1      if x < 2,
@@ -50,7 +50,7 @@ inline v4f hsv_to_rgb (float hue, v4f saturation, v4f value, v4f alpha)
 #if __SSE4_1__
   return _mm_blend_ps (rgbx, alpha, 8); // rgba
 #else
-  const union { std::uint32_t u [4]; v4f f; } mask = { { 0xffffffff, 0xffffffff, 0xffffffff, 0x00000000, }, };
+  const union { std::int32_t i [4]; v4f f; } mask = { { -1, -1, -1, 0, }, };
   return _mm_or_ps (_mm_and_ps (mask.f, rgbx), alpha);
 #endif
 }

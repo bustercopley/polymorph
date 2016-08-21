@@ -97,21 +97,19 @@ model_t::model_t () : memory (nullptr), capacity (0), count (0) { }
 inline float rainbow_hue (float phase)
 {
   const float rainbow_ends [] = {
-    -0.32812500f,
-    0.37500000f,
-    0.75000000f,
-    1.21875000f,
-    2.46093750f,
-    3.39843750f,
-    4.59375000f,
-    5.67187500f,
+    0.94531250f,
+    1.06250000f,
+    1.12500000f,
+    1.20312500f,
+    1.41015625f,
+    1.56640625f,
+    1.76562500f,
+    1.94531250f,
   };
-  unsigned n = sizeof rainbow_ends / sizeof * rainbow_ends - 1;
-  unsigned i = truncate (n * phase);
-  passert (i < n);
-  float hue = rainbow_ends [i] + (n * phase - ui2f (i)) * (rainbow_ends [i + 1] - rainbow_ends [i]);
-  if (hue < 0.0f) hue += 6.0f;
-  return hue;
+  phase -= (int) phase; // fractional part, assuming non-negative
+  int n = (sizeof rainbow_ends / sizeof rainbow_ends [0]) - 1;
+  int i = n * phase;
+  return rainbow_ends [i] + (n * phase - i) * (rainbow_ends [i + 1] - rainbow_ends [i]);
 }
 
 bool model_t::start (int width, int height, const settings_t & settings)
@@ -202,14 +200,12 @@ bool model_t::start (int width, int height, const settings_t & settings)
     A.starting_point = A.target.point;
   }
 
-  float global_time_offset = get_float (rng, 0.0f, usr::cycle_duration);
+  float global_phase_offset = get_float (rng, 1.0f, 2.0f);
   for (unsigned n = 0; n != count; ++ n) {
     float phase = ui2f (n) / ui2f (count);
-    objects [n].hue = rainbow_hue (phase);
+    objects [n].hue = rainbow_hue (global_phase_offset - phase);
     // Initial animation_time is in [T, 2T) to force an immediate transition.
-    float animation_time = global_time_offset + (1.0f - phase) * usr::cycle_duration;
-    if (animation_time < usr::cycle_duration) animation_time += usr::cycle_duration;
-    objects [n].animation_time = animation_time;
+    objects [n].animation_time = (1.0f + phase) * usr::cycle_duration;
   }
 
   // Take the animation-speed setting, s, a whole number in the range 0 to 100, inclusive;
