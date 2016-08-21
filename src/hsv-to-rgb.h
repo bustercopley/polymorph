@@ -7,17 +7,10 @@
 
 inline v4f hue_vector (float hue)
 {
-  const v4f num1 = { 1.0f, 1.0f, 1.0f, 1.0f, };
-  const v4f num2 = { 2.0f, 2.0f, 2.0f, 2.0f, };
-  const v4f num3 = { 3.0f, 3.0f, 3.0f, 3.0f, };
-  const v4f num5 = { 5.0f, 5.0f, 5.0f, 5.0f, };
-  const v4f num6 = { 6.0f, 6.0f, 6.0f, 6.0f, };
-
-  // The components of theta are [(hue + 1) % 6, (hue + 5) % 6, (hue + 3) % 6].
   // Offsets 1, 5, 3 give the sequence [red, yellow, green, cyan, blue, magenta, red).
   const v4f offsets = { 1.0f, 5.0f, 3.0f, 0.0f, };
   v4f theta = _mm_set1_ps (hue) + offsets;
-  theta -= _mm_and_ps (_mm_cmpge_ps (theta, num6), num6);
+  theta -= _mm_and_ps (_mm_cmpge_ps (theta, _mm_set1_ps (6.0f)), _mm_set1_ps (6.0f));
 
   // Apply the function f to each component of theta, where:
   //   f (x) = 1      if x < 2,
@@ -36,14 +29,14 @@ inline v4f hue_vector (float hue)
 
   // f (x) = ((x<2) AND 1) OR (((x<2) XOR (x<3)) AND (3-x)) OR (((x>=5)) AND (x-5)).
 
-  v4f lt2 = _mm_cmplt_ps (theta, num2);
-  v4f lt3 = _mm_cmplt_ps (theta, num3);
+  v4f lt2 = theta < _mm_set1_ps (2.0f);
+  v4f lt3 = theta < _mm_set1_ps (3.0f);
   v4f b23 = _mm_xor_ps (lt2, lt3);
-  v4f ge5 = _mm_cmpge_ps (theta, num5);
+  v4f ge5 = theta >= _mm_set1_ps (5.0f);
 
-  v4f term1 = _mm_and_ps (lt2, num1);
-  v4f term2 = _mm_and_ps (b23, num3 - theta);
-  v4f term3 = _mm_and_ps (ge5, theta - num5);
+  v4f term1 = _mm_and_ps (lt2, _mm_set1_ps (1.0f));
+  v4f term2 = _mm_and_ps (b23, _mm_set1_ps (3.0f) - theta);
+  v4f term3 = _mm_and_ps (ge5, theta - _mm_set1_ps (5.0f));
 
   return _mm_or_ps (_mm_or_ps (term1, term2), term3);
 }
