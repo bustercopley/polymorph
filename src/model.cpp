@@ -18,7 +18,8 @@
 
 namespace usr {
   // Physical parameters.
-  static const float density = 100.0f; // Density of a ball.
+  static const float density = 100.0f;      // Density of a ball.
+  static const float fill_factor = 0.185f;  // Density of the gas.
 
   // Pixels per logical distance unit (at front of tank).
   static const float scale = 50.0f;
@@ -107,7 +108,6 @@ inline float rainbow_hue (float x)
 
 bool model_t::start (int width, int height, const settings_t & settings)
 {
-  radius = 0.5f + 0.01f * ui2f (settings.trackbar_pos [3]);
   ALIGNED16 float view [4];
 
   float scale = 0.5f / usr::scale;
@@ -144,27 +144,26 @@ bool model_t::start (int width, int height, const settings_t & settings)
     store4f (walls [k] [1], normalize (normal));
   }
 
-  // Add objects.
-
-  // Trackbar positions 0, 1, 2 specify 1, 2, 3 objects respectively.
-  // subsequently the number of objects increases linearly with position.
-  unsigned pos = settings.trackbar_pos [0];
-  unsigned max_count = std::max (3u, truncate ((x1 / (2 * radius) + 1) *
-                                               (y1 / (2 * radius) + 1) *
-                                               (zd / (2 * radius) + 1)));
-  count = pos < 2 ? pos + 1 : 3 + (max_count - 3) * (pos - 2) / 98;
-  set_capacity (count);
-
+  // Object circumradius is in [0.5, 1.5).
+  radius = 0.5f + 0.01f * ui2f (settings.trackbar_pos [3]);
   float mass = usr::density * (radius * radius);
   float moment = 0.4f * usr::density * ((radius * radius) * (radius * radius));
 
+  // Trackbar positions 0, 1, 2 specify 1, 2, 3 objects respectively;
+  // subsequently the number of objects increases linearly with position.
+  unsigned max_count = std::max (3u, truncate (usr::fill_factor * (x1 * y1 * zd) / (radius * radius * radius)));
+  DWORD pos = settings.trackbar_pos [0];
+  count = pos < 2 ? pos + 1 : 3 + (max_count - 3) * (pos - 2) / 98;
+  set_capacity (count);
+
+  // Add objects.
   for (unsigned n = 0; n != count; ++ n) {
     kdtree_index [n] = n;
     object_order [n] = n;
     object_t & A = objects [n];
-    A.r = radius;
     A.m = mass;
     A.l = moment;
+    A.r = radius;
     v4f c = { 0.0f, 0.0f, 0.5f * (z1 + z2), 0.0f, };
     v4f m = { x2 - radius, y2 - radius, 0.5f * (z1 - z2) - radius, 0.0f, };
   loop:
