@@ -148,7 +148,7 @@ bool model_t::start (int width, int height, const settings_t & settings)
   radius = 0.5f + 0.01f * ui2f (settings.trackbar_pos [3]);
   float mass = usr::density * (radius * radius);
   float moment = 0.4f * usr::density * ((radius * radius) * (radius * radius));
-
+  float phase_offset = get_float (rng, 1.0f, 2.0f);
   // Trackbar positions 0, 1, 2 specify 1, 2, 3 objects respectively;
   // subsequently the number of objects increases linearly with position.
   unsigned max_count = std::max (3u, truncate (usr::fill_factor * (x1 * y1 * zd) / (radius * radius * radius)));
@@ -160,10 +160,7 @@ bool model_t::start (int width, int height, const settings_t & settings)
   for (unsigned n = 0; n != count; ++ n) {
     kdtree_index [n] = n;
     object_order [n] = n;
-    object_t & A = objects [n];
-    A.m = mass;
-    A.l = moment;
-    A.r = radius;
+
     v4f c = { 0.0f, 0.0f, 0.5f * (z1 + z2), 0.0f, };
     v4f m = { x2 - radius, y2 - radius, 0.5f * (z1 - z2) - radius, 0.0f, };
   loop:
@@ -185,45 +182,53 @@ bool model_t::start (int width, int height, const settings_t & settings)
     store4f (u [n], get_vector_in_ball (rng, 0x1.921fb4P+001f)); // pi
     store4f (w [n], get_vector_in_ball (rng, 0.10f));
 
-    std::uint64_t entropy = rng.get ();
-    // Don't use 64-bit modulo in 32-bit environments, as it's provided by libc.
-    A.target.system = (system_select_t) ((std::size_t) (entropy >> 3) % 6);
-    A.target.point = entropy & 7;
-    A.starting_point = A.target.point;
-  }
+    object_t & A = objects [n];
+    A.m = mass;
+    A.l = moment;
+    A.r = radius;
 
-  float global_phase_offset = get_float (rng, 1.0f, 2.0f);
-  for (unsigned n = 0; n != count; ++ n) {
     float phase = ui2f (n) / ui2f (count);
-    objects [n].hue = rainbow_hue (global_phase_offset - phase);
+    A.hue = rainbow_hue (phase_offset - phase);
     // Initial animation_time is in [T, 2T) to force an immediate transition.
-    objects [n].animation_time = (1.0f + phase) * usr::cycle_duration;
+    A.animation_time = (1.0f + phase) * usr::cycle_duration;
+
+    // Get two independent random integers, d6 uniform on [0, 6) and d8 uniform on [0, 8).
+    std::uint32_t d48 = (((std::uint32_t) rng.get () & 0x3ffffff0u) * 3u) >> 26u;
+    std::uint32_t d6 = d48 >> 3u;
+    std::uint32_t d8 = d48 & 7u;
+    A.target.system = (system_select_t) d6;
+    A.target.point = d8;
+    A.starting_point = A.target.point;
   }
 
   // Take the animation-speed setting, s, a whole number in the range 0 to 100, inclusive;
   // every frame, the morph/fade animation time is advanced by the time interval kT, where
   // k is an increasing continuous function of s, and the constant T is the default frame time.
   DWORD s = settings.trackbar_pos [2];
-  // Boost sensitivity in upper range. (Note: 100 to power 4 < 2 to power 27.)
-  float k = s <= 50 ? 0.02f * ui2f (s) : 0.00000016f * ui2f ((s * s) * (s * s));
-  animation_speed_constant = k;
+  float k = 0.02f * ui2f (s);  // 0.0 <= k <= 2.0
+  // Boost animation speed in the upper half of the range.
+  animation_speed_constant = s <= 50 ? k : ((k * k) * (k * k));
 
   // Initialize bump function object for the lightness and saturation fading animation.
   ALIGNED16 bump_specifier_t s_bump = usr::hsv_s_bump;
   ALIGNED16 bump_specifier_t v_bump = usr::hsv_v_bump;
-  if (s > 50) {
-    // At higher animation speed, progressively suppress fading.
-    DWORD s1 = 100 - s;
-    float g = 0.02f * ui2f (s1);              // Saturation fading decreases linearly.
-    float h = g * g * g;                      // Lightness fading falls off more rapidly.
-    if (s >= 75) { g = 0.0f; h = 0.0f; }      // No fading at all above 75% speed.
+  if (s >= 75) {
+    // No fading at all above 75% animation speed.
+    s_bump.v0 = s_bump.v1;
+    v_bump.v0 = v_bump.v1;
+  }
+  else if (s >= 50)
+  {
+    // Between 50% and 75% animation speed, progressively suppress fading.
+    float g = 2.0f - k;      // Saturation fading decreases linearly.
+    float h = g * g * g;     // Lightness fading falls off more rapidly.
     s_bump.v0 = g * s_bump.v0 + (1.0f - g) * s_bump.v1;
     v_bump.v0 = h * v_bump.v0 + (1.0f - h) * v_bump.v1;
   }
   if (s <= 30) {
-    // At low speed, offset the attack-begin and attack-end times
-    // of the lightness and saturation independently to give a white
-    // warning flash effect.
+    // At low animation speed, offset the attack-begin and attack-end
+    // times of the lightness and saturation independently to give a
+    // white warning flash effect.
     s_bump.t0 += 0.10f;
     s_bump.t1 += 0.25f;
     v_bump.t1 -= 0.15f;
