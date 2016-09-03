@@ -13,18 +13,6 @@
 
 #define WC_MAIN TEXT ("M")
 
-NOINLINE int message_loop (HWND hdlg)
-{
-  MSG msg;
-  while (::GetMessage (& msg, NULL, 0, 0)) {
-    if (! hdlg || ! ::IsDialogMessage (hdlg, & msg)) {
-      ::TranslateMessage (& msg);
-      ::DispatchMessage (& msg);
-    }
-  }
-  return (int) msg.wParam;
-}
-
 int WINAPI _tWinMain (HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
 {
   _mm_setcsr (_mm_getcsr () | (_MM_FLUSH_ZERO_ON | _MM_DENORMALS_ZERO_ON));
@@ -69,8 +57,6 @@ int WINAPI _tWinMain (HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
                              parent, NULL, hInstance, & ws);
     if (hwnd) break;
     // Window creation failed (window will be destroyed).
-    // Pump messages and throw away the WM_QUIT.
-    message_loop (0);
   }
 
   if (! hwnd) return 1;
@@ -90,7 +76,14 @@ int WINAPI _tWinMain (HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
   ::SetWindowPos (hdlg ? hdlg : hwnd, NULL, 0, 0, 0, 0,
                   SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_SHOWWINDOW);
 
-  return message_loop (hdlg);
+  MSG msg;
+  while (::GetMessage (& msg, NULL, 0, 0)) {
+    if (! hdlg || ! ::IsDialogMessage (hdlg, & msg)) {
+      ::TranslateMessage (& msg);
+      ::DispatchMessage (& msg);
+    }
+  }
+  return (int) msg.wParam;
 }
 
 #ifdef TINY
