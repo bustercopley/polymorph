@@ -13,6 +13,7 @@
 PFNWGLCHOOSEPIXELFORMATARBPROC wglChoosePixelFormatARB = nullptr;
 PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB = nullptr;
 
+// Pixel format attributes for up-level opengl context.
 const int pf_attribs [] = {
   WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
   WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
@@ -25,6 +26,7 @@ const int pf_attribs [] = {
   0, 0,
 };
 
+// Rendering context attributes for up-level opengl context.
 const int context_attribs [] = {
   WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
   WGL_CONTEXT_MINOR_VERSION_ARB, 2,
@@ -42,45 +44,44 @@ ALWAYS_INLINE inline bool get_glprocs ()
   return true;
 }
 
-// Get OpenGL function pointers needed for context creation (call with legacy context current).
-ALWAYS_INLINE inline void get_init_glprocs ()
-{
-  wglChoosePixelFormatARB = (PFNWGLCHOOSEPIXELFORMATARBPROC) ::wglGetProcAddress ("wglChoosePixelFormatARB");
-  wglCreateContextAttribsARB = (PFNWGLCREATECONTEXTATTRIBSARBPROC) ::wglGetProcAddress ("wglCreateContextAttribsARB");
-}
-
 LRESULT CALLBACK InitWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   if (msg != WM_NCCREATE) return ::DefWindowProc (hwnd, msg, wParam, lParam);
+  // Create a legacy OpenGL rendering context and make it current in this window.
   PIXELFORMATDESCRIPTOR pfd = { sizeof pfd, 1, PFD_SUPPORT_OPENGL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, };
   HDC hdc = ::GetDC (hwnd);
   int pf = ::ChoosePixelFormat (hdc, & pfd);
   ::SetPixelFormat (hdc, pf, & pfd);
   HGLRC hglrc = ::wglCreateContext (hdc);
   ::wglMakeCurrent (hdc, hglrc);
-  // Get the function pointers.
-  get_init_glprocs ();
+  // Get OpenGL function pointers needed for context creation.
+  wglChoosePixelFormatARB = (PFNWGLCHOOSEPIXELFORMATARBPROC) ::wglGetProcAddress ("wglChoosePixelFormatARB");
+  wglCreateContextAttribsARB = (PFNWGLCREATECONTEXTATTRIBSARBPROC) ::wglGetProcAddress ("wglCreateContextAttribsARB");
+  // Destroy the rendering context.
   ::wglMakeCurrent (NULL, NULL);
   ::wglDeleteContext (hglrc);
   ::ReleaseDC (hwnd, hdc);
-  return FALSE; // Abort window creation.
+  // Abort window creation.
+  return FALSE;
 }
 
 bool glinit (HINSTANCE hInstance)
 {
-  // Create legacy OpenGL window to get function pointers needed to create a proper OpenGL window.
-  // The window does not survive creation. See InitWndProc for details.
+  // Create a window with a legacy OpenGL rendering context, to get
+  // the WGL function pointers needed to create an up-level rendering
+  // context. The window does not survive creation. See InitWndProc.
   WNDCLASSEX init_wndclass = { sizeof (WNDCLASSEX), 0, & InitWndProc, 0, 0, hInstance, NULL, NULL, NULL, NULL, WC_GLINIT, NULL };
   ::RegisterClassEx (& init_wndclass);
   ::CreateWindowEx (0, WC_GLINIT, TEXT (""), 0,
                     CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
                     NULL, NULL, hInstance, NULL);
+  // Return true if we succeeded in getting the function pointers.
   return wglChoosePixelFormatARB && wglCreateContextAttribsARB;
 }
 
 HGLRC install_rendering_context (HDC hdc)
 {
-  // Set up OpenGL rendering context.
+  // Create up-level OpenGL rendering context and make it current in this DC.
   int pf;
   UINT pfcount;
   if (! wglChoosePixelFormatARB (hdc, pf_attribs, NULL, 1, & pf, & pfcount) ||
