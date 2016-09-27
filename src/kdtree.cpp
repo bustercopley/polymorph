@@ -62,7 +62,7 @@
 //   the d co-ordinate is greater than or equal to w, where d === k (mod 3), and
 //   where w is the co-ordinate value associated with the non-leaf node.
 
-static const std::uint8_t mod3 [] = { 0, 1, 2, 0, 1, };
+static const std::uint8_t inc_mod3 [] = { 1, 2, 0, 1, };
 
 inline unsigned nonleaf_nodes_required (unsigned n)
 {
@@ -86,7 +86,7 @@ void kdtree_t::compute (unsigned * RESTRICT index, const float (* RESTRICT x) [4
 
   unsigned node = 0;
   unsigned level_node_count = 1;
-  unsigned dim = 0;
+  std::uint8_t dim = 0;
   while (count > 2 * level_node_count) {
     unsigned begin = 0;
     for (unsigned i = 0; i != level_node_count; ++ i) {
@@ -97,7 +97,7 @@ void kdtree_t::compute (unsigned * RESTRICT index, const float (* RESTRICT x) [4
       begin = end;
     }
     level_node_count = 2 * level_node_count;
-    dim = mod3 [dim + 1];
+    dim = inc_mod3 [dim];
   }
   first_leaf = node;
 }
@@ -117,7 +117,7 @@ void kdtree_t::search (unsigned * RESTRICT index, const float (* RESTRICT x) [4]
     stack_node [stack_top ++] = 0;
     // Traverse the tree discarding nodes not intersecting the search cube.
     unsigned first_node_of_current_level = 0;
-    unsigned dim = 0;
+    std::uint8_t dim = 0;
     while (stack_top) {
       // Pop a node from the stack.
       // This node's box certainly intersects the search box.
@@ -126,14 +126,14 @@ void kdtree_t::search (unsigned * RESTRICT index, const float (* RESTRICT x) [4]
         // Ascend to the level that contains node.
         while (first_node_of_current_level > node) {
           first_node_of_current_level /= 2;
-          dim = mod3 [dim + 2];
+          dim = inc_mod3 [dim + 1];
         }
         // Push one or both child nodes onto the stack.
         float s = split [node];
         if (x [target] [dim] - 2 * max_radius <= s) stack_node [stack_top ++] = 2 * node + 1;
         if (x [target] [dim] + 2 * max_radius >= s) stack_node [stack_top ++] = 2 * node + 2;
         // Descend one level to our children's level.
-        dim = mod3 [dim + 1];
+        dim = inc_mod3 [dim];
         first_node_of_current_level = 2 * first_node_of_current_level + 1;
       }
       else {
@@ -172,7 +172,7 @@ void kdtree_t::search (unsigned * RESTRICT index, const float (* RESTRICT x) [4]
     // Traverse the tree.
     unsigned normal_sign_mask = _mm_movemask_ps (normal);
     unsigned first_node_of_current_level = 0;
-    unsigned dim = 0;
+    std::uint8_t dim = 0;
     while (stack_top) {
       // Pop a node from the stack.
       -- stack_top;
@@ -181,7 +181,7 @@ void kdtree_t::search (unsigned * RESTRICT index, const float (* RESTRICT x) [4]
       // Ascend to the level that contains node.
       while (first_node_of_current_level > node) {
         first_node_of_current_level /= 2;
-        dim = mod3 [dim + 2];
+        dim = inc_mod3 [dim + 1];
       }
       while (node < first_leaf) {
         // Loop condition: node's critical corner's wall-distance is less than max_radius.
@@ -201,7 +201,7 @@ void kdtree_t::search (unsigned * RESTRICT index, const float (* RESTRICT x) [4]
         // Visit the favourite child now.
         node = 2 * node + 1 + favourite;
         first_node_of_current_level = 2 * first_node_of_current_level + 1;
-        dim = mod3 [dim + 1];
+        dim = inc_mod3 [dim];
       }
       // Visiting a leaf node.
       unsigned level_node_count = first_node_of_current_level + 1;
