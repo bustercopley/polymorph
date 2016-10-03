@@ -95,12 +95,6 @@ const char * names [] = {
 float min_d = 1.0f, max_d = 0.0f;
 #endif
 
-model_t::model_t () : memory (nullptr), kdtree_split (nullptr),
-                      capacity (0), kdtree_capacity (0), count (0)
-{
-
-}
-
 inline float rainbow_hue (float x)
 {
   // This is the degree-5 minimax polynomial on [0, 1] for

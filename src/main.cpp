@@ -10,6 +10,7 @@
 #include "qpc.h"
 #include "vector.h"
 #include <cstdint>
+#include <cstring>
 
 #define WC_MAIN TEXT ("M")
 
@@ -26,6 +27,13 @@ int WINAPI _tWinMain (HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
   ::LoadString (hInstance, 1, (LPTSTR) (& display_name), 0);
 
   ALIGNED16 window_struct_t ws;
+  // Zero out ws. This is done to avoid the need to zero subobjects piecemeal,
+  // as an optimization for code size. It makes a lot of assumptions, chiefly
+  // that no member of ws has a non-trivial constructor. We have initialization
+  // functions instead of non-trivial constructors for other reasons, so it's no
+  // extra burden. If that changes, get rid of this memset, but pay attention to
+  // zeroing members that require it.
+  std::memset (& ws, '\0', sizeof ws);
 
   get_arguments (::GetCommandLine (), ws.arguments);
   load_settings (ws.settings);

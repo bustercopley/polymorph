@@ -15,7 +15,6 @@
 struct model_t
 {
   ~model_t ();
-  model_t ();
 
   bool initialize (std::uint64_t seed);
   bool start (int width, int height, const settings_t & settings);
