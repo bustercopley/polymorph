@@ -25,7 +25,7 @@ polymorph_LDLIBS=$($(CONFIG)_LDLIBS)
 polymorph_RESFLAGS=-DPLATFORM_CONFIG=$(PLATFORM)_$(CONFIG) -I$(SHADER_DIRECTORY)
 polymorph_SOURCE_PREFIX=src/
 polymorph_OBJECTS=\
-arguments.o bump.o dialog.o glinit.o graphics.o kdtree.o main.o markov.o memory.o \
+arguments.o bump.o dialog.o glinit.o graphics.o main.o markov.o memory.o \
 model.o partition.o polymorph.o random.o reposition.o resources.o rodrigues.o \
 settings.o systems.o make_system.o
 

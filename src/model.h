@@ -5,7 +5,6 @@
 
 #include "compiler.h"
 #include "random.h"
-#include "kdtree.h"
 #include "graphics.h"
 #include "bump.h"
 #include "markov.h"
@@ -26,6 +25,9 @@ private:
   void set_capacity (std::size_t new_capacity);
   void recalculate_locus (unsigned index);
   void draw (unsigned begin, unsigned count);
+  void bounce (unsigned ix, unsigned iy);
+  void wall_bounce (unsigned iw, unsigned iy);
+  void kdtree_search ();
 
   ALIGNED16 float walls [6] [2] [4];
   ALIGNED16 float abc [system_count] [8] [4];
@@ -38,6 +40,8 @@ private:
   object_t * objects;
   unsigned * object_order;
   unsigned * kdtree_index;
+  float * kdtree_split;
+
   float (* x) [4];  // position
   float (* v) [4];  // velocity
   float (* u) [4];  // angular position
@@ -45,13 +49,13 @@ private:
   float (* e) [4];  // locus end
 
   program_t program;
-  kdtree_t kdtree;
   rng_t rng;
 
   float radius;
   float animation_speed_constant;
 
   std::size_t capacity;
+  std::size_t kdtree_capacity;
   unsigned count;
   unsigned primitive_count [system_count]; // = { 12, 24, 60, }
   std::uint32_t vao_ids [system_count];

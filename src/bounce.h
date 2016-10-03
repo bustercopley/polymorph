@@ -3,7 +3,7 @@
 #ifndef bounce_h
 #define bounce_h
 
-#include "object.h"
+#include "model.h"
 #include "vector.h"
 
 namespace usr
@@ -14,10 +14,8 @@ namespace usr
 
 // Called when two balls might collide.
 // Maybe apply equal and opposite impulses to objects ix and iy.
-inline void bounce (unsigned ix, unsigned iy,
-                    object_t * RESTRICT objects,
-                    const float (* RESTRICT x) [4],
-                    float (* RESTRICT v) [4], float (* RESTRICT w) [4])
+ALWAYS_INLINE
+inline void model_t::bounce (unsigned ix, unsigned iy)
 {
   const object_t & A = objects [ix];
   const object_t & B = objects [iy];
@@ -64,11 +62,8 @@ inline void bounce (unsigned ix, unsigned iy,
 }
 
 // Called when a ball might collide with a wall.
-inline void bounce (unsigned iw, unsigned ix,
-                    const float (* RESTRICT walls) [2] [4],
-                    object_t * RESTRICT objects,
-                    const float (* RESTRICT x) [4],
-                    float (* RESTRICT v) [4], float (* RESTRICT w) [4])
+ALWAYS_INLINE
+inline void model_t::wall_bounce (unsigned iw, unsigned ix)
 {
   object_t & A = objects [ix];
   v4f anchor = load4f (walls [iw] [0]);

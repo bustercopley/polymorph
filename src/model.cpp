@@ -13,6 +13,8 @@
 #include "vector.h"
 #include "hsv-to-rgb.h"
 #include "print.h"
+#include "bounce.h"
+#include "bsr.h"
 
 #include <algorithm>
 
@@ -93,7 +95,11 @@ const char * names [] = {
 float min_d = 1.0f, max_d = 0.0f;
 #endif
 
-model_t::model_t () : memory (nullptr), capacity (0), count (0) { }
+model_t::model_t () : memory (nullptr), kdtree_split (nullptr),
+                      capacity (0), kdtree_capacity (0), count (0)
+{
+
+}
 
 inline float rainbow_hue (float x)
 {
@@ -273,6 +279,7 @@ model_t::~model_t ()
   }
 #endif
   //deallocate (memory);
+  //deallocate (kdtree_split);
 }
 
 void model_t::set_capacity (std::size_t new_capacity)
@@ -316,8 +323,7 @@ void model_t::nodraw_next ()
   // Advance the simulation without updating the angular position.
   if (count) {
     // Collision detection.
-    kdtree.compute (kdtree_index, x, count); // undefined behaviour if count == 0.
-    kdtree.search (kdtree_index, x, count, walls, radius, objects, v, w);
+    kdtree_search ();
   }
 
   advance_linear (x, v, count);
