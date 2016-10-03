@@ -48,8 +48,8 @@ BEGIN
 
   // The id of trackbar n is IDC_TRACKBARS_START + 4 * n, and its buddies
   // have the two succeeding ids (this numbering is assumed in "dialog.cpp").
-  // Statements are ordered so as to label the trackbars "More", "Hotter"
-  // and "Faster" (for accessibility tools).
+  // Statements are ordered so as to label the trackbars "More", "Hotter",
+  // "Faster", "Bigger" (for accessibility tools).
 
   LEFT_BUDDY_TYPE   "Fewer",   IDC_TRACKBARS_START + 2,    0,    0,   50,   14,  LEFT_BUDDY_STYLE
   RIGHT_BUDDY_TYPE  "More",    IDC_TRACKBARS_START + 1,    0,    0,   50,   14,  RIGHT_BUDDY_STYLE
