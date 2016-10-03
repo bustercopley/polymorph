@@ -29,13 +29,6 @@ private:
   void wall_bounce (unsigned iw, unsigned iy);
   void kdtree_search ();
 
-  ALIGNED16 float walls [6] [2] [4];
-  ALIGNED16 float abc [system_count] [8] [4];
-  ALIGNED16 float xyz [system_count] [3] [4];
-  ALIGNED16 float xyzinvt [system_count] [3] [4];
-  ALIGNED16 bumps_t bumps;
-  ALIGNED16 step_t step;
-
   void * memory;
   object_t * objects;
   unsigned * object_order;
@@ -48,9 +41,6 @@ private:
   float (* w) [4];  // angular velocity
   float (* e) [4];  // locus end
 
-  program_t program;
-  rng_t rng;
-
   float radius;
   float animation_speed_constant;
 
@@ -59,6 +49,16 @@ private:
   unsigned count;
   unsigned primitive_count [system_count]; // = { 12, 24, 60, }
   std::uint32_t vao_ids [system_count];
+
+  ALIGNED16 float walls [6] [2] [4];
+  ALIGNED16 float abc [system_count] [8] [4];
+  ALIGNED16 float xyz [system_count] [3] [4];
+  ALIGNED16 float xyzinvt [system_count] [3] [4];
+  ALIGNED16 bumps_t bumps;
+  ALIGNED16 step_t step;
+
+  program_t program;
+  rng_t rng;
 };
 
 #endif
