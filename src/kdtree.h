@@ -1,4 +1,5 @@
 // -*- C++ -*-
+
 #ifndef kdtree_h
 #define kdtree_h
 
