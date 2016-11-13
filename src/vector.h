@@ -10,32 +10,6 @@
 typedef __m128 v4f;
 
 #define SHUFFLE(a, b, c, d) ((a) | ((b) << 2) | ((c) << 4) | ((d) << 6))
-#define UNPACK2(a,a0,a1)               \
-do {                                   \
-  v4f _t = (a);                        \
-  v4f _t0 = _mm_unpacklo_ps (_t, _t);  \
-  (a0) = _mm_movelh_ps (_t0, _t0);     \
-  (a1) = _mm_movehl_ps (_t0, _t0);     \
-} while (0)
-#define UNPACK3(a,a0,a1,a2)            \
-do {                                   \
-  v4f _t = (a);                        \
-  v4f _t0 = _mm_unpacklo_ps (_t, _t);  \
-  v4f _t1 = _mm_unpackhi_ps (_t, _t);  \
-  (a0) = _mm_movelh_ps (_t0, _t0);     \
-  (a1) = _mm_movehl_ps (_t0, _t0);     \
-  (a2) = _mm_movelh_ps (_t1, _t1);     \
-} while (0)
-#define UNPACK4(a,a0,a1,a2,a3)         \
-do {                                   \
-  v4f _t = (a);                        \
-  v4f _t0 = _mm_unpacklo_ps (_t, _t);  \
-  v4f _t1 = _mm_unpackhi_ps (_t, _t);  \
-  (a0) = _mm_movelh_ps (_t0, _t0);     \
-  (a1) = _mm_movehl_ps (_t0, _t0);     \
-  (a2) = _mm_movelh_ps (_t1, _t1);     \
-  (a3) = _mm_movehl_ps (_t1, _t1);     \
-} while (0)
 
 ALWAYS_INLINE inline v4f load4f (const float * a) { return _mm_load_ps (a); }
 ALWAYS_INLINE inline void store4f (float * a, v4f v) { _mm_store_ps (a, v); }
@@ -118,8 +92,11 @@ ALWAYS_INLINE inline v4f tmapply (const float (* m) [4], v4f x)
   v4f m0 = load4f (m [0]);
   v4f m1 = load4f (m [1]);
   v4f m2 = load4f (m [2]);
-  v4f x0, x1, x2;
-  UNPACK3 (x, x0, x1, x2);
+
+  v4f x0 = _mm_shuffle_ps (x, x, SHUFFLE (0, 0, 0, 0));
+  v4f x1 = _mm_shuffle_ps (x, x, SHUFFLE (1, 1, 1, 1));
+  v4f x2 = _mm_shuffle_ps (x, x, SHUFFLE (2, 2, 2, 2));
+
   return x0 * m0 + x1 * m1 + x2 * m2;
 }
 
