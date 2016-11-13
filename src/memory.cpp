@@ -2,7 +2,7 @@
 #include "memory.h"
 #include "print.h"
 
-void * allocate_internal (std::size_t n)
+void * allocate (std::size_t n)
 {
   if (! n) return nullptr;
   return ::HeapAlloc (::GetProcessHeap (), 0, n);

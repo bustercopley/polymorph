@@ -5,7 +5,7 @@
 
 #include <cstddef>
 
-void * allocate_internal (std::size_t n);
+void * allocate (std::size_t n);
 void deallocate (void * p);
 
 #endif

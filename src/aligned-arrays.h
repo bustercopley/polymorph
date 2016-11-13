@@ -52,7 +52,7 @@ inline void reallocate_aligned_arrays (void * & memory, std::size_t & capacity, 
     deallocate (memory);
     capacity = internal::align_up (new_capacity, 16);
     std::size_t bytes_needed = capacity * internal::sum_sizes (p ...) + 63;
-    memory = allocate_internal (bytes_needed);
+    memory = allocate (bytes_needed);
     void * memp = internal::align_up (memory, 64);
     internal::setp (capacity, (char *) memp, p ...);
   }

@@ -81,7 +81,7 @@ inline void model_t::kdtree_search ()
   if (node_count > kdtree_capacity) {
     deallocate (kdtree_split);
     kdtree_capacity = node_count;
-    kdtree_split = (float *) allocate_internal (kdtree_capacity * sizeof (float));
+    kdtree_split = (float *) allocate (kdtree_capacity * sizeof (float));
   }
 
   unsigned node = 0;

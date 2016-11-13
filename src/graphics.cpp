@@ -41,7 +41,7 @@ inline void print_info_log (GLuint object,
 {
   GLint log_length;
   glGet__iv (object, GL_INFO_LOG_LENGTH, & log_length); GLCHECK;
-  char * log = (char *) allocate_internal (log_length + 1);
+  char * log = (char *) allocate (log_length + 1);
   if (log) {
     glGet__InfoLog (object, log_length, NULL, log); GLCHECK;
     log [log_length] = '\0';
@@ -158,7 +158,7 @@ bool uniform_buffer_t::initialize ()
   // Align client-side buffer to at least 64 bytes, to avoid straddling cache lines.
   align = align > 64 ? align : 64;
   m_size = max_size;
-  m_memory = allocate_internal (m_size + align);
+  m_memory = allocate (m_size + align);
   if (! m_memory) return false;
   align_up (m_begin, m_memory, align);
   align_up (m_stride, sizeof (object_data_t), align);
