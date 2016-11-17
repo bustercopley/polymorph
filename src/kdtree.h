@@ -12,8 +12,8 @@
 #include "bounce.h"
 #include <cstdint>
 
-// Simplified kd-tree of fixed dimension k = 3,
-// using an implicit binary tree of constant depth.
+// Simplified kd-tree of fixed dimension 3,
+// using a constant-depth implicit binary tree.
 
 // The build phase is pretty much the classical algorithm, making use
 // of the partition routine from quicksort. There are two search phases.
@@ -37,11 +37,6 @@
 // Tree structure
 //   Node 0 is the root node.
 //   Node m's children are nodes 2m+1 and 2m+2.
-// Leaf nodes
-//   The bottom level, level K, contains 2^K nodes.
-//   Every node in level K contains either one or two points, and at least one node in level K contains two points.
-//   In other words we have 2^K < N <= 2^(K+1).
-//   Explicitly, K = logb(N)-1, where for all n > 0, logb(n) is the greatest integer k such that 2^k <= n.
 // Levels
 //   There are K+1 levels, numbered 0, 1, 2, ..., K; the nodes on level K are the leaf nodes.
 //   For each k, level k contains the 2^k nodes in the range [2^k-1, 2^(k+1)-1).
@@ -53,18 +48,21 @@
 //   The points are distributed evenly among the nodes of each level:
 //   For each m, node m (which is in level k at position i, see above)
 //   contains the points [iN/2^k, (i+1)N/2^k).
-//   The middle point of a non-leaf node m (in level k at position i) is defined to be the first
+//   The "middle point" of a non-leaf node m (in level k at position i) is defined to be the first
 //   point of its second child (node 2m+2, in level k+1 at position 2i+1), i.e., point (2i+1)N/2^(k+1).
+// Leaf nodes
+//   The bottom level, level K, contains 2^K nodes.
+//   Every node in level K contains either one or two points, and at least one node in level K contains two points.
+//   In other words we have 2^K < N <= 2^(K+1).
+//   Explicitly, K = logb(N)-1, where for all n > 0, logb(n) is the greatest integer k such that 2^k <= n.
 // KD tree
-//   The data for the KD tree consists of a permutation of [0, N), represented
-//   as an array of N unsigned integers, and a co-ordinate value for each
-//   non-leaf node, represented as an array of (2^K)-1 floating-point numbers.
-//   The points [begin, end) of each non-leaf node m (in level k at position i),
-//   are partitioned about the middle position so that, taking the KD tree's
-//   permutation into account in the appropriate way, for points in [begin, mid)
-//   the d co-ordinate is less than or equal to w, and for points in [mid, end),
-//   the d co-ordinate is greater than or equal to w, where d === k (mod 3), and
-//   where w is the co-ordinate value associated with the non-leaf node.
+//   The data for the KD tree consists of a permutation of [0, N), represented as an array
+//   of N unsigned integers (kdtree_index), and a co-ordinate value for each non-leaf node,
+//   represented as an array of (2^K)-1 floating-point numbers (kdtree_split).
+//   The points [begin, end) of each non-leaf node m (in level k at position i) are
+//   partitioned about the node's middle point mid in dimension d = k % 3, in the sense that
+//   x [kdtree_index[n]] [d] <= kdtree_split[m] for n in [begin, mid),
+//   x [kdtree_index[n]] [d] >= kdtree_split[m] for n in [mid, end).
 
 static const std::uint8_t inc_mod3 [] = { 1, 2, 0, 1, };
 
@@ -100,12 +98,13 @@ inline void model_t::kdtree_search ()
     dim = inc_mod3 [dim];
   }
   unsigned first_leaf = node;
+  unsigned leaf_count = first_leaf + 1;
 
   // Enough stack to traverse a tree with more than 2^32 nodes.
   ALIGNED16 float stack_corner [32] [4]; // Critical corner of a node, used in the wall search phase.
   unsigned stack_node [32];              // Node index
 
-  for (unsigned target = 0; target != count; ++ target) {
+  for (unsigned n = 1; n != count; ++ n) {
     // Visit every node whose box intersects the search cube.
     unsigned stack_top = 0;
     // Push node 0 onto the stack.
@@ -123,23 +122,28 @@ inline void model_t::kdtree_search ()
           first_node_of_current_level /= 2;
           dim = inc_mod3 [dim + 1];
         }
-        // Push one or both child nodes onto the stack.
-        float s = kdtree_split [node];
-        if (x [target] [dim] - 2 * radius <= s) stack_node [stack_top ++] = 2 * node + 1;
-        if (x [target] [dim] + 2 * radius >= s) stack_node [stack_top ++] = 2 * node + 2;
-        // Descend one level to our children's level.
-        dim = inc_mod3 [dim];
-        first_node_of_current_level = 2 * first_node_of_current_level + 1;
+        unsigned position = node - first_node_of_current_level;
+        unsigned level_node_count = first_node_of_current_level + 1;
+        // Consider the children if at least one of this node's points comes before the target.
+        // The first child is at i = position * count / level_node_count, and we require i < n.
+        if (position * count < n * level_node_count) { // Division avoided.
+          // Push one or both child nodes onto the stack.
+          float s = kdtree_split [node];
+          if (x [kdtree_index [n]] [dim] - 2 * radius <= s) stack_node [stack_top ++] = 2 * node + 1;
+          if (x [kdtree_index [n]] [dim] + 2 * radius >= s) stack_node [stack_top ++] = 2 * node + 2;
+          // Descend one level to our children's level.
+          dim = inc_mod3 [dim];
+          first_node_of_current_level = 2 * first_node_of_current_level + 1;
+        }
       }
       else {
-        unsigned level_node_count = first_leaf + 1;
+        // Visit a leaf node.
         unsigned position = node - first_leaf;
-        unsigned begin = position * count / level_node_count;
-        unsigned end = (position + 1) * count / level_node_count;
-        for (unsigned n = begin; n != end; ++ n) {
-          if (kdtree_index [n] > target) {
-            bounce (target, kdtree_index [n]);
-          }
+        unsigned points_begin = position * count / leaf_count;
+        unsigned points_end = (position + 1) * count / leaf_count;
+        // Consider points which are in this node and come before the target.
+        for (unsigned i = points_begin; i != points_end && i < n; ++ i) {
+          bounce (kdtree_index [i], kdtree_index [n]);
         }
       }
     }
@@ -198,12 +202,11 @@ inline void model_t::kdtree_search ()
         first_node_of_current_level = 2 * first_node_of_current_level + 1;
         dim = inc_mod3 [dim];
       }
-      // Visiting a leaf node.
-      unsigned level_node_count = first_node_of_current_level + 1;
-      unsigned node_position = node - first_node_of_current_level;
-      unsigned node_points_begin = node_position * count / level_node_count;
-      unsigned node_points_end = (node_position + 1) * count / level_node_count;
-      for (unsigned n = node_points_begin; n != node_points_end; ++ n) {
+      // Visit a leaf node.
+      unsigned position = node - first_leaf;
+      unsigned points_begin = position * count / leaf_count;
+      unsigned points_end = (position + 1) * count / leaf_count;
+      for (unsigned n = points_begin; n != points_end; ++ n) {
         wall_bounce (iw, kdtree_index [n]);
       }
     }
