@@ -1,6 +1,5 @@
 #include "mswin.h"
 #include "memory.h"
-#include "print.h"
 
 void * allocate (std::size_t n)
 {
