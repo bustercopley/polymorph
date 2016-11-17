@@ -132,7 +132,7 @@ void reflect (triangle_t & t)
 
 void initialize_systems (float (& abc) [system_count] [8] [4],
                          float (& xyz) [system_count] [3] [4],
-                         float (& xyzinvt) [system_count] [3] [4],
+                         float (& xyzinv) [system_count] [3] [4],
                          unsigned (& primitive_count) [system_count],
                          unsigned (& vao_ids) [system_count])
 {
@@ -143,7 +143,7 @@ void initialize_systems (float (& abc) [system_count] [8] [4],
   {
     std::memcpy (xyz [select], t.xyz, sizeof t.xyz);
     std::memcpy (abc [select], t.abc, sizeof t.abc);
-    cramer::inverse_transpose (xyz [select], xyzinvt [select]);
+    cramer::inverse (xyz [select], xyzinv [select]);
     unsigned p = 2, N = 2 * p * q * r / (q * r + r * p + p * q - p * q * r);
     make_system (q, r, t.xyz, nodes, indices);
     vao_ids [select] = make_vao (N, nodes, indices);

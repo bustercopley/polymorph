@@ -67,27 +67,8 @@ ALWAYS_INLINE inline v4f sqrt (v4f k)
   return _mm_and_ps (_mm_cmpneq_ps (k, _mm_setzero_ps ()), k * rsqrt (k));
 }
 
-// Apply the 3x3 matrix m to the column vector x.
+// Multiply column-major 3x3 matrix m (on the left) and column vector x (on the right).
 ALWAYS_INLINE inline v4f mapply (const float (* m) [4], v4f x)
-{
-#if __SSE4_1__
-  v4f t0 = _mm_dp_ps (load4f (m [0]), x, 0x71);
-  v4f t1 = _mm_dp_ps (load4f (m [1]), x, 0x72);
-  v4f t2 = _mm_dp_ps (load4f (m [2]), x, 0x74);
-  return _mm_or_ps (_mm_or_ps (t0, t1), t2);
-#else
-  v4f t0 = load4f (m [0]) * x;
-  v4f t1 = load4f (m [1]) * x;
-  v4f lo = _mm_hadd_ps (t0, t1); // t00+t01 t02+t03 t10+t11 t12+t13
-  v4f t2 = load4f (m [2]) * x;
-  v4f t3 = _mm_setzero_ps ();
-  v4f hi = _mm_hadd_ps (t2, t3); // t20+t21 t22+t23 0 0
-  return _mm_hadd_ps (lo, hi);
-#endif
-}
-
-// Transpose 3x3 matrix m and apply to column vector x.
-ALWAYS_INLINE inline v4f tmapply (const float (* m) [4], v4f x)
 {
   v4f m0 = load4f (m [0]);
   v4f m1 = load4f (m [1]);

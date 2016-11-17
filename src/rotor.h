@@ -24,7 +24,7 @@ inline rotor_t::rotor_t (const float (& u) [4], float a)
 
 inline void rotor_t::operator () (const float (& in) [4], float (& out) [4]) const
 {
-  store4f (out, tmapply (matrix, load4f (in)));
+  store4f (out, mapply (matrix, load4f (in)));
 }
 
 #endif
