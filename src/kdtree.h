@@ -7,9 +7,9 @@
 #include "compiler.h"
 #include "memory.h"
 #include "vector.h"
-#include "bsr.h"
 #include "partition.h"
 #include "bounce.h"
+#include <x86intrin.h>
 #include <cstdint>
 
 // Simplified kd-tree of fixed dimension 3,
@@ -66,19 +66,20 @@
 
 static const std::uint8_t inc_mod3 [] = { 1, 2, 0, 1, };
 
-inline unsigned nonleaf_nodes_required (unsigned n)
+inline unsigned round_up_to_power_of_two (unsigned n)
 {
-  return (1 << bsr (n - 1)) - 1;
+  return 1 << _bit_scan_reverse (n - 1);
 }
 
 ALWAYS_INLINE
 inline void model_t::kdtree_search ()
 {
   // Undefined behaviour if count == 0.
-  unsigned node_count = nonleaf_nodes_required (count);
-  if (node_count > kdtree_capacity) {
+  unsigned leaf_count = round_up_to_power_of_two (count);
+  unsigned nonleaf_count = leaf_count - 1;
+  if (nonleaf_count > kdtree_capacity) {
     deallocate (kdtree_split);
-    kdtree_capacity = node_count;
+    kdtree_capacity = nonleaf_count;
     kdtree_split = (float *) allocate (kdtree_capacity * sizeof (float));
   }
 
@@ -97,15 +98,17 @@ inline void model_t::kdtree_search ()
     level_node_count = 2 * level_node_count;
     dim = inc_mod3 [dim];
   }
-  unsigned first_leaf = node;
-  unsigned leaf_count = first_leaf + 1;
 
   // Enough stack to traverse a tree with more than 2^32 nodes.
-  ALIGNED16 float stack_corner [32] [4]; // Critical corner of a node, used in the wall search phase.
   unsigned stack_node [32];              // Node index
+  ALIGNED16 float stack_corner [32] [4]; // Extra stack space used in the wall search phase.
 
+  // For every pair of integers i, n such that 0 <= i < n < count,
+  // if |x[i'] - x[n']| < 2R then call bounce(i', n'),
+  // where i' = kdtree_index[i] and n' = kdtree_index[n].
   for (unsigned n = 1; n != count; ++ n) {
-    // Visit every node whose box intersects the search cube.
+    // Visit every node whose box intersects the search cube (the bounding
+    // cube of the sphere of radius 2R centred on the target point).
     unsigned stack_top = 0;
     // Push node 0 onto the stack.
     stack_node [stack_top ++] = 0;
@@ -116,7 +119,8 @@ inline void model_t::kdtree_search ()
       // Pop a node from the stack.
       // This node's box certainly intersects the search box.
       unsigned node = stack_node [-- stack_top];
-      if (node < first_leaf) {
+      if (node < nonleaf_count) {
+        // Visit a nonleaf node.
         // Ascend to the level that contains node.
         while (first_node_of_current_level > node) {
           first_node_of_current_level /= 2;
@@ -138,10 +142,9 @@ inline void model_t::kdtree_search ()
       }
       else {
         // Visit a leaf node.
-        unsigned position = node - first_leaf;
+        unsigned position = node - nonleaf_count;
         unsigned points_begin = position * count / leaf_count;
         unsigned points_end = (position + 1) * count / leaf_count;
-        // Consider points which are in this node and come before the target.
         for (unsigned i = points_begin; i != points_end && i < n; ++ i) {
           bounce (kdtree_index [i], kdtree_index [n]);
         }
@@ -149,6 +152,7 @@ inline void model_t::kdtree_search ()
     }
   }
 
+  // Detect collisions with walls.
   for (unsigned iw = 0; iw != 6; ++ iw) {
     // Visit every node whose critical corner's wall-distance is less than max_radius.
     // The "wall-distance" of a point x is dot(x - anchor, normal).
@@ -182,8 +186,9 @@ inline void model_t::kdtree_search ()
         first_node_of_current_level /= 2;
         dim = inc_mod3 [dim + 1];
       }
-      while (node < first_leaf) {
-        // Loop condition: node's critical corner's wall-distance is less than max_radius.
+      while (node < nonleaf_count) {
+        // Visit a nonleaf node.
+        // Precondition: node's critical corner's wall-distance is less than max_radius.
         // The favourite child's critical corner is the same as this node's so certainly also qualifies.
         unsigned favourite = normal_sign_mask >> dim & 1;
         unsigned other = favourite ^ 1;
@@ -203,7 +208,7 @@ inline void model_t::kdtree_search ()
         dim = inc_mod3 [dim];
       }
       // Visit a leaf node.
-      unsigned position = node - first_leaf;
+      unsigned position = node - nonleaf_count;
       unsigned points_begin = position * count / leaf_count;
       unsigned points_end = (position + 1) * count / leaf_count;
       for (unsigned n = points_begin; n != points_end; ++ n) {

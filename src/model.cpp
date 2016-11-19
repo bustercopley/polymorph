@@ -14,7 +14,6 @@
 #include "hsv-to-rgb.h"
 #include "print.h"
 #include "bounce.h"
-#include "bsr.h"
 
 #include <algorithm>
 
