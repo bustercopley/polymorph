@@ -52,7 +52,7 @@ int WINAPI _tWinMain (HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
   // Create the screen saver window.
   HWND hwnd;
   HWND parent = ws.arguments.mode == parented ? (HWND) ws.arguments.numeric_arg : NULL;
-  DWORD style = (ws.arguments.mode == parented ? WS_CHILD : WS_POPUP);
+  DWORD style = ws.arguments.mode == parented ? WS_CHILD : WS_POPUP;
   DWORD ex_style =
     (ws.arguments.mode == screensaver || ws.arguments.mode == configure ? WS_EX_TOPMOST : 0) |
     (ws.arguments.mode == persistent ? WS_EX_APPWINDOW : WS_EX_TOOLWINDOW);
@@ -75,18 +75,16 @@ int WINAPI _tWinMain (HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
   // Create the configure dialog if in configure mode.
   dialog_struct_t ds = { ws.settings, hwnd, };
 
-  HWND hdlg = ws.arguments.mode == configure ? ::CreateDialogParam (hInstance, MAKEINTRESOURCE (IDD_CONFIGURE), ds.hwnd, DialogProc, (LPARAM) & ds) : NULL;
-
   // Show the main window, or the configure dialog if in configure mode.
-  // We use SetWindowPos because on Windows 7 when the main window is
-  // shown as a child of the screensaver control-panel applet windows,
-  // no WM_WINDOWPOSCHANGING message arrives if we use ShowWindow.
-  ::SetWindowPos (hdlg ? hdlg : hwnd, NULL, 0, 0, 0, 0,
-                  SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_SHOWWINDOW);
-
+  if (ws.arguments.mode == configure) {
+    ws.hdlg = ::CreateDialogParam (hInstance, MAKEINTRESOURCE (IDD_CONFIGURE), ds.hwnd, DialogProc, (LPARAM) & ds);
+  }
+  else {
+    ::PostMessage (hwnd, WM_APP, 0, 0);
+  }
   MSG msg;
   while (::GetMessage (& msg, NULL, 0, 0)) {
-    if (! hdlg || ! ::IsDialogMessage (hdlg, & msg)) {
+    if (! ws.hdlg || ! ::IsDialogMessage (ws.hdlg, & msg)) {
       ::TranslateMessage (& msg);
       ::DispatchMessage (& msg);
     }

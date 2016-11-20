@@ -25,21 +25,29 @@ BOOL CALLBACK monitor_enum_proc (HMONITOR, HDC, LPRECT rect, LPARAM lparam)
 
 #endif
 
-bool get_rect (RECT & rect, const arguments_t & arguments)
+// Initial top, left, width and height (not right and bottom).
+void get_rect (RECT & rect, const arguments_t & arguments)
 {
   if (arguments.mode == parented) {
     ::GetClientRect ((HWND) arguments.numeric_arg, & rect);
-    return true;
+    return;
   }
 #if MONITOR_SELECT_ENABLED
   int n = (int) arguments.numeric_arg;
   if (n >= 1) {
     monitor_enum_param_t param = { & rect, n - 1 };
     ::EnumDisplayMonitors (NULL, NULL, & monitor_enum_proc, (LPARAM) & param);
-    if (param.n < 0) return true;
+    if (param.n < 0) {
+      rect.right -= rect.left;
+      rect.bottom -= rect.top;
+      return;
+    }
   }
 #endif
-  return false;
+  rect.left   = ::GetSystemMetrics (SM_XVIRTUALSCREEN);
+  rect.top    = ::GetSystemMetrics (SM_YVIRTUALSCREEN);
+  rect.right  = ::GetSystemMetrics (SM_CXVIRTUALSCREEN);
+  rect.bottom = ::GetSystemMetrics (SM_CYVIRTUALSCREEN);
 }
 
 ALIGN_STACK LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -74,51 +82,35 @@ ALIGN_STACK LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LP
   else {
     run_mode_t mode = ws->arguments.mode;
     switch (msg) {
-    case WM_WINDOWPOSCHANGING: {
-      WINDOWPOS * windowpos = (WINDOWPOS *) lParam;
-      if (windowpos->flags & SWP_SHOWWINDOW) {
-        windowpos->flags &= ~ (SWP_NOSIZE | SWP_NOMOVE);
+    case WM_APP: {
+      RECT rect;
+      get_rect (rect, ws->arguments);
 
-        RECT rect;
-        if (get_rect (rect, ws->arguments)) {
-          windowpos->x  = rect.left;
-          windowpos->y  = rect.top;
-          windowpos->cx = rect.right - rect.left;
-          windowpos->cy = rect.bottom - rect.top;
-        }
-        else {
-          windowpos->x  = ::GetSystemMetrics (SM_XVIRTUALSCREEN);
-          windowpos->y  = ::GetSystemMetrics (SM_YVIRTUALSCREEN);
-          windowpos->cx = ::GetSystemMetrics (SM_CXVIRTUALSCREEN);
-          windowpos->cy = ::GetSystemMetrics (SM_CYVIRTUALSCREEN);
-        }
-      }
+      // Show the window.
+      ::SetWindowPos (hwnd, HWND_TOP, rect.left, rect.top, rect.right, rect.bottom,
+        SWP_SHOWWINDOW | SWP_NOOWNERZORDER | SWP_NOCOPYBITS);
+
+      // Remember initial cursor position to detect mouse movement.
+      ::GetCursorPos (& ws->initial_cursor_position);
+      ::InvalidateRect (hwnd, nullptr, FALSE);
       break;
     }
 
     case WM_WINDOWPOSCHANGED: {
       WINDOWPOS * windowpos = (WINDOWPOS *) lParam;
-      if (windowpos->flags & SWP_SHOWWINDOW) {
-        // Remember initial cursor position to detect mouse movement.
-        ::GetCursorPos (& ws->initial_cursor_position);
-        // (Re-)start the simulation.
+      if (! (windowpos->flags & SWP_NOSIZE) || windowpos->flags & SWP_SHOWWINDOW) {
         ws->model.start (windowpos->cx, windowpos->cy, ws->settings);
-        ::PostMessage (hwnd, WM_APP, 0, 0);
       }
       break;
     }
 
-    case WM_APP:
-      ws->model.draw_next ();
-      ::InvalidateRect (hwnd, NULL, FALSE);
-      break;
-
     case WM_PAINT: {
+      ws->model.draw_next ();
       PAINTSTRUCT ps;
       ::BeginPaint (hwnd, & ps);
       ::SwapBuffers (ps.hdc);
       ::EndPaint (hwnd, & ps);
-      ::PostMessage (hwnd, WM_APP, 0, 0);
+      ::InvalidateRect (hwnd, nullptr, FALSE);
       break;
     }
 
@@ -152,11 +144,13 @@ ALIGN_STACK LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LP
     case WM_CLOSE:
       if (mode == configure) {
         if (::GetWindowLongPtr (hwnd, GWL_STYLE) & WS_VISIBLE) {
-          // Workaround for bug observed on Windows 8.1 where hiding
-          // a full-monitor OpenGL window does not remove it from the display:
-          // resize the window before hiding it.
-          ::SetWindowPos (hwnd, NULL, 0, 0, 0, 0, SWP_NOOWNERZORDER | SWP_NOCOPYBITS);
-          ::ShowWindow (hwnd, SW_HIDE);
+          // A simple "ShowWindow (SW_HIDE)" suffices to replace SetWindowPos and SetActiveWindow,
+          // but fails to actually hide the window if it occupies the full primary monitor rect
+          // and the pixel format specifies SWAP_EXCHANGE; now that we use SWAP_COPY, that problem
+          // no longer exists, but we still do it this way just in case.
+          ::SetWindowPos (hwnd, HWND_TOP, 0, 0, 0, 0,
+            SWP_HIDEWINDOW | SWP_NOSIZE | SWP_NOMOVE | SWP_NOOWNERZORDER | SWP_NOACTIVATE);
+          ::SetActiveWindow (ws->hdlg);
         }
       }
       else
@@ -174,7 +168,9 @@ ALIGN_STACK LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LP
       break;
     }
   }
-  if (close_window) ::PostMessage (hwnd, WM_CLOSE, 0, 0);
+  if (close_window) {
+    ::PostMessage (hwnd, WM_CLOSE, 0, 0);
+  }
   if (call_def_window_proc) result = ::DefWindowProc (hwnd, msg, wParam, lParam);
   return result;
 }

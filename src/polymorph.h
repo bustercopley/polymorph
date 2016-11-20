@@ -23,6 +23,7 @@ struct window_struct_t
   settings_t settings;
   POINT initial_cursor_position;
   HGLRC hglrc;
+  HWND hdlg;
 };
 
 ALIGN_STACK LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
