@@ -129,6 +129,11 @@ bool model_t::start (int width, int height, const settings_t & settings)
   ALIGNED16 float view [4];
 
   float scale = 0.5f / usr::scale;
+  float sharpness = usr::line_sharpness;
+  // Adjust scale and line width for small windows (for parented mode).
+  if (width < 512) scale *= 512.0f / width;
+  if (width < 256) sharpness *= 256.0f / width;
+
   // x1, y1, z1: coordinates of bottom-right-front corner of view frustum.
   float x1 = view [0] = scale * width;
   float y1 = view [1] = scale * height;
@@ -142,7 +147,7 @@ bool model_t::start (int width, int height, const settings_t & settings)
 
   program.set_view (view, width, height,
                     usr::fog_near, usr::fog_far,
-                    usr::line_width_extra, usr::line_sharpness);
+                    usr::line_width_extra, sharpness);
 
   // Calculate wall planes to exactly fill the front of the viewing frustum.
 
