@@ -29,6 +29,7 @@
 
 // Implicit binary tree.
 
+// Example (depth K = 3).
 // Level 0:     |                   0                   |
 // Level 1:     |         1         |         2         |
 // Level 2:     |    3    |    4    |    5    |    6    |
@@ -45,16 +46,15 @@
 //   If k<K then node m has two child nodes, which are in level k+1 at positions 2i and 2i+1.
 // Points
 //   There are N points, numbered 0, 1, 2, ..., N-1.
-//   The points are distributed evenly among the nodes of each level:
-//   For each m, node m (which is in level k at position i, see above)
-//   contains the points [iN/2^k, (i+1)N/2^k).
+//   The points are distributed evenly among the nodes of each level; for each m, the node m,
+//   which is in level k at position i (see above), contains the points [iN/2^k, (i+1)N/2^k).
 //   The "middle point" of a non-leaf node m (in level k at position i) is defined to be the first
 //   point of its second child (node 2m+2, in level k+1 at position 2i+1), i.e., point (2i+1)N/2^(k+1).
 // Leaf nodes
-//   The bottom level, level K, contains 2^K nodes.
-//   Every node in level K contains either one or two points, and at least one node in level K contains two points.
-//   In other words we have 2^K < N <= 2^(K+1).
-//   Explicitly, K = logb(N)-1, where for all n > 0, logb(n) is the greatest integer k such that 2^k <= n.
+//   The bottom level, level K, contains 2^K nodes (the leaf nodes). The depth K is chosen,
+//   if possible, so that for some real constant M >= 1 we have M < N/(2^K) <= 2M. Such a K
+//   exists if N > M; otherwise use depth K = 0. Then, each node contains either floor(N/(2^K))
+//   or ceil(N/(2^K)) points, and at least one node contains ceil(N/(2^K)) nodes.
 // KD tree
 //   The data for the KD tree consists of a permutation of [0, N), represented as an array
 //   of N unsigned integers (kdtree_index), and a co-ordinate value for each non-leaf node,
@@ -66,17 +66,20 @@
 
 static const std::uint8_t inc_mod3 [] = { 1, 2, 0, 1, };
 
-inline unsigned round_up_to_power_of_two (unsigned n)
+// See "Leaf nodes" above.
+inline unsigned required_depth (unsigned point_count)
 {
-  return 1 << _bit_scan_reverse (n - 1);
+  static const unsigned M = 2;
+  return (point_count > M)
+    ? (_bit_scan_reverse (point_count / M) - 1)
+    : 0;
 }
 
 ALWAYS_INLINE
 inline void model_t::kdtree_search ()
 {
-  // Undefined behaviour if count == 0.
-  unsigned leaf_count = round_up_to_power_of_two (count);
-  unsigned nonleaf_count = leaf_count - 1;
+  unsigned depth = required_depth (count);
+  unsigned nonleaf_count = (1 << depth) - 1;
   if (nonleaf_count > kdtree_capacity) {
     deallocate (kdtree_split);
     kdtree_capacity = nonleaf_count;
@@ -84,18 +87,17 @@ inline void model_t::kdtree_search ()
   }
 
   unsigned node = 0;
-  unsigned level_node_count = 1;
   std::uint8_t dim = 0;
-  while (count > 2 * level_node_count) {
+  for (unsigned level = 0; level != depth; ++ level) {
     unsigned begin = 0;
+    unsigned level_node_count = 1 << level;
     for (unsigned i = 0; i != level_node_count; ++ i) {
-      unsigned end = (i + 1) * count / level_node_count;
-      unsigned mid = (2 * i + 1) * count / (2 * level_node_count);
+      std::uint64_t end = ((std::uint64_t) (i + 1) * count) >> level;
+      std::uint64_t mid = ((std::uint64_t) (2 * i + 1) * count) >> (level + 1);
       partition (kdtree_index, x, dim, begin, mid, end);
       kdtree_split [node ++] = x [kdtree_index [mid]] [dim];
       begin = end;
     }
-    level_node_count = 2 * level_node_count;
     dim = inc_mod3 [dim];
   }
 
@@ -126,10 +128,10 @@ inline void model_t::kdtree_search ()
           first_node_of_current_level /= 2;
           dim = inc_mod3 [dim + 1];
         }
-        unsigned position = node - first_node_of_current_level;
-        unsigned level_node_count = first_node_of_current_level + 1;
         // Consider the children if at least one of this node's points comes before the target.
         // The first child is at i = position * count / level_node_count, and we require i < n.
+        std::uint64_t position = node - first_node_of_current_level;
+        std::uint64_t level_node_count = first_node_of_current_level + 1;
         if (position * count < n * level_node_count) { // Division avoided.
           // Push one or both child nodes onto the stack.
           float s = kdtree_split [node];
@@ -142,9 +144,9 @@ inline void model_t::kdtree_search ()
       }
       else {
         // Visit a leaf node.
-        unsigned position = node - nonleaf_count;
-        unsigned points_begin = position * count / leaf_count;
-        unsigned points_end = (position + 1) * count / leaf_count;
+        std::uint64_t position = node - nonleaf_count;
+        unsigned points_begin = position * count >> depth;
+        unsigned points_end = (position + 1) * count >> depth;
         for (unsigned i = points_begin; i != points_end && i < n; ++ i) {
           bounce (kdtree_index [i], kdtree_index [n]);
         }
@@ -208,9 +210,9 @@ inline void model_t::kdtree_search ()
         dim = inc_mod3 [dim];
       }
       // Visit a leaf node.
-      unsigned position = node - nonleaf_count;
-      unsigned points_begin = position * count / leaf_count;
-      unsigned points_end = (position + 1) * count / leaf_count;
+      std::uint64_t position = node - nonleaf_count;
+      unsigned points_begin = position * count >> depth;
+      unsigned points_end = (position + 1) * count >> depth;
       for (unsigned n = points_begin; n != points_end; ++ n) {
         wall_bounce (iw, kdtree_index [n]);
       }
