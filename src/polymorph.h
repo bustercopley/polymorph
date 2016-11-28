@@ -8,7 +8,7 @@
 #include "arguments.h"
 #include "settings.h"
 
-//#define ENABLE_MONITOR_SELECT
+#define ENABLE_MONITOR_SELECT
 
 #ifdef ENABLE_MONITOR_SELECT
 #define MONITOR_SELECT_ENABLED 1
