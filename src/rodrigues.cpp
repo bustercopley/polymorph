@@ -1,9 +1,41 @@
+// Copyright 2016 Richard Copley
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include "mswin.h"
 #include "rodrigues.h"
 #include "compiler.h"
 
-// See "problem.tex" for terminology and notation, and "problem.tex",
-// "script.mathomatic" and "script.maxima" for derivations.
+// The function "tangent" below is the mathematical core of the project.
+// It fulfils the function that is more commonly achieved using quaternion
+// multiplication, allowing the composition of rotations in three-dimensional
+// space to be composed. The rotations are represented by three components
+// using Rodrigues' formula (allowing the space to be visualised as a three
+// dimensional vector space, which is easier to conceptualise than the space
+// of unit quaternions which is the surface of a four-dimensional ball).
+
+// I'm unaware of a usable closed-form formula to combine two such
+// representations (the formulae I have seen are not defined on the whole
+// space of rotations - they are undefined at at least a single point -
+// rendering them useless). The "tangent" function describes a differential
+// equation, and the functions "bch2" and "bch4" solve it; as a result the
+// two "bch" functions can combine two rotations provided one of them is
+// "sufficiently small". This is likely much less efficient than using
+// quaternions!
+
+// The formulae are not hard to derive by elementary trigonometry (see
+// doc/script.mathomatic); for a deeper understanding, study the theory of
+// the continuous group SO(3) and its Lie algebra so(3).
 
 // Approximations: for the functions
 //   f(x^2)=f0(x)=sin(x)/x,

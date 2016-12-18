@@ -1,3 +1,17 @@
+// Copyright 2016 Richard Copley
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include "resources.h"
 #include "dialog.h"
 
@@ -64,7 +78,7 @@ BEGIN
   TRACKBAR_CONTROL (IDC_TRACKBARS_START + 8),  76,   96,  146,   14
 
   LEFT_BUDDY_TYPE   "Smaller", IDC_TRACKBARS_START + 14,   0,    0,   50,   14,  LEFT_BUDDY_STYLE
-  RIGHT_BUDDY_TYPE  "Bigger",  IDC_TRACKBARS_START + 13,    0,    0,   50,   14,  RIGHT_BUDDY_STYLE
+  RIGHT_BUDDY_TYPE  "Bigger",  IDC_TRACKBARS_START + 13,   0,    0,   50,   14,  RIGHT_BUDDY_STYLE
   TRACKBAR_CONTROL (IDC_TRACKBARS_START + 12), 76,  112,  146,   14
 
   CONTROL "<a href=""https://buster.me.uk"">buster.me.uk</a>",

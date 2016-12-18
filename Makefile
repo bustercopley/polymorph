@@ -1,3 +1,17 @@
+# Copyright 2016 Richard Copley
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http:#www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 SHELL=cmd
 
 # Override on the command line, e.g., "make PLATFORM=x86 CONFIG=base".
@@ -34,7 +48,7 @@ EXTRA_CLEAN=Polymorph*.scr
 CPPFLAGS=-DUNICODE
 CFLAGS=-g -march=core2 -mtune=generic -mfpmath=sse -mno-stackrealign -fno-ident -fno-fast-math -pedantic -Wall -Wextra
 CXXFLAGS=-std=c++1z
-LDFLAGS=-mwindows -municode
+LDFLAGS=-municode
 LDLIBS=-lopengl32 -lcomctl32 -lshell32
 RESFLAGS=-DPLATFORM_CONFIG=$(PLATFORM)_$(CONFIG) -I$(SHADER_DIRECTORY)
 
@@ -42,21 +56,21 @@ tiny_CPPFLAGS=-DTINY
 tiny_CFLAGS=-flto -Os -fno-asynchronous-unwind-tables
 tiny_CXXFLAGS=-fno-rtti -fno-exceptions
 tiny_LDFLAGS=-nostdlib -Wl,--disable-runtime-pseudo-reloc --entry=$($(PLATFORM)_ENTRY_POINT)
-tiny_LDLIBS=-lgdi32 -ladvapi32 -luser32 -lkernel32
+tiny_LDLIBS=-mwindows -lgdi32 -ladvapi32 -luser32 -lkernel32
 tiny_SHADERS=minified
 
 base_CPPFLAGS=-DENABLE_PRINT -DENABLE_GLCHECK -DENABLE_GLDEBUG
 base_CFLAGS=-flto -Os
 base_CXXFLAGS=
 base_LDFLAGS=
-base_LDLIBS=
+base_LDLIBS=-mconsole -lgdi32
 base_SHADERS=full
 
 debug_CPPFLAGS=-DENABLE_PRINT -DENABLE_GLCHECK -DENABLE_GLDEBUG
 debug_CFLAGS=-Og
 debug_CXXFLAGS=
 debug_LDFLAGS=
-debug_LDLIBS=
+debug_LDLIBS=-mconsole -lgdi32
 debug_SHADERS=full
 
 x86_ENTRY_POINT=_custom_startup
