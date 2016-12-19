@@ -16,26 +16,37 @@
 #include "rodrigues.h"
 #include "compiler.h"
 
-// The function "tangent" below is the mathematical core of the project.
-// It fulfils the function that is more commonly achieved using quaternion
-// multiplication, allowing the composition of rotations in three-dimensional
-// space to be composed. The rotations are represented by three components
-// using Rodrigues' formula (allowing the space to be visualised as a three
-// dimensional vector space, which is easier to conceptualise than the space
-// of unit quaternions which is the surface of a four-dimensional ball).
+// The function "compute" implements the axis-angle representation.
+// It takes three-dimensional vectors v and returns 3x3 matrices M.
+// Here M is a rotation matrix. The axis of the rotation is the line
+// through the origin in the direction of v. The rotation is through
+// an angle equal to the length of v, in radians. The sense of the
+// rotation is given by the right hand rule.
 
-// I'm unaware of a usable closed-form formula to combine two such
-// representations (the formulae I have seen are not defined on the whole
-// space of rotations - they are undefined at at least a single point -
-// rendering them useless). The "tangent" function describes a differential
-// equation, and the functions "bch2" and "bch4" solve it; as a result the
-// two "bch" functions can combine two rotations provided one of them is
-// "sufficiently small". This is likely much less efficient than using
-// quaternions!
+// The functions "bch2" and "bch4" take two vectors representing
+// rotations, and return a vector representing the composition of
+// those two rotations. In other words, for any vectors u and v,
+// the rotation matrix "compute(bch(u,v))" is the product of the
+// matrices "compute(u)" and "compute(v)".
 
-// The formulae are not hard to derive by elementary trigonometry (see
-// doc/script.mathomatic); for a deeper understanding, study the theory of
-// the continuous group SO(3) and its Lie algebra so(3).
+// There do exist closed-form formulae to combine two axis-angle
+// representations, but as far as I know there is none that is
+// defined on the whole space of rotations.
+
+// Instead we set up a differential equation, described by the
+// "tangent" function, and use numerical methods to solve it in the
+// functions "bch2" and "bch4"; as a result, the "bch" functions
+// combine two rotations provided one of the rotations is
+// "sufficiently small".
+
+// It's common practice to represent a rotation by a unit quaternion,
+// and for good reason: combining rotations is much simpler and more
+// efficient and ultimately easier to understand in that system.
+// On the other hand, applying an external torque to an angular
+// momentum is easier in the axis-angle representation (see
+// bounce.h, but don't expect lucid exposition.)
+
+// Implementation.
 
 // Approximations: for the functions
 //   f(x^2)=f0(x)=sin(x)/x,
@@ -216,7 +227,7 @@ void advance_linear (float (* RESTRICT x) [4], const float (* RESTRICT v) [4], u
 }
 
 // Update angular position u for motion with constant angular velocity w over a unit time interval.
-// Use a single step of a second order method to integrate the differential equation from "problem.tex".
+// Use a single step of a second order method to integrate the differential equation defined by "tangent".
 void advance_angular (float (* RESTRICT u) [4], float (* RESTRICT w) [4], unsigned count)
 {
   v4f one = { 1.0f, 1.0f, 1.0f, 1.0f, };
