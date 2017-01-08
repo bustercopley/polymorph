@@ -23,6 +23,7 @@
 #include "vector.h"
 #include "partition.h"
 #include "bounce.h"
+#include "print.h"
 #include <x86intrin.h>
 #include <cstdint>
 
@@ -67,7 +68,7 @@
 // Leaf nodes
 //   The bottom level, level K, contains 2^K nodes (the leaf nodes). The depth K is chosen,
 //   if possible, so that for some real constant M >= 1 we have M < N/(2^K) <= 2M. Such a K
-//   exists if N > M; otherwise use depth K = 0. Then, each node contains either floor(N/(2^K))
+//   exists if N >= M; otherwise use depth K = 0. Then, each node contains either floor(N/(2^K))
 //   or ceil(N/(2^K)) points, and at least one node contains ceil(N/(2^K)) nodes.
 // KD tree
 //   The data for the KD tree consists of a permutation of [0, N), represented as an array
@@ -83,16 +84,45 @@ static const std::uint8_t inc_mod3 [] = { 1, 2, 0, 1, };
 // See "Leaf nodes" above.
 inline unsigned required_depth (unsigned point_count)
 {
-  static const unsigned M = 2;
-  return (point_count > M)
-    ? (_bit_scan_reverse (point_count / M) - 1)
-    : 0;
+  static const unsigned minimum_points_per_leaf = 3;
+  unsigned desired_leaf_count = point_count / minimum_points_per_leaf;
+
+  // BSR(0) is undefined!
+  if (! desired_leaf_count) {
+    return 0;
+  }
+
+  // Let N = point_count, M = minimum_points_per_leaf, r = desired_leaf_count = floor(N/M).
+  // N, M, r are positive integers (since we have already returned if r is zero).
+  // We have   r <= N/M < r+1        (by definition of "floor")
+  // so   (*)  M <= N/r < M + M/r    (multiply each term by M/r)
+
+  // Now let K = floor(log_2(r)) and let R = 2**K = 1 << K.
+  // (K will be the tree depth and R the actual leaf count.)
+  // We have   K <= log_2(r) < K+1   (by definition of "floor")
+  // so        R < r <= 2R           (raise 2 to the power of each term)
+  // and   (*) N/2R <= N/r < N/R     (divide N by each term and reverse the inequalities)
+
+  // Combine the two starred inequalities to get M < N/R < 2M + 2M/r.
+
+  // Hence, M <= floor(N/R), and ceil(N/R) <= 2M + ceil(2M/r).
+  // Each actual leaf node will contain either floor(N/R) or ceil(N/R) points,
+  // so if a given leaf node contains m points then
+  //   M <= m < 2M + ceil(2M/r).
+
+  // If N is sufficiently large (N >= 4M^2) then r >= 2M and so we have:
+  //   M <= m <= 2M.
+
+  return _bit_scan_reverse (desired_leaf_count); // result is K = floor(log_2(r)).
 }
 
 ALWAYS_INLINE
 inline void model_t::kdtree_search ()
 {
   unsigned depth = required_depth (count);
+#if PRINT_ENABLED
+  std::cout << "N " << count << ", K " << depth << ", m " << ((float) count / (1 << depth)) << std::endl;
+#endif
   unsigned nonleaf_count = (1 << depth) - 1;
   if (nonleaf_count > kdtree_capacity) {
     deallocate (kdtree_split);
