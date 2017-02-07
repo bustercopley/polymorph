@@ -19,5 +19,6 @@
 
 void insertion_sort (unsigned * const index, const float (* const x) [4], const unsigned dim, const unsigned begin, const unsigned end);
 void partition (unsigned * index, const float (* x) [4], unsigned dim, unsigned begin, unsigned middle, unsigned end);
+void qsort (unsigned * const index, const float (* const x) [4], const unsigned dim, const unsigned begin, const unsigned end);
 
 #endif

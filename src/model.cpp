@@ -282,6 +282,10 @@ bool model_t::start (int width, int height, const settings_t & settings)
     store4f (v [n], speedup * load4f (v [n]));
     store4f (w [n], speedup * load4f (w [n]));
   }
+
+  // Sort in reverse depth order for painter's algorithm (maintained with insertion_sort in draw_next).
+  qsort (object_order, x, 2, 0, count);
+
   return true;
 }
 

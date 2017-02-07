@@ -78,3 +78,36 @@ void partition (unsigned * const index, const float (* const x) [4], const unsig
     partition (index, x, dim, i, middle, j);
   }
 }
+
+void qsort (unsigned * const index, const float (* const x) [4], unsigned dim, unsigned begin, unsigned end)
+{
+  struct task_t
+  {
+    unsigned begin;
+    unsigned end;
+  };
+
+  task_t stack [32];
+  unsigned stackp = 0;
+
+ loop:
+  if (end - begin < 7) {
+    insertion_sort (index, x, dim, begin, end);
+    // Take a task off the stack.
+    if (stackp) {
+      -- stackp;
+      begin = stack [stackp].begin;
+      end = stack [stackp].end;
+      goto loop;
+    }
+  }
+  else {
+    unsigned middle = begin + (end - begin) / 2;
+    partition (index, x, dim, begin, middle, end);
+    // Push right half onto task stack.
+    stack [stackp ++] = { middle, end, };
+    // Sort left half now.
+    end = middle;
+    goto loop;
+  }
+}
