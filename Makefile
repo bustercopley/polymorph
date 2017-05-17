@@ -55,7 +55,7 @@ RESFLAGS=-DPLATFORM_CONFIG=$(PLATFORM)_$(CONFIG) -I$(SHADER_DIRECTORY)
 tiny_CPPFLAGS=-DTINY
 tiny_CFLAGS=-flto -Os -fno-asynchronous-unwind-tables
 tiny_CXXFLAGS=-fno-rtti -fno-exceptions
-tiny_LDFLAGS=-nostdlib -Wl,--disable-runtime-pseudo-reloc --entry=$($(PLATFORM)_ENTRY_POINT)
+tiny_LDFLAGS=-nostdlib -Wl,--disable-runtime-pseudo-reloc -Wl,-e$($(PLATFORM)_ENTRY_POINT)
 tiny_LDLIBS=-mwindows -lgdi32 -ladvapi32 -luser32 -lkernel32
 tiny_SHADERS=minified
 
