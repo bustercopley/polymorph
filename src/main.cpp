@@ -126,6 +126,7 @@ extern "C"
     int status = _tWinMain (hInstance, NULL, NULL, 0);
     ::ExitProcess ((UINT) (status));
   }
+  void _custom_startup () __attribute__ ((weak, alias("custom_startup")));
 }
 
 #endif

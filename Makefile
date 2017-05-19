@@ -43,6 +43,7 @@ settings.o systems.o make_system.o
 
 OBJDIR=.obj/$(PLATFORM)/$(CONFIG)
 SRCDIR=src
+ENTRY_POINT=custom_startup
 EXTRA_CLEAN=Polymorph*.scr
 
 CPPFLAGS=-DUNICODE
@@ -55,7 +56,7 @@ RESFLAGS=-DPLATFORM_CONFIG=$(PLATFORM)_$(CONFIG) -I$(SHADER_DIRECTORY)
 tiny_CPPFLAGS=-DTINY
 tiny_CFLAGS=-flto -Os -fno-asynchronous-unwind-tables
 tiny_CXXFLAGS=-fno-rtti -fno-exceptions
-tiny_LDFLAGS=-nostdlib -Wl,--disable-runtime-pseudo-reloc -Wl,-e$($(PLATFORM)_ENTRY_POINT)
+tiny_LDFLAGS=-nostdlib -Wl,--disable-runtime-pseudo-reloc -Wl,-e$(ENTRY_POINT)
 tiny_LDLIBS=-mwindows -lgdi32 -ladvapi32 -luser32 -lkernel32
 tiny_SHADERS=minified
 
@@ -72,9 +73,6 @@ debug_CXXFLAGS=
 debug_LDFLAGS=
 debug_LDLIBS=-mconsole -lgdi32
 debug_SHADERS=full
-
-x86_ENTRY_POINT=_custom_startup
-x64_ENTRY_POINT=custom_startup
 
 full_SHADER_DIRECTORY=src
 minified_SHADER_DIRECTORY=.obj/minified
