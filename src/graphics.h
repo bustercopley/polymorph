@@ -50,10 +50,10 @@ struct uniform_buffer_t
   void bind ();
   void update ();
 private:
-  std::size_t m_size;
+  std::uint32_t m_size;
+  std::uint32_t m_stride;
   void * m_memory;
   char * m_begin;
-  std::ptrdiff_t m_stride;
   GLuint m_id;
 };
 
