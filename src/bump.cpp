@@ -75,9 +75,9 @@ void bumps_t::initialize (const bump_specifier_t & b0, const bump_specifier_t & 
   v4f a = T + S;
   v4f m = (V - U) / (d * d * d);
   store4f (c [0], U + m * S * S * (a + d + d));
-  store4f (c [1], -6.0f * m * S * T);
-  store4f (c [2], +3.0f * m * a);
-  store4f (c [3], -2.0f * m);
+  store4f (c [1], _mm_set1_ps (-6.0f) * m * S * T);
+  store4f (c [2], _mm_set1_ps (+3.0f) * m * a);
+  store4f (c [3], _mm_set1_ps (-2.0f) * m);
   store4f (S0, S);
   store4f (T0, T);
   store4f (U0, U);

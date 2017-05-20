@@ -24,7 +24,7 @@ inline v4f hue_vector (float hue)
   // Offsets 1/6, 5/6, 3/6 give the sequence [red, yellow, green, cyan, blue, magenta, red).
   const v4f offsets = { 0x1.555556p-3f, 0x1.aaaaaap-1f, 0x1.000000p-1f, 0x0.000000p+0f, };
   v4f temp = _mm_set1_ps (hue) + offsets;
-  v4f theta = 6.0f * (temp - _mm_cvtepi32_ps (_mm_cvttps_epi32 (temp))); // fractional parts
+  v4f theta = _mm_set1_ps (6.0f) * (temp - _mm_cvtepi32_ps (_mm_cvttps_epi32 (temp))); // fractional parts
 
   // Apply the function f to each component of theta, where:
   //   f (x) = 1      if x < 2,

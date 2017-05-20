@@ -86,5 +86,5 @@ v4f get_vector_in_box (rng_t & rng)
   u64 [0] = rng.get ();
   u64 [1] = rng.get ();
   v4f v = _mm_cvtepi32_ps (i128);
-  return 0x1.000000P-031f * v;
+  return _mm_set1_ps (0x1.000000P-031f) * v;
 }
