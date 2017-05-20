@@ -271,7 +271,7 @@ void program_t::set_view (const float (& view) [4],
       {    0,       0,    -(z1+z2)/zd,  -1, },
       {    0,       0,     2*z1*z2/zd,   0, },
     },
-    { width / 2, height / 2, 0, 0, },
+    { float (width / 2), float (height / 2), 0, 0, },
   };
 
   // Descriptions of the data blocks.
