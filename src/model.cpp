@@ -144,14 +144,16 @@ bool model_t::start (int width, int height, const settings_t & settings)
 
   float scale = 0.5f / usr::scale;
   float sharpness = usr::line_sharpness;
+  float fwidth = width;
+  float fheight = height;
   // Adjust scale and line width for small windows (for parented mode).
-  if (width < 512) scale *= 512.0f / width;
-  if (width < 256) sharpness *= 256.0f / width;
+  if (width < 512) scale *= 512.0f / fwidth;
+  if (width < 256) sharpness *= 256.0f / fwidth;
 
   // x1, y1, z1: coordinates of bottom-right-front corner of view frustum.
-  float x1 = view [0] = scale * width;
-  float y1 = view [1] = scale * height;
-  float z1 = view [2] = scale * (-3 * std::max (width, height));
+  float x1 = view [0] = scale * fwidth;
+  float y1 = view [1] = scale * fheight;
+  float z1 = view [2] = -3.0f * std::max (x1, y1);
 
   float zd = std::min (x1, y1); // td: depth of frustum
   // x2, y2, z2: coordinates of bottom-right-back corner of view frustum.

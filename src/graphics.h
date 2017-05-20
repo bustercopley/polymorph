@@ -63,7 +63,7 @@ struct program_t
   uniform_buffer_t uniform_buffer;
   bool initialize ();
   void set_view (const float (& view) [4],
-                 float width, float height,
+                 int width, int height,
                  float fog_near, float fog_far,
                  float line_width_extra, float line_sharpness);
 };
