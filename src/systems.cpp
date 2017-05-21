@@ -59,11 +59,11 @@ struct triangle_t
 
 //     X1
 //    /  \    Part of the tiling of the sphere, showing
-//   Z0--Y0   the triangle X0-Y0-Z0 and the adjacent triangles.
+//   Y0--Z0   triangles X1-Y0-Z0, X0-Y1-Z0, X0-Y0-Z1.
 //   |\  /|
 //   | X0 |
 //   |/  \|
-//   Y1  Z1
+//   Z1  Y1
 
 // For the snub generator, the three points
 //   TX = alpha * X1 + beta * Y0 + gamma * Z0
