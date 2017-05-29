@@ -47,7 +47,7 @@ ENTRY_POINT=_custom_startup
 EXTRA_CLEAN=Polymorph*.scr
 
 CPPFLAGS=-DUNICODE
-CFLAGS=-g -march=core2 -mtune=generic -mfpmath=sse -mno-stackrealign -fno-ident -fno-fast-math -pedantic -Wall -Wextra
+CFLAGS=-g -march=core2 -mtune=generic -mfpmath=sse -mno-stackrealign -fno-ident -ffast-math -pedantic -Wall -Wextra
 CXXFLAGS=-std=c++1z
 LDFLAGS=-municode
 LDLIBS=-lopengl32 -lcomctl32 -lshell32

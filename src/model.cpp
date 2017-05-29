@@ -31,6 +31,14 @@
 
 #include <algorithm>
 
+__attribute__ ((optimize ("O3"))) float cube (float x)
+{
+  // As of GCC 7.1, with -Os and -ffast-math, for "x * x * x" the
+  // compiler emits a call to the powi function instead of the two
+  // multiplications, which is inconvenient under -nostdlib.
+  return x * x * x;
+}
+
 namespace usr {
   // Physical parameters.
   static const float density = 100.0f;      // Density of a ball.
@@ -185,12 +193,13 @@ bool model_t::start (int width, int height, const settings_t & settings)
 
   // Object circumradius is in [0.5, 1.5).
   radius = 0.5f + 0.01f * ui2f (settings.trackbar_pos [3]);
-  float mass = usr::density * (radius * radius);
-  float moment = 0.4f * usr::density * ((radius * radius) * (radius * radius));
+  float rsq = radius * radius;
+  float mass = usr::density * rsq;
+  float moment = 0.4f * usr::density * (rsq * rsq);
   float phase_offset = get_float (rng, 1.0f, 2.0f);
   // Trackbar positions 0, 1, 2 specify 1, 2, 3 objects respectively;
   // subsequently the number of objects increases linearly with position.
-  unsigned max_count = std::max (3u, truncate (usr::fill_factor * (x1 * y1 * zd) / (radius * radius * radius)));
+  unsigned max_count = std::max (3u, truncate (usr::fill_factor * (x1 * y1 * zd) / (rsq * radius)));
   DWORD pos = settings.trackbar_pos [0];
   count = pos < 2 ? pos + 1 : 3 + (max_count - 3) * (pos - 2) / 98;
   set_capacity (count);
@@ -260,7 +269,7 @@ bool model_t::start (int width, int height, const settings_t & settings)
   {
     // Between 50% and 75% animation speed, progressively suppress fading.
     float g = 2.0f - k;      // Saturation fading decreases linearly.
-    float h = g * g * g;     // Lightness fading falls off more rapidly.
+    float h = cube (g);      // Lightness fading falls off more rapidly.
     s_bump.v0 = g * s_bump.v0 + (1.0f - g) * s_bump.v1;
     v_bump.v0 = h * v_bump.v0 + (1.0f - h) * v_bump.v1;
   }
