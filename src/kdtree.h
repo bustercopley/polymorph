@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// Copyright 2016 Richard Copley
+// Copyright 2012-2017 Richard Copley
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@
 #include "vector.h"
 #include "partition.h"
 #include "bounce.h"
-#include "print.h"
 #include <x86intrin.h>
 #include <cstdint>
 
@@ -68,7 +67,7 @@
 // Leaf nodes
 //   The bottom level, level K, contains 2^K nodes (the leaf nodes). The depth K is chosen,
 //   if possible, so that for some real constant M >= 1 we have M < N/(2^K) <= 2M. Such a K
-//   exists if N >= M; otherwise use depth K = 0. Then, each node contains either floor(N/(2^K))
+//   exists if N > M; otherwise use depth K = 0. Then, each node contains either floor(N/(2^K))
 //   or ceil(N/(2^K)) points, and at least one node contains ceil(N/(2^K)) nodes.
 // KD tree
 //   The data for the KD tree consists of a permutation of [0, N), represented as an array
@@ -120,9 +119,6 @@ ALWAYS_INLINE
 inline void model_t::kdtree_search ()
 {
   unsigned depth = required_depth (count);
-#if PRINT_ENABLED
-  std::cout << "N " << count << ", K " << depth << ", m " << ((float) count / (1 << depth)) << std::endl;
-#endif
   unsigned nonleaf_count = (1 << depth) - 1;
   if (nonleaf_count > kdtree_capacity) {
     deallocate (kdtree_split);

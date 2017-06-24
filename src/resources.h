@@ -1,6 +1,6 @@
 // -*- C++ -*-
 
-// Copyright 2016 Richard Copley
+// Copyright 2012-2017 Richard Copley
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@
 #define x86_debug_APPNAME "Polymorph (x86) (debug)"
 
 #define APPNAME_CONC0(a,b) a ## b
-#define APPNAME_CONC(a,b) APPNAME_CONC0(a,b)
+#define APPNAME_CONC(a,b) APPNAME_CONC0 (a,b)
 #define APPNAME APPNAME_CONC (PLATFORM_CONFIG, _APPNAME)
 
 #define IDI_APPICON 1

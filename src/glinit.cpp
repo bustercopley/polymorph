@@ -1,4 +1,4 @@
-// Copyright 2016 Richard Copley
+// Copyright 2012-2017 Richard Copley
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ const int context_attribs [] = {
 ALWAYS_INLINE inline bool get_glprocs ()
 {
 #define GLPROC_STRINGIZE(a) #a
-#define DO_GLPROC(type, name) (name = (type) ::wglGetProcAddress (GLPROC_STRINGIZE(name))); if (! name) return false
+#define DO_GLPROC(type, name) (name = (type) ::wglGetProcAddress (GLPROC_STRINGIZE (name))); if (! name) return false
 #include "glprocs.inc"
 #undef DO_GLPROC
   return true;
