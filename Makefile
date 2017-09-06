@@ -43,7 +43,7 @@ settings.o systems.o make_system.o
 
 OBJDIR=.obj/$(PLATFORM)/$(CONFIG)
 SRCDIR=src
-ENTRY_POINT=_custom_startup
+ENTRY_POINT=_RawEntryPoint
 EXTRA_CLEAN=Polymorph*.scr
 
 CPPFLAGS=-DUNICODE

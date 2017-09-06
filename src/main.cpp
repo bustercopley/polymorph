@@ -113,13 +113,13 @@ extern "C"
   extern IMAGE_DOS_HEADER __ImageBase;
 
   // In the linker command line, specify this function as the entry point.
-  VISIBLE NORETURN ALIGN_STACK void custom_startup ()
+  VISIBLE NORETURN ALIGN_STACK DWORD CALLBACK RawEntryPoint ()
   {
     HINSTANCE hInstance = (HINSTANCE) & __ImageBase;
     int status = _tWinMain (hInstance, NULL, NULL, 0);
     ::ExitProcess ((UINT) (status));
   }
-  void _custom_startup () __attribute__ ((weak, alias("custom_startup")));
+  DWORD _RawEntryPoint () __attribute__ ((weak, alias("RawEntryPoint")));
 }
 
 #endif
