@@ -119,7 +119,6 @@ extern "C"
     int status = _tWinMain (hInstance, NULL, NULL, 0);
     ::ExitProcess ((UINT) (status));
   }
-  DWORD _RawEntryPoint () __attribute__ ((weak, alias("RawEntryPoint")));
 }
 
 #endif

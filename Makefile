@@ -28,6 +28,10 @@ x86_TOOLDIR=C:\msys64\mingw32\bin
 x64_TOOLDIR=C:\msys64\mingw64\bin
 PATH=$($(PLATFORM)_TOOLDIR)
 
+x86_ENTRY_POINT=_RawEntryPoint@0
+x64_ENTRY_POINT=RawEntryPoint
+ENTRY_POINT=$($(PLATFORM)_ENTRY_POINT)
+
 x64_base_APPNAME=Polymorph-base
 x86_base_APPNAME=Polymorph-x86-base
 x64_tiny_APPNAME=Polymorph
@@ -43,7 +47,6 @@ settings.o systems.o make_system.o
 
 OBJDIR=.obj/$(PLATFORM)/$(CONFIG)
 SRCDIR=src
-ENTRY_POINT=_RawEntryPoint
 EXTRA_CLEAN=Polymorph*.scr
 
 CPPFLAGS=-DUNICODE
