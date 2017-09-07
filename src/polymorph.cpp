@@ -20,6 +20,9 @@
 #include "glinit.h"
 #include "aligned-arrays.h"
 #include "print.h"
+#include "qpc.h"
+
+#define WC_MAIN TEXT ("M")
 
 #if MONITOR_SELECT_ENABLED
 
@@ -187,4 +190,37 @@ ALIGN_STACK LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LP
   }
   if (call_def_window_proc) result = ::DefWindowProc (hwnd, msg, wParam, lParam);
   return result;
+}
+
+HWND create_screensaver_window (window_struct_t & ws)
+{
+  if (! glinit (ws.hInstance)) return 0;
+
+  // Register the window class.
+  WNDCLASSEX wndclass = { sizeof (WNDCLASSEX), 0, & MainWndProc, 0, 0, ws.hInstance, ws.icon, NULL, NULL, NULL, WC_MAIN, ws.icon_small };
+  ATOM wc_main_atom = ::RegisterClassEx (& wndclass);
+
+  // Create the screen saver window.
+  HWND hwnd;
+  HWND parent = ws.arguments.mode == parented ? (HWND) ws.arguments.numeric_arg : NULL;
+  DWORD style = ws.arguments.mode == parented ? WS_CHILD : WS_POPUP;
+  DWORD ex_style =
+    (ws.arguments.mode == screensaver || ws.arguments.mode == configure ? WS_EX_TOPMOST : 0) |
+    (ws.arguments.mode == persistent ? WS_EX_APPWINDOW : WS_EX_TOOLWINDOW);
+
+  // Retry once on failure (works around sporadic SetPixelFormat
+  // failure observed on Intel integrated graphics on Windows 7).
+  for (unsigned retries = 0; retries != 2; ++ retries) {
+    hwnd = ::CreateWindowEx (ex_style, MAKEINTATOM (wc_main_atom), ws.display_name, style,
+                             0, 0, 0, 0,
+                             parent, NULL, ws.hInstance, & ws);
+    if (hwnd) break;
+    // Window creation failed (window will be destroyed).
+  }
+  // Window creation succeeded. Initialize the simulation.
+  if (! ws.model.initialize (qpc ())) {
+    ::DestroyWindow (hwnd);
+    hwnd = 0;
+  }
+  return hwnd;
 }

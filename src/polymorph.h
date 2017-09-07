@@ -35,11 +35,16 @@ struct window_struct_t
   model_t model;
   arguments_t arguments;
   settings_t settings;
+  HINSTANCE hInstance;
+  LPCTSTR display_name;
+  HICON icon;
+  HICON icon_small;
   POINT initial_cursor_position;
   HGLRC hglrc;
   HWND hdlg;
+  HWND hwnd; // Only used by the dialogue procedure.
 };
 
-ALIGN_STACK LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+HWND create_screensaver_window (window_struct_t & ws);
 
 #endif

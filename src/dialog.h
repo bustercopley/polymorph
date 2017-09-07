@@ -43,13 +43,6 @@
 
 #ifndef RC_INVOKED
 #include "mswin.h"
-#include "settings.h"
-
-struct dialog_struct_t
-{
-  settings_t & settings;
-  HWND hwnd;
-};
 
 INT_PTR CALLBACK DialogProc (HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 #endif

@@ -14,6 +14,7 @@
 
 #include "mswin.h"
 #include "dialog.h"
+#include "polymorph.h"
 #include "resources.h"
 #include "settings.h"
 #include "reposition.h"
@@ -34,13 +35,15 @@ inline void italicize_control_font (HWND hwnd)
 
 INT_PTR CALLBACK DialogProc (HWND hdlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
-  dialog_struct_t * ds = reinterpret_cast <dialog_struct_t *> (::GetWindowLongPtr (hdlg, DWLP_USER));
+  window_struct_t * ws = reinterpret_cast <window_struct_t *> (::GetWindowLongPtr (hdlg, DWLP_USER));
 
   switch (message)
   {
   case WM_INITDIALOG: {
-    ds = (dialog_struct_t *) lParam;
-    ::SetWindowLongPtr (hdlg, DWLP_USER, (LONG_PTR) ds);
+    ws = (window_struct_t *) lParam;
+    ::SetWindowLongPtr (hdlg, DWLP_USER, (LONG_PTR) ws);
+    ::SendMessage (hdlg, WM_SETICON, ICON_BIG, (LPARAM) ws->icon);
+    ::SendMessage (hdlg, WM_SETICON, ICON_SMALL, (LPARAM) ws->icon_small);
 
     // Optional extras.
     if (REPOSITION_DIALOG_ENABLED) reposition_window (hdlg);
@@ -49,14 +52,12 @@ INT_PTR CALLBACK DialogProc (HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
     // The id of trackbar n is IDC_TRACKBARS_START + 4 * n, and its buddies have the two succeeding ids.
     for (unsigned i = 0; i != trackbar_count; ++ i) {
       HWND hwnd_trackbar = ::GetDlgItem (hdlg, IDC_TRACKBARS_START + 4 * i);
-      ::SendMessage (hwnd_trackbar, TBM_SETPOS, (WPARAM) TRUE, (LPARAM) ds->settings.trackbar_pos [i]);
+      ::SendMessage (hwnd_trackbar, TBM_SETPOS, (WPARAM) TRUE, (LPARAM) ws->settings.trackbar_pos [i]);
       for (unsigned j = 0; j != 2; ++ j) {
         HWND hwnd_buddy = ::GetDlgItem (hdlg, IDC_TRACKBARS_START + 4 * i + 1 + j);
         ::SendMessage (hwnd_trackbar, TBM_SETBUDDY, (WPARAM) j, (LPARAM) hwnd_buddy);
       }
     }
-    // Override the Z order specified by the ownership relationship.
-    ::SetWindowPos (hdlg, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOOWNERZORDER);
     return TRUE;
   }
 
@@ -68,11 +69,18 @@ INT_PTR CALLBACK DialogProc (HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
     const UINT id = LOWORD (wParam);
     for (unsigned i = 0; i != trackbar_count; ++ i) {
       HWND hwnd_trackbar = ::GetDlgItem (hdlg, IDC_TRACKBARS_START + 4 * i);
-      ds->settings.trackbar_pos [i] = ::SendMessage (hwnd_trackbar, TBM_GETPOS, 0, 0);
+      ws->settings.trackbar_pos [i] = ::SendMessage (hwnd_trackbar, TBM_GETPOS, 0, 0);
     }
-    if (id == IDOK) save_settings (ds->settings);
+    if (id == IDOK) save_settings (ws->settings);
     if (id != IDC_PREVIEW_BUTTON) ::DestroyWindow (hdlg);
-    if (id == IDC_PREVIEW_BUTTON) ::PostMessage (ds->hwnd, WM_APP, 0, 0);
+    if (id == IDC_PREVIEW_BUTTON) {
+      if (! ws->hwnd) {
+        ws->hwnd = create_screensaver_window (* ws);
+      }
+      if (ws->hwnd) {
+        ::PostMessage (ws->hwnd, WM_APP, 0, 0);
+      }
+    }
     return TRUE;
   }
 
