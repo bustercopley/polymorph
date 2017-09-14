@@ -91,10 +91,11 @@ inline unsigned required_depth (unsigned point_count)
     return 0;
   }
 
-  // Let N = point_count, M = minimum_points_per_leaf, r = desired_leaf_count = floor(N/M).
+  // Let N = point_count, M = minimum_points_per_leaf (assumed positive integers).
+  // Let r = desired_leaf_count = floor(N/M).
   // N, M, r are positive integers (since we have already returned if r is zero).
   // We have   r <= N/M < r+1        (by definition of "floor")
-  // so   (*)  M <= N/r < M + M/r    (multiply each term by M/r)
+  // so    (*) M <= N/r < M + M/r    (multiply each term by M/r)
 
   // Now let K = floor(log_2(r)) and let R = 2**K = 1 << K.
   // (K will be the tree depth and R the actual leaf count.)
