@@ -71,6 +71,9 @@ inline void print_info_log (GLuint object,
 void APIENTRY debug_message_callback (GLenum source, GLenum type, GLuint id, GLenum severity,
                                       GLsizei, const GLchar * message, const void *)
 {
+  // Filter out anything that isn't an error or performance issue.
+  if (severity == GL_DEBUG_SEVERITY_NOTIFICATION) return;
+
   std::cout << std::hex << "Source ";
   switch (source)
   {
