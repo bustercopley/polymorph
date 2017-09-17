@@ -79,13 +79,16 @@ ALIGN_STACK LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LP
   if (! ws) {
     if (msg == WM_CREATE) {
       result = -1; // Destroy window.
-      // Retrieve the window-struct pointer from the window createsruct.
+      // Retrieve the window-struct pointer from the window createstruct.
       CREATESTRUCT * cs = (CREATESTRUCT *) lParam;
       ws = (window_struct_t *) cs->lpCreateParams;
       if (HDC hdc = ::GetDC (hwnd)) {
         ws->hglrc = install_rendering_context (hdc);
         if (ws->hglrc) {
-          // Context installed successfully. Store the window-struct pointer in userdata.
+          // Successfully installed the rendering context.
+          // Once-only model/graphics allocation and initialization.
+          ws->model.initialize (qpc ());
+          // Store the window-struct pointer in userdata.
           ::SetWindowLongPtr (hwnd, GWLP_USERDATA, reinterpret_cast <LONG_PTR> (ws));
           result = 0; // Continue window creation.
         }
@@ -216,11 +219,6 @@ HWND create_screensaver_window (window_struct_t & ws)
                              parent, NULL, ws.hInstance, & ws);
     if (hwnd) break;
     // Window creation failed (window will be destroyed).
-  }
-  // Window creation succeeded. Initialize the simulation.
-  if (! ws.model.initialize (qpc ())) {
-    ::DestroyWindow (hwnd);
-    hwnd = 0;
   }
   return hwnd;
 }
