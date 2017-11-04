@@ -241,9 +241,10 @@ bool model_t::start (int width, int height, const settings_t & settings)
     A.animation_time = (1.0f + phase) * usr::cycle_duration;
 
     // Get two independent random integers, d6 uniform on [0, 6) and d8 uniform on [0, 8).
-    std::uint32_t d48 = (((std::uint32_t) rng.get () & 0x3ffffff0u) * 3u) >> 26u;
-    std::uint32_t d6 = d48 >> 3u;
-    std::uint32_t d8 = d48 & 7u;
+    std::uint32_t d = (std::uint32_t) rng.get ();
+    std::uint32_t d8 = d & 7u;
+    // Need at least 2 high bits zero to avoid overflow. Discard the 3 bits used for d8.
+    std::uint32_t d6 = (3u * (d >> 3u)) >> 28u;
     A.target.system = (system_select_t) d6;
     A.target.point = d8;
     A.starting_point = A.target.point;
