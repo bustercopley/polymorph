@@ -19,7 +19,8 @@
 
 #include <cstdint>
 
-struct rng_t {
+struct rng_t
+{
   rng_t () = default;
   void initialize (std::uint64_t seed);
   std::uint64_t get ();

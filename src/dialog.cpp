@@ -37,8 +37,7 @@ INT_PTR CALLBACK DialogProc (HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
 {
   window_struct_t * ws = reinterpret_cast <window_struct_t *> (::GetWindowLongPtr (hdlg, DWLP_USER));
 
-  switch (message)
-  {
+  switch (message) {
   case WM_INITDIALOG: {
     ws = (window_struct_t *) lParam;
     ::SetWindowLongPtr (hdlg, DWLP_USER, (LONG_PTR) ws);

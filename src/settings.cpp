@@ -22,8 +22,7 @@ struct settings_definition_t
   DWORD default_value;
 };
 
-const settings_definition_t settings_definitions [trackbar_count] =
-{
+const settings_definition_t settings_definitions [trackbar_count] = {
   { TEXT ("count"), 50, },
   { TEXT ("heat"), 50, },
   { TEXT ("speed"), 50, },

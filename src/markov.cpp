@@ -46,7 +46,8 @@ inline bool operator == (const polyhedron_select_t & x, const polyhedron_select_
 
 const unsigned probability_max = 1u << 31u;
 const unsigned probability_mask = probability_max - 1u;
-const struct replacement_t {
+const struct replacement_t
+{
   polyhedron_select_t before, after;
   unsigned probability;
 } replacements [] = {

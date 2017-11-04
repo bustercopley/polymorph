@@ -265,8 +265,7 @@ bool model_t::start (int width, int height, const settings_t & settings)
     s_bump.v0 = s_bump.v1;
     v_bump.v0 = v_bump.v1;
   }
-  else if (s >= 50)
-  {
+  else if (s >= 50) {
     // Between 50% and 75% animation speed, progressively suppress fading.
     float g = 2.0f - k;      // Saturation fading decreases linearly.
     float h = cube (g);      // Lightness fading falls off more rapidly.

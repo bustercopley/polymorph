@@ -75,8 +75,7 @@ void APIENTRY debug_message_callback (GLenum source, GLenum type, GLuint id, GLe
   if (severity == GL_DEBUG_SEVERITY_NOTIFICATION) return;
 
   std::cout << std::hex << "Source ";
-  switch (source)
-  {
+  switch (source) {
   case /* 0x8246 */ GL_DEBUG_SOURCE_API:              std::cout << "API"; break;
   case /* 0x8247 */ GL_DEBUG_SOURCE_WINDOW_SYSTEM:    std::cout << "WINDOW_SYSTEM"; break;
   case /* 0x8248 */ GL_DEBUG_SOURCE_SHADER_COMPILER:  std::cout << "SHADER_COMPILER"; break;
@@ -86,8 +85,7 @@ void APIENTRY debug_message_callback (GLenum source, GLenum type, GLuint id, GLe
   default:                                            std::cout << "unknown (0x" << source << ")"; break;
   }
   std::cout << ", type ";
-  switch (type)
-  {
+  switch (type) {
   case /* 0x824C */ GL_DEBUG_TYPE_ERROR:                std::cout << "ERROR"; break;
   case /* 0x824D */ GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:  std::cout << "DEPRECATED_BEHAVIOR"; break;
   case /* 0x824E */ GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:   std::cout << "UNDEFINED_BEHAVIOR"; break;
@@ -100,8 +98,7 @@ void APIENTRY debug_message_callback (GLenum source, GLenum type, GLuint id, GLe
   default:                                              std::cout << "unknown (0x" << type << ")"; break;
   }
   std::cout << ", severity ";
-  switch (severity)
-  {
+  switch (severity) {
   case /* 0x826B */ GL_DEBUG_SEVERITY_NOTIFICATION:  std::cout << "NOTIFICATION"; break;
   case /* 0x9146 */ GL_DEBUG_SEVERITY_HIGH:          std::cout << "HIGH"; break;
   case /* 0x9147 */ GL_DEBUG_SEVERITY_MEDIUM:        std::cout << "MEDIUM"; break;
