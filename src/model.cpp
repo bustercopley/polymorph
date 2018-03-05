@@ -400,11 +400,10 @@ void model_t::draw_next ()
     A.animation_time = t;
   }
 
-  // Sort objects into reverse depth order. Insertion sort is slow the
-  // first time, but faster for subsequent frames because the index is
-  // already almost sorted.
   if (count) {
-    insertion_sort (object_order, x, 2, 0, count); // undefined behaviour if count == 0.
+    // Restore the z-order which we have just perturbed.
+    // Insertion sort is an adaptive sort algorithm.
+    insertion_sort (object_order, x, 2, 0, count);
   }
 
   clear ();

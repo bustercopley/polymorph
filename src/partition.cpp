@@ -19,6 +19,7 @@
 // We don't use std::nth_element because the G++ implementation is a little bloated.
 // Also beware http://gcc.gnu.org/bugzilla/show_bug.cgi?id=58800.
 
+// Undefined behaviour if count == 0.
 void insertion_sort (unsigned * const index, const float (* const x) [4], const unsigned dim, const unsigned begin, const unsigned end)
 {
   for (unsigned n = begin + 1; n != end; ++ n) {
