@@ -119,6 +119,7 @@ inline unsigned required_depth (unsigned point_count)
 ALWAYS_INLINE
 inline void model_t::kdtree_search ()
 {
+  // Reallocate memory for the nodes.
   unsigned depth = required_depth (count);
   unsigned nonleaf_count = (1 << depth) - 1;
   if (nonleaf_count > kdtree_capacity) {
@@ -127,6 +128,7 @@ inline void model_t::kdtree_search ()
     kdtree_split = (float *) allocate (kdtree_capacity * sizeof (float));
   }
 
+  // Phase 1: build the tree.
   unsigned node = 0;
   std::uint8_t dim = 0;
   for (unsigned level = 0; level != depth; ++ level) {
@@ -143,13 +145,46 @@ inline void model_t::kdtree_search ()
   }
 
   // Enough stack to traverse a tree with more than 2^32 nodes.
-  unsigned stack_node [32];              // Node index
-  ALIGNED16 float stack_corner [32] [4]; // Extra stack space used in the wall search phase.
+  unsigned stack_node [32];              // Node index.
+  ALIGNED16 float stack_corner [32] [4]; // Extra space for the wall search phase.
+
+  // Phase 2: for each object, detect collisions with other objects.
+
+  // The later a collision is processed, the greater its tendency
+  // increase the separation of the two objects involved, because
+  // there are fewer chances for the effects of the collision to be
+  // undone by subsequent collisions.
+
+  // If we iterate over the objects in the permuted order specified by
+  // kdtree_index, that tendency will be strongly correlated with
+  // position, and the gas will be more compressible in some regions
+  // of space than others.
+
+  // To avoid such an anisotropy, we iterate over the objects in array
+  // order instead. This entails that the "permeability" of an object,
+  // that is, its increased probability of being involved in early
+  // collisions, is a persistent characteristic of the object.
+
+  // To facilitate that we're now going to compute the inverse of the
+  // kdtree_index permutation.
+  for (unsigned n = 0; n != count; ++ n) {
+    n [kdtree_index] [kdtree_aux] = n;
+  }
 
   // For every pair of integers i, n such that 0 <= i < n < count,
   // if |x[i'] - x[n']| < 2R then call bounce(i', n'),
   // where i' = kdtree_index[i] and n' = kdtree_index[n].
-  for (unsigned n = 1; n != count; ++ n) {
+
+  // Loop over n' instead of n to avoid anisotropy.
+  for (unsigned n_prime = 0; n_prime != count; ++ n_prime) {
+    unsigned n = kdtree_aux [n_prime];
+    if (n < 7) {
+      // Skip the tree traversal and just try all the candidates.
+      for (unsigned i = 0; i != n; ++ i) {
+        bounce (n_prime, kdtree_index [i]);
+      }
+      continue;
+    }
     // Visit every node whose box intersects the search cube (the bounding
     // cube of the sphere of radius 2R centred on the target point).
     unsigned stack_top = 0;
@@ -176,8 +211,8 @@ inline void model_t::kdtree_search ()
         if (position * count < n * level_node_count) { // Division avoided.
           // Push one or both child nodes onto the stack.
           float s = kdtree_split [node];
-          if (x [kdtree_index [n]] [dim] - 2 * radius <= s) stack_node [stack_top ++] = 2 * node + 1;
-          if (x [kdtree_index [n]] [dim] + 2 * radius >= s) stack_node [stack_top ++] = 2 * node + 2;
+          if (x [n_prime] [dim] + 2 * radius >= s) stack_node [stack_top ++] = 2 * node + 2;
+          if (x [n_prime] [dim] - 2 * radius <= s) stack_node [stack_top ++] = 2 * node + 1;
           // Descend one level to our children's level.
           dim = inc_mod3 [dim];
           first_node_of_current_level = 2 * first_node_of_current_level + 1;
@@ -189,13 +224,13 @@ inline void model_t::kdtree_search ()
         unsigned points_begin = position * count >> depth;
         unsigned points_end = (position + 1) * count >> depth;
         for (unsigned i = points_begin; i != points_end && i < n; ++ i) {
-          bounce (kdtree_index [i], kdtree_index [n]);
+          bounce (n_prime, kdtree_index [i]);
         }
       }
     }
   }
 
-  // Detect collisions with walls.
+  // Phase 3: detect collisions with walls.
   for (unsigned iw = 0; iw != 6; ++ iw) {
     // Visit every node whose critical corner's wall-distance is less than max_radius.
     // The "wall-distance" of a point x is dot(x - anchor, normal).

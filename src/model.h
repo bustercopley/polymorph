@@ -46,6 +46,7 @@ private:
   object_t * objects;
   unsigned * object_order;
   unsigned * kdtree_index;
+  unsigned * kdtree_aux;
   float * kdtree_split;
 
   float (* x) [4];  // position
