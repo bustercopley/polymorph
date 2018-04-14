@@ -26,6 +26,14 @@
 #include <x86intrin.h>
 #include <cstdint>
 
+//#define ENABLE_RANDOMIZE_COLLISION_ORDER
+
+#ifdef ENABLE_RANDOMIZE_COLLISION_ORDER
+#define RANDOMIZE_COLLISION_ORDER_ENABLED 1
+#else
+#define RANDOMIZE_COLLISION_ORDER_ENABLED 0
+#endif
+
 // Simplified kd-tree of fixed dimension 3,
 // using a constant-depth implicit binary tree.
 
@@ -160,15 +168,30 @@ inline void model_t::kdtree_search ()
   // position, and the gas will be more compressible in some regions
   // of space than others.
 
-  // To avoid such an anisotropy, we iterate over the objects in array
-  // order instead. This entails that the "permeability" of an object,
-  // that is, its increased probability of being involved in early
-  // collisions, is a persistent characteristic of the object.
+  if constexpr (RANDOMIZE_COLLISION_ORDER_ENABLED) {
+    // To avoid such an anisotropy, we iterate over the objects in random
+    // order instead. This avoids any unfairness.
 
-  // To facilitate that we're now going to compute the inverse of the
-  // kdtree_index permutation.
-  for (unsigned n = 0; n != count; ++ n) {
-    n [kdtree_index] [kdtree_aux] = n;
+    // To facilitate that we're now going to compute a random permutation,
+    // using the inside-out Fisher-Yates shuffle.
+    unsigned bits = _bit_scan_reverse (count) + 1;
+    for (unsigned n = 0; n != count; ++ n) {
+      unsigned i = ((rng.get () >> bits) * (n + 1)) >> (64 - bits);
+      kdtree_aux [n] = kdtree_aux [i];
+      kdtree_aux [i] = n;
+    }
+  }
+  else {
+    // To avoid such an anisotropy, we iterate over the objects in array
+    // order instead. This entails that the "permeability" of an object,
+    // that is, its increased probability of being involved in early
+    // collisions, is a persistent characteristic of the object.
+
+    // To facilitate that we're now going to compute the inverse of the
+    // kdtree_index permutation.
+    for (unsigned n = 0; n != count; ++ n) {
+      n [kdtree_index] [kdtree_aux] = n;
+    }
   }
 
   // For every pair of integers i, n such that 0 <= i < n < count,
