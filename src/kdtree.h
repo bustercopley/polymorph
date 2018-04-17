@@ -158,7 +158,7 @@ inline void model_t::kdtree_search ()
 
   // Phase 2: for each object, detect collisions with other objects.
 
-  // The later a collision is processed, the greater its tendency
+  // The later a collision is processed, the greater its tendency to
   // increase the separation of the two objects involved, because
   // there are fewer chances for the effects of the collision to be
   // undone by subsequent collisions.
