@@ -101,7 +101,7 @@ INT_PTR CALLBACK DialogProc (HWND hdlg, UINT message, WPARAM wParam, LPARAM lPar
     const UINT trackbar_id = buddy_id & ~3;
     HWND hwnd_buddy = drawitem->hwndItem;
     HWND hwnd_trackbar = ::GetDlgItem (hdlg, trackbar_id);
-    UINT alignment = (buddy_id >> 1) & 1 ? TA_RIGHT : TA_LEFT;
+    UINT alignment = buddy_id & 2 ? TA_RIGHT : TA_LEFT;
     // Compute the reference point in the buddy's client coordinates.
     RECT buddy_rect, trackbar_rect, channel_rect;
     ::GetWindowRect (hwnd_trackbar, & trackbar_rect);
