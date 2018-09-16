@@ -33,7 +33,8 @@
 
 struct step_t
 {
-  v4f operator () (float t) const; // Returns { r, r, r, r }, where r = step (t);
+  // Returns { f, f, f, f } where f = step(t);
+  v4f operator () (float t) const;
   void initialize (float t0, float t1);
 private:
   float c [4], T [4];
@@ -58,6 +59,7 @@ struct bump_specifier_t
 
 struct bumps_t
 {
+  // Returns {f, g, f, g} where f = bump0(t), g = bump1(t).
   v4f operator () (float t) const;
   void initialize (const bump_specifier_t & b0, const bump_specifier_t & b1);
 private:

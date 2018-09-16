@@ -163,7 +163,7 @@ bool model_t::start (int width, int height, const settings_t & settings)
   float y1 = view [1] = scale * fheight;
   float z1 = view [2] = -3.0f * std::max (x1, y1);
 
-  float zd = std::min (x1, y1); // td: depth of frustum
+  float zd = std::min (x1, y1); // zd: depth of frustum
   // x2, y2, z2: coordinates of bottom-right-back corner of view frustum.
   float z2 = view [3] = z1 - zd;
   float x2 = x1 * (z2 / z1);

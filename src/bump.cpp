@@ -39,8 +39,10 @@ void step_t::initialize (float t0, float t1)
 
 v4f step_t::operator () (float t) const
 {
-  // Evaluate the polynomial f by Estrin's method.
-  // Mask in 0, f(t) or 1 respectively if t<t0, t0<=t<t1 or t1<t.
+  // Evaluate the polynomial f by Estrin's method. Return
+  //   (0 0 0 0)  if t < t0,
+  //   (f f f f)  if t0 <= t < t1,
+  //   (1 1 1 1)  if t > t1.
   v4f c4 = load4f (c);
   v4f one = { 1.0f, 1.0f, 1.0f, 1.0f, };
   v4f tttt = _mm_set1_ps (t);           // t t t t
@@ -54,7 +56,7 @@ v4f step_t::operator () (float t) const
   v4f hi = _mm_movehl_ps (tx, tx);      // t1  inf  t1  inf
   v4f sel = _mm_and_ps (_mm_cmpge_ps (tttt, lo), _mm_cmplt_ps (tttt, hi));
   v4f val = _mm_and_ps (sel, f1);       // f? 1? f? 1?
-  return _mm_hadd_ps (val, val);        // x x x x, where x = t<t0 ? 0 : t<t1 ? f(t) : 1
+  return _mm_hadd_ps (val, val);
 }
 
 void bumps_t::initialize (const bump_specifier_t & b0, const bump_specifier_t & b1)

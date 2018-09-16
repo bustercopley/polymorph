@@ -27,7 +27,6 @@ open my $out, ">", $outfile or die "Can't open output file \"$outfile\": $!";
 binmode $out;
 
 my %abbrevs = (
-  # Geometry shader
   project       => "I",  # (vec3 x) -> vec4
   pdivide       => "I",  # (vec4 s) -> vec2
   raster        => "J",  # (vec3 x) -> vec2
