@@ -24,8 +24,13 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <algorithm>
 
-#define UNIFORM_BINDING_INDEX_START 0
+// Binding indices for the indexed target GL_UNIFORM_BUFFER.
+// These must match the hardcoded bindings in the shader uniform block declarations.
+#define UNIFORM_BLOCK_BINDING_F 1
+#define UNIFORM_BLOCK_BINDING_G 2
+#define UNIFORM_BLOCK_BINDING_H 3
 
 #if GLCHECK_ENABLED && PRINT_ENABLED
 inline void gl_check (const char * file, int line) {
@@ -187,6 +192,7 @@ void uniform_buffer_t::bind ()
 
 void uniform_buffer_t::update ()
 {
+  // The buffer id is already bound to the GL_UNIFORM_BUFFER target.
   // Create a buffer, orphaning any previous buffer.
   glBufferData (GL_UNIFORM_BUFFER, m_size, nullptr, GL_DYNAMIC_DRAW); GLCHECK;
   // Upload the buffer data.
@@ -278,54 +284,42 @@ void program_t::set_view (const float (& view) [4],
     { float (width >> 1), float (height >> 1), 0, 0, },
   };
 
-  // Descriptions of the data blocks.
+  // The shaders declare uniform blocks "F", "G" and "H", each with
+  // its own distinct hardcoded binding index of the indexed target
+  // GL_UNIFORM_BUFFER. "F" is declared in "fragment-shader.glsl",
+  // "G" in "geometry-shader.glsl", and "H" in both "fragment-shader.glsl"
+  // and "geometry-shader.glsl". The layouts of blocks "F", "G" and "H"
+  // match the structs fragment_data_t, geometry_data_t and object_data_t.
 
-  struct block_descriptor_t
-  {
-    const char * name;
-    GLvoid * data;
-    GLsizeiptr size;
-  };
-
-  block_descriptor_t blocks [] = {
-    { "F", & fragment_data, sizeof fragment_data, },
-    { "G", & geometry_data, sizeof geometry_data, },
-  };
-  GLuint block_count = sizeof blocks / sizeof blocks [0];
-
-  // Create a uniform buffer big enough for all the data blocks.
-
-  GLsizeiptr max_block_size = 0;
-  for (std::size_t n = 0; n != block_count; ++ n)
-    if (max_block_size < blocks [n].size)
-      max_block_size = blocks [n].size;
-
-  const float (& background) [4] = fragment_data.b;
-  glClearColor (background [0], background [1], background [2], 0.0f); GLCHECK;
-
+  // Create one uniform buffer large enough to hold the data for "F" and "G".
+  // This uniform buffer is never destroyed (the uniform buffer id is leaked).
+  GLuint stride = std::max(sizeof fragment_data, sizeof geometry_data);
   GLint align;
   glGetIntegerv (GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, & align); GLCHECK;
-
-  GLuint buffer_size, buffer_stride;
-  align_up (buffer_stride, max_block_size, align);
-  buffer_size = block_count * buffer_stride;
-
+  align_up (stride, stride, align);
   GLuint buf_id;
   glGenBuffers (1, & buf_id); GLCHECK;
   glBindBuffer (GL_UNIFORM_BUFFER, buf_id); GLCHECK;
-  glBufferData (GL_UNIFORM_BUFFER, buffer_size, nullptr, GL_STATIC_DRAW); GLCHECK;
+  glBufferData (GL_UNIFORM_BUFFER, 2 * stride, nullptr, GL_STATIC_DRAW); GLCHECK;
 
-  // Copy each data block to a buffer range and bind the range to the named shader uniform block.
+  // Load each block's data into its own disjoint subrange of the buffer.
+  glBufferSubData (GL_UNIFORM_BUFFER, 0 * stride, sizeof fragment_data, & fragment_data); GLCHECK;
+  glBufferSubData (GL_UNIFORM_BUFFER, 1 * stride, sizeof geometry_data, & geometry_data); GLCHECK;
 
-  for (std::size_t n = 0; n != block_count; ++ n) {
-    glBufferSubData (GL_UNIFORM_BUFFER, n * buffer_stride, blocks [n].size, blocks [n].data); GLCHECK;
-    GLuint block_index = glGetUniformBlockIndex (id, blocks [n].name); GLCHECK;
-    GLuint binding_index = UNIFORM_BINDING_INDEX_START + n + 1;
-    glUniformBlockBinding (id, block_index, binding_index); GLCHECK;
-    glBindBufferRange (GL_UNIFORM_BUFFER, binding_index, buf_id, n * buffer_stride, blocks [n].size); GLCHECK;
-  }
+  // Bind "F" and "G" to the disjoint subranges.
+  // These indexed bindings remain in place for the lifetime of the shader program.
+  glBindBufferRange (GL_UNIFORM_BUFFER, UNIFORM_BLOCK_BINDING_F, buf_id, 0 * stride, sizeof fragment_data); GLCHECK;
+  glBindBufferRange (GL_UNIFORM_BUFFER, UNIFORM_BLOCK_BINDING_G, buf_id, 1 * stride, sizeof geometry_data); GLCHECK;
 
+  // The remaining uniform block, "H", contains per-object attributes.
+
+  // Leave the "H" uniform buffer bound to GL_UNIFORM_BUFFER (but not
+  // to a particular index), so we don't have to bind before we update
+  // the uniform buffer in uniform_buffer_t::update().
   uniform_buffer.bind ();
+
+  // Match the ClearColor to the fog background.
+  glClearColor (fragment_data.b [0], fragment_data.b [1], fragment_data.b [2], 0.0f); GLCHECK;
 }
 
 bool program_t::initialize ()
@@ -363,9 +357,6 @@ bool program_t::initialize ()
     return false;
   }
 
-  // Binding for Uniform block "H".
-  GLuint object_uniform_block_index = glGetUniformBlockIndex (id, "H"); GLCHECK;
-  glUniformBlockBinding (id, object_uniform_block_index, UNIFORM_BINDING_INDEX_START); GLCHECK;
   glUseProgram (id); GLCHECK;
 
   return true;
@@ -383,7 +374,7 @@ void paint (unsigned N,
 {
   const unsigned block_size = sizeof (object_data_t);
   glBindVertexArray (vao_id); GLCHECK;
-  glBindBufferRange (GL_UNIFORM_BUFFER, UNIFORM_BINDING_INDEX_START, uniform_buffer_id, uniform_buffer_offset, block_size); GLCHECK;
+  glBindBufferRange (GL_UNIFORM_BUFFER, UNIFORM_BLOCK_BINDING_H, uniform_buffer_id, uniform_buffer_offset, block_size); GLCHECK;
   glCullFace (GL_FRONT); GLCHECK;
   glDrawElements (GL_TRIANGLES_ADJACENCY, N * 6, GL_UNSIGNED_BYTE, nullptr); GLCHECK;
   glCullFace (GL_BACK); GLCHECK;

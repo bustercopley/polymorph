@@ -17,13 +17,13 @@
 layout (triangles_adjacency) in;
 layout (triangle_strip, max_vertices = 18) out;
 
-layout (std140) uniform G
+layout (std140, binding = 2) uniform G
 {
   mat4 p;
   vec3 q;
 };
 
-layout (std140) uniform H
+layout (std140, binding = 3) uniform H
 {
   vec4 d;
   vec4 g;
