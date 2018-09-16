@@ -71,7 +71,7 @@ struct triangle_t
 //   TZ = alpha * X0 + beta * Y0 + gamma * Z1
 // (see diagram) are the vertices of an equilateral spherical triangle.
 
-ALIGNED16 triangle_t triangles [3] = {
+const ALIGNED16 triangle_t triangles [3] = {
   // Tetrahedral, <2, 3, 3>.
   {
     { { +0x1.000000P+000f, +0x0.000000P+000f, +0x0.000000P+000f, 0.0f, },
@@ -125,21 +125,22 @@ ALIGNED16 triangle_t triangles [3] = {
 };
 
 // Turn a PQR triangle into a PRQ triangle.
-void reflect (triangle_t & t)
+void reflect (float (& abc) [8] [4],
+              float (& xyz) [3] [4])
 {
-  v4f x = load4f (t.xyz [0]);
-  v4f y = load4f (t.xyz [1]);
-  v4f z = load4f (t.xyz [2]);
+  v4f x = load4f (xyz [0]);
+  v4f y = load4f (xyz [1]);
+  v4f z = load4f (xyz [2]);
 
   v4f n = cross (x, y);
   v4f d = (dot (n, z) / dot (n, n)) * n; // Component of z perpendicular to x and y.
 
-  store4f (t.xyz [1], z - (d + d));
-  store4f (t.xyz [2], y);
+  store4f (xyz [1], z - (d + d));
+  store4f (xyz [2], y);
 
   for (unsigned k = 0; k != 8; ++ k) {
-    v4f a = load4f (t.abc [k]);
-    store4f (t.abc [k], _mm_shuffle_ps (a, a, SHUFFLE (0, 2, 1, 3)));
+    v4f a = load4f (abc [k]);
+    store4f (abc [k], _mm_shuffle_ps (a, a, SHUFFLE (0, 2, 1, 3)));
   }
 }
 
@@ -152,21 +153,22 @@ void initialize_systems (float (& abc) [system_count] [8] [4],
   ALIGNED16 float nodes [62] [4];
   std::uint8_t indices [60] [6];
 
-  auto init = [&] (const triangle_t & t, system_select_t select, unsigned q, unsigned r) -> void
+  auto init = [&] (const triangle_t & t, system_select_t select, unsigned q, unsigned r, bool reflected) -> void
   {
     std::memcpy (xyz [select], t.xyz, sizeof t.xyz);
     std::memcpy (abc [select], t.abc, sizeof t.abc);
+    if (reflected) {
+      reflect(abc [select], xyz [select]);
+    }
     cramer::inverse (xyz [select], xyzinv [select]);
     unsigned p = 2, N = 2 * p * q * r / (q * r + r * p + p * q - p * q * r);
-    make_system (q, r, t.xyz, nodes, indices);
+    make_system (q, r, xyz [select], nodes, indices);
     vao_ids [select] = make_vao (N, nodes, indices);
     primitive_count [select] = N;
   };
 
   for (unsigned n = 0; n != 3; ++ n) {
-    triangle_t & triangle = triangles [n];
-    init (triangle, system_select_t (2 * n + 0), 3 + n, 3);
-    reflect (triangle);
-    init (triangle, system_select_t (2 * n + 1), 3, 3 + n);
+    init (triangles [n], system_select_t (2 * n + 0), 3 + n, 3, false);
+    init (triangles [n], system_select_t (2 * n + 1), 3, 3 + n, true);
   }
 }
