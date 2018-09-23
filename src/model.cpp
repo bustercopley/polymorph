@@ -50,7 +50,7 @@ namespace usr {
   // Logical time units per frame.
   static const float frame_time = 1.0f / 60.0f;
 
-  static const float alpha = 0.95f;    // Alpha of output fragments.
+  static const float alpha = 0.85f;    // Alpha of output fragments.
   static const float fog_near = 0.0f;  // Fog blend factor at near plane.
   static const float fog_far = 0.8f;   // Fog blend factor at far plane.
 
@@ -70,8 +70,8 @@ namespace usr {
   //        t0        t1    t2        t3      t
 
   //                                             t0     t1     t2     t3     v0     v1
-  static const bump_specifier_t hsv_s_bump = { 1.50f, 1.75f, 3.75f, 4.25f, 0.00f, 0.25f, };
-  static const bump_specifier_t hsv_v_bump = { 1.50f, 1.75f, 3.75f, 4.25f, 0.07f, 0.25f, };
+  static const bump_specifier_t hsv_s_bump = { 1.50f, 1.75f, 3.75f, 4.25f, 0.00f, 0.275f, };
+  static const bump_specifier_t hsv_v_bump = { 1.50f, 1.75f, 3.75f, 4.25f, 0.09f, 0.333f, };
 
   // Parameters for morph animation timings.
   static const float morph_start = 1.75f;
