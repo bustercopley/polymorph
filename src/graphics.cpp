@@ -200,7 +200,6 @@ void uniform_buffer_t::update ()
 
 bool initialize_graphics (program_t & program)
 {
-  glEnable (GL_DEPTH_CLAMP); GLCHECK;
   glEnable (GL_CULL_FACE); GLCHECK;
   glEnable (GL_BLEND); GLCHECK;
   glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); GLCHECK;
