@@ -102,7 +102,7 @@ test: all
 	$(FILENAME) $(ARG)
 
 debug: .obj/$(FILENAME)
-	gdb --quiet --batch -ex run -ex bt full -ex quit --args .obj/$(FILENAME)
+	gdb --quiet --batch -ex run -ex bt full -ex quit --args .obj/$(FILENAME) $(ARG)
 
 dump: .obj/$(FILENAME).dump
 
