@@ -34,7 +34,7 @@ layout (std140, binding = 0) uniform H
 
 in vec3 X;
 in flat vec3 N;
-in noperspective float E [5];
+sample in noperspective float E [5];
 
 out vec4 o;
 
