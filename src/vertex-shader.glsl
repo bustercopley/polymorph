@@ -14,7 +14,7 @@
 
 #version 430
 
-layout (std140) uniform H
+layout (std140, binding = 0) uniform H
 {
   vec4 d;
   vec4 g;
@@ -22,7 +22,7 @@ layout (std140) uniform H
   bool s;
 };
 
-in vec4 x;
+layout (location = 0) in vec4 x;
 
 out vec3 Q;
 

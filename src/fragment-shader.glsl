@@ -24,7 +24,7 @@ layout (std140, binding = 1) uniform F
   vec3 l [4];
 };
 
-layout (std140, binding = 3) uniform H
+layout (std140, binding = 0) uniform H
 {
   vec4 d;
   vec4 g;

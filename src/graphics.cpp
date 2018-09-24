@@ -26,11 +26,12 @@
 #include <cstdint>
 #include <algorithm>
 
-// Binding indices for the indexed target GL_UNIFORM_BUFFER.
-// These must match the hardcoded bindings in the shader uniform block declarations.
+// Uniform block binding indices and vertex attribute indices.
+// These must match the bindings in shader layout qualifiers.
+#define UNIFORM_BLOCK_BINDING_H 0
 #define UNIFORM_BLOCK_BINDING_F 1
 #define UNIFORM_BLOCK_BINDING_G 2
-#define UNIFORM_BLOCK_BINDING_H 3
+#define VERTEX_ATTRIB_INDEX_X 0
 
 #if GLCHECK_ENABLED && PRINT_ENABLED
 inline void gl_check (const char * file, int line) {
@@ -138,8 +139,6 @@ GLuint make_shader (GLenum type, int resource_id)
   return status ? id : 0;
 }
 
-static const int attribute_id_x = 0;
-
 unsigned make_vao (unsigned N, const float (* vertices) [4], const std::uint8_t (* indices) [6])
 {
   unsigned vao_id;
@@ -151,8 +150,8 @@ unsigned make_vao (unsigned N, const float (* vertices) [4], const std::uint8_t 
   glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, buffer_ids [1]); GLCHECK;
   glBufferData (GL_ARRAY_BUFFER, (N + 2) * 4 * sizeof (float), vertices, GL_STATIC_DRAW); GLCHECK;
   glBufferData (GL_ELEMENT_ARRAY_BUFFER, 6 * N * sizeof (std::uint8_t), indices, GL_STATIC_DRAW); GLCHECK;
-  glVertexAttribPointer (attribute_id_x, 4, GL_FLOAT, GL_FALSE, 0, 0); GLCHECK;
-  glEnableVertexAttribArray (attribute_id_x); GLCHECK;
+  glVertexAttribPointer (VERTEX_ATTRIB_INDEX_X, 4, GL_FLOAT, GL_FALSE, 0, 0); GLCHECK;
+  glEnableVertexAttribArray (VERTEX_ATTRIB_INDEX_X); GLCHECK;
   return vao_id;
 }
 
@@ -336,7 +335,6 @@ bool program_t::initialize ()
       glAttachShader (id, vshader_id); GLCHECK;
       glAttachShader (id, gshader_id); GLCHECK;
       glAttachShader (id, fshader_id); GLCHECK;
-      glBindAttribLocation (id, attribute_id_x, "x"); GLCHECK;
       glLinkProgram (id); GLCHECK;
       glGetProgramiv (id, GL_LINK_STATUS, & status); GLCHECK;
 #if PRINT_ENABLED
