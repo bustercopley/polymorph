@@ -22,7 +22,6 @@
 #undef DO_GLPROC
 
 #define WC_GLINIT TEXT ("g")
-#define PROC_CAST (void (*) ())
 
 // These functions are needed during initialisation; they are handled specially.
 PFNWGLCHOOSEPIXELFORMATARBPROC wglChoosePixelFormatARB = nullptr;
@@ -49,11 +48,22 @@ const int context_attribs [] = {
   0, 0,
 };
 
+template <typename F> ALWAYS_INLINE
+inline bool getproc (F & f, const char * name) {
+  // Cast via void (*) () to suppress "-Wcast-function-type" warning.
+  f = (F) (void (*) ()) ::wglGetProcAddress (name);
+#ifndef TINY
+  return f != nullptr;
+#else
+  return true;
+#endif
+}
+
 // Get OpenGL function pointers (call with final OpenGL context current).
 ALWAYS_INLINE inline bool get_glprocs ()
 {
 #define GLPROC_STRINGIZE(a) #a
-#define DO_GLPROC(type, name) (name = (type) PROC_CAST ::wglGetProcAddress (GLPROC_STRINGIZE (name))); if (! name) return false
+#define DO_GLPROC(t, f) if (! getproc (f, GLPROC_STRINGIZE (f))) return false
 #include "glprocs.inc"
 #undef DO_GLPROC
   return true;
@@ -70,8 +80,8 @@ LRESULT CALLBACK InitWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
   HGLRC hglrc = ::wglCreateContext (hdc);
   ::wglMakeCurrent (hdc, hglrc);
   // Get OpenGL function pointers needed for context creation.
-  wglChoosePixelFormatARB = (PFNWGLCHOOSEPIXELFORMATARBPROC) PROC_CAST ::wglGetProcAddress ("wglChoosePixelFormatARB");
-  wglCreateContextAttribsARB = (PFNWGLCREATECONTEXTATTRIBSARBPROC) PROC_CAST ::wglGetProcAddress ("wglCreateContextAttribsARB");
+  getproc (wglChoosePixelFormatARB, "wglChoosePixelFormatARB");
+  getproc (wglCreateContextAttribsARB, "wglCreateContextAttribsARB");
   // Destroy the rendering context.
   ::wglMakeCurrent (NULL, NULL);
   ::wglDeleteContext (hglrc);
