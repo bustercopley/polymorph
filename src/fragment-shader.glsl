@@ -36,7 +36,7 @@ in vec3 X;
 in flat vec3 N;
 sample in noperspective float E [5];
 
-out vec4 o;
+layout (location = 0) out vec4 o;
 
 void main ()
 {
