@@ -20,18 +20,17 @@ the MSYS shell and install the necessary packages using the command:
    "pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-make" (for the 64-bit toolchain)
 or "pacman -S mingw-w64-i686-gcc mingw-w64-i686-make" (for the 32-bit toolchain).
 
+Strawberry Perl is required for minifying the shaders. (If you use a
+distribution other than Strawberry Perl or if you install Strawberry Perl in
+a non-standard location you should edit the hardcoded path in "Makefile".)
+
 To compile: use the command
    "mingw32-make -j"
 or "mingw32-make -j PLATFORM=x86" (to build for 32-bit Windows)
-or "mingw32-make -j all-platforms-tiny" (to build both at once).
+or "mingw32-make -j CONFIG=base" (to build with debugging output)
+or "mingw32-make -j SHADERS=full" (to skip minification if Perl not installed)
 
 If you install the MinGW-W64 toolchain(s) in a non-standard location,
 you'll need to edit "x64_TOOLDIR" and/or "x86_TOOLDIR" in "Makefile".
-
-Strawberry Perl is also required, for minifying the shaders. (If you use a
-Perl distribution other than Strawberry Perl or if you install Strawberry Perl
-in a non-standard location you should edit the hardcoded path in "Makefile").
-To build without Perl, either run "make CONFIG=base" (which also enables
-debugging output) or set the Make variable tiny_SHADERS to "full" in "Makefile".
 
 To run, right-click on the ".scr" file and choose "Test", "Configure" or "Install".
