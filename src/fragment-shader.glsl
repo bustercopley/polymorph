@@ -34,7 +34,7 @@ layout (std140, binding = 0) uniform H
 
 in vec3 X;
 in flat vec3 N;
-sample in noperspective float E [5];
+sample in noperspective float R, S, T, V, W;
 
 layout (location = 0) out vec4 o;
 
@@ -48,6 +48,6 @@ void main ()
     float E = max (0, dot (L, G));
     C += d.xyz * E + pow (max (0, dot (L - 2 * E * G, U)), r.w) * r.xyz;
   }
-  float e = clamp (f.x + f.y * min (min (min (E [0], E [1]), min (E [2], E [3])), E [4]), 0, 1);
+  float e = clamp (f.x + f.y * min (min (min (R, S), min (T, V)), W), 0, 1);
   o = c + 1.33 * (1 - exp2 (-2 * e * e)) * (vec4 (b + (f.z + f.w * X.z) * C, d.w) - c);
 }

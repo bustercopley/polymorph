@@ -35,13 +35,18 @@ in vec3 Q [6];
 
 out vec3 X;
 out flat vec3 N;
-out noperspective float E [5];
+// Distance of the vertex from each of 5 edges.
+out noperspective float R, S, T, V, W;
 
 vec3 O = m [3].xyz;
 
 void vertex (vec3 x, vec4 p, float e [5])
 {
-  E = e;
+  R = e [0];
+  S = e [1];
+  T = e [2];
+  V = e [3];
+  W = e [4];
   X = x;
   gl_Position = p;
   EmitVertex ();
