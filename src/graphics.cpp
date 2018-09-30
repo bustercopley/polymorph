@@ -340,23 +340,20 @@ bool program_t::initialize ()
       std::cout << "Shader program linking " << (status ? "succeeded." : "failed.") << std::endl;
       PRINT_INFO_LOG (id, glGetProgramiv, glGetProgramInfoLog); GLCHECK;
 #endif
-      glDetachShader (id, fshader_id); GLCHECK;
-      glDetachShader (id, gshader_id); GLCHECK;
-      glDetachShader (id, vshader_id); GLCHECK;
     }
-  }
-  if (fshader_id) { glDeleteShader (fshader_id); GLCHECK; }
-  if (gshader_id) { glDeleteShader (gshader_id); GLCHECK; }
-  if (vshader_id) { glDeleteShader (vshader_id); GLCHECK; }
-
-  if (! status) {
-    //if (id) { glDeleteProgram (id); GLCHECK; }
-    return false;
+    glDetachShader (id, fshader_id); GLCHECK;
+    glDetachShader (id, gshader_id); GLCHECK;
+    glDetachShader (id, vshader_id); GLCHECK;
+    glDeleteShader (fshader_id); GLCHECK;
+    glDeleteShader (gshader_id); GLCHECK;
+    glDeleteShader (vshader_id); GLCHECK;
   }
 
-  glUseProgram (id); GLCHECK;
+  if (status) {
+    glUseProgram (id); GLCHECK;
+  }
 
-  return true;
+  return status;
 }
 
 void clear ()

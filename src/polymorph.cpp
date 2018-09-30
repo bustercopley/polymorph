@@ -86,11 +86,11 @@ ALIGN_STACK LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LP
         ws->hglrc = install_rendering_context (hdc);
         if (ws->hglrc) {
           // Successfully installed the rendering context.
-          // Once-only model/graphics allocation and initialization.
-          ws->model.initialize (qpc ());
           // Store the window-struct pointer in userdata.
           ::SetWindowLongPtr (hwnd, GWLP_USERDATA, reinterpret_cast <LONG_PTR> (ws));
-          result = 0; // Continue window creation.
+          // Once-only model/graphics allocation and initialization.
+          // Abort window creation if shader program compilation fails.
+          result = ws->model.initialize (qpc ()) - 1;
         }
         ::ReleaseDC (hwnd, hdc);
       }
