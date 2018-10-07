@@ -22,7 +22,7 @@
 // Interface.
 
 template <typename ... P>
-inline void reallocate_aligned_arrays (void * & memory, std::size_t & capacity, std::size_t new_capacity, P ... p);
+inline void reallocate_aligned_arrays (void *& memory, std::size_t & capacity, std::size_t new_capacity, P *& ... p);
 
 // Implementation.
 
@@ -42,15 +42,15 @@ namespace internal
   }
 
   template <typename T, typename ... P>
-  inline void setp (std::size_t capacity, char * base, T ** head, P ... rest)
+  inline void setp (std::size_t capacity, char * base, T *& head, P *& ... rest)
   {
-    * head = reinterpret_cast <T *> (base);
+    head = reinterpret_cast <T *> (base);
     setp (capacity, base + capacity * sizeof (T), rest ...);
   }
 }
 
 template <typename ... P>
-inline void reallocate_aligned_arrays (void * & memory, std::size_t & capacity, std::size_t new_capacity, P** ... p)
+inline void reallocate_aligned_arrays (void *& memory, std::size_t & capacity, std::size_t new_capacity, P *& ... p)
 {
   if (new_capacity > capacity) {
     deallocate (memory);

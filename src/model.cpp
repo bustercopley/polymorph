@@ -332,11 +332,11 @@ model_t::~model_t ()
 void model_t::set_capacity (std::size_t new_capacity)
 {
   reallocate_aligned_arrays (memory, capacity, new_capacity,
-                             & x, & v, & u, & w, & e,
-                             & kdtree_index,
-                             & kdtree_aux,
-                             & objects,
-                             & object_order);
+                             x, v, u, w, e,
+                             kdtree_index,
+                             kdtree_aux,
+                             objects,
+                             object_order);
 }
 
 void model_t::recalculate_locus (unsigned index)
