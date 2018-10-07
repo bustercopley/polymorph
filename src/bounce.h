@@ -22,7 +22,7 @@
 
 namespace usr
 {
-  static const float walls_friction = 0.075f;
+  static const float walls_friction = 0.025f;
   static const float balls_friction = 0.075f;
 }
 
