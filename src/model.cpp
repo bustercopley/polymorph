@@ -116,10 +116,17 @@ const char * names [] = {
 float min_d = 1.0f, max_d = 0.0f;
 #endif
 
+// Argument: t in [0, 1]; result: a hue in [0, 6].
 inline float rainbow_hue (float x)
 {
+  // Define a path along the colour-hexagon defined in "hsv-to-rgb.h"
+  // which progresses regularly through the classical seven colours of
+  // the rainbow (roughly).
+
   // Let p be the piecewise linear function on [0,1] joining points
-  // (0, 0.955), (1/2, 1.230), (2/3, 1.420) and (1, 1.955).
+  // (0, 0.955), (1/2, 1.230), (2/3, 1.420) and (1, 1.955). There is
+  // nothing very special about these four points; they were chosen
+  // experimentally.
 
   // Return f(x), where f is the degree-7 minimax polynomial for p on
   // [0, 1]. The error f(x)-p(x) is equioscillating and of degree 8,
@@ -127,22 +134,12 @@ inline float rainbow_hue (float x)
   // the endpoints are equal in sign and magnitude; hence
   // f(1)-f(0) = (p(1)+E) - (p(0)+E) = p(1)-p(0) = 1.955-0.955 = 1.
 
-  // Thus the induced function q:R/Z->R/Z given by q(x+Z) = f(x)+Z
-  // is well-defined and continuous (R the set of all real numbers,
-  // Z the set of all integers); q is smooth on the punctured space
-  // R/Z - {0+Z} but not in general differentiable at 0+Z == 1+Z.
-
   // Seen as a graph of (angular position)/2pi vs. time, f(x) describes
   // a one-revolution rotation at variable speed over one unit of time.
-  // The intent is to define a path along the colour-hexagon defined
-  // in "hsv-to-rgb.h" which progresses regularly through the classical
-  // seven colours of the rainbow. The arbitrary function p was chosen
-  // experimentally.
 
   static const v4f poly_lo = { +0x1.f2b75cP-1f, +0x1.d75e6cP-9f, +0x1.55b804P+3f, -0x1.0a7118P+6f, };
   static const v4f poly_hi = { +0x1.811250P+7f, -0x1.1565f6P+8f, +0x1.86704aP+7f, -0x1.ab6de6P+5f, };
-
-  x -= (int) x; // fractional part, assuming non-negative
+  x -= (int) x; // Fractional part, assuming non-negative.
   return polyeval7 (x, poly_lo, poly_hi);
 }
 
@@ -158,13 +155,13 @@ bool model_t::start (int width, int height, const settings_t & settings)
   if (width < 512) scale *= 512.0f / fwidth;
   if (width < 256) sharpness *= 256.0f / fwidth;
 
-  // x1, y1, z1: coordinates of bottom-right-front corner of view frustum.
+  // x1, y1, z1: Coordinates of bottom-right-front corner of view frustum.
   float x1 = view [0] = scale * fwidth;
   float y1 = view [1] = scale * fheight;
   float z1 = view [2] = -3.0f * std::max (x1, y1);
 
-  float zd = std::min (x1, y1); // zd: depth of frustum
-  // x2, y2, z2: coordinates of bottom-right-back corner of view frustum.
+  float zd = std::min (x1, y1); // zd: Depth of view frustum.
+  // x2, y2, z2: Coordinates of bottom-right-back corner of view frustum.
   float z2 = view [3] = z1 - zd;
   float x2 = x1 * (z2 / z1);
   float y2 = y1 * (z2 / z1);
@@ -173,8 +170,7 @@ bool model_t::start (int width, int height, const settings_t & settings)
                     usr::fog_near, usr::fog_far,
                     usr::line_width_extra, sharpness);
 
-  // Calculate wall planes to exactly fill the front of the viewing frustum.
-
+  // Calculate wall planes to fit the front of the viewing frustum.
   ALIGNED16 const float temp [6] [2] [4] = {
     { { 0.0f, 0.0f, z1, 0.0f, }, { 0.0f, 0.0f, -1.0f, 0.0f, }, },
     { { 0.0f, 0.0f, z2, 0.0f, }, { 0.0f, 0.0f,  1.0f, 0.0f, }, },

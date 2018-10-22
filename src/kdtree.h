@@ -168,37 +168,32 @@ inline void model_t::kdtree_search ()
   // position, and the gas will be more compressible in some regions
   // of space than others.
 
-  if constexpr (RANDOMIZE_COLLISION_ORDER_ENABLED) {
-    // To avoid such an anisotropy, we iterate over the objects in random
-    // order instead. This avoids any unfairness.
+  // To avoid this undesirable anisotropy, choose a different
+  // iteration order by constructing another permutation, kdtree_aux.
 
-    // To facilitate that we're now going to compute a random permutation,
-    // using the inside-out Fisher-Yates shuffle.
+  if constexpr (RANDOMIZE_COLLISION_ORDER_ENABLED) {
+    // To avoid any unfairness, construct a random permutation using
+    // the inside-out Fisher-Yates shuffle.
     unsigned bits = _bit_scan_reverse (count) + 1;
     for (unsigned n = 0; n != count; ++ n) {
+      // Get a random integer i, uniformly distributed on [0, n + 1).
       unsigned i = ((rng.get () >> bits) * (n + 1)) >> (64 - bits);
       kdtree_aux [n] = kdtree_aux [i];
       kdtree_aux [i] = n;
     }
   }
   else {
-    // To avoid such an anisotropy, we iterate over the objects in array
-    // order instead. This entails that the "permeability" of an object,
-    // that is, its increased probability of being involved in early
-    // collisions, is a persistent characteristic of the object.
-
-    // To facilitate that we're now going to compute the inverse of the
-    // kdtree_index permutation.
+    // Iterate over the objects in array order, by computing the
+    // inverse permutation of kdtree_index. This entails that
+    // red/orange objects are more permeable than blue objects.
     for (unsigned n = 0; n != count; ++ n) {
       n [kdtree_index] [kdtree_aux] = n;
     }
   }
 
-  // For every pair of integers i, n such that 0 <= i < n < count,
-  // if |x[i'] - x[n']| < 2R then call bounce(i', n'),
-  // where i' = kdtree_index[i] and n' = kdtree_index[n].
-
-  // Loop over n' instead of n to avoid anisotropy.
+  // For every pair of integers i, n such that 0 <= i' < n' < count,
+  // where i' = kdtree[i] and n' = kdtree[n], if |x[i] - x[n]| < 2R
+  // then call bounce(i, n). Loop over n', not n, to avoid anisotropy.
   for (unsigned n_prime = 0; n_prime != count; ++ n_prime) {
     unsigned n = kdtree_aux [n_prime];
     if (n < 7) {
@@ -231,7 +226,7 @@ inline void model_t::kdtree_search ()
         // The first child is at i = position * count / level_node_count, and we require i < n.
         std::uint64_t position = node - first_node_of_current_level;
         std::uint64_t level_node_count = first_node_of_current_level + 1;
-        if (position * count < n * level_node_count) { // Division avoided.
+        if (position * count < n * level_node_count) {
           // Push one or both child nodes onto the stack.
           float s = kdtree_split [node];
           if (x [n_prime] [dim] + 2 * radius >= s) stack_node [stack_top ++] = 2 * node + 2;
