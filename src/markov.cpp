@@ -65,11 +65,15 @@ const struct replacement_t
   { { tetrahedral, 7, }, { dual_tetrahedral, 7, }, probability_max / 2, },
 };
 const unsigned replacement_count = sizeof replacements / sizeof * replacements;
+
+// The fundamental triangles of the tetrahedral and octahedral tilings
+// are chosen so that no rotation is needed for replacements 0 to 5.
+// Rotations 0, 1, 2 correspond to replacements 6, 7, 8 respectively.
 ALIGNED16 const float rotations [3] [4] = {
-  // Rotate about an X-node through angle pi/4.
+  // Rotate about a p-node through angle pi/4.
   { -0x1.921fb6P-001f, 0.0f, 0.0f, 0.0f, }, // I1 -> T7
   { +0x1.921fb6P-001f, 0.0f, 0.0f, 0.0f, }, // T7 -> I1
-  // Rotate about a Z-node through angle approximately 0.2471 pi.
+  // Rotate about an r-node through angle approximately 0.2471 pi.
   { +0x1.caf0fcP-002f, +0x1.448542P-001f, 0.0f, 0.0f, }, // T7 -> T7*
 };
 
@@ -96,22 +100,23 @@ inline void maybe_perform_replacement (rng_t & rng, float (& u) [4], polyhedron_
     // Fixups after the replacement: avoid backtracking transitions
     // by updating starting_point, and maybe appply a rotation.
     if (m < 6) {
-      // Tetrahedral <-> octahedral; if the starting polyhedron exists in both
-      // tilings, forbid backtracking to it; otherwise, no transition is forbidden.
-      // The fundamental triangles of the tetrahedral and octahedral tilings
-      // are chosen so that no rotation is needed after these replacements.
+      // Replacements 0 - 5 (tetrahedral <-> octahedral): do replacement
+      // on the starting point as well. For example, this prohibits
+      // T0 (octahedron) -> T6 = O5 (truncated octahedron) -> O1(octahedron).
+      // No rotation is needed for these replacements.
+      unsigned base = m - m % 3;
       unsigned j = 0;
-      while (j != 3 && starting_point != replacements [m / 3 + j].before.point) ++ j;
-      starting_point = j == 3 ? current.point : replacements [m / 3 + j].after.point;
+      while (j != 3 && starting_point != replacements [base + j].before.point) ++ j;
+      starting_point = j == 3 ? current.point : replacements [base + j].after.point;
     }
     else {
-      // Apply a rotation in object coordinates.
+      // Replacements 6 - 8: apply a rotation (adjust the object's orientation).
       v4f rotation = load4f (rotations [m - 6]);
       if (duality) rotation = - rotation;
       store4f (u, rotate (load4f (u), rotation));
-      // Tetrahedral <-> icosahedral: no Markov transition is forbidden after these replacements.
-      // Tetrahedral -> dual tetrahedral (both snub): keep the starting_point we already have.
-      if (m < 8) starting_point = current.point;
+      // 6, 7 (tetrahedral <-> icosahedral): no transition is forbidden after these replacements.
+      // 8 (tetrahedral -> dual tetrahedral (both snub)): keep the starting_point we already have.
+      if (m != 8) starting_point = current.point;
     }
   }
 
