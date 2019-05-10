@@ -36,7 +36,6 @@ struct window_struct_t
   arguments_t arguments;
   settings_t settings;
   HINSTANCE hInstance;
-  LPCTSTR display_name;
   HICON icon;
   HICON icon_small;
   POINT initial_cursor_position;

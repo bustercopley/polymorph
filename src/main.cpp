@@ -35,7 +35,6 @@ int WINAPI _tWinMain (HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
   ALIGNED16 window_struct_t ws {};
 
   ws.hInstance = hInstance;
-  ::LoadString (hInstance, 1, (LPTSTR) (& ws.display_name), 0);
   ws.icon = (HICON) ::LoadImage (hInstance, MAKEINTRESOURCE (IDI_APPICON), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE);
   ws.icon_small = (HICON) ::LoadImage (hInstance, MAKEINTRESOURCE (IDI_APPICON), IMAGE_ICON, 16, 16, 0);
   get_arguments (::GetCommandLine (), ws.arguments);

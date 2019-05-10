@@ -199,6 +199,9 @@ HWND create_screensaver_window (window_struct_t & ws)
 {
   if (! glinit (ws.hInstance)) return 0;
 
+  LPCTSTR display_name;
+  ::LoadString (ws.hInstance, 1, (LPTSTR) (& display_name), 0);
+
   // Register the window class.
   WNDCLASSEX wndclass = { sizeof (WNDCLASSEX), 0, & MainWndProc, 0, 0, ws.hInstance, ws.icon, NULL, NULL, NULL, WC_MAIN, ws.icon_small };
   ATOM wc_main_atom = ::RegisterClassEx (& wndclass);
@@ -214,7 +217,7 @@ HWND create_screensaver_window (window_struct_t & ws)
   // Retry once on failure (works around sporadic SetPixelFormat
   // failure observed on Intel integrated graphics on Windows 7).
   for (unsigned retries = 0; retries != 2; ++ retries) {
-    hwnd = ::CreateWindowEx (ex_style, MAKEINTATOM (wc_main_atom), ws.display_name, style,
+    hwnd = ::CreateWindowEx (ex_style, MAKEINTATOM (wc_main_atom), display_name, style,
                              0, 0, 0, 0,
                              parent, NULL, ws.hInstance, & ws);
     if (hwnd) break;
