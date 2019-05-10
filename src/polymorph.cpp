@@ -221,7 +221,7 @@ HWND create_screensaver_window (window_struct_t & ws)
                              0, 0, 0, 0,
                              parent, NULL, ws.hInstance, & ws);
     if (hwnd) break;
-    // Window creation failed (window will be destroyed).
+    // Window creation failed (window has been destroyed).
   }
   return hwnd;
 }
