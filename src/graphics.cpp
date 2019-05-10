@@ -165,7 +165,7 @@ unsigned make_vao (unsigned N, const float (* vertices) [4], const std::uint8_t 
   return vao_id;
 }
 
-// Align x upwards to given alignment (which must be a power of 2). Store the result in y.
+// Align x upwards to given alignment (must be a power of 2). Store result in y.
 template <typename Dest, typename Source>
 inline void align_up (Dest & y, Source x, std::intptr_t alignment)
 {
@@ -183,7 +183,7 @@ bool uniform_buffer_t::initialize ()
   GLint max_size, align;
   glGetIntegerv (GL_MAX_UNIFORM_BLOCK_SIZE, & max_size); GLCHECK;
   glGetIntegerv (GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, & align); GLCHECK;
-  // Align client-side buffer to at least 64 bytes, to avoid straddling cache lines.
+  // Align client buffer to at least 64 bytes to avoid straddling cache lines.
   align = align > 64 ? align : 64;
   m_size = max_size;
   m_memory = allocate (m_size + align);
@@ -230,10 +230,10 @@ void program_t::set_view (const float (& view) [4],
 {
   glViewport (0, 0, width, height); GLCHECK;
 
-  float x1 = view [0];  // x coord of right edge of screen (and of front-right edge of tank)
-  float y1 = view [1];  // y coord of top edge of screen (and of front-top edge of tank)
-  float z1 = view [2];  // z coord of screen (front of tank) (a negative number)
-  float z2 = view [3];  // z coord of back of tank (a negative number) (|z2| > |z1|)
+  float x1 = view [0];  // right edge of screen (front-right edge of tank)
+  float y1 = view [1];  // top edge of screen (front-top edge of tank)
+  float z1 = view [2];  // screen (front of tank) (a negative number)
+  float z2 = view [3];  // back of tank (a negative number) (|z2| > |z1|)
   float zd = z1 - z2;   // tank depth
 
   // Fog is linear in z-distance.
@@ -250,18 +250,18 @@ void program_t::set_view (const float (& view) [4],
 
   struct fragment_data_t
   {
-    GLfloat a [4];      // vec3,      ambient reflection (rgb)
-    GLfloat b [4];      // vec3,      background (rgb)
-    GLfloat c [4];      // vec4,      line colour (rgba)
-    GLfloat r [4];      // vec4,      xyz: specular reflection (rgb); w: exponent
-    GLfloat f [4];      // vec4,      coefficients for line width and fog
-    GLfloat l [4] [4];  // vec3 [4],  light positions
+    GLfloat a [4];      // vec3, ambient reflection (rgb)
+    GLfloat b [4];      // vec3, background (rgb)
+    GLfloat c [4];      // vec4, line colour (rgba)
+    GLfloat r [4];      // vec4, xyz: specular reflection (rgb); w: exponent
+    GLfloat f [4];      // vec4, coefficients for line width and fog
+    GLfloat l [4] [4];  // vec3 [4], light positions
   };
 
   struct geometry_data_t
-  {
-    GLfloat p [4] [4];  // mat4,      projection matrix
-    GLfloat q [4];      // vec3,      pixel scale of normalized device coordinates
+ {
+    GLfloat p [4] [4];  // mat4, projection matrix
+    GLfloat q [4];      // vec3, pixel size in normalized device coordinates
   };
 
   ALIGNED16 fragment_data_t fragment_data = {
@@ -280,10 +280,10 @@ void program_t::set_view (const float (& view) [4],
 
   ALIGNED16 geometry_data_t geometry_data = {
     {
-      // Save a few instructions by using a simplified projection matrix
-      // which doesn't calculate the z component of the clip coordinates.
-      // We don't have any use for that component since we disable near
-      // and far plane clipping and we don't have a depth buffer.
+      // Save a few instructions by using a simplified projection matrix which
+      // doesn't calculate the z component of the clip coordinates. We don't
+      // have any use for that component since we disable near and far plane
+      // clipping and we don't have a depth buffer.
       { -z1/x1,     0,       0,       0, },
       {    0,    -z1/y1,     0,       0, },
       {    0,       0,       0,      -1, },
@@ -292,12 +292,12 @@ void program_t::set_view (const float (& view) [4],
     { float (width >> 1), float (height >> 1), 0, 0, },
   };
 
-  // The shaders declare uniform blocks "F", "G" and "H", each with
-  // its own distinct hardcoded binding index of the indexed target
-  // GL_UNIFORM_BUFFER. "F" is declared in "fragment-shader.glsl",
-  // "G" in "geometry-shader.glsl", and "H" in both "fragment-shader.glsl"
-  // and "geometry-shader.glsl". The layouts of blocks "F", "G" and "H"
-  // match the structs fragment_data_t, geometry_data_t and object_data_t.
+  // The shaders declare uniform blocks "F", "G" and "H", each with its own
+  // distinct hardcoded binding index of the indexed target GL_UNIFORM_BUFFER.
+  // "F" is declared in "fragment-shader.glsl", "G" in "geometry-shader.glsl",
+  // and "H" in both "fragment-shader.glsl" and "geometry-shader.glsl". The
+  // layouts of blocks "F", "G" and "H" match the structs fragment_data_t,
+  // geometry_data_t and object_data_t.
 
   // Create one uniform buffer large enough to hold the data for "F" and "G".
   // This uniform buffer is never destroyed (the uniform buffer id is leaked).
@@ -314,16 +314,16 @@ void program_t::set_view (const float (& view) [4],
   glBufferSubData (GL_UNIFORM_BUFFER, 0 * stride, sizeof fragment_data, & fragment_data); GLCHECK;
   glBufferSubData (GL_UNIFORM_BUFFER, 1 * stride, sizeof geometry_data, & geometry_data); GLCHECK;
 
-  // Bind "F" and "G" to the disjoint subranges.
-  // These indexed bindings remain in place for the lifetime of the shader program.
+  // Bind "F" and "G" to the disjoint subranges. These indexed bindings remain
+  // in place for the lifetime of the shader program.
   glBindBufferRange (GL_UNIFORM_BUFFER, UNIFORM_BLOCK_BINDING_F, buf_id, 0 * stride, sizeof fragment_data); GLCHECK;
   glBindBufferRange (GL_UNIFORM_BUFFER, UNIFORM_BLOCK_BINDING_G, buf_id, 1 * stride, sizeof geometry_data); GLCHECK;
 
   // The remaining uniform block, "H", contains per-object attributes.
 
-  // Leave the "H" uniform buffer bound to GL_UNIFORM_BUFFER (but not
-  // to a particular index), so we don't have to bind before we update
-  // the uniform buffer in uniform_buffer_t::update().
+  // Leave the "H" uniform buffer bound to GL_UNIFORM_BUFFER (but not to a
+  // particular index), so we don't have to bind before we update the uniform
+  // buffer in uniform_buffer_t::update().
   uniform_buffer.bind ();
 
   // Match the ClearColor to the fog background.
