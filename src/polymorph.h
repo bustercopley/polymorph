@@ -32,7 +32,6 @@
 
 struct window_struct_t
 {
-  model_t model;
   arguments_t arguments;
   settings_t settings;
   HINSTANCE hInstance;
@@ -42,6 +41,7 @@ struct window_struct_t
   HGLRC hglrc;
   HWND hdlg;
   HWND hwnd; // Only used by the dialogue procedure.
+  model_t model;
 };
 
 HWND create_screensaver_window (window_struct_t & ws);
