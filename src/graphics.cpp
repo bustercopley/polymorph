@@ -73,6 +73,11 @@ inline void print_info_log (GLuint object,
 #define PRINT_INFO_LOG(a, b, c) do { } while (0)
 #endif
 
+#define GL_DEBUG_CASE(kind, thing)                                             \
+  case GL_DEBUG_##kind##_##thing:                                              \
+    std::cout << #thing;                                                       \
+    break;
+
 #if GLDEBUG_ENABLED
 void APIENTRY debug_message_callback (GLenum source, GLenum type, GLuint id, GLenum severity,
                                       GLsizei, const GLchar * message, const void *)
@@ -82,34 +87,34 @@ void APIENTRY debug_message_callback (GLenum source, GLenum type, GLuint id, GLe
 
   std::cout << std::hex << "Source ";
   switch (source) {
-  case /* 0x8246 */ GL_DEBUG_SOURCE_API:              std::cout << "API"; break;
-  case /* 0x8247 */ GL_DEBUG_SOURCE_WINDOW_SYSTEM:    std::cout << "WINDOW_SYSTEM"; break;
-  case /* 0x8248 */ GL_DEBUG_SOURCE_SHADER_COMPILER:  std::cout << "SHADER_COMPILER"; break;
-  case /* 0x8249 */ GL_DEBUG_SOURCE_THIRD_PARTY:      std::cout << "THIRD_PARTY"; break;
-  case /* 0x824A */ GL_DEBUG_SOURCE_APPLICATION:      std::cout << "APPLICATION"; break;
-  case /* 0x824B */ GL_DEBUG_SOURCE_OTHER:            std::cout << "OTHER"; break;
-  default:                                            std::cout << "unknown (0x" << source << ")"; break;
+    GL_DEBUG_CASE (SOURCE, API);
+    GL_DEBUG_CASE (SOURCE, WINDOW_SYSTEM);
+    GL_DEBUG_CASE (SOURCE, SHADER_COMPILER);
+    GL_DEBUG_CASE (SOURCE, THIRD_PARTY);
+    GL_DEBUG_CASE (SOURCE, APPLICATION);
+    GL_DEBUG_CASE (SOURCE, OTHER);
+  default: std::cout << "[" << source << "]"; break;
   }
   std::cout << ", type ";
   switch (type) {
-  case /* 0x824C */ GL_DEBUG_TYPE_ERROR:                std::cout << "ERROR"; break;
-  case /* 0x824D */ GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:  std::cout << "DEPRECATED_BEHAVIOR"; break;
-  case /* 0x824E */ GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:   std::cout << "UNDEFINED_BEHAVIOR"; break;
-  case /* 0x824F */ GL_DEBUG_TYPE_PORTABILITY:          std::cout << "PORTABILITY"; break;
-  case /* 0x8250 */ GL_DEBUG_TYPE_PERFORMANCE:          std::cout << "PERFORMANCE"; break;
-  case /* 0x8251 */ GL_DEBUG_TYPE_OTHER:                std::cout << "OTHER"; break;
-  case /* 0x8268 */ GL_DEBUG_TYPE_MARKER:               std::cout << "MARKER"; break;
-  case /* 0x8269 */ GL_DEBUG_TYPE_PUSH_GROUP:           std::cout << "PUSH_GROUP"; break;
-  case /* 0x826A */ GL_DEBUG_TYPE_POP_GROUP:            std::cout << "POP_GROUP"; break;
-  default:                                              std::cout << "unknown (0x" << type << ")"; break;
+    GL_DEBUG_CASE (TYPE, ERROR);
+    GL_DEBUG_CASE (TYPE, DEPRECATED_BEHAVIOR);
+    GL_DEBUG_CASE (TYPE, UNDEFINED_BEHAVIOR);
+    GL_DEBUG_CASE (TYPE, PORTABILITY);
+    GL_DEBUG_CASE (TYPE, PERFORMANCE);
+    GL_DEBUG_CASE (TYPE, OTHER);
+    GL_DEBUG_CASE (TYPE, MARKER);
+    GL_DEBUG_CASE (TYPE, PUSH_GROUP);
+    GL_DEBUG_CASE (TYPE, POP_GROUP);
+  default: std::cout << "[" << type << "]"; break;
   }
   std::cout << ", severity ";
   switch (severity) {
-  case /* 0x826B */ GL_DEBUG_SEVERITY_NOTIFICATION:  std::cout << "NOTIFICATION"; break;
-  case /* 0x9146 */ GL_DEBUG_SEVERITY_HIGH:          std::cout << "HIGH"; break;
-  case /* 0x9147 */ GL_DEBUG_SEVERITY_MEDIUM:        std::cout << "MEDIUM"; break;
-  case /* 0x9148 */ GL_DEBUG_SEVERITY_LOW:           std::cout << "LOW"; break;
-  default:                                           std::cout << "unknown (0x" << severity << ")"; break;
+    GL_DEBUG_CASE (SEVERITY, NOTIFICATION);
+    GL_DEBUG_CASE (SEVERITY, HIGH);
+    GL_DEBUG_CASE (SEVERITY, MEDIUM);
+    GL_DEBUG_CASE (SEVERITY, LOW);
+  default: std::cout << "[" << severity << "]"; break;
   }
   std::cout << std::dec << ", id " << id << ", message \"" << message << "\"" << std::endl;
 }
