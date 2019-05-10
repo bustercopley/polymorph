@@ -34,12 +34,17 @@
 #define VERTEX_ATTRIB_INDEX_X 0
 
 #if GLCHECK_ENABLED && PRINT_ENABLED
-inline void gl_check (const char * file, int line) {
+inline void gl_check (const char * file, int line)
+{
   GLint er = glGetError ();
   if (GLCHECK_TRACE || er) {
     std::cout << file << ":" << line << ":";
-    if (er) std::cout << "error " << er;
-    else std::cout << "OK";
+    if (er) {
+      std::cout << "error " << er;
+    }
+    else {
+      std::cout << "OK";
+    }
     std::cout << std::endl;
   }
   if (er) {
