@@ -16,11 +16,14 @@
 #include "random.h"
 #include "compiler.h"
 
-// The xorshift family of PRNGs was introduced in [1].
-// This particular generator, "xorshift64* A_1(12; 25; 27).M_32", is suggested in [2].
+// The xorshift family of PRNGs was introduced in [1]. This particular
+// generator, "xorshift64* A_1(12; 25; 27).M_32", is suggested in [2].
 
-// [1] George Marsaglia (2003) http://www.jstatsoft.org/article/view/v008i14/xorshift.pdf
-// [2] Sebastiano Vigna (2014) http://arxiv.org/abs/1402.6246
+// [1] George Marsaglia (2003)
+// http://www.jstatsoft.org/article/view/v008i14/xorshift.pdf
+
+// [2] Sebastiano Vigna (2014)
+// http://arxiv.org/abs/1402.6246
 
 void rng_t::initialize (std::uint64_t seed)
 {
@@ -41,7 +44,7 @@ std::uint64_t rng_t::get ()
 #include "random-util.h"
 
 // Random floating-point number uniformly distributed on the interval [a, b).
-// Undefined behaviour (due to signed integer overflow) if |a| >= 32767 * |b - a|.
+// Undefined behaviour due to signed integer overflow if |a| >= 32767 * |b - a|.
 float get_float (rng_t & rng, float a, float b)
 {
   if (a < b || a > b) { // Ordered and not equal.
