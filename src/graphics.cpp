@@ -28,10 +28,10 @@
 
 // Uniform block binding indices and vertex attribute indices.
 // These must match the bindings in shader layout qualifiers.
-#define UNIFORM_BLOCK_BINDING_H 0
-#define UNIFORM_BLOCK_BINDING_F 1
-#define UNIFORM_BLOCK_BINDING_G 2
-#define VERTEX_ATTRIB_INDEX_X 0
+#define BLOCK_H 0
+#define BLOCK_F 1
+#define BLOCK_G 2
+#define ATTRIB_X 0
 
 #if GLCHECK_ENABLED && PRINT_ENABLED
 inline void gl_check (const char * file, int line)
@@ -53,7 +53,12 @@ inline void gl_check (const char * file, int line)
 }
 #define GLCHECK gl_check (__FILE__, __LINE__)
 #elif GLCHECK_ENABLED
-#define GLCHECK do { GLint er = glGetError (); if (er) ::ExitProcess (er); } while (false)
+#define GLCHECK                                                                \
+  do {                                                                         \
+    GLint er = glGetError ();                                                  \
+    if (er)                                                                    \
+      ::ExitProcess (er);                                                      \
+  } while (false)
 #else
 #define GLCHECK do { } while (false)
 #endif
@@ -61,14 +66,13 @@ inline void gl_check (const char * file, int line)
 #if PRINT_ENABLED
 #define PRINT_INFO_LOG(a, b, c) print_info_log (a, b, c)
 inline void print_info_log (GLuint object,
-                            PFNGLGETSHADERIVPROC glGet__iv,
-                            PFNGLGETSHADERINFOLOGPROC glGet__InfoLog)
+  PFNGLGETSHADERIVPROC glGet__iv, PFNGLGETSHADERINFOLOGPROC glGet__InfoLog)
 {
   GLint log_length;
   glGet__iv (object, GL_INFO_LOG_LENGTH, & log_length); GLCHECK;
   char * log = (char *) allocate (log_length + 1);
   if (log) {
-    glGet__InfoLog (object, log_length, NULL, log); GLCHECK;
+    glGet__InfoLog (object, log_length, nullptr, log); GLCHECK;
     log [log_length] = '\0';
     if (log [0]) print (log);
     deallocate (log);
@@ -84,8 +88,8 @@ inline void print_info_log (GLuint object,
     break;
 
 #if GLDEBUG_ENABLED
-void APIENTRY debug_message_callback (GLenum source, GLenum type, GLuint id, GLenum severity,
-                                      GLsizei, const GLchar * message, const void *)
+void APIENTRY debug_message_callback (GLenum source, GLenum type, GLuint id,
+  GLenum severity, GLsizei, const GLchar * message, const void *)
 {
   // Filter out anything that isn't an error or performance issue.
   if (severity == GL_DEBUG_SEVERITY_NOTIFICATION) return;
@@ -121,7 +125,8 @@ void APIENTRY debug_message_callback (GLenum source, GLenum type, GLuint id, GLe
     GL_DEBUG_CASE (SEVERITY, LOW);
   default: std::cout << "[" << severity << "]"; break;
   }
-  std::cout << std::dec << ", id " << id << ", message \"" << message << "\"" << std::endl;
+  std::cout << std::dec << ", id " << id << ", message \"" << message << "\""
+            << std::endl;
 }
 #endif
 
@@ -143,13 +148,16 @@ GLuint make_shader (GLenum type, int resource_id)
   case IDR_GEOMETRY_SHADER: std::cout << "Geometry "; break;
   default: ;
   }
-  std::cout << "Shader compilation " << (status ? "succeeded." : "failed.") << std::endl;
-  PRINT_INFO_LOG (id, glGetShaderiv, glGetShaderInfoLog); GLCHECK;
+  std::cout << "Shader compilation " << (status ? "succeeded." : "failed.")
+            << std::endl;
+  PRINT_INFO_LOG (id, glGetShaderiv, glGetShaderInfoLog);
+  GLCHECK;
 #endif
   return status ? id : 0;
 }
 
-unsigned make_vao (unsigned N, const float (* vertices) [4], const std::uint8_t (* indices) [6])
+unsigned make_vao (
+  unsigned N, const float (* vertices) [4], const std::uint8_t (* indices) [6])
 {
   unsigned vao_id;
   glGenVertexArrays (1, & vao_id); GLCHECK;
@@ -158,10 +166,12 @@ unsigned make_vao (unsigned N, const float (* vertices) [4], const std::uint8_t 
   glGenBuffers (2, buffer_ids); GLCHECK;
   glBindBuffer (GL_ARRAY_BUFFER, buffer_ids [0]); GLCHECK;
   glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, buffer_ids [1]); GLCHECK;
-  glBufferData (GL_ARRAY_BUFFER, (N + 2) * 4 * sizeof (float), vertices, GL_STATIC_DRAW); GLCHECK;
-  glBufferData (GL_ELEMENT_ARRAY_BUFFER, 6 * N * sizeof (std::uint8_t), indices, GL_STATIC_DRAW); GLCHECK;
-  glVertexAttribPointer (VERTEX_ATTRIB_INDEX_X, 4, GL_FLOAT, GL_FALSE, 0, 0); GLCHECK;
-  glEnableVertexAttribArray (VERTEX_ATTRIB_INDEX_X); GLCHECK;
+  GLsizeiptr n = (N + 2) * 4 * sizeof (float);
+  GLsizeiptr m = 6 * N * sizeof (std::uint8_t);
+  glBufferData (GL_ARRAY_BUFFER, n, vertices, GL_STATIC_DRAW); GLCHECK;
+  glBufferData (GL_ELEMENT_ARRAY_BUFFER, m, indices, GL_STATIC_DRAW); GLCHECK;
+  glVertexAttribPointer (ATTRIB_X, 4, GL_FLOAT, GL_FALSE, 0, 0); GLCHECK;
+  glEnableVertexAttribArray (ATTRIB_X); GLCHECK;
   return vao_id;
 }
 
@@ -217,7 +227,9 @@ bool initialize_graphics (program_t & program)
 #if GLDEBUG_ENABLED
   glEnable (GL_DEBUG_OUTPUT); GLCHECK;
   glDebugMessageCallback (debug_message_callback, nullptr); GLCHECK;
-  glDebugMessageControl (GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, 0, GL_TRUE); GLCHECK;
+  glDebugMessageControl (GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE,
+    0, 0, GL_TRUE);
+  GLCHECK;
 #endif
 
   return program.initialize ();
@@ -264,7 +276,7 @@ void program_t::set_view (const float (& view) [4],
     GLfloat q [4];      // vec3, pixel size in normalized device coordinates
   };
 
-  ALIGNED16 fragment_data_t fragment_data = {
+  ALIGNED16 fragment_data_t fdata = {
     { 0.02f, 0.02f, 0.02f, 0.00f, },
     { 0.00f, 0.00f, 0.00f, 0.00f, },
     { 0.00f, 0.00f, 0.00f, 1.00f, },
@@ -278,7 +290,7 @@ void program_t::set_view (const float (& view) [4],
     },
   };
 
-  ALIGNED16 geometry_data_t geometry_data = {
+  ALIGNED16 geometry_data_t gdata = {
     {
       // Save a few instructions by using a simplified projection matrix which
       // doesn't calculate the z component of the clip coordinates. We don't
@@ -301,23 +313,28 @@ void program_t::set_view (const float (& view) [4],
 
   // Create one uniform buffer large enough to hold the data for "F" and "G".
   // This uniform buffer is never destroyed (the uniform buffer id is leaked).
-  GLuint stride = std::max(sizeof fragment_data, sizeof geometry_data);
+  GLuint stride = std::max(sizeof fdata, sizeof gdata);
   GLint align;
   glGetIntegerv (GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, & align); GLCHECK;
   align_up (stride, stride, align);
-  GLuint buf_id;
-  glGenBuffers (1, & buf_id); GLCHECK;
-  glBindBuffer (GL_UNIFORM_BUFFER, buf_id); GLCHECK;
-  glBufferData (GL_UNIFORM_BUFFER, 2 * stride, nullptr, GL_STATIC_DRAW); GLCHECK;
+  GLuint buf;
+  glGenBuffers (1, & buf); GLCHECK;
+  glBindBuffer (GL_UNIFORM_BUFFER, buf); GLCHECK;
+  glBufferData (GL_UNIFORM_BUFFER, 2 * stride, nullptr, GL_STATIC_DRAW);
+  GLCHECK;
 
   // Load each block's data into its own disjoint subrange of the buffer.
-  glBufferSubData (GL_UNIFORM_BUFFER, 0 * stride, sizeof fragment_data, & fragment_data); GLCHECK;
-  glBufferSubData (GL_UNIFORM_BUFFER, 1 * stride, sizeof geometry_data, & geometry_data); GLCHECK;
+  glBufferSubData (GL_UNIFORM_BUFFER, 0 * stride, sizeof fdata, & fdata);
+  GLCHECK;
+  glBufferSubData (GL_UNIFORM_BUFFER, 1 * stride, sizeof gdata, & gdata);
+  GLCHECK;
 
   // Bind "F" and "G" to the disjoint subranges. These indexed bindings remain
   // in place for the lifetime of the shader program.
-  glBindBufferRange (GL_UNIFORM_BUFFER, UNIFORM_BLOCK_BINDING_F, buf_id, 0 * stride, sizeof fragment_data); GLCHECK;
-  glBindBufferRange (GL_UNIFORM_BUFFER, UNIFORM_BLOCK_BINDING_G, buf_id, 1 * stride, sizeof geometry_data); GLCHECK;
+  glBindBufferRange (GL_UNIFORM_BUFFER, BLOCK_F, buf, 0 * stride, sizeof fdata);
+  GLCHECK;
+  glBindBufferRange (GL_UNIFORM_BUFFER, BLOCK_G, buf, 1 * stride, sizeof gdata);
+  GLCHECK;
 
   // The remaining uniform block, "H", contains per-object attributes.
 
@@ -327,7 +344,7 @@ void program_t::set_view (const float (& view) [4],
   uniform_buffer.bind ();
 
   // Match the ClearColor to the fog background.
-  glClearColor (fragment_data.b [0], fragment_data.b [1], fragment_data.b [2], 0.0f); GLCHECK;
+  glClearColor (fdata.b [0], fdata.b [1], fdata.b [2], 0.0f); GLCHECK;
 }
 
 bool program_t::initialize ()
@@ -335,28 +352,30 @@ bool program_t::initialize ()
   if (! uniform_buffer.initialize ()) return false;
 
   GLint status = 0;
-  GLuint vshader_id = make_shader (GL_VERTEX_SHADER, IDR_VERTEX_SHADER);
-  GLuint gshader_id = make_shader (GL_GEOMETRY_SHADER, IDR_GEOMETRY_SHADER);
-  GLuint fshader_id = make_shader (GL_FRAGMENT_SHADER, IDR_FRAGMENT_SHADER);
-  if (vshader_id && gshader_id && fshader_id) {
+  GLuint vshader = make_shader (GL_VERTEX_SHADER, IDR_VERTEX_SHADER);
+  GLuint gshader = make_shader (GL_GEOMETRY_SHADER, IDR_GEOMETRY_SHADER);
+  GLuint fshader = make_shader (GL_FRAGMENT_SHADER, IDR_FRAGMENT_SHADER);
+  if (vshader && gshader && fshader) {
     id = glCreateProgram (); GLCHECK;
     if (id) {
-      glAttachShader (id, vshader_id); GLCHECK;
-      glAttachShader (id, gshader_id); GLCHECK;
-      glAttachShader (id, fshader_id); GLCHECK;
+      glAttachShader (id, vshader); GLCHECK;
+      glAttachShader (id, gshader); GLCHECK;
+      glAttachShader (id, fshader); GLCHECK;
       glLinkProgram (id); GLCHECK;
       glGetProgramiv (id, GL_LINK_STATUS, & status); GLCHECK;
 #if PRINT_ENABLED
-      std::cout << "Shader program linking " << (status ? "succeeded." : "failed.") << std::endl;
-      PRINT_INFO_LOG (id, glGetProgramiv, glGetProgramInfoLog); GLCHECK;
+      std::cout << "Shader program linking "
+                << (status ? "succeeded." : "failed.") << std::endl;
+      PRINT_INFO_LOG (id, glGetProgramiv, glGetProgramInfoLog);
+      GLCHECK;
 #endif
     }
-    glDetachShader (id, fshader_id); GLCHECK;
-    glDetachShader (id, gshader_id); GLCHECK;
-    glDetachShader (id, vshader_id); GLCHECK;
-    glDeleteShader (fshader_id); GLCHECK;
-    glDeleteShader (gshader_id); GLCHECK;
-    glDeleteShader (vshader_id); GLCHECK;
+    glDetachShader (id, fshader); GLCHECK;
+    glDetachShader (id, gshader); GLCHECK;
+    glDetachShader (id, vshader); GLCHECK;
+    glDeleteShader (fshader); GLCHECK;
+    glDeleteShader (gshader); GLCHECK;
+    glDeleteShader (vshader); GLCHECK;
   }
 
   if (status) {
@@ -373,14 +392,17 @@ void clear ()
 
 void paint (unsigned N,
             unsigned vao_id,
-            GLuint uniform_buffer_id,
-            std::ptrdiff_t uniform_buffer_offset)
+            GLuint ubuf,
+            std::ptrdiff_t uoffset)
 {
   const unsigned block_size = sizeof (object_data_t);
   glBindVertexArray (vao_id); GLCHECK;
-  glBindBufferRange (GL_UNIFORM_BUFFER, UNIFORM_BLOCK_BINDING_H, uniform_buffer_id, uniform_buffer_offset, block_size); GLCHECK;
+  glBindBufferRange (GL_UNIFORM_BUFFER, BLOCK_H, ubuf, uoffset, block_size);
+  GLCHECK;
   glCullFace (GL_FRONT); GLCHECK;
-  glDrawElements (GL_TRIANGLES_ADJACENCY, N * 6, GL_UNSIGNED_BYTE, nullptr); GLCHECK;
+  glDrawElements (GL_TRIANGLES_ADJACENCY, N * 6, GL_UNSIGNED_BYTE, nullptr);
+  GLCHECK;
   glCullFace (GL_BACK); GLCHECK;
-  glDrawElements (GL_TRIANGLES_ADJACENCY, N * 6, GL_UNSIGNED_BYTE, nullptr); GLCHECK;
+  glDrawElements (GL_TRIANGLES_ADJACENCY, N * 6, GL_UNSIGNED_BYTE, nullptr);
+  GLCHECK;
 }
