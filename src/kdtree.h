@@ -61,28 +61,33 @@
 //   Node 0 is the root node.
 //   Node m's children are nodes 2m+1 and 2m+2.
 // Levels
-//   There are K+1 levels, numbered 0, 1, 2, ..., K; the nodes on level K are the leaf nodes.
-//   For each k, level k contains the 2^k nodes in the range [2^k-1, 2^(k+1)-1).
+//   There are K+1 levels, numbered 0 to K; nodes on level K are leaf nodes.
+//   Each level k contains the 2^k nodes in the range [2^k-1, 2^(k+1)-1).
 //   Therefore the total number of non-leaf nodes is 2^K-1.
 //   Node m is in level k = logb(m+2)-1 at position i = m+1-2^k.
-//   If k<K then node m has two child nodes, which are in level k+1 at positions 2i and 2i+1.
+//   If k<K, node m has two child nodes, in level k+1 at positions 2i and 2i+1.
 // Points
 //   There are N points, numbered 0, 1, 2, ..., N-1.
-//   The points are distributed evenly among the nodes of each level; for each m, the node m,
-//   which is in level k at position i (see above), contains the points [iN/2^k, (i+1)N/2^k).
-//   The "middle point" of a non-leaf node m (in level k at position i) is defined to be the first
-//   point of its second child (node 2m+2, in level k+1 at position 2i+1), i.e., point (2i+1)N/2^(k+1).
+//   The points are distributed evenly among the nodes of each level; for each
+//   m, the node m, which is in level k at position i (see above), contains the
+//   points [iN/2^k, (i+1)N/2^k).
+//   The "middle point" of a non-leaf node m (in level k at position i) is
+//   defined to be the first point of its second child (node 2m+2, in level k+1
+//   at position 2i+1), i.e., point (2i+1)N/2^(k+1).
 // Leaf nodes
-//   The bottom level, level K, contains 2^K nodes (the leaf nodes). The depth K is chosen,
-//   if possible, so that for some real constant M >= 1 we have M < N/(2^K) <= 2M. Such a K
-//   exists if N > M; otherwise use depth K = 0. Then, each node contains either floor(N/(2^K))
-//   or ceil(N/(2^K)) points, and at least one node contains ceil(N/(2^K)) nodes.
+//   The bottom level, level K, contains 2^K nodes (the leaf nodes). The depth K
+//   is chosen, if possible, so that for some real constant M >= 1 we have M <
+//   N/(2^K) <= 2M. Such a K exists if N > M; otherwise use depth K = 0. Then,
+//   each node contains either floor(N/(2^K)) or ceil(N/(2^K)) points, and at
+//   least one node contains ceil(N/(2^K)) nodes.
 // KD tree
-//   The data for the KD tree consists of a permutation of [0, N), represented as an array
-//   of N unsigned integers (kdtree_index), and a co-ordinate value for each non-leaf node,
-//   represented as an array of (2^K)-1 floating-point numbers (kdtree_split).
-//   The points [begin, end) of each non-leaf node m (in level k at position i) are
-//   partitioned about the node's middle point mid in dimension d = k % 3, in the sense that
+//   The data for the KD tree consists of a permutation of [0, N), represented
+//   as an array of N unsigned integers (kdtree_index), and a co-ordinate value
+//   for each non-leaf node, represented as an array of (2^K)-1 floating-point
+//   numbers (kdtree_split).
+//   The points [begin, end) of each non-leaf node m (in level k at position i)
+//   are partitioned about the node's middle point mid in dimension d = k % 3,
+//   in the sense that
 //   x [kdtree_index[n]] [d] <= kdtree_split[m] for n in [begin, mid),
 //   x [kdtree_index[n]] [d] >= kdtree_split[m] for n in [mid, end).
 
@@ -91,17 +96,17 @@ static const std::uint8_t inc_mod3 [] = { 1, 2, 0, 1, };
 // See "Leaf nodes" above.
 inline unsigned required_depth (unsigned point_count)
 {
-  static const unsigned minimum_points_per_leaf = 3;
-  unsigned desired_leaf_count = point_count / minimum_points_per_leaf;
+  static const unsigned min_points_per_leaf = 3;
+  unsigned desired_leaf_count = point_count / min_points_per_leaf;
 
   // BSR(0) is undefined!
   if (! desired_leaf_count) {
     return 0;
   }
 
-  // Let N = point_count, M = minimum_points_per_leaf (assumed positive integers).
+  // Let N = point_count, M = min_points_per_leaf (assumed positive integers).
   // Let r = desired_leaf_count = floor(N/M).
-  // N, M, r are positive integers (since we have already returned if r is zero).
+  // N, M, r are positive integers (we have already returned if r is zero).
   // We have   r <= N/M < r+1        (by definition of "floor")
   // so    (*) M <= N/r < M + M/r    (multiply each term by M/r)
 
@@ -109,7 +114,7 @@ inline unsigned required_depth (unsigned point_count)
   // (K will be the tree depth and R the actual leaf count.)
   // We have   K <= log_2(r) < K+1   (by definition of "floor")
   // so        R < r <= 2R           (raise 2 to the power of each term)
-  // and   (*) N/2R <= N/r < N/R     (divide N by each term and reverse the inequalities)
+  // and   (*) N/2R <= N/r < N/R     (divide N by each term and reverse)
 
   // Combine the two starred inequalities to get M < N/R < 2M + 2M/r.
 
@@ -121,7 +126,7 @@ inline unsigned required_depth (unsigned point_count)
   // If N is sufficiently large (N >= 4M^2) then r >= 2M and so we have:
   //   M <= m <= 2M.
 
-  return _bit_scan_reverse (desired_leaf_count); // result is K = floor(log_2(r)).
+  return _bit_scan_reverse (desired_leaf_count); // result K = floor(log_2(r)).
 }
 
 ALWAYS_INLINE
@@ -153,8 +158,8 @@ inline void model_t::kdtree_search ()
   }
 
   // Enough stack to traverse a tree with more than 2^32 nodes.
-  unsigned stack_node [32];              // Node index.
-  ALIGNED16 float stack_corner [32] [4]; // Extra space for the wall search phase.
+  unsigned stack [32];                   // Node index.
+  ALIGNED16 float stack_corner [32] [4]; // Extra space for wall phase.
 
   // Phase 2: for each object, detect collisions with other objects.
 
@@ -194,27 +199,27 @@ inline void model_t::kdtree_search ()
   // For every pair of integers i, n such that 0 <= i' < n' < count,
   // where i' = kdtree[i] and n' = kdtree[n], if |x[i] - x[n]| < 2R
   // then call bounce(i, n). Loop over n', not n, to avoid anisotropy.
-  for (unsigned n_prime = 0; n_prime != count; ++ n_prime) {
-    unsigned n = kdtree_aux [n_prime];
+  for (unsigned n1 = 0; n1 != count; ++ n1) {
+    unsigned n = kdtree_aux [n1];
     if (n < 7) {
       // Skip the tree traversal and just try all the candidates.
       for (unsigned i = 0; i != n; ++ i) {
-        bounce (n_prime, kdtree_index [i]);
+        bounce (n1, kdtree_index [i]);
       }
       continue;
     }
     // Visit every node whose box intersects the search cube (the bounding
     // cube of the sphere of radius 2R centred on the target point).
-    unsigned stack_top = 0;
+    unsigned top = 0;
     // Push node 0 onto the stack.
-    stack_node [stack_top ++] = 0;
+    stack [top ++] = 0;
     // Traverse the tree discarding nodes not intersecting the search cube.
     unsigned first_node_of_current_level = 0;
     std::uint8_t dim = 0;
-    while (stack_top) {
+    while (top) {
       // Pop a node from the stack.
       // This node's box certainly intersects the search box.
-      unsigned node = stack_node [-- stack_top];
+      unsigned node = stack [-- top];
       if (node < nonleaf_count) {
         // Visit a nonleaf node.
         // Ascend to the level that contains node.
@@ -222,15 +227,16 @@ inline void model_t::kdtree_search ()
           first_node_of_current_level /= 2;
           dim = inc_mod3 [dim + 1];
         }
-        // Consider the children if at least one of this node's points comes before the target.
-        // The first child is at i = position * count / level_node_count, and we require i < n.
+        // Visit children if at least one of this node's points comes before the
+        // target. First child is at i = position * count / level_node_count;
+        // visit if i < n.
         std::uint64_t position = node - first_node_of_current_level;
         std::uint64_t level_node_count = first_node_of_current_level + 1;
         if (position * count < n * level_node_count) {
           // Push one or both child nodes onto the stack.
           float s = kdtree_split [node];
-          if (x [n_prime] [dim] + 2 * radius >= s) stack_node [stack_top ++] = 2 * node + 2;
-          if (x [n_prime] [dim] - 2 * radius <= s) stack_node [stack_top ++] = 2 * node + 1;
+          if (x [n1] [dim] + 2 * radius >= s) stack [top ++] = 2 * node + 2;
+          if (x [n1] [dim] - 2 * radius <= s) stack [top ++] = 2 * node + 1;
           // Descend one level to our children's level.
           dim = inc_mod3 [dim];
           first_node_of_current_level = 2 * first_node_of_current_level + 1;
@@ -242,7 +248,7 @@ inline void model_t::kdtree_search ()
         unsigned points_begin = position * count >> depth;
         unsigned points_end = (position + 1) * count >> depth;
         for (unsigned i = points_begin; i != points_end && i < n; ++ i) {
-          bounce (n_prime, kdtree_index [i]);
+          bounce (n1, kdtree_index [i]);
         }
       }
     }
@@ -250,33 +256,32 @@ inline void model_t::kdtree_search ()
 
   // Phase 3: detect collisions with walls.
   for (unsigned iw = 0; iw != 6; ++ iw) {
-    // Visit every node whose critical corner's wall-distance is less than max_radius.
+    // Visit every node whose wall-distance is less than max_radius.
     // The "wall-distance" of a point x is dot(x - anchor, normal).
-    // The "critical corner" of a node is the corner of the node box of least wall-distance.
-    // The critical reader will see that the critical corner is not always uniquely defined,
-    // and why it doesn't matter.
+    // The "wall-distance" of a node is its critical corner's wall-distance.
+    // The "critical corner" of a node is the corner nearest the wall.
     const v4f anchor = load4f (walls [iw] [0]);
     const v4f normal = load4f (walls [iw] [1]);
-    unsigned stack_top = 0;
-    // The root (outer) node box's corners are at infinity.
-    // Don't actually use infinity, in order to work under "-ffinite-math-only".
-    static const v4f big_value = { 0x1.000000P+060f, 0x1.000000P+060f, 0x1.000000P+060f, 0.0f, };
+    unsigned top = 0;
+    // The root (outer) node box's corners are at infinity. Don't actually
+    // use infinity, in order to work under "-ffinite-math-only".
+    static const v4f big_val = { 0x1.0P+060f, 0x1.0P+060f, 0x1.0P+060f, 0.0f, };
     static const v4f sign_bit = { -0.0f, -0.0f, -0.0f, 0.0f, };
-    v4f normal_non_negative = _mm_cmpge_ps (normal, _mm_setzero_ps ());
-    v4f critical_corner = _mm_xor_ps (_mm_and_ps (normal_non_negative, sign_bit), big_value);
+    v4f critical_corner = _mm_xor_ps (big_val,
+      _mm_and_ps (_mm_cmpge_ps (normal, _mm_setzero_ps ()), sign_bit));
     // Push node 0 onto the stack.
-    store4f (stack_corner [stack_top], critical_corner);
-    stack_node [stack_top] = 0;
-    ++ stack_top;
+    store4f (stack_corner [top], critical_corner);
+    stack [top] = 0;
+    ++ top;
     // Traverse the tree.
     unsigned normal_sign_mask = _mm_movemask_ps (normal);
     unsigned first_node_of_current_level = 0;
     std::uint8_t dim = 0;
-    while (stack_top) {
+    while (top) {
       // Pop a node from the stack.
-      -- stack_top;
-      v4f critical_corner = load4f (stack_corner [stack_top]);
-      unsigned node = stack_node [stack_top];
+      -- top;
+      v4f critical_corner = load4f (stack_corner [top]);
+      unsigned node = stack [top];
       // Ascend to the level that contains node.
       while (first_node_of_current_level > node) {
         first_node_of_current_level /= 2;
@@ -284,19 +289,20 @@ inline void model_t::kdtree_search ()
       }
       while (node < nonleaf_count) {
         // Visit a nonleaf node.
-        // Precondition: node's critical corner's wall-distance is less than max_radius.
-        // The favourite child's critical corner is the same as this node's so certainly also qualifies.
+        // Precondition: node's wall-distance is less than max_radius.
+        // The favourite child also qualifies as it shares our critical corner.
         unsigned favourite = normal_sign_mask >> dim & 1;
         unsigned other = favourite ^ 1;
-        // Construct the other child's critical corner in place, after the end of the stack.
-        store4f (stack_corner [stack_top], critical_corner);
-        stack_corner [stack_top] [dim] = kdtree_split [node];
+        // Construct the other child's critical corner in place on the stack.
+        store4f (stack_corner [top], critical_corner);
+        stack_corner [top] [dim] = kdtree_split [node];
         // The other child's critical corner might be in H; if so ...
-        float other_child_critical_corner_distance = _mm_cvtss_f32 (dot (load4f (stack_corner [stack_top]) - anchor, normal));
-        if (other_child_critical_corner_distance < radius) {
-          // ...  push the other child onto the stack (its critical corner is already in place).
-          stack_node [stack_top] = 2 * node + 1 + other;
-          ++ stack_top;
+        v4f corner = load4f (stack_corner [top]);
+        float corner_distance = _mm_cvtss_f32 (dot (corner - anchor, normal));
+        if (corner_distance < radius) {
+          // ...  push its node index (its critical corner is already in place).
+          stack [top] = 2 * node + 1 + other;
+          ++ top;
         }
         // Visit the favourite child now.
         node = 2 * node + 1 + favourite;
