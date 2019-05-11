@@ -53,7 +53,9 @@ void get_rect (RECT & rect, const arguments_t & arguments)
   int n = (int) arguments.numeric_arg;
   if (n >= 1) {
     monitor_enum_param_t param = { & rect, n - 1 };
-    ::EnumDisplayMonitors (NULL, NULL, & monitor_enum_proc, (LPARAM) & param);
+    ::EnumDisplayMonitors (
+      nullptr, nullptr, & monitor_enum_proc, (LPARAM) &param);
+
     if (param.n < 0) {
       rect.right -= rect.left;
       rect.bottom -= rect.top;
@@ -67,13 +69,15 @@ void get_rect (RECT & rect, const arguments_t & arguments)
   rect.bottom = ::GetSystemMetrics (SM_CYVIRTUALSCREEN);
 }
 
-ALIGN_STACK LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+ALIGN_STACK
+LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   // Retrieve the window-struct pointer from the window userdata.
-  window_struct_t * ws = (window_struct_t *) ::GetWindowLongPtr (hwnd, GWLP_USERDATA);
+  window_struct_t * ws =
+    (window_struct_t *) ::GetWindowLongPtr (hwnd, GWLP_USERDATA);
 
   LRESULT result = 0;
-  bool call_def_window_proc = false;
+  bool no_defwndproc = true;
   bool close_window = false;
 
   if (! ws) {
@@ -87,7 +91,7 @@ ALIGN_STACK LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LP
         if (ws->hglrc) {
           // Successfully installed the rendering context.
           // Store the window-struct pointer in userdata.
-          ::SetWindowLongPtr (hwnd, GWLP_USERDATA, reinterpret_cast <LONG_PTR> (ws));
+          ::SetWindowLongPtr (hwnd, GWLP_USERDATA, LONG_PTR (ws));
           // Once-only model/graphics allocation and initialization.
           // Abort window creation if shader program compilation fails.
           result = ws->model.initialize (qpc ()) - 1;
@@ -96,18 +100,18 @@ ALIGN_STACK LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LP
       }
     }
     else {
-      call_def_window_proc = true;
+      no_defwndproc = false;
     }
   }
   else {
     run_mode_t mode = ws->arguments.mode;
     switch (msg) {
     case WM_APP: {
-      RECT rect;
-      get_rect (rect, ws->arguments);
+      RECT rc;
+      get_rect (rc, ws->arguments);
 
       // Show the window.
-      ::SetWindowPos (hwnd, HWND_TOP, rect.left, rect.top, rect.right, rect.bottom,
+      ::SetWindowPos (hwnd, HWND_TOP, rc.left, rc.top, rc.right, rc.bottom,
         SWP_SHOWWINDOW | SWP_NOOWNERZORDER | SWP_NOCOPYBITS);
 
       // Remember initial cursor position to detect mouse movement.
@@ -117,9 +121,9 @@ ALIGN_STACK LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LP
     }
 
     case WM_WINDOWPOSCHANGED: {
-      WINDOWPOS * windowpos = (WINDOWPOS *) lParam;
-      if (! (windowpos->flags & SWP_NOSIZE) || windowpos->flags & SWP_SHOWWINDOW) {
-        ws->model.start (windowpos->cx, windowpos->cy, ws->settings);
+      WINDOWPOS * wp = (WINDOWPOS *) lParam;
+      if (! (wp->flags & SWP_NOSIZE) || wp->flags & SWP_SHOWWINDOW) {
+        ws->model.start (wp->cx, wp->cy, ws->settings);
       }
       break;
     }
@@ -135,12 +139,14 @@ ALIGN_STACK LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LP
     }
 
     case WM_SETCURSOR:
-      ::SetCursor (mode == screensaver || mode == configure ? NULL : ::LoadCursor (NULL, IDC_ARROW));
+      ::SetCursor (mode == screensaver || mode == configure
+                     ? nullptr
+                     : ::LoadCursor (nullptr, IDC_ARROW));
       break;
 
     case WM_MOUSEMOVE:
       if (mode == screensaver || mode == configure) {
-        // Compare the current mouse position with the one stored in the window struct.
+        // Compare current mouse position with that stored in the window struct.
         DWORD pos = ::GetMessagePos ();
         int dx = GET_X_LPARAM (pos) - ws->initial_cursor_position.x;
         int dy = GET_Y_LPARAM (pos) - ws->initial_cursor_position.y;
@@ -148,28 +154,36 @@ ALIGN_STACK LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LP
       }
       break;
 
-    case WM_KEYDOWN: case WM_LBUTTONDOWN: case WM_MBUTTONDOWN: case WM_RBUTTONDOWN:
+    case WM_KEYDOWN:
+    case WM_LBUTTONDOWN:
+    case WM_MBUTTONDOWN:
+    case WM_RBUTTONDOWN:
       close_window = mode != parented;
       break;
 
-    case WM_ACTIVATE: case WM_ACTIVATEAPP: case WM_NCACTIVATE:
-      close_window = (mode == screensaver || mode == configure) && LOWORD (wParam) == WA_INACTIVE;
-      call_def_window_proc = true;
+    case WM_ACTIVATE:
+    case WM_ACTIVATEAPP:
+    case WM_NCACTIVATE:
+      no_defwndproc = false;
+      close_window = (mode == screensaver || mode == configure)
+        && LOWORD (wParam) == WA_INACTIVE;
       break;
 
     case WM_SYSCOMMAND:
-      call_def_window_proc = ! ((mode == screensaver || mode == configure) && wParam == SC_SCREENSAVE);
+      no_defwndproc = (mode == screensaver || mode == configure)
+        && wParam == SC_SCREENSAVE;
       break;
 
     case WM_CLOSE:
       if (mode == configure) {
         if (::GetWindowLongPtr (hwnd, GWL_STYLE) & WS_VISIBLE) {
-          // A simple "ShowWindow (SW_HIDE)" suffices to replace SetWindowPos and SetActiveWindow,
-          // but fails to actually hide the window if it occupies the full primary monitor rect
-          // and the pixel format specifies SWAP_EXCHANGE; now that we use SWAP_COPY, that problem
+          // A simple "ShowWindow (SW_HIDE)" suffices to replace SetWindowPos
+          // and SetActiveWindow, but fails to actually hide the window if it
+          // occupies the full primary monitor rect and the pixel format
+          // specifies SWAP_EXCHANGE; now that we use SWAP_COPY, that problem
           // no longer exists, but we still do it this way just in case.
-          ::SetWindowPos (hwnd, HWND_TOP, 0, 0, 0, 0,
-            SWP_HIDEWINDOW | SWP_NOSIZE | SWP_NOMOVE | SWP_NOOWNERZORDER | SWP_NOACTIVATE);
+          ::SetWindowPos (hwnd, HWND_TOP, 0, 0, 0, 0, SWP_HIDEWINDOW
+            | SWP_NOSIZE | SWP_NOMOVE | SWP_NOOWNERZORDER | SWP_NOACTIVATE);
           ::SetActiveWindow (ws->hdlg);
         }
       }
@@ -178,20 +192,22 @@ ALIGN_STACK LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LP
       break;
 
     case WM_DESTROY:
-      ::wglMakeCurrent (NULL, NULL);
+      ::wglMakeCurrent (nullptr, nullptr);
       ::wglDeleteContext (ws->hglrc);
       ::PostQuitMessage (0);
       break;
 
     default:
-      call_def_window_proc = true;
+      no_defwndproc = false;
       break;
     }
   }
   if (close_window) {
     ::PostMessage (hwnd, WM_CLOSE, 0, 0);
   }
-  if (call_def_window_proc) result = ::DefWindowProc (hwnd, msg, wParam, lParam);
+  if (!no_defwndproc) {
+    result = ::DefWindowProc (hwnd, msg, wParam, lParam);
+  }
   return result;
 }
 
@@ -203,24 +219,27 @@ HWND create_screensaver_window (window_struct_t & ws)
   ::LoadString (ws.hInstance, 1, (LPTSTR) (& display_name), 0);
 
   // Register the window class.
-  WNDCLASSEX wndclass = { sizeof (WNDCLASSEX), 0, & MainWndProc, 0, 0, ws.hInstance, ws.icon, NULL, NULL, NULL, WC_MAIN, ws.icon_small };
-  ATOM wc_main_atom = ::RegisterClassEx (& wndclass);
+  WNDCLASSEX wndclass = {sizeof (WNDCLASSEX), 0, & MainWndProc, 0, 0,
+    ws.hInstance, ws.icon, nullptr, nullptr, nullptr, WC_MAIN, ws.icon_small};
+  ATOM wc_main_atom = ::RegisterClassEx (&wndclass);
 
   // Create the screen saver window.
   HWND hwnd;
-  HWND parent = ws.arguments.mode == parented ? (HWND) ws.arguments.numeric_arg : NULL;
-  DWORD style = ws.arguments.mode == parented ? WS_CHILD : WS_POPUP;
+  const arguments_t & args = ws.arguments;
+  HWND parent = args.mode == parented ? (HWND) args.numeric_arg : nullptr;
+  DWORD style = args.mode == parented ? WS_CHILD : WS_POPUP;
   DWORD ex_style =
-    (ws.arguments.mode == screensaver || ws.arguments.mode == configure ? WS_EX_TOPMOST : 0) |
-    (ws.arguments.mode == persistent ? WS_EX_APPWINDOW : WS_EX_TOOLWINDOW);
+    (args.mode == screensaver || args.mode == configure ? WS_EX_TOPMOST : 0) |
+    (args.mode == persistent ? WS_EX_APPWINDOW : WS_EX_TOOLWINDOW);
 
   // Retry once on failure (works around sporadic SetPixelFormat
   // failure observed on Intel integrated graphics on Windows 7).
   for (unsigned retries = 0; retries != 2; ++ retries) {
-    hwnd = ::CreateWindowEx (ex_style, MAKEINTATOM (wc_main_atom), display_name, style,
-                             0, 0, 0, 0,
-                             parent, NULL, ws.hInstance, & ws);
-    if (hwnd) break;
+    hwnd = ::CreateWindowEx (ex_style, MAKEINTATOM (wc_main_atom), display_name,
+      style, 0, 0, 0, 0, parent, nullptr, ws.hInstance, & ws);
+    if (hwnd) {
+      break;
+    }
     // Window creation failed (window has been destroyed).
   }
   return hwnd;
