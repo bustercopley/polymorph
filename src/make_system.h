@@ -19,6 +19,7 @@
 
 #include <cstdint>
 
-void make_system (unsigned q, unsigned r, const float (& xyz_in) [3] [4], float (* nodes) [4], std::uint8_t (* indices) [6]);
+void make_system (unsigned q, unsigned r, const float (& xyz_in)[3][4],
+  float (* nodes)[4], std::uint8_t (* indices)[6]);
 
 #endif

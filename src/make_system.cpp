@@ -19,9 +19,10 @@
 
 // Did I mention that 'make_system' works by magic?
 
-void make_system (unsigned q, unsigned r, const float (& xyz_in) [3] [4], float (* nodes) [4], std::uint8_t (* indices) [6])
+void make_system (unsigned q, unsigned r, const float (& xyz_in) [3] [4],
+  float (* nodes) [4], std::uint8_t (* indices) [6])
 {
-  std::uint8_t * P, * Q, * R; // Permutations taking black triangles around nodes.
+  std::uint8_t * P, * Q, * R; // Permutations taking triangles around nodes.
   std::uint8_t * Qi;          // Inverse of the permutation Q.
   std::uint8_t * Px, * Rx;    // Map a triangle to its P- or R-node.
 
@@ -56,7 +57,7 @@ void make_system (unsigned q, unsigned r, const float (& xyz_in) [3] [4], float 
   unsigned n0 = 0, m0 = 0;
 
   while ([& m0, Px, Rx, q, r, nodes, & next_node, N, B] () -> bool {
-    // Calculate the coordinates of any remaining unknown P- and R-nodes around Q-node m0.
+    // Calculate coordinates of any unknown P- and R-nodes around Q-node m0.
     ALIGNED16 rotor_t Y_rotate (nodes [m0 / q], B);
     for (unsigned n = m0 + 1; n != m0 + q; ++ n) {
       if (Px [n] == undef) {
