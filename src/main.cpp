@@ -27,20 +27,24 @@ int WINAPI _tWinMain (HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
 {
   _mm_setcsr (_mm_getcsr () | (_MM_FLUSH_ZERO_ON | _MM_DENORMALS_ZERO_ON));
 
-  INITCOMMONCONTROLSEX icc = { sizeof (INITCOMMONCONTROLSEX), ICC_BAR_CLASSES | ICC_LINK_CLASS | ICC_STANDARD_CLASSES };
-  ::InitCommonControlsEx (& icc);
+  INITCOMMONCONTROLSEX icc = {sizeof (INITCOMMONCONTROLSEX),
+    ICC_BAR_CLASSES | ICC_LINK_CLASS | ICC_STANDARD_CLASSES};
+  ::InitCommonControlsEx (&icc);
 
   ALIGNED16 window_struct_t ws {};
 
   ws.hInstance = hInstance;
-  ws.icon = (HICON) ::LoadImage (hInstance, MAKEINTRESOURCE (IDI_APPICON), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE);
-  ws.icon_small = (HICON) ::LoadImage (hInstance, MAKEINTRESOURCE (IDI_APPICON), IMAGE_ICON, 16, 16, 0);
+  ws.icon = (HICON) ::LoadImage (
+    hInstance, MAKEINTRESOURCE (IDI_APPICON), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE);
+  ws.icon_small = (HICON) ::LoadImage (
+    hInstance, MAKEINTRESOURCE (IDI_APPICON), IMAGE_ICON, 16, 16, 0);
   ws.arguments = get_arguments (::GetCommandLine ());
   load_settings (ws.settings);
 
   // Show the main window, or the configure dialog if in configure mode.
   if (ws.arguments.mode == configure) {
-    ws.hdlg = ::CreateDialogParam (hInstance, MAKEINTRESOURCE (IDD_CONFIGURE), NULL, DialogProc, (LPARAM) & ws);
+    ws.hdlg = ::CreateDialogParam (hInstance, MAKEINTRESOURCE (IDD_CONFIGURE),
+      nullptr, DialogProc, (LPARAM) & ws);
   }
   else {
     HWND hwnd = create_screensaver_window (ws);
@@ -48,7 +52,7 @@ int WINAPI _tWinMain (HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
     ::PostMessage (hwnd, WM_APP, 0, 0);
   }
   MSG msg;
-  while (::GetMessage (& msg, NULL, 0, 0)) {
+  while (::GetMessage (& msg, nullptr, 0, 0)) {
     if (! ws.hdlg || ! ::IsDialogMessage (ws.hdlg, & msg)) {
       ::TranslateMessage (& msg);
       ::DispatchMessage (& msg);
@@ -74,7 +78,7 @@ extern "C"
   VISIBLE NORETURN ALIGN_STACK DWORD CALLBACK RawEntryPoint ()
   {
     HINSTANCE hInstance = (HINSTANCE) & __ImageBase;
-    int status = _tWinMain (hInstance, NULL, NULL, 0);
+    int status = _tWinMain (hInstance, nullptr, nullptr, 0);
     ::ExitProcess ((UINT) (status));
   }
 }
