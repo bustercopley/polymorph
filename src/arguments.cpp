@@ -17,48 +17,36 @@
 #include "compiler.h"
 #include <cstdint>
 
-#define UPCASE(c) ((c) & ~ TEXT (' '))
-#define ISUPPER(c) (TEXT ('A') <= (c) && (c) <= TEXT ('Z'))
+#define DOWNCASE(c) ((c) | TEXT (' '))
 #define ISDIGIT(c) (TEXT ('0') <= (c) && (c) <= TEXT ('9'))
-
-ALWAYS_INLINE inline UINT_PTR number_from_string (const TCHAR * s)
-{
-  UINT_PTR result = 0;
-  while (ISDIGIT (* s)) {
-    result = 10 * result + (* s - TEXT ('0'));
-    ++ s;
-  }
-  return result;
-}
 
 arguments_t get_arguments (const TCHAR * s)
 {
-  arguments_t args;
+  arguments_t args {configure, 0};
 
   // Skip the image path, which might be quoted.
   TCHAR c;
   bool quoted = false;
-  while (c = * s, quoted ^= c == TEXT ('"'), c && (quoted || c != TEXT (' '))) ++ s;
-
-  // Skip zero or more non-alphanumeric characters.
-  while (* s && ! ISDIGIT (* s) && (c = UPCASE (* s), ! ISUPPER (c))) ++ s;
-
-  // Read optional mode letter.
-  // Default to configure mode if the mode letter is missing or unrecognised.
-  args.mode = configure;
-  if (* s && ! ISDIGIT (* s)) {
-    ++ s;
-    if (c == TEXT ('S')) args.mode = screensaver;
-    else if (c == TEXT ('X')) args.mode = persistent;
-    else if (c == TEXT ('P') || c == TEXT ('L')) args.mode = parented;
-    // Any other letter means configure mode.
+  while (c = * s, quoted ^= c == TEXT ('"'), c && (quoted || c != TEXT (' '))) {
+    ++s;
   }
 
-  // Skip zero or more non-numeric characters.
-  while (* s && ! ISDIGIT (* s)) ++ s;
-
-  // Read optional numeric argument.
-  args.numeric_arg = number_from_string (s);
+  while (* s) {
+    // Any digits (even non-consecutive) contribute to 'numeric_arg'.
+    if (ISDIGIT (* s)) {
+      args.numeric_arg = 10 * args.numeric_arg + (* s - TEXT ('0'));
+    }
+    else {
+      // Some letters change the mode.
+      switch (DOWNCASE (* s)) {
+      case TEXT ('s'): args.mode = screensaver; break;
+      case TEXT ('x'): args.mode = persistent; break;
+      case TEXT ('p'):
+      case TEXT ('l'): args.mode = parented; break;
+      }
+    }
+    ++ s;
+  }
 
   return args;
 }

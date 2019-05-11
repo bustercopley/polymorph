@@ -21,7 +21,7 @@
 
 enum run_mode_t
 {
-  persistent, screensaver, configure, parented
+  configure, parented, screensaver, persistent,
 };
 
 struct arguments_t
