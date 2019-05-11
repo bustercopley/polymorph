@@ -31,8 +31,10 @@ ALWAYS_INLINE inline UINT_PTR number_from_string (const TCHAR * s)
   return result;
 }
 
-void get_arguments (const TCHAR * s, arguments_t & args)
+arguments_t get_arguments (const TCHAR * s)
 {
+  arguments_t args;
+
   // Skip the image path, which might be quoted.
   TCHAR c;
   bool quoted = false;
@@ -57,4 +59,6 @@ void get_arguments (const TCHAR * s, arguments_t & args)
 
   // Read optional numeric argument.
   args.numeric_arg = number_from_string (s);
+
+  return args;
 }

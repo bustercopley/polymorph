@@ -30,6 +30,6 @@ struct arguments_t
   UINT_PTR numeric_arg;
 };
 
-void get_arguments (const TCHAR * s, arguments_t & args);
+arguments_t get_arguments (const TCHAR * s);
 
 #endif

@@ -15,8 +15,6 @@
 #include "mswin.h"
 #include "compiler.h"
 #include "resources.h"
-#include "glinit.h"
-#include "model.h"
 #include "arguments.h"
 #include "polymorph.h"
 #include "settings.h"
@@ -37,7 +35,7 @@ int WINAPI _tWinMain (HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
   ws.hInstance = hInstance;
   ws.icon = (HICON) ::LoadImage (hInstance, MAKEINTRESOURCE (IDI_APPICON), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE);
   ws.icon_small = (HICON) ::LoadImage (hInstance, MAKEINTRESOURCE (IDI_APPICON), IMAGE_ICON, 16, 16, 0);
-  get_arguments (::GetCommandLine (), ws.arguments);
+  ws.arguments = get_arguments (::GetCommandLine ());
   load_settings (ws.settings);
 
   // Show the main window, or the configure dialog if in configure mode.
