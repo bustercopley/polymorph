@@ -21,10 +21,11 @@
 
 inline v4f hue_vector (float hue)
 {
-  // Offsets 1/6, 5/6, 3/6 give the sequence [red, yellow, green, cyan, blue, magenta, red).
-  const v4f offsets = { 0x1.555556p-3f, 0x1.aaaaaap-1f, 0x1.000000p-1f, 0x0.000000p+0f, };
+  // Offsets 1/6, 5/6, 3/6 give [red, yellow, green, cyan, blue, magenta, red).
+  const v4f offsets = { 0x1.555556p-3f, 0x1.aaaaaap-1f, 0.5f, 0.0f, };
   v4f temp = _mm_set1_ps (hue) + offsets;
-  v4f theta = _mm_set1_ps (6.0f) * (temp - _mm_cvtepi32_ps (_mm_cvttps_epi32 (temp))); // fractional parts
+  v4f theta = // fmod (temp, 6.0)
+    _mm_set1_ps (6.0f) * (temp - _mm_cvtepi32_ps (_mm_cvttps_epi32 (temp)));
 
   // Apply the function f to each component of theta, where:
   //   f (x) = 1      if x < 2,
@@ -41,7 +42,7 @@ inline v4f hue_vector (float hue)
   //    0 +---+---+---XXXXXXXXX---+--> x
   //      0   1   2   3   4   5   6
 
-  // f (x) = ((x<2) AND 1) OR (((x<2) XOR (x<3)) AND (3-x)) OR (((x>=5)) AND (x-5)).
+  // f (x) = (x<2) ? 1 : (x<3) ? (3-x) : (x>=5) ? (x-5) : 0.
 
   v4f lt2 = theta < _mm_set1_ps (2.0f);
   v4f lt3 = theta < _mm_set1_ps (3.0f);
@@ -55,7 +56,8 @@ inline v4f hue_vector (float hue)
   return _mm_or_ps (_mm_or_ps (term1, term2), term3);
 }
 
-// Assumes saturation and value have all four components equal, and alpha's first three components are zero.
+// Assumes saturation and value have all four components equal, and alpha's
+// first three components are zero.
 inline v4f hsv_to_rgb (float hue, v4f saturation, v4f value, v4f alpha)
 {
   v4f chroma = saturation * value;
