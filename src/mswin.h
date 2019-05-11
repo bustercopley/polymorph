@@ -67,7 +67,8 @@
 
 #include <sdkddkver.h>
 #include <windows.h>
-#include <commctrl.h>
 #include <tchar.h>
+
+#include <commctrl.h>
 
 #endif
