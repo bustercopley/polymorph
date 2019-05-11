@@ -32,15 +32,15 @@ IDR_FRAGMENT_SHADER RCDATA "fragment-shader.glsl"
 #define TRACKBAR_STYLE TBS_NOTICKS | TBS_BOTH | TBS_DOWNISLEFT | WS_TABSTOP
 
 #if OWNER_DRAWN_TRACKBAR_BUDDIES_ENABLED
-#define LEFT_BUDDY_TYPE LTEXT
-#define RIGHT_BUDDY_TYPE LTEXT
-#define LEFT_BUDDY_STYLE SS_OWNERDRAW
-#define RIGHT_BUDDY_STYLE SS_OWNERDRAW
+#define LBUDDY_TYPE LTEXT
+#define RBUDDY_TYPE LTEXT
+#define LBUDDY_STYLE SS_OWNERDRAW
+#define RBUDDY_STYLE SS_OWNERDRAW
 #else
-#define LEFT_BUDDY_TYPE RTEXT
-#define RIGHT_BUDDY_TYPE LTEXT
-#define LEFT_BUDDY_STYLE 0
-#define RIGHT_BUDDY_STYLE 0
+#define LBUDDY_TYPE RTEXT
+#define RBUDDY_TYPE LTEXT
+#define LBUDDY_STYLE 0
+#define RBUDDY_STYLE 0
 #endif
 
 #define TRACKBAR_CONTROL(id) CONTROL "", id, TRACKBAR_CLASS, TRACKBAR_STYLE
@@ -53,41 +53,41 @@ CAPTION "Polymorph"
 FONT 9, "Segoe UI", 0, 0, 0x1
 
 BEGIN
-  ICON     IDI_APPICON, IDC_STATIC,            30,   22,    0,    0
+  ICON IDI_APPICON, IDC_STATIC, 30, 22, 0, 0
 
-  LTEXT    "And the ratios of their numbers, motions, and other properties, everywhere God, as far as necessity allowed or gave consent, has exactly perfected, and harmonised in due proportion.",
-           IDC_MESSAGE,                        80,   14,  150,   36
+  LTEXT "And the ratios of their numbers, motions, and other properties, everywhere God, as far as necessity allowed or gave consent, has exactly perfected, and harmonised in due proportion.",
+    IDC_MESSAGE, 80, 14, 150, 36
 
-  CTEXT    "TIMAEUS, Plato.", IDC_STATIC,      80,   50,  150,   10
+  CTEXT "TIMAEUS, Plato.", IDC_STATIC, 80, 50, 150, 10
 
   // The id of trackbar n is IDC_TRACKBARS_START + 4 * n, and its buddies
   // have the two succeeding ids (this numbering is assumed in "dialog.cpp").
   // Statements are ordered so as to label the trackbars "More", "Hotter",
   // "Faster", "Bigger" (for accessibility tools).
 
-  LEFT_BUDDY_TYPE   "Fewer",   IDC_TRACKBARS_START + 2,    0,    0,   50,   14,  LEFT_BUDDY_STYLE
-  RIGHT_BUDDY_TYPE  "More",    IDC_TRACKBARS_START + 1,    0,    0,   50,   14,  RIGHT_BUDDY_STYLE
-  TRACKBAR_CONTROL (IDC_TRACKBARS_START + 0),  76,   64,  146,   14
+  LBUDDY_TYPE "Fewer", IDC_TRACKBARS_START + 2, 0, 0, 50, 14, LBUDDY_STYLE
+  RBUDDY_TYPE "More", IDC_TRACKBARS_START + 1, 0, 0, 50, 14, RBUDDY_STYLE
+  TRACKBAR_CONTROL (IDC_TRACKBARS_START + 0), 76, 64, 146, 14
 
-  LEFT_BUDDY_TYPE   "Colder",  IDC_TRACKBARS_START + 6,    0,    0,   50,   14,  LEFT_BUDDY_STYLE
-  RIGHT_BUDDY_TYPE  "Hotter",  IDC_TRACKBARS_START + 5,    0,    0,   50,   14,  RIGHT_BUDDY_STYLE
-  TRACKBAR_CONTROL (IDC_TRACKBARS_START + 4),  76,   80,  146,   14
+  LBUDDY_TYPE "Colder", IDC_TRACKBARS_START + 6, 0, 0, 50, 14, LBUDDY_STYLE
+  RBUDDY_TYPE "Hotter", IDC_TRACKBARS_START + 5, 0, 0, 50, 14, RBUDDY_STYLE
+  TRACKBAR_CONTROL (IDC_TRACKBARS_START + 4), 76, 80, 146, 14
 
-  LEFT_BUDDY_TYPE   "Slower",  IDC_TRACKBARS_START + 10,   0,    0,   50,   14,  LEFT_BUDDY_STYLE
-  RIGHT_BUDDY_TYPE  "Faster",  IDC_TRACKBARS_START + 9,    0,    0,   50,   14,  RIGHT_BUDDY_STYLE
-  TRACKBAR_CONTROL (IDC_TRACKBARS_START + 8),  76,   96,  146,   14
+  LBUDDY_TYPE "Slower", IDC_TRACKBARS_START + 10, 0, 0, 50, 14, LBUDDY_STYLE
+  RBUDDY_TYPE "Faster", IDC_TRACKBARS_START + 9, 0, 0, 50, 14, RBUDDY_STYLE
+  TRACKBAR_CONTROL (IDC_TRACKBARS_START + 8), 76, 96, 146, 14
 
-  LEFT_BUDDY_TYPE   "Smaller", IDC_TRACKBARS_START + 14,   0,    0,   50,   14,  LEFT_BUDDY_STYLE
-  RIGHT_BUDDY_TYPE  "Bigger",  IDC_TRACKBARS_START + 13,   0,    0,   50,   14,  RIGHT_BUDDY_STYLE
-  TRACKBAR_CONTROL (IDC_TRACKBARS_START + 12), 76,  112,  146,   14
+  LBUDDY_TYPE "Smaller", IDC_TRACKBARS_START + 14, 0, 0, 50, 14, LBUDDY_STYLE
+  RBUDDY_TYPE "Bigger", IDC_TRACKBARS_START + 13, 0, 0, 50, 14, RBUDDY_STYLE
+  TRACKBAR_CONTROL (IDC_TRACKBARS_START + 12), 76, 112, 146, 14
 
   CONTROL "<a href=""https://buster.me.uk"">buster.me.uk</a>",
-                 IDC_SYSLINK, "SysLink", WS_TABSTOP,       8,  DLGH - 36,  DLGW - 16,  10
+    IDC_SYSLINK, "SysLink", WS_TABSTOP, 8, DLGH - 36, DLGW - 16, 10
 
-  LTEXT          "", IDC_BUTTONS_STATIC,                   0,  DLGH - 26,       DLGW,  26
-  DEFPUSHBUTTON  "OK", IDOK,                      DLGW - 164,  DLGH - 20,         50,  14
-  PUSHBUTTON     "Cancel", IDCANCEL,              DLGW - 110,  DLGH - 20,         50,  14
-  PUSHBUTTON     "&Preview", IDC_PREVIEW_BUTTON,  DLGW -  56,  DLGH - 20,         50,  14
+  LTEXT "", IDC_BUTTONS_STATIC, 0, DLGH - 26, DLGW, 26
+  DEFPUSHBUTTON "OK", IDOK, DLGW - 164, DLGH - 20, 50, 14
+  PUSHBUTTON "Cancel", IDCANCEL, DLGW - 110, DLGH - 20, 50, 14
+  PUSHBUTTON "&Preview", IDC_PREVIEW_BUTTON, DLGW - 56, DLGH - 20, 50, 14
 END
 
 CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "polymorph.scr.manifest"
