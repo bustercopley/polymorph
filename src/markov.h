@@ -27,6 +27,7 @@ struct polyhedron_select_t
   unsigned point;
 };
 
-void transition (rng_t & rng, float (& u) [4], polyhedron_select_t & current, unsigned & starting_point);
+void transition (rng_t & rng, float (& u) [4], polyhedron_select_t & current,
+  unsigned & starting_point);
 
 #endif
