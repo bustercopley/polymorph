@@ -51,27 +51,30 @@ v4f step_t::operator () (float t) const
   v4f ha = _mm_hadd_ps (f0, f0) * tt * tt;
   v4f f = _mm_hadd_ps (ha, ha);         // f f f f
   v4f f1 = _mm_unpacklo_ps (f, one);    // f 1 f 1
-  v4f tx = load4f (T);                  // t0   t1  t1  inf
-  v4f lo = _mm_movelh_ps (tx, tx);      // t0   t1  t0   t1
-  v4f hi = _mm_movehl_ps (tx, tx);      // t1  inf  t1  inf
+  v4f tx = load4f (T);                  // t0  t1 t1 inf
+  v4f lo = _mm_movelh_ps (tx, tx);      // t0  t1 t0  t1
+  v4f hi = _mm_movehl_ps (tx, tx);      // t1 inf t1 inf
   v4f sel = _mm_and_ps (_mm_cmpge_ps (tttt, lo), _mm_cmplt_ps (tttt, hi));
   v4f val = _mm_and_ps (sel, f1);       // f? 1? f? 1?
   return _mm_hadd_ps (val, val);
 }
 
-void bumps_t::initialize (const bump_specifier_t & b0, const bump_specifier_t & b1)
+#define SHUFPS(u, v, shuffle) _mm_shuffle_ps (u, v, SHUFFLE shuffle)
+
+void bumps_t::initialize (
+  const bump_specifier_t & b0, const bump_specifier_t & b1)
 {
   // Precompute the coefficients of four cubic polynomials in t, giving
   // the two smoothstep regions of the each of the two bump functions.
-  v4f b0t = _mm_load_ps (& b0.t0); // b0.t0 b0.t1 b0.t2 b0.t2
-  v4f b1t = _mm_load_ps (& b1.t0); // b1.t0 b1.t1 b1.t2 b1.t2
-  v4f b0v = _mm_movelh_ps (_mm_load_ps (& b0.v0), _mm_setzero_ps ()); // b0.v0 b0.v1 0 0
-  v4f b1v = _mm_movelh_ps (_mm_load_ps (& b1.v0), _mm_setzero_ps ()); // b1.v0 b1.v1 0 0
-  v4f S = _mm_shuffle_ps (b0t, b1t, SHUFFLE (0, 2, 0, 2)); // b0.t0 b0.t2 b1.t0 b1.t2
-  v4f T = _mm_shuffle_ps (b0t, b1t, SHUFFLE (1, 3, 1, 3)); // b0.t1 b0.t3 b1.t1 b1.t3
-  v4f U = _mm_shuffle_ps (b0v, b1v, SHUFFLE (0, 2, 0, 2)); // b0.v0 0 b1.v0 0
-  v4f V1 = _mm_shuffle_ps (b0v, b1v, SHUFFLE (1, 0, 1, 0)); // b0.v1 b0.v0 b1.v1 b1.v0
-  v4f V2 = _mm_shuffle_ps (b0v, b1v, SHUFFLE (2, 1, 2, 1)); // 0 b0.v1 0 b1.v1
+  v4f b0t = load4f (& b0.t0); // b0.t0 b0.t1 b0.t2 b0.t2
+  v4f b1t = load4f (& b1.t0); // b1.t0 b1.t1 b1.t2 b1.t2
+  v4f b0v = _mm_movelh_ps (load4f (& b0.v0), _mm_setzero_ps ()); // b0.v0 b0.v1
+  v4f b1v = _mm_movelh_ps (load4f (& b1.v0), _mm_setzero_ps ()); // b1.v0 b1.v1
+  v4f S = SHUFPS (b0t, b1t, (0, 2, 0, 2)); // b0.t0 b0.t2 b1.t0 b1.t2
+  v4f T = SHUFPS (b0t, b1t, (1, 3, 1, 3)); // b0.t1 b0.t3 b1.t1 b1.t3
+  v4f U = SHUFPS (b0v, b1v, (0, 2, 0, 2)); // b0.v0   0   b1.v0   0
+  v4f V1 = SHUFPS (b0v, b1v, (1, 0, 1, 0)); // b0.v1 b0.v0 b1.v1 b1.v0
+  v4f V2 = SHUFPS (b0v, b1v, (2, 1, 2, 1)); //   0   b0.v1   0   b1.v1
   v4f V = V1 - V2;
   v4f d = T - S;
   v4f a = T + S;
@@ -89,9 +92,8 @@ void bumps_t::initialize (const bump_specifier_t & b0, const bump_specifier_t & 
 // Returns {f,g,f,g}, where f = bump0 (t), g = bump1 (t).
 v4f bumps_t::operator () (float t) const
 {
-  // Compute all four polynomials by Estrin's method, and mask
-  // and combine the values according to the region of the graph
-  // to which t belongs.
+  // Compute all four polynomials by Estrin's method, and mask and combine the
+  // values according to the region of the graph to which t belongs.
   v4f s = _mm_set1_ps (t);
   v4f S = load4f (S0);
   v4f T = load4f (T0);
