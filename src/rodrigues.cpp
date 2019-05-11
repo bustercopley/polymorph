@@ -265,27 +265,27 @@ void compute (char * RESTRICT buffer, std::size_t stride, const float (* RESTRIC
     v4f a = _mm_moveldup_ps (ab);
     v4f b = _mm_movehdup_ps (ab);
     v4f skew = a * u0;
-    v4f u1 = _mm_shuffle_ps (u0, u0, SHUFFLE (1, 2, 0, 3)); // u1 u2 u0 0
-    v4f u2 = _mm_shuffle_ps (u0, u0, SHUFFLE (2, 0, 1, 3)); // u2 u0 u1 0
+    v4f u1 = SHUFPS (u0, u0, (1, 2, 0, 3));  // u1 u2 u0 0
+    v4f u2 = SHUFPS (u0, u0, (2, 0, 1, 3));  // u2 u0 u1 0
     v4f symm = b * (u1 * u2);
-    v4f sub = symm - skew;                       // s0 s1 s2  0
-    v4f add = symm + skew;                       // a0 a1 a2  0
-    v4f phicos = iiii + b * (usq - xsq);         // d0 d1 d2 cos(x)
-    v4f aslo = _mm_movelh_ps (add, sub);         // a0 a1 s0 s1
-    v4f ashi = _mm_unpackhi_ps (add, sub);       // a2 s2  0  0
-    v4f ashd = _mm_movelh_ps (ashi, phicos);     // a2 s2 d0 d1
+    v4f sub = symm - skew;                   // s0 s1 s2  0
+    v4f add = symm + skew;                   // a0 a1 a2  0
+    v4f phicos = iiii + b * (usq - xsq);     // d0 d1 d2 cos(x)
+    v4f aslo = _mm_movelh_ps (add, sub);     // a0 a1 s0 s1
+    v4f ashi = _mm_unpackhi_ps (add, sub);   // a2 s2  0  0
+    v4f ashd = _mm_movelh_ps (ashi, phicos); // a2 s2 d0 d1
     v4f xyz0 = load4f (x [m]);
 #if __SSE4_1__
-    v4f phi = _mm_blend_ps (phicos, add, 8);     // d0 d1 d2  0
-    v4f xyz1 = _mm_blend_ps (xyz0, iiii, 8);     // x0 x1 x2  1
+    v4f phi = _mm_blend_ps (phicos, add, 8); // d0 d1 d2  0
+    v4f xyz1 = _mm_blend_ps (xyz0, iiii, 8); // x0 x1 x2  1
 #else
     v4f phi = _mm_and_ps (mask.f, phicos);
     v4f xyz1 = _mm_or_ps (xyz0, oooi);
 #endif
-    store4f (& f [0], _mm_shuffle_ps (ashd, sub, SHUFFLE (2, 0, 1, 3)));  // d0 a2 s1 0
-    store4f (& f [4], _mm_shuffle_ps (ashd, add, SHUFFLE (1, 3, 0, 3)));  // s2 d1 a0 0
-    store4f (& f [8], _mm_shuffle_ps (aslo, phi, SHUFFLE (1, 2, 2, 3)));  // a1 s0 d2 0
-    store4f (& f [12], xyz1);                                             // x0 x1 x2 1
+    store4f (& f [0], SHUFPS (ashd, sub, (2, 0, 1, 3))); // d0 a2 s1 0
+    store4f (& f [4], SHUFPS (ashd, add, (1, 3, 0, 3))); // s2 d1 a0 0
+    store4f (& f [8], SHUFPS (aslo, phi, (1, 2, 2, 3))); // a1 s0 d2 0
+    store4f (& f [12], xyz1);                            // x0 x1 x2 1
   }
 }
 

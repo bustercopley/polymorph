@@ -24,6 +24,7 @@
 typedef __m128 v4f;
 
 #define SHUFFLE(a, b, c, d) ((a) | ((b) << 2) | ((c) << 4) | ((d) << 6))
+#define SHUFPS(u, v, shuffle) _mm_shuffle_ps (u, v, SHUFFLE shuffle)
 
 ALWAYS_INLINE inline v4f load4f (const float * a) { return _mm_load_ps (a); }
 ALWAYS_INLINE inline void store4f (float * a, v4f v) { _mm_store_ps (a, v); }
@@ -41,10 +42,10 @@ inline v4f dot (v4f u, v4f v)
 
 ALWAYS_INLINE inline v4f cross (const v4f a, const v4f b)
 {
-  v4f c = _mm_shuffle_ps (a, a, SHUFFLE (1, 2, 0, 3)); // a1 a2 a0 a3
-  v4f d = _mm_shuffle_ps (b, b, SHUFFLE (1, 2, 0, 3)); // b1 b2 b0 b3
-  v4f r1 = a * d - b * c;          // a0b1-b0a1 a1b2-b1a2 a2b0-b2a0 0
-  v4f r = _mm_shuffle_ps (r1, r1, SHUFFLE (1, 2, 0, 3));
+  v4f c = SHUFPS (a, a, (1, 2, 0, 3)); // a1 a2 a0 a3
+  v4f d = SHUFPS (b, b, (1, 2, 0, 3)); // b1 b2 b0 b3
+  v4f r1 = a * d - b * c;              // a0b1-b0a1 a1b2-b1a2 a2b0-b2a0 0
+  v4f r = SHUFPS (r1, r1, (1, 2, 0, 3));
   return r;
 }
 
@@ -88,9 +89,9 @@ ALWAYS_INLINE inline v4f mapply (const float (* m) [4], v4f x)
   v4f m1 = load4f (m [1]);
   v4f m2 = load4f (m [2]);
 
-  v4f x0 = _mm_shuffle_ps (x, x, SHUFFLE (0, 0, 0, 0));
-  v4f x1 = _mm_shuffle_ps (x, x, SHUFFLE (1, 1, 1, 1));
-  v4f x2 = _mm_shuffle_ps (x, x, SHUFFLE (2, 2, 2, 2));
+  v4f x0 = SHUFPS (x, x, (0, 0, 0, 0));
+  v4f x1 = SHUFPS (x, x, (1, 1, 1, 1));
+  v4f x2 = SHUFPS (x, x, (2, 2, 2, 2));
 
   return x0 * m0 + x1 * m1 + x2 * m2;
 }

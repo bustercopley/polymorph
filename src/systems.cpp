@@ -140,7 +140,7 @@ void reflect (float (& abc) [8] [4],
 
   for (unsigned k = 0; k != 8; ++ k) {
     v4f a = load4f (abc [k]);
-    store4f (abc [k], _mm_shuffle_ps (a, a, SHUFFLE (0, 2, 1, 3)));
+    store4f (abc [k], SHUFPS (a, a, (0, 2, 1, 3)));
   }
 }
 

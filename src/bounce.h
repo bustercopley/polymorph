@@ -64,10 +64,10 @@ inline void model_t::bounce (unsigned ix, unsigned iy)
       v4f ha = _mm_hadd_ps (quotients, quotients);
       v4f hh = _mm_hadd_ps (ha, ha);
       v4f munu = (top * R) / (hh * divisors);
-      v4f muA = _mm_shuffle_ps (munu, munu, SHUFFLE (0, 0, 0, 0));
-      v4f muB = _mm_shuffle_ps (munu, munu, SHUFFLE (1, 1, 1, 1));
-      v4f nuA = _mm_shuffle_ps (munu, munu, SHUFFLE (2, 2, 2, 2));
-      v4f nuB = _mm_shuffle_ps (munu, munu, SHUFFLE (3, 3, 3, 3));
+      v4f muA = SHUFPS (munu, munu, (0, 0, 0, 0));
+      v4f muB = SHUFPS (munu, munu, (1, 1, 1, 1));
+      v4f nuA = SHUFPS (munu, munu, (2, 2, 2, 2));
+      v4f nuB = SHUFPS (munu, munu, (3, 3, 3, 3));
       store4f (v [ix], load4f (v [ix]) - muA * u);
       store4f (v [iy], load4f (v [iy]) + muB * u);
       store4f (w [ix], load4f (w [ix]) - nuA * dxu);

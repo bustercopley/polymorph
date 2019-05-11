@@ -59,8 +59,6 @@ v4f step_t::operator () (float t) const
   return _mm_hadd_ps (val, val);
 }
 
-#define SHUFPS(u, v, shuffle) _mm_shuffle_ps (u, v, SHUFFLE shuffle)
-
 void bumps_t::initialize (
   const bump_specifier_t & b0, const bump_specifier_t & b1)
 {
