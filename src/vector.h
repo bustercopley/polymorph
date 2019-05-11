@@ -82,7 +82,7 @@ ALWAYS_INLINE inline v4f sqrt (v4f k)
   return _mm_and_ps (_mm_cmpneq_ps (k, _mm_setzero_ps ()), k * rsqrt (k));
 }
 
-// Multiply column-major 3x3 matrix m (on the left) and column vector x (on the right).
+// Multiply column-major 3x3 matrix m (on left) and column vector x (on right).
 ALWAYS_INLINE inline v4f mapply (const float (* m) [4], v4f x)
 {
   v4f m0 = load4f (m [0]);
@@ -96,7 +96,7 @@ ALWAYS_INLINE inline v4f mapply (const float (* m) [4], v4f x)
   return x0 * m0 + x1 * m1 + x2 * m2;
 }
 
-// Evaluate two cubic polynomials at t by Estrin's method. Requires SSE3 (for haddps).
+// Evaluate two cubic polynomials at t by Estrin's method.
 // First argument t t * *, result a(t) b(t) a(t) b(t).
 ALWAYS_INLINE inline v4f polyeval (const v4f t, const v4f a, const v4f b)
 {
@@ -111,7 +111,7 @@ ALWAYS_INLINE inline v4f polyeval (const v4f t, const v4f a, const v4f b)
   return g;
 }
 
-// Evaluate a single degree-7 polynomial at t by Estrin's method. Requires SSE3 (for haddps).
+// Evaluate a single degree-7 polynomial at t by Estrin's method.
 ALWAYS_INLINE inline float polyeval7 (const float t, const v4f lo, const v4f hi)
 {
   v4f one = _mm_set1_ps (1.0f);       // 1 1 1 1
@@ -121,11 +121,11 @@ ALWAYS_INLINE inline float polyeval7 (const float t, const v4f lo, const v4f hi)
   v4f t1bq = t1sq * t1sq;             // biquadrates of t1
   v4f c = lo * t1;                    // l0 l1t l2 l3t
   v4f d = hi * t1;                    // h0 h1t h2 h3t
-  v4f e = _mm_hadd_ps (c, d);         // l0+l1t l2+l3t h0+h1t h2+h3t
-  v4f f = e * t1sq;                   // l0+l1t l2t^2+l3t^3 h0+h1t h2t^2+h3t^3
-  v4f g = _mm_hadd_ps (f, f);         // l0+l1t+l2t^2+l3t^3 h0+h1t+h2t^2+h3t^3 * *
-  v4f h = g * t1bq;                   // l0+l1t+l2t^2+l3t^3 h0t^4+h1t^5+h2t^6+h3t^7 * *
-  v4f i = _mm_hadd_ps (h, h);         // l0+l1t+l2t^2+l3t^3+h0t^4+h1t^5+h2t^6+h3t^7 * * *
+  v4f e = _mm_hadd_ps (c, d); // l0+l1t l2+l3t h0+h1t h2+h3t
+  v4f f = e * t1sq;           // l0+l1t l2t^2+l3t^3 h0+h1t h2t^2+h3t^3
+  v4f g = _mm_hadd_ps (f, f); // l0+l1t+l2t^2+l3t^3 h0+h1t+h2t^2+h3t^3
+  v4f h = g * t1bq;           // l0+l1t+l2t^2+l3t^3 h0t^4+h1t^5+h2t^6+h3t^7
+  v4f i = _mm_hadd_ps (h, h); // l0+l1t+l2t^2+l3t^3+h0t^4+h1t^5+h2t^6+h3t^7
   return _mm_cvtss_f32 (i);
 }
 
@@ -135,7 +135,7 @@ ALWAYS_INLINE inline float polyeval7 (const float t, const v4f lo, const v4f hi)
 ALWAYS_INLINE inline std::uint32_t truncate (float x)
 {
   // Allows the use of cvttss2si (which produces a signed integer).
-  // Correct casting from float to uint32_t goes via the FPU stack in 32-bit mode.
+  // Correct casting from float to uint32_t uses the FPU in 32-bit mode.
   return (std::uint32_t) (std::int32_t) x;
 }
 
