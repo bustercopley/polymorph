@@ -16,11 +16,12 @@
 #include "compiler.h"
 #include <utility>
 
-// We don't use std::nth_element because the G++ implementation is a little bloated.
-// Also beware http://gcc.gnu.org/bugzilla/show_bug.cgi?id=58800.
+// Don't use std::nth_element because the implementation is a little bloated
+// (originally because of http://gcc.gnu.org/bugzilla/show_bug.cgi?id=58800).
 
 // Undefined behaviour if count == 0.
-void insertion_sort (unsigned * const index, const float (* const x) [4], const unsigned dim, const unsigned begin, const unsigned end)
+void insertion_sort (unsigned * const index, const float (* const x) [4],
+  const unsigned dim, const unsigned begin, const unsigned end)
 {
   for (unsigned n = begin + 1; n != end; ++ n) {
     // Now, the range [begin, n) is sorted.
@@ -40,12 +41,18 @@ void insertion_sort (unsigned * const index, const float (* const x) [4], const 
 //   val (i) <= val (middle) for i in [begin, middle) and
 //   val (j) >= val (middle) for j in (middle, end),
 // where val (i) = x [index [i]] [dim].
-void partition (unsigned * const index, const float (* const x) [4], const unsigned dim, const unsigned begin, const unsigned middle, const unsigned end)
+void partition (unsigned * const index, const float (*const x) [4],
+  const unsigned dim, const unsigned begin, const unsigned middle,
+  const unsigned end)
 {
   if (end - begin <= 7) insertion_sort (index, x, dim, begin, end);
   else {
-    auto val = [index, x, dim] (unsigned i) ALWAYS_INLINE { return x [index [i]] [dim]; };
-    auto swap = [index] (unsigned i, unsigned j) ALWAYS_INLINE { std::swap (index [i], index [j]); };
+    auto val = [index, x, dim] (unsigned i) ALWAYS_INLINE {
+      return x [index [i]] [dim];
+    };
+    auto swap = [index] (unsigned i, unsigned j) ALWAYS_INLINE {
+      std::swap (index [i], index [j]);
+     };
     // Move the middle element to position 1.
     swap (begin + 1, begin + (end - begin) / 2);
     // Now put elements 0, 1, n-1 in order.
@@ -54,8 +61,8 @@ void partition (unsigned * const index, const float (* const x) [4], const unsig
     if (val (begin + 1) > val (end - 1)) swap (begin + 1, end - 1);
     // The element now in position 1 (the median-of-three) is the pivot.
     float pivot = val (begin + 1);
-    // Scan i forwards until val (i) >= pivot and scan j backwards until val (j) <= pivot;
-    // if i <= j, exchange elements i and j and repeat.
+    // Scan i forwards until val (i) >= pivot and scan j backwards until
+    // val (j) <= pivot; if i <= j, exchange elements i and j and repeat.
     unsigned i = begin + 1, j = end - 1;
     while ([&] () -> bool {
       while (val (++ i) < pivot) continue;
@@ -80,7 +87,8 @@ void partition (unsigned * const index, const float (* const x) [4], const unsig
   }
 }
 
-void qsort (unsigned * const index, const float (* const x) [4], unsigned dim, unsigned begin, unsigned end)
+void qsort (unsigned * const index, const float (* const x) [4], unsigned dim,
+  unsigned begin, unsigned end)
 {
   struct task_t
   {
