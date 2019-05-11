@@ -49,5 +49,7 @@ void main ()
     C += d.xyz * E + pow (max (0, dot (L - 2 * E * G, U)), r.w) * r.xyz;
   }
   float e = clamp (f.x + f.y * min (min (min (R, S), min (T, V)), W), 0, 1);
-  o = c + 1.33 * (1 - exp2 (-2 * e * e)) * (vec4 (b + (f.z + f.w * X.z) * C, d.w) - c);
+  o = c + 1.33
+    * (1 - exp2 (-2 * e * e))
+    * (vec4 (b + (f.z + f.w * X.z) * C, d.w) - c);
 }

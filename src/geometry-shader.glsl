@@ -52,7 +52,8 @@ void vertex (vec3 x, vec4 p, float e [5])
   EmitVertex ();
 }
 
-void triangle (vec3 A, vec3 B, vec3 C, vec4 x, vec4 y, vec4 z, float e [5], float f [5], float g [5])
+void triangle (vec3 A, vec3 B, vec3 C, vec4 x, vec4 y, vec4 z,
+  float e [5], float f [5], float g [5])
 {
   vertex (A, x, e);
   vertex (B, y, f);
@@ -101,9 +102,10 @@ void snub_segment (vec3 Q, vec3 U, vec3 V, vec4 y, vec4 z)
   vec2 k = perp (t, u);
   vec2 l = perp (v, w);
   triangle (C, U, V, x, y, z,
-            float [5] (abs (dot (k, c - u)), dist (c, u, v), abs (dot (l, c - w)), 1e9, 1e9),
-            float [5] (0, 0, abs (dot (l, u - w)), 1e9, 1e9),
-            float [5] (abs (dot (k, v - u)), 0, 0, 1e9, 1e9));
+    float [5] (abs (dot (k, c - u)), dist (c, u, v), abs (dot (l, c - w)),
+      1e9, 1e9),
+    float [5] (0, 0, abs (dot (l, u - w)), 1e9, 1e9),
+    float [5] (abs (dot (k, v - u)), 0, 0, 1e9, 1e9));
 }
 
 bool nondegenerate (vec2 a, vec2 b, vec2 c)
@@ -114,7 +116,8 @@ bool nondegenerate (vec2 a, vec2 b, vec2 c)
   return abs (A) > 0.01;
 }
 
-void aspect (vec3 Q, vec3 V, vec3 W, vec3 X, vec4 h, vec4 i, vec4 j, vec2 v, vec2 w, vec2 x)
+void aspect (vec3 Q, vec3 V, vec3 W, vec3 X, vec4 h, vec4 i, vec4 j,
+  vec2 v, vec2 w, vec2 x)
 {
   N = Q;
   vec3 A = O + dot (W - O, Q) * Q;
@@ -132,22 +135,36 @@ void aspect (vec3 Q, vec3 V, vec3 W, vec3 X, vec4 h, vec4 i, vec4 j, vec2 v, vec
   vec4 g = project (A);
 
   vec2 a = pdivide (g);
-  vec2 q [7] = { raster (A + dot (e, Y) * E - Y), raster (A + U), v, w, x, raster (A + Y), raster (A + dot (f, U) * F - U) };
+  vec2 q [7] = {
+    raster (A + dot (e, Y) * E - Y),
+    raster (A + U),
+    v, w, x,
+    raster (A + Y),
+    raster (A + dot (f, U) * F - U)
+  };
 
   for (int i = 0; i < 6; ++ i) {
     vec2 c = q [i];
     vec2 d = q [i + 1] - c;
     float l = dot (d, d);
-    m [i] = l < 1e-3 ? vec4 (1e9) : inversesqrt (l) * vec2 (-d.y, d.x) * mat4x2 (a - c, v - c, w - c, x - c);
+    m [i] = l < 1e-3
+      ? vec4 (1e9)
+      : inversesqrt (l)
+        * vec2 (-d.y, d.x) * mat4x2 (a - c, v - c, w - c, x - c);
   }
 
   float G [4] [5];
 
-  for (int j = 0; j < 4; ++ j) for (int i = 0; i < 5; ++ i) G [j] [i] = abs (m [i] [j]);
+  for (int j = 0; j < 4; ++ j)
+    for (int i = 0; i < 5; ++ i)
+      G [j] [i] = abs (m [i] [j]);
+
   if (nondegenerate (a, v, w))
     triangle (A, V, W, g, h, i, G [0], G [1], G [2]);
 
-  for (int j = 0; j < 4; ++ j) G [j] [0] = abs (m [5] [j]);
+  for (int j = 0; j < 4; ++ j)
+    G [j] [0] = abs (m [5] [j]);
+
   if (nondegenerate (a, w, x))
     triangle (A, W, X, g, i, j, G [0], G [2], G [3]);
 }
