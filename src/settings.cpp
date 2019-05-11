@@ -23,10 +23,10 @@ struct settings_definition_t
 };
 
 const settings_definition_t settings_definitions [trackbar_count] = {
-  { TEXT ("count"), 50, },
-  { TEXT ("heat"), 50, },
-  { TEXT ("speed"), 50, },
-  { TEXT ("radius"), 50, },
+  {TEXT ("count"), 50},
+  {TEXT ("heat"), 50},
+  {TEXT ("speed"), 50},
+  {TEXT ("radius"), 50},
 };
 
 const TCHAR * key_name = TEXT ("SOFTWARE\\Buster\\Polymorph");
@@ -35,8 +35,11 @@ inline void load (HKEY key, LPCTSTR value_name, DWORD & setting, DWORD maximum)
 {
   DWORD type, value, size;
   size = sizeof (DWORD);
-  LONG error = ::RegQueryValueEx (key, value_name, 0, & type, (LPBYTE) & value, & size);
-  if (error == ERROR_SUCCESS && value <= maximum) setting = value;
+  LONG error =
+    ::RegQueryValueEx (key, value_name, 0, & type, (LPBYTE) & value, & size);
+  if (error == ERROR_SUCCESS && value <= maximum) {
+    setting = value;
+  }
 }
 
 NOINLINE void load_settings (settings_t & settings)
@@ -46,7 +49,8 @@ NOINLINE void load_settings (settings_t & settings)
   }
 
   HKEY key;
-  LONG error = ::RegOpenKeyEx (HKEY_CURRENT_USER, key_name, 0, KEY_QUERY_VALUE, & key);
+  LONG error =
+    ::RegOpenKeyEx (HKEY_CURRENT_USER, key_name, 0, KEY_QUERY_VALUE, & key);
   if (error == ERROR_SUCCESS) {
     for (unsigned i = 0; i != trackbar_count; ++ i) {
       const TCHAR * name = settings_definitions [i].registry_value_name;
@@ -59,11 +63,13 @@ NOINLINE void load_settings (settings_t & settings)
 NOINLINE void save_settings (const settings_t & settings)
 {
   HKEY key;
-  LONG error = ::RegCreateKeyEx (HKEY_CURRENT_USER, key_name, 0, NULL, 0, KEY_SET_VALUE, NULL, & key, NULL);
+  LONG error = ::RegCreateKeyEx (
+    HKEY_CURRENT_USER, key_name, 0, NULL, 0, KEY_SET_VALUE, NULL, & key, NULL);
   if (error == ERROR_SUCCESS) {
     for (unsigned i = 0; i != trackbar_count; ++ i) {
       const TCHAR * name = settings_definitions [i].registry_value_name;
-      ::RegSetValueEx (key, name, 0, REG_DWORD, (const BYTE *) & settings.trackbar_pos [i], sizeof (DWORD));
+      ::RegSetValueEx (key, name, 0, REG_DWORD,
+        (const BYTE *) & settings.trackbar_pos [i], sizeof (DWORD));
     }
     ::RegCloseKey (key);
   }
