@@ -18,11 +18,13 @@
 #define aligned_arrays_h
 
 #include <cstddef>
+#include <cstdint>
 
 // Interface.
 
 template <typename ... P>
-inline void reallocate_aligned_arrays (void *& memory, std::size_t & capacity, std::size_t new_capacity, P *& ... p);
+inline void reallocate_aligned_arrays (
+  void *& memory, std::size_t & capacity, std::size_t new_capacity, P *& ... p);
 
 // Implementation.
 
@@ -31,9 +33,9 @@ inline void reallocate_aligned_arrays (void *& memory, std::size_t & capacity, s
 
 namespace internal
 {
-  template <typename T> inline constexpr T align_up (T p, std::intptr_t alignment = 64)
+  template <std::intptr_t N, typename T> inline constexpr T align_up (T p)
   {
-    return (T) ((((std::intptr_t) p) + alignment - 1) & -alignment);
+    return (T) ((((std::intptr_t) p) + N - 1) & -N);
   }
 
   inline void setp (std::size_t, char *)
@@ -50,14 +52,15 @@ namespace internal
 }
 
 template <typename ... P>
-inline void reallocate_aligned_arrays (void *& memory, std::size_t & capacity, std::size_t new_capacity, P *& ... p)
+inline void reallocate_aligned_arrays (
+  void *& memory, std::size_t & capacity, std::size_t new_capacity, P *& ... p)
 {
   if (new_capacity > capacity) {
     deallocate (memory);
-    capacity = internal::align_up (new_capacity, 16);
+    capacity = internal::align_up <16> (new_capacity);
     std::size_t bytes_needed = capacity * (0 + ... + sizeof (P)) + 63;
     memory = allocate (bytes_needed);
-    void * memp = internal::align_up (memory, 64);
+    void * memp = internal::align_up <64> (memory);
     internal::setp (capacity, (char *) memp, p ...);
   }
 }
