@@ -85,12 +85,12 @@ inline void pexit ()
 #define pprint(term) print (pp_stringize1 (term), (term))
 
 #else
-template <typename T, unsigned N> inline void print (const char *, T (&) [N]) { }
-template <typename T> inline void print (const char *, T) { }
-inline void print (const char *) { }
-inline void print (const wchar_t *) { }
-inline void xassert (const char *, bool) { }
-inline void pexit () { }
+template <typename T, unsigned N> inline void print (const char *, T (&) [N]) {}
+template <typename T> inline void print (const char *, T) {}
+inline void print (const char *) {}
+inline void print (const wchar_t *) {}
+inline void xassert (const char *, bool) {}
+inline void pexit () {}
 #define passert(condition)
 #define pprint(term)
 #endif
