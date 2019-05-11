@@ -1,36 +1,30 @@
-Copyright 2012-2019 Richard Copley
+Here are the instructions for building the Polymorph screensaver from source.
+See README for how to run or install the screensaver after it is built.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+SETTING UP THE BUILD ENVIRONMENT.
 
-    http://www.apache.org/licenses/LICENSE-2.0
+You need a recent MinGW-W64 toolchain and GNU Make. To get them, install MSYS2
+from Sourceforge, then launch the MINGW32 or MINGW64 shell and get the necessary
+packages using the commands:
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+   pacman -Sqyu ${MINGW_PACKAGE_PREFIX}-gcc
+   pacman -Sqyu ${MINGW_PACKAGE_PREFIX}-make
 
-INSTALLATION INSTRUCTIONS.
+Perl is required for minifying the shaders. If you don't want that, you can
+skip the minification step (see COMPILE COMMANDS below). Otherwise, install
+Strawberry Perl in the default location, or install the Perl distribution
+of your choice and add its bin directory to the PATH in Makefile, or get
+MINGW Perl using this command:
 
-You need a recent MinGW-W64 toolchain and GNU Make.
-If you don't have them, install MSYS2 from Sourceforge, then launch
-the MSYS shell and install the necessary packages using the command:
-   "pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-make" (for the 64-bit toolchain)
-or "pacman -S mingw-w64-i686-gcc mingw-w64-i686-make" (for the 32-bit toolchain).
+   pacman -Sqyu ${MINGW_PACKAGE_PREFIX}-perl
 
-Strawberry Perl is required for minifying the shaders. (If you use a
-distribution other than Strawberry Perl or if you install Strawberry Perl in
-a non-standard location you should edit the hardcoded path in "Makefile".)
+COMPILE COMMANDS.
 
-To compile: use the command
-   "mingw32-make -j"
-or "mingw32-make -j PLATFORM=x86" (to build for 32-bit Windows)
-or "mingw32-make -j CONFIG=base" (to build with debugging output)
-or "mingw32-make -j SHADERS=full" (to skip minification if Perl not installed)
+To compile, enter one of these commands in the MINGW32 or MINGW64 shell:
 
-If you install the MinGW-W64 toolchain(s) in a non-standard location,
-you'll need to edit "x64_TOOLDIR" and/or "x86_TOOLDIR" in "Makefile".
+    mingw32-make -j
+    mingw32-make -j SHADERS=full
+    mingw32-make -j PLATFORM=x86
 
-To run, right-click on the ".scr" file and choose "Test", "Configure" or "Install".
+SHADERS is 'minified' (the default) or 'full' (don't run the minifier).
+PLATFORM is x86 (for 32-bit Windows) or x64 (for 64-bit windows).
