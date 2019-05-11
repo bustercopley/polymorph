@@ -50,11 +50,12 @@ SRCDIR=src
 EXTRA_CLEAN=Polymorph*.scr
 
 CPPFLAGS=-DUNICODE
-CFLAGS=-g -march=core2 -mtune=generic -mfpmath=sse -mno-stackrealign -fno-ident -ffast-math -pedantic -Wall -Wextra
+CFLAGS=-g -march=core2 -mtune=generic -mfpmath=sse -mno-stackrealign \
+-fno-ident -ffast-math -pedantic -Wall -Wextra
 CXXFLAGS=-std=c++1z
 LDFLAGS=-municode
 LDLIBS=-lopengl32 -lcomctl32 -lshell32
-RESFLAGS=-DPLATFORM_CONFIG=$(PLATFORM)_$(CONFIG) -I$(SHADER_DIRECTORY)
+RESFLAGS=-DPLATFORM_CONFIG=$(PLATFORM)_$(CONFIG) -I$(SHADER_DIR)
 
 tiny_CPPFLAGS=-DTINY
 tiny_CFLAGS=-flto -Os -fno-asynchronous-unwind-tables
@@ -77,24 +78,28 @@ debug_LDFLAGS=
 debug_LDLIBS=-mconsole -lgdi32
 debug_SHADERS=full
 
-full_SHADER_DIRECTORY=src
-minified_SHADER_DIRECTORY=.obj/minified
+full_SHADER_DIR=src
+minified_SHADER_DIR=.obj/minified
 
 SHADERS=$($(CONFIG)_SHADERS)
 SHADER_NAMES=vertex-shader.glsl geometry-shader.glsl fragment-shader.glsl
-SHADER_DIRECTORY=$($(SHADERS)_SHADER_DIRECTORY)
+SHADER_DIR=$($(SHADERS)_SHADER_DIR)
 SHADER_RESOURCES=$($(SHADERS)_SHADER_RESOURCES)
-$(foreach shaders,full minified,$(eval $(shaders)_SHADER_RESOURCES=$(SHADER_NAMES:%=$$($(shaders)_SHADER_DIRECTORY)/%)))
+
+$(foreach shaders,full minified,$(eval \
+$(shaders)_SHADER_RESOURCES=$(SHADER_NAMES:%=$$($(shaders)_SHADER_DIR)/%)))
 
 RESOURCES=polyhedron.ico $(SHADER_RESOURCES) src/polymorph.scr.manifest
 
 objects=$(OBJECTS:%=$(OBJDIR)/%)
 cppflags=$(CPPFLAGS) $($(CONFIG)_CPPFLAGS)
 cflags=$(CFLAGS) $($(CONFIG)_CFLAGS)
-cxxflags=$(CXXFLAGS) $($(CONFIG)_CXXFLAGS)
+cxxflags=$(cflags) $(CXXFLAGS) $($(CONFIG)_CXXFLAGS)
 ldflags=$(LDFLAGS) $($(CONFIG)_LDFLAGS)
 ldlibs=$(LDLIBS) $($(CONFIG)_LDLIBS)
 resflags=$(RESFLAGS)
+
+DEBUG_COMMANDS=-ex run -ex bt full -ex quit
 
 all: $(FILENAME) dump
 
@@ -102,7 +107,7 @@ test: all
 	$(FILENAME) $(ARG)
 
 debug: .obj/$(FILENAME)
-	gdb --quiet --batch -ex run -ex bt full -ex quit --args .obj/$(FILENAME) $(ARG)
+	gdb --quiet --batch $(DEBUG_COMMANDS) --args .obj/$(FILENAME) $(ARG)
 
 dump: .obj/$(FILENAME).dump
 
@@ -116,30 +121,33 @@ $(FILENAME): .obj/$(FILENAME)
 	strip .obj/$(FILENAME) -o $(FILENAME)
 
 .obj/$(FILENAME).dump: .obj/$(FILENAME)
-	>.obj\$(FILENAME).dump ( objdump -Mintel --no-show-raw-insn -d -C -l .obj/$(FILENAME) & objdump -s -j.data .obj/$(FILENAME) )
+	>.obj\$(FILENAME).dump ( \
+objdump -Mintel --no-show-raw-insn -d -C -l .obj/$(FILENAME) & \
+objdump -s -j.data .obj/$(FILENAME) )
 
 .obj/$(PLATFORM)/$(CONFIG)/resources.o: $(RESOURCES)
 
 .obj/$(FILENAME): $(objects)
-	$(CXX) $(cflags) $(cxxflags) $(ldflags) $(objects) $(ldlibs) -o .obj/$(FILENAME)
+	$(CXX) $(cxxflags) $(ldflags) $(objects) $(ldlibs) -o .obj/$(FILENAME)
 	-@size .obj/$(FILENAME)
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp | $(OBJDIR)
-	$(CXX) -c $< -o $@ -MMD $(cppflags) $(cflags) $(cxxflags)
+	$(CXX) -c $< -o $@ -MMD $(cppflags) $(cxxflags)
 $(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR)
-	$(CC) -c $< -o $@ -MMD $(cppflags) $(cflags) $(ccflags)
+	$(CC) -c $< -o $@ -MMD $(cppflags) $(cflags)
 $(OBJDIR)/%.o: $(SRCDIR)/%.S | $(OBJDIR)
 	$(CC) -c $< -o $@ -MMD
 $(OBJDIR)/%.o: $(SRCDIR)/%.rc | $(OBJDIR)
 	$(CC) -x c $< $(cppflags) -MM -MT $@ -MF $(@:%.o=%.d)
 	windres $(cppflags) $(resflags) $< $@
 
-$(minified_SHADER_DIRECTORY)/%.glsl: src/%.glsl minify.pl | $(minified_SHADER_DIRECTORY)
+$(minified_SHADER_DIR)/%.glsl: src/%.glsl minify.pl | $(minified_SHADER_DIR)
 	c:\strawberry\perl\bin\perl.exe minify.pl "$<" "$@"
 
 .obj: ; -md "$@"
 .obj/minified $(PLATFORMS:%=.obj/%): | .obj ; -md "$@"
-$(foreach platform,$(PLATFORMS),$(eval $(CONFIG:%=.obj/$(platform)/%): | .obj/$(platform) ; -md "$$@"))
+$(foreach platform,$(PLATFORMS),$(eval \
+$(CONFIG:%=.obj/$(platform)/%): | .obj/$(platform) ; -md "$$@"))
 
 -include $(OBJECTS:%.o=$(OBJDIR)/%.d)
 include build-all.mak
