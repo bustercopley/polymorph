@@ -44,7 +44,7 @@
 #ifndef RC_INVOKED
 #include "mswin.h"
 
-INT_PTR CALLBACK DialogProc (HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK DialogProc (HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
 #endif
 
 #endif
