@@ -29,7 +29,7 @@ const settings_definition_t settings_definitions [trackbar_count] = {
   { TEXT ("radius"), 50, },
 };
 
-static const TCHAR * key_name = TEXT ("SOFTWARE\\Buster\\Polymorph");
+const TCHAR * key_name = TEXT ("SOFTWARE\\Buster\\Polymorph");
 
 inline void load (HKEY key, LPCTSTR value_name, DWORD & setting, DWORD maximum)
 {

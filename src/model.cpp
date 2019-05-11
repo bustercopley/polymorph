@@ -41,21 +41,21 @@ __attribute__ ((optimize ("O3"))) float cube (float x)
 
 namespace usr {
   // Physical parameters.
-  static const float density = 100.0f;      // Density of a ball.
-  static const float fill_factor = 0.185f;  // Density of the gas.
+  const float density = 100.0f;      // Density of a ball.
+  const float fill_factor = 0.185f;  // Density of the gas.
 
   // Pixels per logical distance unit (at front of tank).
-  static const float scale = 50.0f;
+  const float scale = 50.0f;
 
   // Logical time units per frame.
-  static const float frame_time = 1.0f / 60.0f;
+  const float frame_time = 1.0f / 60.0f;
 
-  static const float alpha = 0.85f;    // Alpha of output fragments.
-  static const float fog_near = 0.0f;  // Fog blend factor at near plane.
-  static const float fog_far = 0.8f;   // Fog blend factor at far plane.
+  const float alpha = 0.85f;    // Alpha of output fragments.
+  const float fog_near = 0.0f;  // Fog blend factor at near plane.
+  const float fog_far = 0.8f;   // Fog blend factor at far plane.
 
-  static const float line_width_extra = 0.0f;
-  static const float line_sharpness = 1.0f;
+  const float line_width_extra = 0.0f;
+  const float line_sharpness = 1.0f;
 
   // Parameters for material-colour animation timings.
 
@@ -69,14 +69,14 @@ namespace usr {
   // v0 +XXXX----------+----+----------XXXX-->
   //        t0        t1    t2        t3      t
 
-  //                                             t0     t1     t2     t3     v0     v1
-  static const bump_specifier_t hsv_s_bump = { 1.50f, 1.75f, 3.75f, 4.25f, 0.00f, 0.275f, };
-  static const bump_specifier_t hsv_v_bump = { 1.50f, 1.75f, 3.75f, 4.25f, 0.09f, 0.333f, };
+  //                                      t0     t1     t2     t3     v0     v1
+  const bump_specifier_t hsv_s_bump = { 1.50f, 1.75f, 3.75f, 4.25f, 0.00f, 0.275f, };
+  const bump_specifier_t hsv_v_bump = { 1.50f, 1.75f, 3.75f, 4.25f, 0.09f, 0.333f, };
 
   // Parameters for morph animation timings.
-  static const float morph_start = 1.75f;
-  static const float morph_finish = 3.50f;
-  static const float cycle_duration = 4.25f;
+  const float morph_start = 1.75f;
+  const float morph_finish = 3.50f;
+  const float cycle_duration = 4.25f;
 }
 
 #if PRINT_ENABLED
@@ -137,8 +137,8 @@ inline float rainbow_hue (float x)
   // Seen as a graph of (angular position)/2pi vs. time, f(x) describes
   // a one-revolution rotation at variable speed over one unit of time.
 
-  static const v4f poly_lo = { +0x1.f2b75cP-1f, +0x1.d75e6cP-9f, +0x1.55b804P+3f, -0x1.0a7118P+6f, };
-  static const v4f poly_hi = { +0x1.811250P+7f, -0x1.1565f6P+8f, +0x1.86704aP+7f, -0x1.ab6de6P+5f, };
+  const v4f poly_lo = { +0x1.f2b75cP-1f, +0x1.d75e6cP-9f, +0x1.55b804P+3f, -0x1.0a7118P+6f, };
+  const v4f poly_hi = { +0x1.811250P+7f, -0x1.1565f6P+8f, +0x1.86704aP+7f, -0x1.ab6de6P+5f, };
   x -= (int) x; // Fractional part, assuming non-negative.
   return polyeval7 (x, poly_lo, poly_hi);
 }

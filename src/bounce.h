@@ -22,8 +22,8 @@
 
 namespace usr
 {
-  static const float walls_friction = 0.025f;
-  static const float balls_friction = 0.075f;
+  const float walls_friction = 0.025f;
+  const float balls_friction = 0.075f;
 }
 
 // Called when two balls might collide.

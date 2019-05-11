@@ -91,12 +91,12 @@
 //   x [kdtree_index[n]] [d] <= kdtree_split[m] for n in [begin, mid),
 //   x [kdtree_index[n]] [d] >= kdtree_split[m] for n in [mid, end).
 
-static const std::uint8_t inc_mod3 [] = { 1, 2, 0, 1, };
+const std::uint8_t inc_mod3 [] = { 1, 2, 0, 1, };
 
 // See "Leaf nodes" above.
 inline unsigned required_depth (unsigned point_count)
 {
-  static const unsigned min_points_per_leaf = 3;
+  const unsigned min_points_per_leaf = 3;
   unsigned desired_leaf_count = point_count / min_points_per_leaf;
 
   // BSR(0) is undefined!
@@ -265,8 +265,8 @@ inline void model_t::kdtree_search ()
     unsigned top = 0;
     // The root (outer) node box's corners are at infinity. Don't actually
     // use infinity, in order to work under "-ffinite-math-only".
-    static const v4f big_val = { 0x1.0P+060f, 0x1.0P+060f, 0x1.0P+060f, 0.0f, };
-    static const v4f sign_bit = { -0.0f, -0.0f, -0.0f, 0.0f, };
+    const v4f big_val = { 0x1.0P+060f, 0x1.0P+060f, 0x1.0P+060f, 0.0f, };
+    const v4f sign_bit = { -0.0f, -0.0f, -0.0f, 0.0f, };
     v4f critical_corner = _mm_xor_ps (big_val,
       _mm_and_ps (_mm_cmpge_ps (normal, _mm_setzero_ps ()), sign_bit));
     // Push node 0 onto the stack.
