@@ -68,31 +68,44 @@ namespace
   // f: Remes error +-0x1.950326P-021f, max ulp error +-14.
   // g: Remes error +-0x1.4711d0P-024f, max ulp error +-4.
   // h: Remes error +-0x1.e7b99cP-028f, max ulp error +-2.
-  const v4f fpoly = { +0x1.ffffe6P-001f, -0x1.55502cP-003f, +0x1.1068acP-007f, -0x1.847be2P-013f, };
-  const v4f gpoly = { +0x1.fffffaP-002f, -0x1.555340P-005f, +0x1.6b8f0cP-010f, -0x1.89e394P-016f, };
-  const v4f hpoly = { +0x1.555554P-004f, +0x1.6c1cd6P-010f, +0x1.13e3e4P-015f, +0x1.f88a10P-021f, };
+  const v4f fpoly = {
+    +0x1.ffffe6P-001f, -0x1.55502cP-003f, +0x1.1068acP-007f, -0x1.847be2P-013f
+  };
+  const v4f gpoly = {
+    +0x1.fffffaP-002f, -0x1.555340P-005f, +0x1.6b8f0cP-010f, -0x1.89e394P-016f
+  };
+  const v4f hpoly = {
+    +0x1.555554P-004f, +0x1.6c1cd6P-010f, +0x1.13e3e4P-015f, +0x1.f88a10P-021f
+  };
 
   // Minimax polynomial for (acos(x))^2.
-  // Very restricted range [+0x1.8c97f0P-001f, +0x1.fb5486P-001f] ([0.774596691, 0.990879238]).
+  // Very restricted range [+0x1.8c97f0P-001f, +0x1.fb5486P-001f]
+  // ([0.774596691, 0.990879238]).
   // Remes error +-0x1.460d54P-021f, max ulp error +-446.
-  const v4f apoly = { +0x1.37b24aP+001f, -0x1.7cb23cP+001f, +0x1.494690P-001f, -0x1.aa37e2P-004f, };
+  const v4f apoly = {
+    +0x1.37b24aP+001f, -0x1.7cb23cP+001f, +0x1.494690P-001f, -0x1.aa37e2P-004f
+  };
 
   // Argument x x * *, result sin(x) 1-cos(x) sin(x) 1-cos(x).
   // Range [-pi/2, pi/2].
   inline v4f sincos_internal (const v4f x)
   {
-    v4f xsq = x * x;                           // x^2 x^2 * *
-    v4f fgfg = polyeval (xsq, fpoly, gpoly);   // sin(x)/x (1-cos(x))/x^2 sin(x)/x (1-cos(x))/x^2
-    v4f xmix = _mm_unpacklo_ps (x, xsq);       // x x^2 x x^2
-    return xmix * fgfg;                        // sin(x) 1-cos(x) sin(x) 1-cos(x)
+    v4f xsq = x * x; // x^2 x^2 * *
+    v4f fgfg = polyeval (xsq, fpoly, gpoly);
+    v4f xmix = _mm_unpacklo_ps (x, xsq); // x x^2 x x^2
+    return xmix * fgfg;
   }
 
   // Argument x y z w, result x-pi y-pi z-pi w-pi.
   inline v4f subtract_pi (v4f x)
   {
     // To 48 binary digits, pi is 1.921fb54442d2P+001.
-    v4f pi_hi = { 0x1.921fb4P+001f, 0x1.921fb4P+001f, 0x1.921fb4P+001f, 0x1.921fb4P+001f, };
-    v4f pi_lo = { 0x1.4442d2P-023f, 0x1.4442d2P-023f, 0x1.4442d2P-023f, 0x1.4442d2P-023f, };
+    v4f pi_hi = {
+      0x1.921fb4P+001f, 0x1.921fb4P+001f, 0x1.921fb4P+001f, 0x1.921fb4P+001f
+    };
+    v4f pi_lo = {
+      0x1.4442d2P-023f, 0x1.4442d2P-023f, 0x1.4442d2P-023f, 0x1.4442d2P-023f
+    };
     return (x - pi_hi) - pi_lo; // I'm pretty sure
   }
 
@@ -101,48 +114,47 @@ namespace
   // Argument x^2 x^2 * *, result f0(x) g0(x) f0(x) g0(x).
   inline v4f fg (const v4f xsq)
   {
-    v4f lim = { +0x1.3bd3ccP+001f, 0.0f, 0.0f, 0.0f, }; // (pi/2)^2
+    v4f lim = _mm_set_ss (0x1.3bd3ccP+1f); // (pi/2)^2
     if (_mm_comile_ss (xsq, lim)) {
       // Quadrant 1 (0 <= x < pi/2).
       return polyeval (xsq, fpoly, gpoly);
     }
     else {
       // Quadrants 2 and 3 (pi/2 <= x < 3pi/2).
-      v4f x = sqrt_nonzero (xsq);            // x x * * (approx)
+      v4f x = sqrt_nonzero (xsq);             // x x * * (approx)
       // Let t = x - pi. Then sin(t) = -sin(x) and cos(t) = -cos(x).
-      v4f xmpi = subtract_pi (x);            // x-pi x-pi * *
-      v4f sc1 = sincos_internal (xmpi);      // -sin(x) 1+cos(x) -sin(x) 1+cos(x)
+      v4f xmpi = subtract_pi (x);             // x-pi x-pi * *
+      v4f sc1 = sincos_internal (xmpi);       // -sin(x) 1+cos(x) " "
       v4f o2o2 = { 0.0f, 2.0f, 0.0f, 2.0f, };
-      v4f sc2 = o2o2 - sc1;                  // sin(x) 1-cos(x) sin(x) 1-cos(x)
+      v4f sc2 = o2o2 - sc1;                   // sin(x) 1-cos(x) " "
       // Reciprocal-multiply to approximate f and g.
-      v4f xx = _mm_unpacklo_ps (x, xsq);     // x x^2 x x^2
-      return rcp (xx) * sc2;                 // f0(x) g0(x) f0(x) g0(x)
+      v4f xx = _mm_unpacklo_ps (x, xsq);      // x x^2 x x^2
+      return rcp (xx) * sc2;                  // f0(x) g0(x) f0(x) g0(x)
     }
   }
 
-  // Total derivative of f(t) at 0, where f is the continuous function R->R^3
-  // such that f(0) = u and for all real t, e^{\hat{f}(t)} = e^{\hat{u}} e^{t\hat{w}}.
+  // Derivative of v = v(t), where v = bch(u, tw).
   inline v4f tangent (v4f u, v4f w)
   {
-    v4f one = { 1.0f, 1.0f, 1.0f, 1.0f, };
-    v4f half = { 0.5f, 0.5f, 0.5f, 0.5f, };
-    v4f lim = { +0x1.3bd3ccP+001f, 0.0f, 0.0f, 0.0f, };           // (pi/2)^2 0 0 0
+    v4f one = _mm_set1_ps (1.0f);
+    v4f half = _mm_set1_ps (0.5f);
+    v4f lim = _mm_set_ss (0x1.3bd3ccP+1f); // (pi/2)^2
     v4f xsq = dot (u, u);
     v4f g, h;
     // Evaluate g and h at xsq (range [0, (2pi)^2)).
     if (_mm_comile_ss (xsq, lim)) {
       // Quadrant 1 (0 <= x < pi/2).
-      h = polyeval (xsq, hpoly, hpoly);  // Cubic in xsq.
-      g = one - xsq * h;                 // Quartic in xsq (the extra precision is important).
+      h = polyeval (xsq, hpoly, hpoly); // Cubic in xsq.
+      g = one - xsq * h;                // Quartic in xsq.
     }
     else {
       // Quadrants 2, 3 and 4 (pi/2 <= x < 2pi).
       // Let t = x/2 - pi/2. Then sin(t) = -cos(x/2) and cos(t) = sin(x/2).
-      v4f x = sqrt_nonzero (xsq);              // x/2 x/2 x/2 x/2 (approx)
-      v4f hxmpi = half * subtract_pi (x);      // 0.5*(x-pi)
-      v4f sc = sincos_internal (hxmpi);        // -cos(x/2) 1-sin(x/2) -cos(x/2) 1-sin(x/2)
+      v4f x = sqrt_nonzero (xsq);             // x/2 x/2 x/2 x/2 (approx)
+      v4f hxmpi = half * subtract_pi (x);     // 0.5*(x-pi)
+      v4f sc = sincos_internal (hxmpi);       // -cos(x/2) 1-sin(x/2) " "
       v4f oioi = { 0.0f, 1.0f, 0.0f, 1.0f, };
-      v4f cs = oioi - sc;                      // cos(x/2) sin(x/2) cos(x/2) sin(x/2)
+      v4f cs = oioi - sc;                     // cos(x/2) sin(x/2) " "
       v4f c = _mm_moveldup_ps (cs);
       v4f s = _mm_movehdup_ps (cs);
       // Reciprocal-multiply to approximate (x/2)cot(x/2).
@@ -152,12 +164,12 @@ namespace
     return dot (u, w) * h * u + g * w - half * cross (u, w);
   }
 
-  // Compute z = bch(x,y), where e^\hat{x} e^\hat{y} = e^\hat{z}, for fairly small x.
+  // Compute z = bch(x,y), where exp(hat(z)) = exp(hat(x)) exp(hat(y))).
   inline v4f bch4 (v4f x, v4f y)
   {
     // One step of the classical fourth-order Runge-Kutta method.
-    v4f half = { 0.5f, 0.5f, 0.5f, 0.5f, };
-    v4f sixth = { 0x1.555556P-003f, 0x1.555556P-003f, 0x1.555556P-003f, 0x1.555556P-003f, };
+    v4f half = _mm_set1_ps (0.5f);
+    v4f sixth = _mm_set1_ps (0x1.555556P-3f);
     v4f A = tangent (y, x);
     v4f B = tangent (y + half * A, x);
     v4f C = tangent (y + half * B, x);
@@ -168,7 +180,7 @@ namespace
   // Compute z = bch(x,y) for very small x.
   inline v4f bch2 (v4f x, v4f y)
   {
-    v4f half = { 0.5f, 0.5f, 0.5f, 0.5f, };
+    v4f half = _mm_set1_ps (0.5f);
     if (1) {
       // One step of the midpoint method.
       v4f a = tangent (y, x);
@@ -184,8 +196,9 @@ namespace
   }
 }
 
-// Update position x for motion with constant velocity v over a unit time interval.
-void advance_linear (float (* RESTRICT x) [4], const float (* RESTRICT v) [4], unsigned count)
+// Update position x for constant velocity v over a unit time interval.
+void advance_linear (
+  float (* RESTRICT x) [4], const float (* RESTRICT v) [4], unsigned count)
 {
   // Load 64 bytes (one cache line) of data at a time.
   // This can operate on padding at the end of the arrays.
@@ -226,13 +239,15 @@ void advance_linear (float (* RESTRICT x) [4], const float (* RESTRICT v) [4], u
   }
 }
 
-// Update angular position u for motion with constant angular velocity w over a unit time interval.
-// Use a single step of a second order method to integrate the differential equation defined by "tangent".
-void advance_angular (float (* RESTRICT u) [4], float (* RESTRICT w) [4], unsigned count)
+// Update angular position u for constant angular velocity w over a unit time
+// interval. Use a single step of a second order method to integrate the
+// differential equation defined by "tangent".
+void advance_angular (
+  float (* RESTRICT u) [4], float (* RESTRICT w) [4], unsigned count)
 {
-  v4f one = { 1.0f, 1.0f, 1.0f, 1.0f, };
-  v4f twopi = { 0x1.921fb6P+002f, 0x1.921fb6P+002f, 0x1.921fb6P+002f, 0x1.921fb6P+002f, };
-  v4f lim1 = { +0x1.3c0000P+003f, 0.0f, 0.0f, 0.0f, }; // a touch over pi^2 (~ +0x1.3bd3ccP+003f)
+  v4f one = _mm_set1_ps (1.0f);
+  v4f twopi = _mm_set1_ps (0x1.921fb6P+2f);
+  v4f lim1 = _mm_set_ss(0x1.3c0000P+3f); // a touch over pi^2 (~ 0x1.3bd3ccP+3f)
   for (unsigned n = 0; n != count; ++ n) {
     v4f u1 = bch2 (load4f (w [n]), load4f (u [n]));
     // If |u|^2 exceeds lim1, scale u in order to adjust its length by -2pi.
@@ -244,14 +259,16 @@ void advance_angular (float (* RESTRICT u) [4], float (* RESTRICT w) [4], unsign
   }
 }
 
-// Compute OpenGL modelview matrices from linear and angular position vectors, x and u.
-void compute (char * RESTRICT buffer, std::size_t stride, const float (* RESTRICT x) [4], const float (* RESTRICT u) [4], const unsigned * permutation, unsigned count)
+// Compute OpenGL modelview matrices from linear and angular positions, x and u.
+void compute (char * RESTRICT buffer, std::size_t stride,
+  const float (* RESTRICT x) [4], const float (* RESTRICT u) [4],
+  const unsigned * permutation, unsigned count)
 {
-  v4f iiii = { 1.0f, 1.0f, 1.0f, 1.0f, };
+  v4f iiii = _mm_set1_ps (1.0f);
 #if __SSE4_1__
 #else
-  const union { std::uint32_t u [4]; v4f f; } mask = { { 0xffffffff, 0xffffffff, 0xffffffff, 0x00000000, }, };
-  v4f oooi = { 0.0f, 0.0f, 0.0f, 1.0f, };
+  const union { std::int32_t u [4]; v4f f; } mask = { {-1, -1, -1, 0, }, };
+  v4f oooi = {0.0f, 0.0f, 0.0f, 1.0f};
 #endif
   char * iter = buffer;
   for (unsigned n = 0; n != count; ++ n, iter += stride) {
@@ -308,7 +325,8 @@ v4f sincos (const v4f x)
   return oioi - sc;                // sin(x) cos(x) sin(x) cos(x)
 }
 
-// Very restricted range [+0x1.8c97f0P-001f, +0x1.fb5486P-001f] ([0.774596691, 0.990879238]).
+// Very restricted range [+0x1.8c97f0P-001f, +0x1.fb5486P-001f]
+// ([0.774596691, 0.990879238]).
 // Argument x x x x, result acos(x) acos(x) acos(x) acos(x).
 v4f arccos (v4f x)
 {
