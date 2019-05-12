@@ -25,6 +25,7 @@
 #include "partition.h"
 #include "vector.h"
 #include <cstdint>
+#include <x86intrin.h>
 
 //#define ENABLE_RANDOMIZE_COLLISION_ORDER
 
