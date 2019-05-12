@@ -13,7 +13,9 @@
 // limitations under the License.
 
 #include "mswin.h"
+
 #include "random.h"
+#include "random-util.h"
 #include "compiler.h"
 
 // The xorshift family of PRNGs was introduced in [1]. This particular
@@ -40,8 +42,6 @@ std::uint64_t rng_t::get ()
   state ^= state >> 27;
   return state * 2685821657736338717ull;
 }
-
-#include "random-util.h"
 
 // Random floating-point number uniformly distributed on the interval [a, b).
 // Undefined behaviour due to signed integer overflow if |a| >= 32767 * |b - a|.

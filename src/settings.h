@@ -17,7 +17,6 @@
 #ifndef settings_h
 #define settings_h
 
-#include "compiler.h"
 #include "mswin.h"
 
 static const unsigned trackbar_count = 4;

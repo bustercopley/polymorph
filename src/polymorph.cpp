@@ -12,15 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "mswin.h"
-#include "compiler.h"
-#include <windowsx.h>
 #include "polymorph.h"
-#include "resources.h"
-#include "glinit.h"
 #include "aligned-arrays.h"
+#include "compiler.h"
+#include "glinit.h"
 #include "print.h"
 #include "qpc.h"
+#include "resources.h"
+#include <windowsx.h>
 
 #define WC_MAIN TEXT ("M")
 

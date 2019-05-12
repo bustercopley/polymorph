@@ -13,10 +13,11 @@
 // limitations under the License.
 
 #include "mswin.h"
+
 #include "markov.h"
+#include "compiler.h"
 #include "random.h"
 #include "rodrigues.h"
-#include "compiler.h"
 
 // The procedure below gives rise to roughly the following relative polyhedron
 // abundancies.

@@ -17,7 +17,6 @@
 #ifndef graphics_h
 #define graphics_h
 
-#include "mswin.h"
 #include <cstddef>
 #include <cstdint>
 #include <GL/gl.h>

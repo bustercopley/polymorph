@@ -29,7 +29,6 @@ inline void reallocate_aligned_arrays (
 // Implementation.
 
 #include "memory.h"
-#include <cstdint>
 
 namespace internal
 {

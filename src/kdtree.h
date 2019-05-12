@@ -18,12 +18,12 @@
 #define kdtree_h
 
 #include "mswin.h"
+
+#include "bounce.h"
 #include "compiler.h"
 #include "memory.h"
-#include "vector.h"
 #include "partition.h"
-#include "bounce.h"
-#include <x86intrin.h>
+#include "vector.h"
 #include <cstdint>
 
 //#define ENABLE_RANDOMIZE_COLLISION_ORDER

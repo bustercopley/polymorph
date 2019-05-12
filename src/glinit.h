@@ -18,6 +18,7 @@
 #define glinit_h
 
 #include "mswin.h"
+
 #include <GL/gl.h>
 #include <GL/glext.h>
 #include <GL/wglext.h>

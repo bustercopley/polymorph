@@ -17,6 +17,10 @@
 #ifndef dialog_h
 #define dialog_h
 
+#ifndef RC_INVOKED
+#include "mswin.h"
+#endif
+
 //#define ENABLE_REPOSITION_DIALOG
 #define ENABLE_ITALICIZE_MESSAGE_FONT
 #define ENABLE_OWNER_DRAWN_TRACKBAR_BUDDIES
@@ -42,8 +46,6 @@
 #endif
 
 #ifndef RC_INVOKED
-#include "mswin.h"
-
 INT_PTR CALLBACK DialogProc (HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
 #endif
 

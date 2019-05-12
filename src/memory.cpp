@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "mswin.h"
+
 #include "memory.h"
 
 void * allocate (std::size_t n)

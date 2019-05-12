@@ -13,13 +13,14 @@
 // limitations under the License.
 
 #include "mswin.h"
+
 #include "systems.h"
 #include "compiler.h"
-#include "resources.h"
-#include "vector.h"
-#include "make_system.h"
 #include "cramer.h"
 #include "graphics.h"
+#include "make_system.h"
+#include "resources.h"
+#include "vector.h"
 #include <cstdint>
 #include <cstring>
 

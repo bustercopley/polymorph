@@ -13,11 +13,9 @@
 // limitations under the License.
 
 #include "dialog.h"
-#include "mswin.h"
 #include "polymorph.h"
 #include "reposition.h"
 #include "resources.h"
-#include "settings.h"
 #include <shellapi.h>
 
 inline void italicize_control_font (HWND hwnd)

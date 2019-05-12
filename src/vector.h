@@ -17,8 +17,9 @@
 #ifndef vector_h
 #define vector_h
 
-#include "compiler.h"
 #include "mswin.h"
+
+#include "compiler.h"
 #include <cstdint>
 #include <immintrin.h>
 typedef __m128 v4f;

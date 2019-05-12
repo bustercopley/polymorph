@@ -13,17 +13,14 @@
 // limitations under the License.
 
 #include "mswin.h"
+
 #include "graphics.h"
 #include "compiler.h"
-#include "memory.h"
-#include "resources.h"
-#include "glinit.h"
-#include "vector.h"
-#include "print.h"
 #include "glcheck.h"
-
-#include <cstddef>
-#include <cstdint>
+#include "glinit.h"
+#include "memory.h"
+#include "print.h"
+#include "resources.h"
 #include <algorithm>
 
 // Uniform block binding indices and vertex attribute indices.

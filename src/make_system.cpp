@@ -13,7 +13,9 @@
 // limitations under the License.
 
 #include "mswin.h"
+
 #include "make_system.h"
+#include "compiler.h"
 #include "rotor.h"
 #include "vector.h"
 

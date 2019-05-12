@@ -13,13 +13,13 @@
 // limitations under the License.
 
 #include "mswin.h"
-#include "compiler.h"
-#include "resources.h"
+
 #include "arguments.h"
-#include "polymorph.h"
-#include "settings.h"
+#include "compiler.h"
 #include "dialog.h"
-#include "vector.h"
+#include "polymorph.h"
+#include "resources.h"
+#include "settings.h"
 #include <cstdint>
 #include <cstring>
 

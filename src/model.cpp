@@ -13,22 +13,19 @@
 // limitations under the License.
 
 #include "mswin.h"
-#include "model.h"
-#include "compiler.h"
-#include "memory.h"
-#include "kdtree.h"
-#include "random.h"
-#include "rodrigues.h"
-#include "markov.h"
-#include "random-util.h"
-#include "partition.h"
-#include "graphics.h"
-#include "aligned-arrays.h"
-#include "vector.h"
-#include "hsv-to-rgb.h"
-#include "print.h"
-#include "bounce.h"
 
+#include "model.h"
+#include "aligned-arrays.h"
+#include "bounce.h"
+#include "hsv-to-rgb.h"
+#include "kdtree.h"
+#include "markov.h"
+#include "memory.h"
+#include "partition.h"
+#include "print.h"
+#include "random-util.h"
+#include "rodrigues.h"
+#include "vector.h"
 #include <algorithm>
 
 __attribute__ ((optimize ("O3"))) float cube (float x)

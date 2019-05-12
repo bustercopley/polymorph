@@ -12,9 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "mswin.h"
 #include "arguments.h"
-#include "compiler.h"
 #include <cstdint>
 
 #define DOWNCASE(c) ((c) | TEXT (' '))

@@ -19,7 +19,6 @@
 
 #include "vector.h"
 #include <cstddef>
-#include <cstdint>
 
 // State: four three-dimensional vectors x, u, v, w per body
 //   x: position (defined in point_t)

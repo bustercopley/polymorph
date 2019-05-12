@@ -17,13 +17,12 @@
 #ifndef model_h
 #define model_h
 
-#include "compiler.h"
-#include "random.h"
-#include "graphics.h"
 #include "bump.h"
-#include "markov.h"
-#include "settings.h"
+#include "compiler.h"
+#include "graphics.h"
 #include "object.h"
+#include "random.h"
+#include "settings.h"
 #include <cstdint>
 
 struct model_t

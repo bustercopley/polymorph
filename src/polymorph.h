@@ -18,8 +18,9 @@
 #define polymorph_h
 
 #include "mswin.h"
-#include "model.h"
+
 #include "arguments.h"
+#include "model.h"
 #include "settings.h"
 
 #define ENABLE_MONITOR_SELECT
