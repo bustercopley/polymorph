@@ -20,7 +20,7 @@
 
 arguments_t get_arguments (const TCHAR * s)
 {
-  arguments_t args {configure, 0};
+  arguments_t args { configure, 0 };
 
   // Skip the image path, which might be quoted.
   TCHAR c;

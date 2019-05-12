@@ -59,7 +59,7 @@ struct bump_specifier_t
 
 struct bumps_t
 {
-  // Returns {f, g, f, g} where f = bump0(t), g = bump1(t).
+  // Returns { f, g, f, g } where f = bump0(t), g = bump1(t).
   v4f operator () (float t) const;
   void initialize (const bump_specifier_t & b0, const bump_specifier_t & b1);
 private:

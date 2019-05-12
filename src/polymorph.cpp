@@ -218,8 +218,8 @@ HWND create_screensaver_window (window_struct_t & ws)
   ::LoadString (ws.hInstance, 1, (LPTSTR) (& display_name), 0);
 
   // Register the window class.
-  WNDCLASSEX wndclass = {sizeof (WNDCLASSEX), 0, & MainWndProc, 0, 0,
-    ws.hInstance, ws.icon, nullptr, nullptr, nullptr, WC_MAIN, ws.icon_small};
+  WNDCLASSEX wndclass = { sizeof (WNDCLASSEX), 0, & MainWndProc, 0, 0,
+    ws.hInstance, ws.icon, nullptr, nullptr, nullptr, WC_MAIN, ws.icon_small };
   ATOM wc_main_atom = ::RegisterClassEx (&wndclass);
 
   // Create the screen saver window.

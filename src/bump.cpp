@@ -86,7 +86,7 @@ void bumps_t::initialize (
   store4f (V0, V);
 }
 
-// Returns {f,g,f,g}, where f = bump0 (t), g = bump1 (t).
+// Returns { f, g, f, g }, where f = bump0 (t), g = bump1 (t).
 v4f bumps_t::operator () (float t) const
 {
   // Compute all four polynomials by Estrin's method, and mask and combine the

@@ -72,8 +72,8 @@ LRESULT CALLBACK InitWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   if (msg != WM_NCCREATE) return ::DefWindowProc (hwnd, msg, wParam, lParam);
   // Create a legacy OpenGL context and make it current in this window.
-  PIXELFORMATDESCRIPTOR pfd = {sizeof pfd, 1, PFD_SUPPORT_OPENGL,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  PIXELFORMATDESCRIPTOR pfd = { sizeof pfd, 1, PFD_SUPPORT_OPENGL,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
   HDC hdc = ::GetDC (hwnd);
   int pf = ::ChoosePixelFormat (hdc, & pfd);
   ::SetPixelFormat (hdc, pf, & pfd);
@@ -95,8 +95,8 @@ bool glinit (HINSTANCE hInstance)
   // Create a window with a legacy OpenGL rendering context, to get
   // the WGL function pointers needed to create an up-level rendering
   // context. The window does not survive creation. See InitWndProc.
-  WNDCLASSEX init_wndclass = {sizeof (WNDCLASSEX), 0, &InitWndProc, 0, 0,
-    hInstance, nullptr, nullptr, nullptr, nullptr, WC_GLINIT, nullptr};
+  WNDCLASSEX init_wndclass = { sizeof (WNDCLASSEX), 0, &InitWndProc, 0, 0,
+    hInstance, nullptr, nullptr, nullptr, nullptr, WC_GLINIT, nullptr };
   ::RegisterClassEx (&init_wndclass);
   ::CreateWindowEx (0, WC_GLINIT, TEXT (""), 0,
                     CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,

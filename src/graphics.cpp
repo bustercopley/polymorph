@@ -176,7 +176,7 @@ unsigned make_vao (
 template <typename Dest, typename Source>
 inline void align_up (Dest & y, Source x, std::intptr_t alignment)
 {
-  y = (Dest) ((((std::intptr_t) (x)) + (alignment - 1)) & - alignment);
+  y = (Dest) ((((std::intptr_t) (x)) + (alignment - 1)) & -alignment);
 }
 
 uniform_buffer_t::~uniform_buffer_t ()

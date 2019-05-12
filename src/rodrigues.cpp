@@ -269,7 +269,7 @@ void compute (char * RESTRICT buffer, std::size_t stride,
 #if __SSE4_1__
 #else
   const union { std::int32_t u [4]; v4f f; } mask = { {-1, -1, -1, 0 } };
-  v4f oooi = {0.0f, 0.0f, 0.0f, 1.0f};
+  v4f oooi = { 0.0f, 0.0f, 0.0f, 1.0f };
 #endif
   char * iter = buffer;
   for (unsigned n = 0; n != count; ++ n, iter += stride) {
