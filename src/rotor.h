@@ -31,7 +31,7 @@ private:
 
 inline rotor_t::rotor_t (const float (& u) [4], float a)
 {
-  ALIGNED16 float X [4] = { 0.0f, 0.0f, 0.0f, 0.0f, };
+  ALIGNED16 float X [4] = { 0.0f, 0.0f, 0.0f, 0.0f };
   ALIGNED16 float U [4];
   store4f (U, _mm_set1_ps (a) * _mm_load_ps (u));
   const unsigned permutation [1] = { 0 };

@@ -274,16 +274,16 @@ void program_t::set_view (const float (& view) [4],
   };
 
   ALIGNED16 fragment_data_t fdata = {
-    { 0.02f, 0.02f, 0.02f, 0.00f, },
-    { 0.00f, 0.00f, 0.00f, 0.00f, },
-    { 0.00f, 0.00f, 0.00f, 1.00f, },
-    { 0.25f, 0.25f, 0.25f, 32.0f, },
-    { line0, line1, fog0, fog1, },
+    { 0.02f, 0.02f, 0.02f, 0.00f },
+    { 0.00f, 0.00f, 0.00f, 0.00f },
+    { 0.00f, 0.00f, 0.00f, 1.00f },
+    { 0.25f, 0.25f, 0.25f, 32.0f },
+    { line0, line1, fog0, fog1 },
     {
-      { -0.6f * x1, -0.2f * y1, z1 + y1, 0.0f, },
-      { -0.2f * x1, +0.6f * y1, z1 + x1, 0.0f, },
-      { +0.2f * x1, -0.6f * y1, z1 + y1, 0.0f, },
-      { +0.6f * x1, +0.2f * y1, z1 + x1, 0.0f, },
+      { -0.6f * x1, -0.2f * y1, z1 + y1, 0.0f },
+      { -0.2f * x1, +0.6f * y1, z1 + x1, 0.0f },
+      { +0.2f * x1, -0.6f * y1, z1 + y1, 0.0f },
+      { +0.6f * x1, +0.2f * y1, z1 + x1, 0.0f },
     },
   };
 
@@ -293,12 +293,12 @@ void program_t::set_view (const float (& view) [4],
       // doesn't calculate the z component of the clip coordinates. We don't
       // have any use for that component since we disable near and far plane
       // clipping and we don't have a depth buffer.
-      { -z1/x1,     0,       0,       0, },
-      {    0,    -z1/y1,     0,       0, },
-      {    0,       0,       0,      -1, },
-      {    0,       0,       0,       0, },
+      { -z1/x1,     0,       0,       0 },
+      {    0,    -z1/y1,     0,       0 },
+      {    0,       0,       0,      -1 },
+      {    0,       0,       0,       0 },
     },
-    { float (width >> 1), float (height >> 1), 0, 0, },
+    { float (width >> 1), float (height >> 1), 0, 0 },
   };
 
   // The shaders declare uniform blocks "F", "G" and "H", each with its own

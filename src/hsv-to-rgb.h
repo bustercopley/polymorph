@@ -22,7 +22,7 @@
 inline v4f hue_vector (float hue)
 {
   // Offsets 1/6, 5/6, 3/6 give [red, yellow, green, cyan, blue, magenta, red).
-  const v4f offsets = { 0x1.555556p-3f, 0x1.aaaaaap-1f, 0.5f, 0.0f, };
+  const v4f offsets = { 0x1.555556p-3f, 0x1.aaaaaap-1f, 0.5f, 0.0f };
   v4f temp = _mm_set1_ps (hue) + offsets;
   v4f theta = // fmod (temp, 6.0)
     _mm_set1_ps (6.0f) * (temp - _mm_cvtepi32_ps (_mm_cvttps_epi32 (temp)));
@@ -66,7 +66,7 @@ inline v4f hsv_to_rgb (float hue, v4f saturation, v4f value, v4f alpha)
 #if __SSE4_1__
   return _mm_blend_ps (rgbx, alpha, 8); // rgba
 #else
-  const union { std::int32_t i [4]; v4f f; } mask = { { -1, -1, -1, 0, }, };
+  const union { std::int32_t i [4]; v4f f; } mask = { { -1, -1, -1, 0 } };
   return _mm_or_ps (_mm_and_ps (mask.f, rgbx), alpha);
 #endif
 }

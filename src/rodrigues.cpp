@@ -126,7 +126,7 @@ namespace
       // Let t = x - pi. Then sin(t) = -sin(x) and cos(t) = -cos(x).
       v4f xmpi = subtract_pi (x);             // x-pi x-pi * *
       v4f sc1 = sincos_internal (xmpi);       // -sin(x) 1+cos(x) " "
-      v4f o2o2 = { 0.0f, 2.0f, 0.0f, 2.0f, };
+      v4f o2o2 = { 0.0f, 2.0f, 0.0f, 2.0f };
       v4f sc2 = o2o2 - sc1;                   // sin(x) 1-cos(x) " "
       // Reciprocal-multiply to approximate f and g.
       v4f xx = _mm_unpacklo_ps (x, xsq);      // x x^2 x x^2
@@ -154,7 +154,7 @@ namespace
       v4f x = sqrt_nonzero (xsq);             // x/2 x/2 x/2 x/2 (approx)
       v4f hxmpi = half * subtract_pi (x);     // 0.5*(x-pi)
       v4f sc = sincos_internal (hxmpi);       // -cos(x/2) 1-sin(x/2) " "
-      v4f oioi = { 0.0f, 1.0f, 0.0f, 1.0f, };
+      v4f oioi = { 0.0f, 1.0f, 0.0f, 1.0f };
       v4f cs = oioi - sc;                     // cos(x/2) sin(x/2) " "
       v4f c = _mm_moveldup_ps (cs);
       v4f s = _mm_movehdup_ps (cs);
@@ -268,7 +268,7 @@ void compute (char * RESTRICT buffer, std::size_t stride,
   v4f iiii = _mm_set1_ps (1.0f);
 #if __SSE4_1__
 #else
-  const union { std::int32_t u [4]; v4f f; } mask = { {-1, -1, -1, 0, }, };
+  const union { std::int32_t u [4]; v4f f; } mask = { {-1, -1, -1, 0 } };
   v4f oooi = {0.0f, 0.0f, 0.0f, 1.0f};
 #endif
   char * iter = buffer;
@@ -321,7 +321,7 @@ v4f rotate (v4f u, v4f v)
 // Argument x x * *, result sin(x) cos(x) sin(x) cos(x).
 v4f sincos (const v4f x)
 {
-  v4f oioi = { 0.0f, 1.0f, 0.0f, 1.0f, };
+  v4f oioi = { 0.0f, 1.0f, 0.0f, 1.0f };
   v4f sc = sincos_internal (-x);   // -sin(x) 1-cos(x) -sin(x) 1-cos(x)
   return oioi - sc;                // sin(x) cos(x) sin(x) cos(x)
 }

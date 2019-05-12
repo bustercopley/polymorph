@@ -114,7 +114,7 @@ void qsort (unsigned * const index, const float (* const x) [4], unsigned dim,
     unsigned middle = begin + (end - begin) / 2;
     partition (index, x, dim, begin, middle, end);
     // Push right half onto task stack.
-    stack [stackp ++] = { middle, end, };
+    stack [stackp ++] = { middle, end };
     // Sort left half now.
     end = middle;
     goto loop;

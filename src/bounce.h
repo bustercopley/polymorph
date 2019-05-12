@@ -33,7 +33,7 @@ inline void model_t::bounce (unsigned ix, unsigned iy)
 {
   const object_t & A = objects [ix];
   const object_t & B = objects [iy];
-  v4f s = { A.r + B.r, 0.0f, 0.0f, 0.0f, };
+  v4f s = { A.r + B.r, 0.0f, 0.0f, 0.0f };
   v4f ssq = s * s;
   v4f dx = load4f (x [iy]) - load4f (x [ix]);
   v4f dxsq = dot (dx, dx);
@@ -53,13 +53,13 @@ inline void model_t::bounce (unsigned ix, unsigned iy)
       // impulse lambda*u is consistent with conservation of
       // energy and momentum.
       v4f dxu = cross (dxn, u);
-      v4f km2 = { -2.0f, -2.0f, -2.0f, -2.0f, };
+      v4f km2 = { -2.0f, -2.0f, -2.0f, -2.0f };
       v4f top = km2 * (dot (u, dv) - dot (dxu, rw));
       v4f usq = dot (u, u);
       v4f dxusq = dot (dxu, dxu);
-      v4f R = { 1.0f, 1.0f, A.r, B.r, };
+      v4f R = { 1.0f, 1.0f, A.r, B.r };
       v4f urdxu_sq = _mm_movehl_ps (R * R * dxusq, usq);
-      v4f divisors = { A.m, B.m, A.l, B.l, };
+      v4f divisors = { A.m, B.m, A.l, B.l };
       v4f quotients = urdxu_sq / divisors;
       v4f ha = _mm_hadd_ps (quotients, quotients);
       v4f hh = _mm_hadd_ps (ha, ha);
@@ -101,7 +101,7 @@ inline void model_t::wall_bounce (unsigned iw, unsigned ix)
       v4f vN_sq = vn * vn;
       v4f k_vFsq = dot (kvF, vF);
       v4f kvF_sq = kf * k_vFsq;
-      v4f ml = { A.m, A.l, A.m, A.l, };
+      v4f ml = { A.m, A.l, A.m, A.l };
       v4f wtf = _mm_unpacklo_ps (vN_sq + kvF_sq, (R * R) * kvF_sq) / ml;
       v4f munu = (vN_sq + k_vFsq) / (ml * _mm_hadd_ps (wtf, wtf));
       munu += munu;

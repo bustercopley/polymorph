@@ -79,12 +79,12 @@ namespace usr {
 #if PRINT_ENABLED
 // These are Father Wenninger's numbers.
 const unsigned polyhedra [system_count] [8] = {
-  { 2, 1, 1, 11, 6, 6, 7, 4, },
-  { 2, 1, 1, 11, 6, 6, 7, 4, },
-  { 11, 2, 3, 13, 8, 7, 15, 17, },
-  { 11, 2, 3, 13, 8, 7, 15, 17, },
-  { 12, 4, 5, 14, 10, 9, 16, 18, },
-  { 12, 4, 5, 14, 10, 9, 16, 18, },
+  { 2, 1, 1, 11, 6, 6, 7, 4 },
+  { 2, 1, 1, 11, 6, 6, 7, 4 },
+  { 11, 2, 3, 13, 8, 7, 15, 17 },
+  { 11, 2, 3, 13, 8, 7, 15, 17 },
+  { 12, 4, 5, 14, 10, 9, 16, 18 },
+  { 12, 4, 5, 14, 10, 9, 16, 18 },
 };
 
 unsigned polyhedron_counts [18] = { 0 };
@@ -173,12 +173,12 @@ bool model_t::start (int width, int height, const settings_t & settings)
 
   // Calculate wall planes to fit the front of the viewing frustum.
   ALIGNED16 const float temp [6] [2] [4] = {
-    { { 0.0f, 0.0f, z1, 0.0f, }, { 0.0f, 0.0f, -1.0f, 0.0f, }, },
-    { { 0.0f, 0.0f, z2, 0.0f, }, { 0.0f, 0.0f,  1.0f, 0.0f, }, },
-    { {  -x1, 0.0f, z1, 0.0f, }, { z1 - z2, 0.0f, x1 - x2, 0.0f, }, },
-    { {   x1, 0.0f, z1, 0.0f, }, { z2 - z1, 0.0f, x1 - x2, 0.0f, }, },
-    { { 0.0f,  -y1, z1, 0.0f, }, { 0.0f, z1 - z2, y1 - y2, 0.0f, }, },
-    { { 0.0f,   y1, z1, 0.0f, }, { 0.0f, z2 - z1, y1 - y2, 0.0f, }, },
+    { { 0.0f, 0.0f, z1, 0.0f }, { 0.0f, 0.0f, -1.0f, 0.0f } },
+    { { 0.0f, 0.0f, z2, 0.0f }, { 0.0f, 0.0f,  1.0f, 0.0f } },
+    { {  -x1, 0.0f, z1, 0.0f }, { z1 - z2, 0.0f, x1 - x2, 0.0f } },
+    { {   x1, 0.0f, z1, 0.0f }, { z2 - z1, 0.0f, x1 - x2, 0.0f } },
+    { { 0.0f,  -y1, z1, 0.0f }, { 0.0f, z1 - z2, y1 - y2, 0.0f } },
+    { { 0.0f,   y1, z1, 0.0f }, { 0.0f, z2 - z1, y1 - y2, 0.0f } },
   };
 
   for (unsigned k = 0; k != 6; ++ k) {
@@ -207,8 +207,8 @@ bool model_t::start (int width, int height, const settings_t & settings)
     kdtree_index [n] = n;
     object_order [n] = n;
 
-    v4f c = { 0.0f, 0.0f, 0.5f * (z1 + z2), 0.0f, };
-    v4f m = { x2 - radius, y2 - radius, 0.5f * (z1 - z2) - radius, 0.0f, };
+    v4f c = { 0.0f, 0.0f, 0.5f * (z1 + z2), 0.0f };
+    v4f m = { x2 - radius, y2 - radius, 0.5f * (z1 - z2) - radius, 0.0f };
   loop:
     // Get a random point in the bounding cuboid of the viewing frustum.
     v4f t = m * get_vector_in_box (rng) + c;
@@ -439,7 +439,7 @@ void model_t::draw (unsigned begin, unsigned count)
   compute (reinterpret_cast <char *> (& uniform_buffer [0].m),
     uniform_buffer.stride (), x, u, & (object_order [begin]), count);
 
-  const v4f alpha = { 0.0f, 0.0f, 0.0f, usr::alpha, };
+  const v4f alpha = { 0.0f, 0.0f, 0.0f, usr::alpha };
   for (unsigned n = 0; n != count; ++ n) {
     unsigned m = object_order [begin + n];
     const object_t & obj = objects [m];

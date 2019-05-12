@@ -62,8 +62,8 @@ inline v4f rcp (v4f k)
 // Newton's method on f(x) = (1/(x^2)) - k.
 inline v4f rsqrt (v4f k)
 {
-  v4f half = { 0.5f, 0.5f, 0.5f, 0.5f, };
-  v4f three = { 3.0f, 3.0f, 3.0f, 3.0f, };
+  v4f half = { 0.5f, 0.5f, 0.5f, 0.5f };
+  v4f three = { 3.0f, 3.0f, 3.0f, 3.0f };
   v4f x0 = _mm_rsqrt_ps (k);
   return (half * x0) * (three - (x0 * x0) * k);
 }

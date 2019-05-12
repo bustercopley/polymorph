@@ -55,17 +55,17 @@ const struct replacement_t
   unsigned probability;
 } replacements [] = {
   // The fixups in maybe_perform_replacement assume this ordering.
-  { { tetrahedral, 0, }, { octahedral,  1, }, unsigned (0.375f * pmax), },
-  { { tetrahedral, 6, }, { octahedral,  5, }, unsigned (0.375f * pmax), },
-  { { tetrahedral, 3, }, { octahedral,  0, }, unsigned (0.375f * pmax), },
-  { { octahedral,  1, }, { tetrahedral, 0, }, unsigned (0.375f * pmax), },
-  { { octahedral,  5, }, { tetrahedral, 6, }, unsigned (0.375f * pmax), },
-  { { octahedral,  0, }, { tetrahedral, 3, }, unsigned (0.375f * pmax), },
-  { { icosahedral, 1, }, { tetrahedral, 7, }, unsigned (0.400f * pmax), },
-  { { tetrahedral, 7, }, { icosahedral, 1, }, unsigned (0.600f * pmax), },
+  { { tetrahedral, 0 }, { octahedral,  1 }, unsigned (0.375f * pmax) },
+  { { tetrahedral, 6 }, { octahedral,  5 }, unsigned (0.375f * pmax) },
+  { { tetrahedral, 3 }, { octahedral,  0 }, unsigned (0.375f * pmax) },
+  { { octahedral,  1 }, { tetrahedral, 0 }, unsigned (0.375f * pmax) },
+  { { octahedral,  5 }, { tetrahedral, 6 }, unsigned (0.375f * pmax) },
+  { { octahedral,  0 }, { tetrahedral, 3 }, unsigned (0.375f * pmax) },
+  { { icosahedral, 1 }, { tetrahedral, 7 }, unsigned (0.400f * pmax) },
+  { { tetrahedral, 7 }, { icosahedral, 1 }, unsigned (0.600f * pmax) },
   // The snub tetrahedron is not chiral (it is the icosahedron).
   // Not doing this replacement makes some snub-desnub combos impossible.
-  { { tetrahedral, 7, }, { dual_tetrahedral, 7, }, pmax / 2, },
+  { { tetrahedral, 7 }, { dual_tetrahedral, 7 }, pmax / 2 },
 };
 const unsigned replacement_count = sizeof replacements / sizeof * replacements;
 
@@ -74,10 +74,10 @@ const unsigned replacement_count = sizeof replacements / sizeof * replacements;
 // Rotations 0, 1, 2 correspond to replacements 6, 7, 8 respectively.
 ALIGNED16 const float rotations [3] [4] = {
   // Rotate about a p-node through angle pi/4.
-  { -0x1.921fb6P-001f, 0.0f, 0.0f, 0.0f, }, // I1 -> T7
-  { +0x1.921fb6P-001f, 0.0f, 0.0f, 0.0f, }, // T7 -> I1
+  { -0x1.921fb6P-001f, 0.0f, 0.0f, 0.0f }, // I1 -> T7
+  { +0x1.921fb6P-001f, 0.0f, 0.0f, 0.0f }, // T7 -> I1
   // Rotate about an r-node through angle approximately 0.2471 pi.
-  { +0x1.caf0fcP-002f, +0x1.448542P-001f, 0.0f, 0.0f, }, // T7 -> T7*
+  { +0x1.caf0fcP-002f, +0x1.448542P-001f, 0.0f, 0.0f }, // T7 -> T7*
 };
 
 inline bool bernoulli_trial (rng_t & rng, unsigned probability)
