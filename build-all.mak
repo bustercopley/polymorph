@@ -14,9 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-dist: clean-all
-	copy /y Polymorph.scr "g:\www\htdocs\polymorph\Polymorph.scr"
-	copy /y Polymorph-x86.scr "g:\www\htdocs\polymorph\Polymorph (x86).scr"
 clean-all: clean
 	$(MAKE) all-platforms-all-configs
 
@@ -42,4 +39,4 @@ $(foreach config,$(CONFIGS),$(eval $(config-targets)))
 $(foreach platform,$(PLATFORMS),$(eval $(platform-targets)))
 $(foreach platform,$(PLATFORMS),$(foreach config,$(CONFIGS),$(eval $(platform-config-targets))))
 
-.PHONY: dist clean-all all-platforms-all-configs
+.PHONY: clean-all all-platforms-all-configs
