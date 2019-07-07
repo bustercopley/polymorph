@@ -16,113 +16,114 @@
 
 #include "make_system.h"
 #include "compiler.h"
+#include "memory.h"
 #include "rotor.h"
 #include "vector.h"
+#include <cstring>
+#include <utility>
 
-// Did I mention that 'make_system' works by magic?
-
-void make_system (unsigned q, unsigned r, const float (& xyz_in) [3] [4],
-  float (* nodes) [4], std::uint8_t (* indices) [6])
+// Return the order of the rotation group of the pqr triangulation.
+unsigned moebius_order (unsigned p, unsigned q, unsigned r)
 {
-  std::uint8_t * P, * Q, * R; // Permutations taking triangles around nodes.
-  std::uint8_t * Qi;          // Inverse of the permutation Q.
-  std::uint8_t * Px, * Rx;    // Map a triangle to its P- or R-node.
+  return (2 * p * q * r) / (q * r + r * p + p * q - p * q * r);
+}
 
-  std::uint8_t memory [360];
-  std::uint8_t * memp = memory;
-  P = memp; memp += 60;
-  Q = memp; memp += 60;
-  R = memp; memp += 60;
-  Qi = memp; memp += 60;
-  Px = memp; memp += 60;
-  Rx = memp; // memp += 60;
-
-  const std::uint8_t undef = 0xff;
-  const unsigned p = 2, N = 2 * p * q * r / (q * r + r * p + p * q - p * q * r);
-  for (unsigned n = 0; n != sizeof memory; ++ n) memory [n] = undef;
-  for (unsigned n = 0; n != N; ++ n) {
-    n [Q] = n - n % q + (n + 1) % q;
-    n [Q] [Qi] = n;
+NOINLINE unsigned sigma_inverse (unsigned dart, unsigned order)
+{
+  if (dart % order < 1u) {
+    dart += order;
   }
+  return dart - 1u;
+}
 
-  unsigned next_node = N / q;
+unsigned make_system (const unsigned (& p) [3],
+                      const float (& triangle) [3] [4],
+                      float (* nodes) [4], std::uint8_t (* indices) [6])
+{
+  ALIGNED16 rotor_t rotate;
+  void * memory = allocate (3 * 6 * 60 * sizeof (unsigned));
+  unsigned * alpha = reinterpret_cast <unsigned *> (memory);
+  unsigned * sigma = alpha + 6 * 60;
+  unsigned * origin = sigma + 6 * 60;
+  const unsigned n = moebius_order (p [0], p [1], p [2]);
+  unsigned next [3], a [3];
 
-  // We are given the coordinates of the P-, Q- and R-nodes in triangle 0.
-  store4f (nodes [Px [0] = next_node ++], load4f (xyz_in [0]));
-  store4f (nodes [0], load4f (xyz_in [1]));
-  store4f (nodes [Rx [0] = next_node ++], load4f (xyz_in [2]));
-
-  float two_pi = 0x1.921fb6P+002f;
-  float A = two_pi / ui2f (p);
-  float B = two_pi / ui2f (q);
-
-  unsigned n0 = 0, m0 = 0;
-
-  while ([& m0, Px, Rx, q, r, nodes, & next_node, N, B] () -> bool {
-    // Calculate coordinates of any unknown P- and R-nodes around Q-node m0.
-    ALIGNED16 rotor_t Y_rotate (nodes [m0 / q], B);
-    for (unsigned n = m0 + 1; n != m0 + q; ++ n) {
-      if (Px [n] == undef) {
-        Px [n] = next_node;
-        Y_rotate (nodes [Px [n - 1]], nodes [next_node]);
-        ++ next_node;
+  unsigned dart = 0, node = 0;
+  for (unsigned i = 0; i != 3; ++ i) {
+    a [i] = dart + 1;
+    next [i] = dart + 2 * p [i];
+    store4f (nodes [node], load4f (triangle [i]));
+    for (unsigned m = 0; m != n / p [i]; ++ m) {
+      unsigned predecessor = dart + 2 * p [i] - 1;
+      for (unsigned j = 0; j != 2 * p [i]; ++ j) {
+        predecessor [sigma] = dart;
+        origin [dart] = node;
+        predecessor = dart ++;
       }
-      if (Rx [n] == undef) {
-        Rx [n] = next_node;
-        Y_rotate (nodes [Rx [n - 1]], nodes [next_node]);
-        ++ next_node;
-      }
+      ++ node;
     }
-    m0 += q;
-    return m0 != N;
-  } ()) {
-    while (n0 [P] != undef) ++ n0;
-
-    // Attach triangle m0 to triangle n0's dangling P-node.
-    // At this point we learn the coordinates of the next Q-node.
-    Px [m0] = Px [n0];
-    ALIGNED16 rotor_t X_rotate (nodes [Px [n0]], A);
-    X_rotate (nodes [n0 / q], nodes [m0 / q]);
-
-    // Work out the consequences of attaching the new triangle.
-    // Invariant: n [P] = m if and only if m [Q] [R] = n, for all m, n < N.
-    unsigned n = n0, m = m0;
-    do {
-      n [P] = m;
-      m = m [Q];
-      m [R] = n;
-      Rx [m] = Rx [n] = Rx [m] & Rx [n];
-      unsigned d = 1;
-      while (d != r && n [R] != undef) {
-        n = n [R];
-        ++ d;
-      }
-      while (d != r && m [P] != undef) {
-        m = m [P] [Q];
-        ++ d;
-      }
-      if (d == r - 1) {
-        n [R] = m;
-        n = n [Qi];
-        m [P] = n;
-        Px [m] = Px [n] = Px [m] & Px [n];
-      }
-      if (n [P] != undef) {
-        n = m0;
-        m = n0;
-      }
-    } while (n [P] == undef);
   }
 
-  for (unsigned n = 0; n != N; ++ n) {
-    unsigned i = n;
-    unsigned j = i [R];
-    unsigned k = j [P];
-    indices [n] [0] = Px [j];
-    indices [n] [1] = j / q;
-    indices [n] [2] = Rx [i];
-    indices [n] [3] = Px [i];
-    indices [n] [4] = k / q;
-    indices [n] [5] = Rx [k];
+  constexpr unsigned undef = -1;
+  std::memset (alpha, '\xff', 6 * 60 * sizeof 0 [alpha]);
+  unsigned mu [3] = { 0, 1, 2 };
+  bool even = true;
+  rotate.about (nodes [0], -6.28318531f / ui2f (p [0]));
+
+  while (true) {
+    a [0] [sigma] [alpha] = a [1];
+    a [1] [sigma] [alpha] = a [2];
+    a [2] [sigma] [alpha] = a [0];
+
+    unsigned b [3];
+    b [1] = sigma_inverse (a [2], 2 * p [2 [mu]]);
+    if (a [2] [alpha] == undef && b [1] [alpha] != undef) {
+      b [0] = sigma_inverse (b [1] [alpha], 2 * p [0 [mu]]);
+      b [2] = a [1] [sigma];
+
+      b [0] [sigma] [alpha] = b [1];
+      b [1] [sigma] [alpha] = b [2];
+      b [2] [sigma] [alpha] = b [0];
+    }
+
+    if (a [0] [sigma] [sigma] [alpha] == undef) {
+      a [0] = a [0] [sigma];
+      std::swap (1 [mu], 2 [mu]);
+    }
+    else if (a [1] [sigma] [sigma] [alpha] == undef) {
+      a [0] = a [1] [sigma];
+      std::swap (0 [mu], 1 [mu]);
+      rotate.about (nodes [origin [a [0]]], -6.28318531f / ui2f (p [0 [mu]]));
+    }
+    else break;
+    even = !even;
+
+    if (a [0] [sigma] [sigma] [alpha] == undef) {
+      a [1] = next [1 [mu]] + even;
+      next [1 [mu]] += 2 * p [1 [mu]];
+      rotate (nodes [origin [a [0] [alpha] [sigma] [alpha]]],
+              nodes [origin [a [1]]]);
+    }
+    else {
+      a [1] = a [0] [sigma] [sigma] [alpha] [sigma] [alpha] [sigma];
+    }
+    a [2] = sigma_inverse (a [0] [alpha], 2 * p [2 [mu]]);
   }
+
+  for (unsigned i = 0; i != n / p [0]; ++ i) {
+    unsigned d = 2 * p [0] * i;
+    for (unsigned m = 0; m != p [0]; ++ m) {
+      std::uint8_t (& block) [6] = indices [p [0] * i + m];
+      block [0] = origin [d];
+      block [1] = origin [d = d [alpha]];
+      block [2] = origin [d = d [sigma] [alpha]];
+      block [3] = origin [d = d [sigma] [sigma] [sigma] [alpha]];
+      block [4] = origin [d = d [sigma] [alpha]];
+      block [5] = origin [d = d [sigma] [sigma] [sigma] [alpha]];
+      d = d [sigma] [alpha] [sigma];
+    }
+  }
+
+  deallocate (memory);
+  return n;
 }

@@ -163,8 +163,7 @@ void initialize_systems (float (& abc) [system_count] [8] [4],
       reflect(abc [select], xyz [select]);
     }
     cramer::inverse (xyz [select], xyzinv [select]);
-    unsigned p = 2, N = 2 * p * q * r / (q * r + r * p + p * q - p * q * r);
-    make_system (q, r, xyz [select], nodes, indices);
+    unsigned N = make_system ({ 2, q, r }, xyz [select], nodes, indices);
     vao_ids [select] = make_vao (N, nodes, indices);
     primitive_count [select] = N;
   };

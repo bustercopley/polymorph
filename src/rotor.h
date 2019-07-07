@@ -21,7 +21,7 @@
 
 struct rotor_t
 {
-  rotor_t (const float (& u) [4], float A);
+  void about (const float (& u) [4], float A);
   void operator () (const float (& in) [4], float (& out) [4]) const {
     store4f (out, mapply (matrix, load4f (in)));
   }
@@ -29,7 +29,7 @@ private:
   float matrix [4] [4];
 };
 
-inline rotor_t::rotor_t (const float (& u) [4], float a)
+inline void rotor_t::about (const float (& u) [4], float a)
 {
   ALIGNED16 float X [4] = { 0.0f, 0.0f, 0.0f, 0.0f };
   ALIGNED16 float U [4];
