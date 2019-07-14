@@ -154,22 +154,15 @@ void initialize_systems (float (& abc) [system_count] [8] [4],
   ALIGNED16 float nodes [62] [4];
   std::uint8_t indices [60] [6];
 
-  auto init = [&](const triangle_t & t, system_select_t select, unsigned q,
-    unsigned r, bool reflected) -> void {
-
-    std::memcpy (xyz [select], t.xyz, sizeof t.xyz);
-    std::memcpy (abc [select], t.abc, sizeof t.abc);
-    if (reflected) {
-      reflect(abc [select], xyz [select]);
-    }
-    cramer::inverse (xyz [select], xyzinv [select]);
-    unsigned N = make_system ({ 2, q, r }, xyz [select], nodes, indices);
-    vao_ids [select] = make_vao (N, nodes, indices);
-    primitive_count [select] = N;
-  };
-
-  for (unsigned n = 0; n != 3; ++ n) {
-    init (triangles [n], system_select_t (2 * n + 0), 3 + n, 3, false);
-    init (triangles [n], system_select_t (2 * n + 1), 3, 3 + n, true);
+  for (unsigned n = 0; n != 6; ++ n) {
+    unsigned p [3] = { 2, 3, 3 };
+    p [1 + (n & 1)] = 3 + n / 2;
+    std::memcpy (xyz [n], triangles [n / 2].xyz, sizeof triangles [n / 2].xyz);
+    std::memcpy (abc [n], triangles [n / 2].abc, sizeof triangles [n / 2].abc);
+    if (n & 1) reflect (abc [n], xyz [n]);
+    cramer::inverse (xyz [n], xyzinv [n]);
+    unsigned N = make_system (p, xyz [n], nodes, indices);
+    vao_ids [n] = make_vao (N, nodes, indices);
+    primitive_count [n] = N;
   }
 }
