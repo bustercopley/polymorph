@@ -62,17 +62,11 @@ float get_float (rng_t & rng, float a, float b)
 // Return a random vector uniformly distributed in a ball centre the origin.
 v4f get_vector_in_ball (rng_t & rng, float radius)
 {
-  union {
-    __m128i i128;
-    std::uint64_t u64 [2];
-    std::uint32_t u32 [4];
-  };
   v4f v, vsq;
   do {
-    u64 [0] = rng.get ();
-    u64 [1] = rng.get ();
-    u32 [3] = 0;
-    v = _mm_cvtepi32_ps (i128);
+    auto a = rng.get ();
+    auto b = rng.get () & 0x00000000ffffffffull; // Asume little-endian.
+    v = _mm_cvtepi32_ps (_mm_set_epi64x (b, a));
     vsq = dot (v, v);
   }
   while (_mm_comige_ss (vsq, _mm_set_ss (0x1.0P+62f)));
@@ -82,12 +76,6 @@ v4f get_vector_in_ball (rng_t & rng, float radius)
 // Return four random floats uniformly distributed in [-1,1)^4.
 v4f get_vector_in_box (rng_t & rng)
 {
-  union {
-    std::uint64_t u64 [2];
-    __m128i i128;
-  };
-  u64 [0] = rng.get ();
-  u64 [1] = rng.get ();
-  v4f v = _mm_cvtepi32_ps (i128);
+  v4f v = _mm_cvtepi32_ps (_mm_set_epi64x (rng.get (), rng.get ()));
   return _mm_set1_ps (0x1.000000P-031f) * v;
 }

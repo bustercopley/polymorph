@@ -66,8 +66,8 @@ inline v4f hsv_to_rgb (float hue, v4f saturation, v4f value, v4f alpha)
 #if __SSE4_1__
   return _mm_blend_ps (rgbx, alpha, 8); // rgba
 #else
-  const union { std::int32_t i [4]; v4f f; } mask = { { -1, -1, -1, 0 } };
-  return _mm_or_ps (_mm_and_ps (mask.f, rgbx), alpha);
+  v4f mask = _mm_castsi128_ps (_mm_setr_epi32 (-1, -1, -1, 0));
+  return _mm_or_ps (_mm_and_ps (mask, rgbx), alpha);
 #endif
 }
 

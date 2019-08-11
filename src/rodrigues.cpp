@@ -268,7 +268,7 @@ void compute (char * RESTRICT buffer, std::size_t stride,
   v4f iiii = _mm_set1_ps (1.0f);
 #if __SSE4_1__
 #else
-  const union { std::int32_t u [4]; v4f f; } mask = { {-1, -1, -1, 0 } };
+  v4f mask = _mm_castsi128_ps (_mm_setr_epi32 (-1, -1, -1, 0));
   v4f oooi = { 0.0f, 0.0f, 0.0f, 1.0f };
 #endif
   char * iter = buffer;
@@ -297,7 +297,7 @@ void compute (char * RESTRICT buffer, std::size_t stride,
     v4f phi = _mm_blend_ps (phicos, add, 8); // d0 d1 d2  0
     v4f xyz1 = _mm_blend_ps (xyz0, iiii, 8); // x0 x1 x2  1
 #else
-    v4f phi = _mm_and_ps (mask.f, phicos);
+    v4f phi = _mm_and_ps (mask, phicos);
     v4f xyz1 = _mm_or_ps (xyz0, oooi);
 #endif
     store4f (& f [0], SHUFPS (ashd, sub, (2, 0, 1, 3))); // d0 a2 s1 0
