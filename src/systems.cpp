@@ -26,8 +26,8 @@
 
 struct triangle_t
 {
-  float xyz [3] [4]; // Coordinates for single triangle XYZ of Moebius tiling.
-  float abc [8] [4]; // Coefficients A, B, C for generator T = AX + BY + CZ.
+  float xyz [3] [4]; // Three unit vectors, corners of a Moebius triangle XYZ.
+  float abc [8] [4]; // Coefficients of uniform generators aX + bY + cZ.
 };
 
 // The fundamental triangle of the tiling has angles
@@ -42,6 +42,11 @@ struct triangle_t
 // cosa = (cosB * cosC) / (sinB * sinC),
 // cosb = cosB / sinC,
 // cosc = cosC / sinB.
+
+// An example spherical triangle XYZ with dihedral angles A, B, C is given by
+// X = (1     0          0),
+// Y = (cosc  sinc       0),
+// Z = (cosb  sinb*cosA  sinb*sinA).
 
 // Any triple (alpha, beta, gamma) identifies a point T relative to
 // the spherical triangle XYZ, by the formula
@@ -59,8 +64,8 @@ struct triangle_t
 // { alpha, beta, gamma },  Snub generator.
 
 //     X1
-//    /  \    Part of the tiling of the sphere, showing
-//   Y0--Z0   triangles X1-Y0-Z0, X0-Y1-Z0, X0-Y0-Z1.
+//    /  \    Part of the tiling of the sphere, showing positive-
+//   Y0--Z0   sense triangles X1-Y0-Z0, X0-Y1-Z0, X0-Y0-Z1.
 //   |\  /|
 //   | X0 |
 //   |/  \|

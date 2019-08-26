@@ -79,8 +79,8 @@ unsigned make_system (const unsigned (& p) [3],
   rotate.about (nodes [0], -6.28318531f / ui2f (p [0]));
 
   // Extend alpha to a fixed point free involution, maintaining the invariant
-  // d[alpha] == undef || d == d[alpha][sigma][alpha][sigma][alpha][sigma],
-  // and locate the remaining nodes.
+  // d[alpha] == undef || d == d[alpha][sigma][alpha][sigma][alpha][sigma]
+  // for all darts d, and find the coordinates of the remaining nodes.
   while (true) {
     a [0] [sigma] [alpha] = a [1];
     a [1] [sigma] [alpha] = a [2];
@@ -105,7 +105,7 @@ unsigned make_system (const unsigned (& p) [3],
       a [1] = a [0] [sigma] [sigma] [alpha] [sigma] [alpha] [sigma];
     }
     else {
-      // Locate a new node.
+      // Find the coordinates of a new node.
       a [1] = next [mu [1]] + even;
       next [mu [1]] += 2 * p [mu [1]];
       rotate (nodes [origin [a [0] [alpha] [sigma] [alpha]]],
