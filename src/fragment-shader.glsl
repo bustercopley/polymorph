@@ -16,20 +16,20 @@
 
 layout (std140, binding = 1) uniform F
 {
-  vec3 a;
-  vec3 b;
-  vec4 c;
-  vec4 r;
-  vec4 f;
-  vec3 l [4];
+  vec3 a;      // ambient reflection (rgb)
+  vec3 b;      // background (rgb)
+  vec4 c;      // line colour (rgba)
+  vec4 r;      // xyz: specular reflection (rgb), w: exponent
+  vec4 f;      // coefficients for line width and fog
+  vec3 l [4];  // light positions
 };
 
 layout (std140, binding = 0) uniform H
 {
-  vec4 d;
-  vec4 g;
-  mat4 m;
-  bool s;
+  vec4 d;  // diffuse reflection
+  vec4 g;  // uniform coefficients
+  mat4 m;  // modelview matrix
+  bool s;  // snub?
 };
 
 in vec3 X;
@@ -41,15 +41,23 @@ layout (location = 0) out vec4 o;
 void main ()
 {
   vec3 G = gl_FrontFacing ? N : -N;
-  vec3 C = a - b;
   vec3 U = normalize (X);
+  vec3 C = a - b;
+  // Add diffuse and specular reflection from each light.
   for (int i = 0; i != 4; ++ i) {
     vec3 L = normalize (l [i] - X);
     float E = max (0, dot (L, G));
     C += d.xyz * E + pow (max (0, dot (L - 2 * E * G, U)), r.w) * r.xyz;
   }
-  float e = clamp (f.x + f.y * min (min (min (R, S), min (T, V)), W), 0, 1);
-  o = c + 1.33
-    * (1 - exp2 (-2 * e * e))
-    * (vec4 (b + (f.z + f.w * X.z) * C, d.w) - c);
+  // Edge shading.     // d: distance of sample from the edge.
+  //                   // e: fade factor between edge and face colours.
+  // e ^               // For d1 <= d <= d2, e = x + y * d, or d = (e - x) / y.
+  //   |
+  // 1 +      +---     // e(d1) = 0, so d1 = -x / y.
+  //   |     /         // e(d2) = 1, so d2 = (1 - x) / y.
+  //   |    /          // Thus d2 - d1 = 1 / y, and given d1 and d2, we have:
+  // 0 +===+--+---> d  // y = 1 / (d2 - d1), x = 1 - y * d2.
+  //   0   d1 d2
+  float e = clamp(f.x + f.y * min (R, min (min (S, T), min (V, W))), 0, 1);
+  o = c + e * (vec4 ((f.z + f.w * X.z) * C + b, d.w) - c);
 }

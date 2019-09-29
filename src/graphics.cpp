@@ -241,7 +241,7 @@ bool initialize_graphics (program_t & program)
 void program_t::set_view (const float (& view) [4],
                           int width, int height,
                           float fog_near, float fog_far,
-                          float line_width_extra, float line_sharpness)
+                          float line0, float line1)
 {
   glViewport (0, 0, width, height); GLCHECK;
 
@@ -257,9 +257,6 @@ void program_t::set_view (const float (& view) [4],
   float fogd = fogn - fogf;
   float fog1 = fogd / zd;
   float fog0 = fogf - fog1 * z2;
-
-  float line0 = -0.5f * line_width_extra * line_sharpness;
-  float line1 = line_sharpness;
 
   // Data blocks in layout std140.
 

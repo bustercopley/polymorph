@@ -51,8 +51,8 @@ namespace usr {
   const float fog_near = 0.0f;  // Fog blend factor at near plane.
   const float fog_far = 0.8f;   // Fog blend factor at far plane.
 
-  const float line_width_extra = 0.0f;
-  const float line_sharpness = 1.0f;
+  const float line_width = 1.0f;
+  const float line_margin = 0.65f;
 
   // Parameters for material-colour animation timings.
 
@@ -149,12 +149,13 @@ bool model_t::start (int width, int height, const settings_t & settings)
   ALIGNED16 float view [4];
 
   float scale = 0.5f / usr::scale;
-  float sharpness = usr::line_sharpness;
+  float line1 = 1.0f / usr::line_margin;
+  float line0 = 1.0f - usr::line_width / usr::line_margin;
   float fwidth = width;
   float fheight = height;
   // Adjust scale and line width for small windows (for parented mode).
   if (width < 512) scale *= 512.0f / fwidth;
-  if (width < 256) sharpness *= 256.0f / fwidth;
+  if (width < 256) line1 *= 256.0f / fwidth;
 
   // x1, y1, z1: Coordinates of bottom-right-front corner of view frustum.
   float x1 = view [0] = scale * fwidth;
@@ -167,9 +168,8 @@ bool model_t::start (int width, int height, const settings_t & settings)
   float x2 = x1 * (z2 / z1);
   float y2 = y1 * (z2 / z1);
 
-  program.set_view (view, width, height,
-                    usr::fog_near, usr::fog_far,
-                    usr::line_width_extra, sharpness);
+  program.set_view (view, width, height, usr::fog_near, usr::fog_far,
+                    line0, line1);
 
   // Calculate wall planes to fit the front of the viewing frustum.
   ALIGNED16 const float temp [6] [2] [4] = {

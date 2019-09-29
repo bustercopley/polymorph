@@ -65,7 +65,7 @@ struct program_t
   void set_view (const float (& view) [4],
                  int width, int height,
                  float fog_near, float fog_far,
-                 float line_width_extra, float line_sharpness);
+                 float line_width, float line_margin);
 };
 
 bool initialize_graphics (program_t & program);
