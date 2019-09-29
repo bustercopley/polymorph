@@ -190,8 +190,14 @@ bool uniform_buffer_t::initialize ()
   GLint max_size, align;
   glGetIntegerv (GL_MAX_UNIFORM_BLOCK_SIZE, & max_size); GLCHECK;
   glGetIntegerv (GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, & align); GLCHECK;
+
+#if PRINT_ENABLED
+  std::cout << "Max uniform block size " << max_size
+            << "\nUniform buffer offset alignment " << align << std::endl;
+#endif
+
   // Align client buffer to at least 64 bytes to avoid straddling cache lines.
-  align = align > 64 ? align : 64;
+  align = std::max (align, 64);
   m_size = max_size;
   m_memory = allocate (m_size + align);
   if (! m_memory) return false;
@@ -389,12 +395,13 @@ void clear ()
 
 void paint (unsigned N,
             unsigned vao_id,
-            GLuint ubuf,
-            std::ptrdiff_t uoffset)
+            GLuint uniform_buffer_id,
+            std::ptrdiff_t uniform_buffer_offset)
 {
   const unsigned block_size = sizeof (object_data_t);
   glBindVertexArray (vao_id); GLCHECK;
-  glBindBufferRange (GL_UNIFORM_BUFFER, BLOCK_H, ubuf, uoffset, block_size);
+  glBindBufferRange (GL_UNIFORM_BUFFER, BLOCK_H, uniform_buffer_id,
+                     uniform_buffer_offset, block_size);
   GLCHECK;
   glCullFace (GL_FRONT); GLCHECK;
   glDrawElements (GL_TRIANGLES_ADJACENCY, N * 6, GL_UNSIGNED_BYTE, nullptr);
