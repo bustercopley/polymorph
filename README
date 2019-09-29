@@ -1,16 +1,11 @@
-Polymorph, an OpenGL screensaver for Windows.
+[Polymorph](https://buster.me.uk/) screensaver for Windows.
 
-See the uniform polyhedra! See them morph! See them spin! See them bounce!
-
-Download page:
-
-  https://buster.me.uk/
+Morphing uniform polyhedra, spinning and bouncing around in a box.
 
 Instructions:
 
- * Download the screensaver from the download page.
- * Right-click on the screensaver file in File Explorer.
- * Click "Test", "Configure" or "Install".
+* Download the screensaver (or [build from source](INSTALL.md)).
+* Right-click on the `.scr` file and click "Test", "Configure" or "Install".
 
-See the file "LICENSE" for the conditions under which you may use this software.
-See the file "INSTALL" for instructions on how to build from source.
+See [INSTALL](INSTALL.md) for instructions on how to build from source.
+See [LICENSE](LICENSE) for the conditions under which you may use this software.

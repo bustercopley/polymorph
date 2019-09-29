@@ -1,30 +1,35 @@
 Here are the instructions for building the Polymorph screensaver from source.
-See README for how to run or install the screensaver after it is built.
+See [README](README.md) for how to run or install the screensaver after it is
+built.
 
-SETTING UP THE BUILD ENVIRONMENT.
+## Setting up the build environment.
 
 You need a recent MinGW-W64 toolchain and GNU Make. To get them, install MSYS2
 from Sourceforge, then launch the MINGW32 or MINGW64 shell and get the necessary
 packages using the commands:
 
-   pacman -Sqyu ${MINGW_PACKAGE_PREFIX}-gcc
-   pacman -Sqyu ${MINGW_PACKAGE_PREFIX}-make
+    pacman -Sqyu ${MINGW_PACKAGE_PREFIX}-gcc
+    pacman -Sqyu ${MINGW_PACKAGE_PREFIX}-make
 
-Perl is required for minifying the shaders. If you don't want that, you can
-skip the minification step (see COMPILE COMMANDS below). Otherwise, install
-Strawberry Perl in the default location, or install the Perl distribution
-of your choice and add its bin directory to the PATH in Makefile, or get
-MINGW Perl using this command:
+If you want to minify the shader sources, you also need to have Perl installed.
 
-   pacman -Sqyu ${MINGW_PACKAGE_PREFIX}-perl
+## Compile commands.
 
-COMPILE COMMANDS.
+To compile, enter this command in the MINGW32 or MINGW64 shell:
 
-To compile, enter one of these commands in the MINGW32 or MINGW64 shell:
+    mingw32-make
 
-    mingw32-make -j
-    mingw32-make -j SHADERS=full
-    mingw32-make -j PLATFORM=x86
+You can set variables on the Make command line to influence Make's behaviour.
+For example:
 
-SHADERS is 'minified' (the default) or 'full' (don't run the minifier).
-PLATFORM is x86 (for 32-bit Windows) or x64 (for 64-bit windows).
+* To target 32-bit Windows:
+
+        mingw32-make PLATFORM=x86
+
+* To specify the location of Perl if it is not on the path:
+
+        mingw32-make PERL=c:\Strawberry\perl\bin\perl.exe
+
+* To skip shader minification (e.g., if Perl is not available):
+
+        mingw32-make shaders=full
