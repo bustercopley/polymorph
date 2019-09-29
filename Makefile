@@ -14,53 +14,43 @@
 
 SHELL=cmd
 
-# Override on the command line, e.g., "make PLATFORM=x86 CONFIG=base".
-PLATFORM=x64
-CONFIG=tiny
-
+# Available platforms and configs.
 PLATFORMS=x64 x86
 CONFIGS=tiny base debug
 
-$(if $(filter $(CONFIG),$(CONFIGS)),,$(error Bad config "$(CONFIG)"))
-$(if $(filter $(PLATFORM),$(PLATFORMS)),,$(error Bad platform "$(PLATFORM)"))
+# Default platform and config (can be overridden on the Make command line).
+PLATFORM=x64
+CONFIG=tiny
 
-x86_TOOLDIR=C:\msys64\mingw32\bin
-x64_TOOLDIR=C:\msys64\mingw64\bin
-PATH=$($(PLATFORM)_TOOLDIR)
+# Top-level targets.
+all: $(PLATFORM)-$(CONFIG)
+test: $(PLATFORM)-$(CONFIG)-test
+debug: $(PLATFORM)-$(CONFIG)-debug
+clean: ; -rd /s /q .obj
+.PHONY: all test debug clean
 
-x86_ENTRY_POINT=_RawEntryPoint@0
-x64_ENTRY_POINT=RawEntryPoint
-ENTRY_POINT=$($(PLATFORM)_ENTRY_POINT)
-
-x64_base_APPNAME=Polymorph-base
-x86_base_APPNAME=Polymorph-x86-base
-x64_tiny_APPNAME=Polymorph
-x86_tiny_APPNAME=Polymorph-x86
-x64_debug_APPNAME=Polymorph-debug
-x86_debug_APPNAME=Polymorph-x86-debug
-
-FILENAME=$($(PLATFORM)_$(CONFIG)_APPNAME).scr
+# Options common to all platforms and configs.
+SRCDIR=src
+CPPFLAGS=-DUNICODE
+CFLAGS=-g -march=core2 -mtune=generic -mfpmath=sse -mno-stackrealign \
+-fno-ident -ffast-math -Wall -Wextra -Werror
+CXXFLAGS=-std=c++1z
+LDFLAGS=-municode
+LDLIBS=-lopengl32 -lcomctl32 -lshell32
+RESOURCES=polyhedron.ico $(SRCDIR)/polymorph.scr.manifest
+SHADER_NAMES=vertex-shader.glsl geometry-shader.glsl fragment-shader.glsl
 OBJECTS=\
 arguments.o bump.o dialog.o glinit.o graphics.o main.o markov.o memory.o \
 model.o partition.o polymorph.o random.o reposition.o resources.o rodrigues.o \
 settings.o systems.o make_system.o
+DEBUGGER_ARGS=--batch --quiet -ex run -ex "bt full" -ex quit
+PERL=perl.exe
 
-OBJDIR=.obj/$(PLATFORM)/$(CONFIG)
-SRCDIR=src
-EXTRA_CLEAN=Polymorph*.scr
-
-CPPFLAGS=-DUNICODE
-CFLAGS=-g -march=core2 -mtune=generic -mfpmath=sse -mno-stackrealign \
--fno-ident -ffast-math -pedantic -Wall -Wextra
-CXXFLAGS=-std=c++1z
-LDFLAGS=-municode
-LDLIBS=-lopengl32 -lcomctl32 -lshell32
-RESFLAGS=-DPLATFORM_CONFIG=$(PLATFORM)_$(CONFIG) -I$(SHADER_DIR)
-
+# Config-specific options.
 tiny_CPPFLAGS=-DTINY
 tiny_CFLAGS=-flto -Os -fno-asynchronous-unwind-tables
 tiny_CXXFLAGS=-fno-rtti -fno-exceptions
-tiny_LDFLAGS=-nostdlib -Wl,--disable-runtime-pseudo-reloc -Wl,-e$(ENTRY_POINT)
+tiny_LDFLAGS=-nostdlib -Wl,--disable-runtime-pseudo-reloc -Wl,-e$(entry_point)
 tiny_LDLIBS=-mwindows -lgdi32 -ladvapi32 -luser32 -lkernel32
 tiny_SHADERS=minified
 
@@ -72,108 +62,113 @@ base_LDLIBS=-mconsole -lgdi32
 base_SHADERS=full
 
 debug_CPPFLAGS=-DENABLE_PRINT -DENABLE_GLCHECK -DENABLE_GLDEBUG
-debug_CFLAGS=-Og
+debug_CFLAGS=-O0 -ggdb3
 debug_CXXFLAGS=
 debug_LDFLAGS=
 debug_LDLIBS=-mconsole -lgdi32
 debug_SHADERS=full
 
-full_SHADER_DIR=src
-minified_SHADER_DIR=.obj/minified
+# Shader-specific options.
+full_SHADERS_DIR=$(SRCDIR)
+minified_SHADERS_DIR=.obj/minified
 
-SHADERS=$($(CONFIG)_SHADERS)
-SHADER_NAMES=vertex-shader.glsl geometry-shader.glsl fragment-shader.glsl
-SHADER_DIR=$($(SHADERS)_SHADER_DIR)
-SHADER_RESOURCES=$($(SHADERS)_SHADER_RESOURCES)
+$(foreach shaders,full minified,\
+$(eval $(shaders)_RESOURCES=$(SHADER_NAMES:%=$($(shaders)_SHADERS_DIR)/%)))
 
-$(foreach shaders,full minified,$(eval \
-$(shaders)_SHADER_RESOURCES=$(SHADER_NAMES:%=$$($(shaders)_SHADER_DIR)/%)))
+# Platform-specific options.
+x86_TOOLDIR=C:\msys64\mingw32\bin
+x64_TOOLDIR=C:\msys64\mingw64\bin
+x86_ENTRY_POINT=_RawEntryPoint@0
+x64_ENTRY_POINT=RawEntryPoint
 
-RESOURCES=polyhedron.ico $(SHADER_RESOURCES) src/polymorph.scr.manifest
+# Options that depend on both platform and config.
+x64_base_APPNAME=Polymorph-base
+x86_base_APPNAME=Polymorph-x86-base
+x64_tiny_APPNAME=Polymorph
+x86_tiny_APPNAME=Polymorph-x86
+x64_debug_APPNAME=Polymorph-debug
+x86_debug_APPNAME=Polymorph-x86-debug
 
-objects=$(OBJECTS:%=$(OBJDIR)/%)
-cppflags=$(CPPFLAGS) $($(CONFIG)_CPPFLAGS)
-cflags=$(CFLAGS) $($(CONFIG)_CFLAGS)
-cxxflags=$(cflags) $(CXXFLAGS) $($(CONFIG)_CXXFLAGS)
-ldflags=$(LDFLAGS) $($(CONFIG)_LDFLAGS)
-ldlibs=$(LDLIBS) $($(CONFIG)_LDLIBS)
-resflags=$(RESFLAGS)
+# Internal variables.
+filename=$($(platform)_$(config)_APPNAME).scr
+objdir=.obj/$(platform)/$(config)
+shaders=$($(config)_SHADERS)
+shaders_dir=$($(shaders)_SHADERS_DIR)
+tooldir=$($(platform)_TOOLDIR)
+entry_point=$($(platform)_ENTRY_POINT)
+objects=$(OBJECTS:%=$(objdir)/%)
+cppflags=$(CPPFLAGS) $($(config)_CPPFLAGS)
+cflags=$(CFLAGS) $($(config)_CFLAGS)
+cxxflags=$(cflags) $(CXXFLAGS) $($(config)_CXXFLAGS)
+ldflags=$(LDFLAGS) $($(config)_LDFLAGS)
+ldlibs=$(LDLIBS) $($(config)_LDLIBS)
+resflags=-DPLATFORM_CONFIG=$(platform)_$(config) -I$(shaders_dir)
+resources=$(RESOURCES) $($(shaders)_RESOURCES)
 
-DEBUG_COMMANDS=-ex run -ex bt full -ex quit
+# Rules that depend on platform and config.
+define platform-config-defs
 
-all: $(FILENAME) dump
+# Top-level targets (advanced).
+$(platform)-$(config): $(filename)
 
-test: all
-	$(FILENAME) $(ARG)
+$(platform)-$(config)-test: $(platform)-$(config)
+	$(filename) $(ARGS)
 
-debug: .obj/$(FILENAME)
-	gdb --quiet --batch $(DEBUG_COMMANDS) --args .obj/$(FILENAME) $(ARG)
+$(platform)-$(config)-debug: $(objdir)/$(filename)
+	gdb $(DEBUGGER_ARGS) --args $(objdir)/$(filename) $(ARGS)
 
-dump: .obj/$(FILENAME).dump
+clean: $(platform)-$(config)-clean
+$(platform)-$(config)-clean:
+	-del $(filename)
 
-clean:
-	-rd /s /q .obj
-	-del $(EXTRA_CLEAN:%="%")
+all-platforms-all-configs: $(platform)-$(config)
+$(platform)-all-configs: $(platform)-$(config)
+all-platforms-$(config): $(platform)-$(config)
 
-.PHONY: all test debug dump clean
-
-$(FILENAME): .obj/$(FILENAME)
-	strip .obj/$(FILENAME) -o $(FILENAME)
-
-.obj/$(FILENAME).dump: .obj/$(FILENAME)
-	>.obj\$(FILENAME).dump ( \
-objdump -Mintel --no-show-raw-insn -d -C -l .obj/$(FILENAME) & \
-objdump -s -j.data .obj/$(FILENAME) )
-
-.obj/$(PLATFORM)/$(CONFIG)/resources.o: $(RESOURCES)
-
-.obj/$(FILENAME): $(objects)
-	$(CXX) $(cxxflags) $(ldflags) $(objects) $(ldlibs) -o .obj/$(FILENAME)
-	-@size .obj/$(FILENAME)
-
-$(OBJDIR)/%.o: $(SRCDIR)/%.cpp | $(OBJDIR)
-	$(CXX) -c $< -o $@ -MMD $(cppflags) $(cxxflags)
-$(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR)
-	$(CC) -c $< -o $@ -MMD $(cppflags) $(cflags)
-$(OBJDIR)/%.o: $(SRCDIR)/%.S | $(OBJDIR)
-	$(CC) -c $< -o $@ -MMD
-$(OBJDIR)/%.o: $(SRCDIR)/%.rc | $(OBJDIR)
-	$(CC) -x c $< $(cppflags) -MM -MT $@ -MF $(@:%.o=%.d)
-	windres $(cppflags) $(resflags) $< $@
-
-$(minified_SHADER_DIR)/%.glsl: src/%.glsl minify.pl | $(minified_SHADER_DIR)
-	c:\strawberry\perl\bin\perl.exe minify.pl "$<" "$@"
-
-.obj: ; -md "$@"
-.obj/minified $(PLATFORMS:%=.obj/%): | .obj ; -md "$@"
-$(foreach platform,$(PLATFORMS),$(eval \
-$(CONFIG:%=.obj/$(platform)/%): | .obj/$(platform) ; -md "$$@"))
-
-clean-all: clean
-	$(MAKE) all-platforms-all-configs
-
-all-platforms-all-configs: $(foreach platform,$(PLATFORMS),$(platform)-all-configs)
-
-define platform-targets
-$(platform)-all-configs: $(foreach config,$(CONFIGS),$(platform)-$(config))
-.PHONY: $(platform)-all-configs
-endef
-
-define config-targets
-all-platforms-$(config): $(foreach platform,$(PLATFORMS),$(platform)-$(config))
-.PHONY: all-platforms-$(config)
-endef
-
-define platform-config-targets
-$(platform)-$(config): $($($(config)_SHADERS)_SHADER_RESOURCES) | .obj/$(platform)
-	$(MAKE) PLATFORM=$(platform) CONFIG=$(config) all
 .PHONY: $(platform)-$(config)
+.PHONY: $(platform)-$(config)-test
+.PHONY: $(platform)-$(config)-debug
+.PHONY: $(platform)-$(config)-clean
+.PHONY: $(platform)-all-configs
+.PHONY: all-platforms-$(config)
+.PHONY: all-platforms-all-configs
+
+# Select platform toolchain by giving PATH a target-specific variable value.
+$(platform)-$(config)-%: PATH=$(tooldir)
+$(filename): PATH=$(tooldir)
+$(objdir)/%: PATH=$(tooldir)
+
+# Bottom-level targets.
+$(filename): $(objdir)/$(filename)
+	strip $$< -o $$@
+
+$(objdir)/$(filename): $(objects)
+	$(CXX) $(cxxflags) $(ldflags) $$^ $(ldlibs) -o $$@
+
+$(objdir)/%.o: $(SRCDIR)/%.cpp | $(objdir)
+	$(CXX) -c -o $$@ $$< -MMD -MP $(cppflags) $(cxxflags)
+
+$(objdir)/%.o: $(SRCDIR)/%.rc | $(objdir)
+	$(CC) -x c $$< $(cppflags) -MM -MP -MT $$@ -MF $$(@:%.o=%.d)
+	windres $(cppflags) $(resflags) $$< $$@
+
+$(objdir)/resources.o: $(resources)
+.obj/$(platform)/$(config): | .obj/$(platform) ; -md "$$@"
+
+# Automatic prerequisites.
+-include $(objects:%.o=%.d)
+
 endef
 
-$(foreach config,$(CONFIGS),$(eval $(config-targets)))
-$(foreach platform,$(PLATFORMS),$(eval $(platform-targets)))
-$(foreach platform,$(PLATFORMS),$(foreach config,$(CONFIGS),$(eval $(platform-config-targets))))
+# Invoke platform-config-defs for each platform and each config.
+define platform-defs
+$(foreach config,$(CONFIGS),$(eval $(platform-config-defs)))
+.obj/$(platform): | .obj ; -md "$$@"
+endef
+$(foreach platform,$(PLATFORMS),$(eval $(platform-defs)))
 
-.PHONY: clean-all all-platforms-all-configs
-
--include $(OBJECTS:%.o=$(OBJDIR)/%.d)
+# Miscellaneous.
+.obj: ; -md "$@"
+.obj/minified: | .obj ; -md "$@"
+.obj/minified/%.glsl: $(SRCDIR)/%.glsl minify.pl | .obj/minified
+	$(PERL) minify.pl "$<" "$@"
