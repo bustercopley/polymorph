@@ -310,7 +310,7 @@ void program_t::set_view (const float (& view) [4],
 
   // Create one uniform buffer large enough to hold the data for "F" and "G".
   // This uniform buffer is never destroyed (the uniform buffer id is leaked).
-  GLuint stride = std::max(sizeof fdata, sizeof gdata);
+  GLuint stride = std::max (sizeof fdata, sizeof gdata);
   GLint align;
   glGetIntegerv (GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, & align); GLCHECK;
   align_up (stride, stride, align);

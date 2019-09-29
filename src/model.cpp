@@ -198,7 +198,7 @@ bool model_t::start (int width, int height, const settings_t & settings)
   // subsequently the number of objects increases linearly with position.
   unsigned max_count = std::max (3u,
     truncate (usr::fill_factor * (x1 * y1 * zd) / (rsq * radius)));
-  DWORD pos = settings.trackbar_pos[0];
+  DWORD pos = settings.trackbar_pos [0];
   count = pos < 2 ? pos + 1 : 3 + (max_count - 3) * (pos - 2) / 98;
   set_capacity (count);
 
@@ -324,8 +324,8 @@ model_t::~model_t ()
   std::cout << std::fixed << std::setprecision (2);
   for (unsigned n = 0; n != 18; ++ n) {
     std::cout << std::setw (10)
-              << (100.0f * polyhedron_counts[n] / total_polyhedron_count)
-              << " % " << names[n] << "\n";
+              << (100.0 * polyhedron_counts [n] / total_polyhedron_count)
+              << " % " << names [n] << "\n";
   }
 #endif
   //deallocate (memory);

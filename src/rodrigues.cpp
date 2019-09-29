@@ -248,7 +248,7 @@ void advance_angular (
 {
   v4f one = _mm_set1_ps (1.0f);
   v4f twopi = _mm_set1_ps (0x1.921fb6P+2f);
-  v4f lim1 = _mm_set_ss(0x1.3c0000P+3f); // a touch over pi^2 (~ 0x1.3bd3ccP+3f)
+  v4f lim1 = _mm_set_ss (0x1.3c0000P+3f); // Just over pi^2 (~ 0x1.3bd3ccP+3f).
   for (unsigned n = 0; n != count; ++ n) {
     v4f u1 = bch2 (load4f (w [n]), load4f (u [n]));
     // If |u|^2 exceeds lim1, scale u in order to adjust its length by -2pi.
