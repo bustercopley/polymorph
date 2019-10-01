@@ -21,8 +21,22 @@
 #include "make_system.h"
 #include "resources.h"
 #include "vector.h"
+#include "rodrigues.h"
 #include <cstdint>
 #include <cstring>
+
+const unsigned symbols [] [3] = {
+  { 2, 3, 3 },
+  { 4, 3, 2 },
+  { 2, 5, 3 },
+};
+
+const float betas [] = {
+  1.61803399f, // (1 + sqrt5)/2
+  1.68501832f, // sqrt((4 + curt(19 - 3sqrt33) + curt(19 + 3sqrt33))/3)
+  1.71556150f, // curt((9(1 + sqrt5) + sqrt(6(17 + 27sqrt5))) / 36) +
+               // curt((9(1 + sqrt5) - sqrt(6(17 + 27sqrt5))) / 36)
+};
 
 struct triangle_t
 {
@@ -30,124 +44,103 @@ struct triangle_t
   float abc [8] [4]; // Coefficients of uniform generators aX + bY + cZ.
 };
 
-// The fundamental triangle of the tiling has angles
-// A = pi/p, B = pi/q, C = pi/r and sides a, b, c.
+triangle_t get_triangle (const unsigned (& p) [3]) {
+  ALIGNED16 float S [3] [4], cosa [4], sina [4];
+  for (int i = 0; i != 3; ++ i) {
+    store4f (S [i], sincos (_mm_set1_ps (3.14159265f / p [i])));
+  }
 
-// By the spherical cosine rule,
-// cosa = (cosA + cosB * cosC) / (sinB * sinC),
-// cosb = (cosB + cosC * cosA) / (sinC * sinA),
-// cosc = (cosC + cosA * cosB) / (sinA * sinB).
+  // The spherical cosine rule.
+  cosa [0] = (S [0] [1] + S [1] [1] * S [2] [1]) / (S [1] [0] * S [2] [0]);
+  cosa [1] = (S [1] [1] + S [2] [1] * S [0] [1]) / (S [2] [0] * S [0] [0]);
+  cosa [2] = (S [2] [1] + S [0] [1] * S [1] [1]) / (S [0] [0] * S [1] [0]);
+  cosa [3] = 0.0f;
 
-// We assume p = 2; thus cosA = 0 and sinA = 1. Therefore,
-// cosa = (cosB * cosC) / (sinB * sinC),
-// cosb = cosB / sinC,
-// cosc = cosC / sinB.
+  // The trigonometrical identity.
+  v4f sina_v4f = sqrt (_mm_set1_ps (1.0) - load4f (cosa) * load4f (cosa));
+  store4f (sina, sina_v4f);
 
-// An example spherical triangle XYZ with dihedral angles A, B, C is given by
-// X = (1     0          0),
-// Y = (cosc  sinc       0),
-// Z = (cosb  sinb*cosA  sinb*sinA).
-
-// Any triple (alpha, beta, gamma) identifies a point T relative to
-// the spherical triangle XYZ, by the formula
-// T = alpha * X + beta * Y + gamma * Z.
-// For certain triples, replicating the point T in each triangle
-// of the tiling gives the vertices of a uniform polyhedron:
-
-// { 1, 0, 0 },             Point X.
-// { 0, 1, 0 },             Point Y.
-// { 0, 0, 1 },             Point Z.
-// { 0, sinb, sinc },       Intersection of YZ with bisector of angle X.
-// { sina, 0, sinc },       Intersection of ZX with bisector of angle Y.
-// { sina, sinb, 0 },       Intersection of YZ with bisector of angle Z.
-// { sinA, sinB, sinC },    Incentre (intersection of the three bisectors).
-// { alpha, beta, gamma },  Snub generator.
-
-//     X1
-//    /  \    Part of the tiling of the sphere, showing positive-
-//   Y0--Z0   sense triangles X1-Y0-Z0, X0-Y1-Z0, X0-Y0-Z1.
-//   |\  /|
-//   | X0 |
-//   |/  \|
-//   Z1  Y1
-
-// For the snub generator, the three points
-//   TX = alpha * X1 + beta * Y0 + gamma * Z0
-//   TY = alpha * X0 + beta * Y1 + gamma * Z0
-//   TZ = alpha * X0 + beta * Y0 + gamma * Z1
-// (see diagram) are the vertices of an equilateral spherical triangle.
-
-const ALIGNED16 triangle_t triangles [3] = {
-  // Tetrahedral, <2, 3, 3>.
-  {
-    { { +0x1.000000P+0f, +0x0.000000P+0f, +0x0.000000P+0f, 0.0f },
-      { +0x1.279a74P-1f, +0x1.a20bd8P-1f, +0x0.000000P+0f, 0.0f },
-      { +0x1.279a74P-1f, +0x0.000000P+0f, +0x1.a20bd8P-1f, 0.0f },
+  ALIGNED16 triangle_t triangle = {
+    {
+      { 1, 0, 0, 0 },
+      { cosa [2], sina [2], 0, 0 },
+      { cosa [1], S [0] [1] * sina [1], S [0] [0] * sina [1], 0 },
     },
-    { { +0x1.000000P+0f, +0x0.000000P+0f, +0x0.000000P+0f, 0.0f }, // 2
-      { +0x0.000000P+0f, +0x1.000000P+0f, +0x0.000000P+0f, 0.0f }, // 1
-      { +0x0.000000P+0f, +0x0.000000P+0f, +0x1.000000P+0f, 0.0f }, // 1
-      { +0x0.000000P+0f, +0x1.3988e2P-1f, +0x1.3988e2P-1f, 0.0f }, // 11
-      { +0x1.34bf64P-1f, +0x0.000000P+0f, +0x1.0b621eP-1f, 0.0f }, // 6
-      { +0x1.34bf64P-1f, +0x1.0b621eP-1f, +0x0.000000P+0f, 0.0f }, // 6
-      { +0x1.c9f25cP-2f, +0x1.8c97f0P-2f, +0x1.8c97f0P-2f, 0.0f }, // 7
-      { +0x1.4cb7c0P-2f, +0x1.d2393eP-2f, +0x1.d2393eP-2f, 0.0f }, // 4
-      // Great icosahedron:
-      // { -0x1.605a90P+0f, +0x1.792eceP-1f, +0x1.792eceP-1f, 0.0f },
+    {
+      { 1, 0, 0, 0 }, // Vertex A
+      { 0, 1, 0, 0 }, // Vertex B
+      { 0, 0, 1, 0 }, // Vertex C
+      { 0, 0, 0, 0 },
+      { 0, 0, 0, 0 },
+      { 0, 0, 0, 0 },
+      { 0, 0, 0, 0 },
+      { 0, 0, 0, 0 },
     },
-  },
-  // Octahedral, <2, 4, 3>.
-  // Oriented so that two octahedral triangles cover one tetrahedral triangle.
-  {
-    { { +0x1.6a09e6P-1f, +0x1.000000P-1f, +0x1.000000P-1f, 0.0f },
-      { +0x1.000000P+0f, +0x0.000000P+0f, +0x0.000000P+0f, 0.0f },
-      { +0x1.279a74P-1f, +0x1.a20bd8P-1f, +0x0.000000P+0f, 0.0f },
-    },
-    { { +0x1.000000P+0f, +0x0.000000P+0f, +0x0.000000P+0f, 0.0f }, // 11
-      { +0x0.000000P+0f, +0x1.000000P+0f, +0x0.000000P+0f, 0.0f }, // 2
-      { +0x0.000000P+0f, +0x0.000000P+0f, +0x1.000000P+0f, 0.0f }, // 3
-      { +0x0.000000P+0f, +0x1.02ca46P-1f, +0x1.3cf3aeP-1f, 0.0f }, // 13
-      { +0x1.1fd4a6P-1f, +0x0.000000P+0f, +0x1.f28990P-2f, 0.0f }, // 8
-      { +0x1.43d136P-1f, +0x1.c9f25cP-2f, +0x0.000000P+0f, 0.0f }, // 7
-      { +0x1.b9d594P-2f, +0x1.386c8eP-2f, +0x1.7ea3c6P-2f, 0.0f }, // 15
-      { +0x1.31816eP-2f, +0x1.8d5502P-2f, +0x1.bdd092P-2f, 0.0f }, // 17
-    },
-  },
-  // Icosahedral, <2, 5, 3>.
-  {
-    { { +0x1.000000P+0f, +0x0.000000P+0f, +0x0.000000P+0f, 0.0f },
-      { +0x1.b38880P-1f, +0x1.0d2ca0P-1f, +0x0.000000P+0f, 0.0f },
-      { +0x1.de4bd6P-1f, +0x0.000000P+0f, +0x1.6d62c6P-2f, 0.0f },
-    },
-    { { +0x1.000000P+0f, +0x0.000000P+0f, +0x0.000000P+0f, 0.0f }, // 12
-      { +0x0.000000P+0f, +0x1.000000P+0f, +0x0.000000P+0f, 0.0f }, // 4
-      { +0x0.000000P+0f, +0x0.000000P+0f, +0x1.000000P+0f, 0.0f }, // 5
-      { +0x0.000000P+0f, +0x1.b4242aP-2f, +0x1.414c80P-1f, 0.0f }, // 14
-      { +0x1.16fc4eP-1f, +0x0.000000P+0f, +0x1.e33798P-2f, 0.0f }, // 10
-      { +0x1.4e5014P-1f, +0x1.890220P-2f, +0x0.000000P+0f, 0.0f }, // 9
-      { +0x1.b3be36P-2f, +0x1.001f92P-2f, +0x1.795d50P-2f, 0.0f }, // 16
-      { +0x1.287f1eP-2f, +0x1.52a52eP-2f, +0x1.b882c6P-2f, 0.0f }, // 18
-    },
-  },
-};
+  };
+
+  store4f (triangle.abc [3], sina_v4f);
+  store4f (triangle.abc [4], sina_v4f);
+  store4f (triangle.abc [5], sina_v4f);
+
+  triangle.abc [3] [0] = 0.0f;
+  triangle.abc [4] [1] = 0.0f;
+  triangle.abc [5] [2] = 0.0f;
+
+  triangle.abc [6] [0] = S [0] [0];
+  triangle.abc [6] [1] = S [1] [0];
+  triangle.abc [6] [2] = S [2] [0];
+
+  unsigned pi [3] = { 0, 1, 2 };
+
+  if (p [0] > p [1]) {
+    pi [0] = 1;
+    pi [1] = 0;
+  }
+
+  if (p [pi [0]] > p [2]) {
+    pi [2] = pi [0];
+    pi [0] = 2;
+  }
+
+  if (p [pi [1]] > p [pi [2]]) {
+    unsigned t = pi [1];
+    pi [1] = pi [2];
+    pi [2] = t;
+  }
+
+  float beta0 = betas [p [pi [2]] - 3];
+
+  triangle.abc [7] [pi [0]] = 1.0f;
+  triangle.abc [7] [pi [1]] = S [pi [1]] [0] * beta0;
+  triangle.abc [7] [pi [2]] = S [pi [2]] [0] * (beta0 * beta0 - 1);
+
+  for (int n = 0; n != 8; ++ n) {
+    v4f T = _mm_setzero_ps ();
+    for (int i = 0; i != 3; ++ i) {
+      T = T + _mm_set1_ps (triangle.abc [n] [i]) * load4f (triangle.xyz [i]);
+    }
+    store4f (triangle.abc [n], rsqrt (dot (T, T)) * load4f (triangle.abc [n]));
+  }
+
+  return triangle;
+}
 
 // Turn a PQR triangle into a PRQ triangle.
-void reflect (float (& abc) [8] [4],
-              float (& xyz) [3] [4])
+void reflect (triangle_t & triangle)
 {
-  v4f x = load4f (xyz [0]);
-  v4f y = load4f (xyz [1]);
-  v4f z = load4f (xyz [2]);
+  v4f x = load4f (triangle.xyz [0]);
+  v4f y = load4f (triangle.xyz [1]);
+  v4f z = load4f (triangle.xyz [2]);
 
   v4f n = cross (x, y);                  // Perpendicular to x and y.
   v4f d = (dot (n, z) / dot (n, n)) * n; // Component of z parallel to n.
 
-  store4f (xyz [1], z - (d + d));
-  store4f (xyz [2], y);
+  store4f (triangle.xyz [1], z - (d + d));
+  store4f (triangle.xyz [2], y);
 
   for (unsigned k = 0; k != 8; ++ k) {
-    v4f a = load4f (abc [k]);
-    store4f (abc [k], SHUFPS (a, a, (0, 2, 1, 3)));
+    v4f a = load4f (triangle.abc [k]);
+    store4f (triangle.abc [k], SHUFPS (a, a, (0, 2, 1, 3)));
   }
 }
 
@@ -160,11 +153,17 @@ void initialize_systems (float (& abc) [system_count] [8] [4],
   std::uint8_t indices [60] [6];
 
   for (unsigned n = 0; n != 6; ++ n) {
-    unsigned p [3] = { 2, 3, 3 };
-    p [1 + (n & 1)] = 3 + n / 2;
-    std::memcpy (xyz [n], triangles [n / 2].xyz, sizeof triangles [n / 2].xyz);
-    std::memcpy (abc [n], triangles [n / 2].abc, sizeof triangles [n / 2].abc);
-    if (n & 1) reflect (abc [n], xyz [n]);
+    unsigned p [3];
+    std::memcpy (p, symbols [n / 2], sizeof p);
+    ALIGNED16 triangle_t triangle = get_triangle (p);
+    if (n & 1) {
+      auto temp = p [1];
+      p [1] = p [2];
+      p [2] = temp;
+      reflect (triangle);
+    }
+    std::memcpy (xyz [n], triangle.xyz, sizeof triangle.xyz);
+    std::memcpy (abc [n], triangle.abc, sizeof triangle.abc);
     cramer::inverse (xyz [n], xyzinv [n]);
     unsigned N = make_system (p, xyz [n], nodes, indices);
     vao_ids [n] = make_vao (N, nodes, indices);

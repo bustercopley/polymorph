@@ -55,12 +55,12 @@ const struct replacement_t
   unsigned probability;
 } replacements [] = {
   // The fixups in maybe_perform_replacement assume this ordering.
-  { { tetrahedral, 0 }, { octahedral,  1 }, unsigned (0.375f * pmax) },
-  { { tetrahedral, 6 }, { octahedral,  5 }, unsigned (0.375f * pmax) },
-  { { tetrahedral, 3 }, { octahedral,  0 }, unsigned (0.375f * pmax) },
-  { { octahedral,  1 }, { tetrahedral, 0 }, unsigned (0.375f * pmax) },
-  { { octahedral,  5 }, { tetrahedral, 6 }, unsigned (0.375f * pmax) },
-  { { octahedral,  0 }, { tetrahedral, 3 }, unsigned (0.375f * pmax) },
+  { { tetrahedral, 0 }, { octahedral,  0 }, unsigned (0.375f * pmax) },
+  { { tetrahedral, 6 }, { octahedral,  4 }, unsigned (0.375f * pmax) },
+  { { tetrahedral, 3 }, { octahedral,  2 }, unsigned (0.375f * pmax) },
+  { { octahedral,  0 }, { tetrahedral, 0 }, unsigned (0.375f * pmax) },
+  { { octahedral,  4 }, { tetrahedral, 6 }, unsigned (0.375f * pmax) },
+  { { octahedral,  2 }, { tetrahedral, 3 }, unsigned (0.375f * pmax) },
   { { icosahedral, 1 }, { tetrahedral, 7 }, unsigned (0.400f * pmax) },
   { { tetrahedral, 7 }, { icosahedral, 1 }, unsigned (0.600f * pmax) },
   // The snub tetrahedron is not chiral (it is the icosahedron).

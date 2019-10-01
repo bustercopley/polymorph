@@ -196,6 +196,7 @@ void main ()
               float [5] (dist (w, v, u), 0, 0, 1e9, 1e9),
               float [5] (0, dist (v, u, w), 0, 1e9, 1e9),
               float [5] (0, 0, dist (u, w, v), 1e9, 1e9));
+    snub_segment (Q [0], V, W, i, j);
     snub_segment (Q [4], W, U, j, h);
     snub_segment (Q [2], U, V, h, i);
   }
