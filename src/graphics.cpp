@@ -312,14 +312,11 @@ void program_t::set_view (const float (& view) [4],
   // geometry_data_t and object_data_t.
 
   // Create one uniform buffer large enough to hold the data for "F" and "G".
-  // This uniform buffer is never destroyed (the uniform buffer id is leaked).
   GLuint stride = std::max (sizeof fdata, sizeof gdata);
   GLint align;
   glGetIntegerv (GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, & align); GLCHECK;
   align_up (stride, stride, align);
-  GLuint buf;
-  glGenBuffers (1, & buf); GLCHECK;
-  glBindBuffer (GL_UNIFORM_BUFFER, buf); GLCHECK;
+  glBindBuffer (GL_UNIFORM_BUFFER, static_uniform_buffer_id); GLCHECK;
   glBufferData (GL_UNIFORM_BUFFER, 2 * stride, nullptr, GL_STATIC_DRAW);
   GLCHECK;
 
@@ -331,9 +328,11 @@ void program_t::set_view (const float (& view) [4],
 
   // Bind "F" and "G" to the disjoint subranges. These indexed bindings remain
   // in place for the lifetime of the shader program.
-  glBindBufferRange (GL_UNIFORM_BUFFER, BLOCK_F, buf, 0 * stride, sizeof fdata);
+  glBindBufferRange (GL_UNIFORM_BUFFER, BLOCK_F, static_uniform_buffer_id,
+                     0 * stride, sizeof fdata);
   GLCHECK;
-  glBindBufferRange (GL_UNIFORM_BUFFER, BLOCK_G, buf, 1 * stride, sizeof gdata);
+  glBindBufferRange (GL_UNIFORM_BUFFER, BLOCK_G, static_uniform_buffer_id,
+                     1 * stride, sizeof gdata);
   GLCHECK;
 
   // The remaining uniform block, "H", contains per-object attributes.
@@ -350,6 +349,7 @@ void program_t::set_view (const float (& view) [4],
 bool program_t::initialize ()
 {
   if (! uniform_buffer.initialize ()) return false;
+  glGenBuffers (1, & static_uniform_buffer_id); GLCHECK;
 
   GLint status = 0;
   GLuint vshader = make_shader (GL_VERTEX_SHADER, IDR_VERTEX_SHADER);

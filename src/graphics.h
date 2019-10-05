@@ -60,6 +60,7 @@ private:
 struct program_t
 {
   GLuint id;
+  GLuint static_uniform_buffer_id;
   uniform_buffer_t uniform_buffer;
   bool initialize ();
   void set_view (const float (& view) [4],
