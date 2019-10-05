@@ -21,7 +21,7 @@
 #include <cstddef>
 
 // State: four three-dimensional vectors x, u, v, w per body
-//   x: position (defined in point_t)
+//   x: position
 //   v: velocity
 //   u: angular position
 //   w: angular velocity
