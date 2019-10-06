@@ -26,9 +26,9 @@
 #include <cstring>
 
 const unsigned symbols [] [3] = {
-  { 2, 3, 3 },
-  { 4, 3, 2 },
-  { 2, 5, 3 },
+  { 2, 3, 3 }, // tetrahedral
+  { 4, 3, 2 }, // octahedral
+  { 2, 5, 3 }, // icosahedral
 };
 
 const float betas [] = {
@@ -38,109 +38,110 @@ const float betas [] = {
                // curt((9(1 + sqrt5) - sqrt(6(17 + 27sqrt5))) / 36)
 };
 
-struct triangle_t
+void get_triangle (unsigned (& p) [3], bool reflect, float (& xyz) [3] [4],
+                   float (& abc) [8] [4])
 {
-  float xyz [3] [4]; // Three unit vectors, corners of a Moebius triangle XYZ.
-  float abc [8] [4]; // Coefficients of uniform generators aX + bY + cZ.
-};
-
-triangle_t get_triangle (const unsigned (& p) [3]) {
-  ALIGNED16 float S [3] [4], cosa [4], sina [4];
-  for (int i = 0; i != 3; ++ i) {
-    store4f (S [i], sincos (_mm_set1_ps (3.14159265f / p [i])));
+  // S [0] = sinA cosA sinA cosA
+  // S [1] = sinB cosB sinB cosB
+  // S [2] = sinC cosC sinC cosC
+  v4f S [3];
+  for (unsigned i = 0; i != 3; ++ i) {
+    S [i] = sincos (_mm_set1_ps (3.14159265f / p [i]));
   }
 
-  // The spherical cosine rule.
-  cosa [0] = (S [0] [1] + S [1] [1] * S [2] [1]) / (S [1] [0] * S [2] [0]);
-  cosa [1] = (S [1] [1] + S [2] [1] * S [0] [1]) / (S [2] [0] * S [0] [0]);
-  cosa [2] = (S [2] [1] + S [0] [1] * S [1] [1]) / (S [0] [0] * S [1] [0]);
+  v4f t0 = _mm_unpacklo_ps (S [0], S [1]);               // sinA sinB cosA cosB
+  v4f t1 = _mm_unpacklo_ps (S [2], _mm_setzero_ps ());   // sinC    0 cosC    0
+  v4f vsinA = _mm_movelh_ps (t0, t1);                    // sinA sinB sinC 0
+  v4f vcosA = _mm_movehl_ps (t1, t0);                    // cosA cosB cosC 0
+
+  v4f vsinB = SHUFPS (vsinA, vsinA, (1, 2, 0, 3));       // sinB sinC sinA 0
+  v4f vsinC = SHUFPS (vsinA, vsinA, (2, 0, 1, 3));       // sinC sinA sinB 0
+  v4f vcosB = SHUFPS (vcosA, vcosA, (1, 2, 0, 3));       // cosB cosC cosA 0
+  v4f vcosC = SHUFPS (vcosA, vcosA, (2, 0, 1, 3));       // cosC cosA cosB 0
+
+  // Use the spherical cosine rule and the trigonometrical identity.
+  v4f vcosa = (vcosA + vcosB * vcosC) / (vsinB * vsinC);   // cosa cosb cosc 0
+  v4f vsina = sqrt (_mm_set1_ps (1.0) - vcosa * vcosa);  // sina sinb sinc 0
+
+  ALIGNED16 float cosA [4], sinA [4], cosa [4], sina [4];
+  store4f (cosA, vcosA);
+  store4f (sinA, vsinA);
+  store4f (cosa, vcosa);
+  store4f (sina, vsina);
+
   cosa [3] = 0.0f;
+  sina [3] = 0.0f;
 
-  // The trigonometrical identity.
-  v4f sina_v4f = sqrt (_mm_set1_ps (1.0) - load4f (cosa) * load4f (cosa));
-  store4f (sina, sina_v4f);
+  // xyz [0] =    1          0          0
+  // xyz [1] = cosc       sinc          0
+  // xyz [2] = cosb  cosA*sinb  sinA*sinb
+  xyz [0] [0] = 1.0f;
+  xyz [1] [0] = cosa [2];
+  xyz [1] [1] = sina [2];
+  xyz [2] [0] = cosa [1];
+  xyz [2] [1] = cosA [0] * sina [1];
+  xyz [2] [2] = sinA [0] * sina [1];
 
-  ALIGNED16 triangle_t triangle = {
-    {
-      { 1, 0, 0, 0 },
-      { cosa [2], sina [2], 0, 0 },
-      { cosa [1], S [0] [1] * sina [1], S [0] [0] * sina [1], 0 },
-    },
-    {
-      { 1, 0, 0, 0 }, // Vertex A
-      { 0, 1, 0, 0 }, // Vertex B
-      { 0, 0, 1, 0 }, // Vertex C
-      { 0, 0, 0, 0 },
-      { 0, 0, 0, 0 },
-      { 0, 0, 0, 0 },
-      { 0, 0, 0, 0 },
-      { 0, 0, 0, 0 },
-    },
-  };
+  // abc [0] =    1     0     0  (vertex X)
+  // abc [1] =    0     1     0  (vertex Y)
+  // abc [2] =    0     0     1  (vertex Z)
+  // abc [3] =    0  sinb  sinc  (intersection of bisector of X with edge YZ)
+  // abc [4] = sina     0  sinc  (intersection of bisector of Y with edge ZX)
+  // abc [5] = sina  sinb     0  (intersection of bisector of Z with edge XY)
+  // abc [6] = sinA  sinB  sinC  (incentre)
+  // abc [7] = it's complicated  (snub generator)
+  for (int i = 0; i != 3; ++ i) {
+    abc [i] [i] = 1.0f;
+    store4f (abc [3 + i], vsina);
+    abc [3 + i] [i] = 0.0f;
+  }
+  store4f (abc [6], vsinA);
 
-  store4f (triangle.abc [3], sina_v4f);
-  store4f (triangle.abc [4], sina_v4f);
-  store4f (triangle.abc [5], sina_v4f);
-
-  triangle.abc [3] [0] = 0.0f;
-  triangle.abc [4] [1] = 0.0f;
-  triangle.abc [5] [2] = 0.0f;
-
-  triangle.abc [6] [0] = S [0] [0];
-  triangle.abc [6] [1] = S [1] [0];
-  triangle.abc [6] [2] = S [2] [0];
-
+  // Permutation pi where p [pi [i]] are in ascending order (indirect 3-sort).
   unsigned pi [3] = { 0, 1, 2 };
-
   if (p [0] > p [1]) {
     pi [0] = 1;
     pi [1] = 0;
   }
-
   if (p [pi [0]] > p [2]) {
     pi [2] = pi [0];
     pi [0] = 2;
   }
-
   if (p [pi [1]] > p [pi [2]]) {
     unsigned t = pi [1];
     pi [1] = pi [2];
     pi [2] = t;
   }
 
+  // Coefficients abc [7] for the snubified polyhedron. beta0 is the positive
+  // solution of the cubic equation x^3 - 2*x - 2*cosC = 0.
   float beta0 = betas [p [pi [2]] - 3];
+  abc [7] [pi [0]] = 1.0f;
+  abc [7] [pi [1]] = _mm_cvtss_f32 (S [pi [1]]) * beta0;
+  abc [7] [pi [2]] = _mm_cvtss_f32 (S [pi [2]]) * (beta0 * beta0 - 1);
 
-  triangle.abc [7] [pi [0]] = 1.0f;
-  triangle.abc [7] [pi [1]] = S [pi [1]] [0] * beta0;
-  triangle.abc [7] [pi [2]] = S [pi [2]] [0] * (beta0 * beta0 - 1);
-
-  for (int n = 0; n != 8; ++ n) {
-    v4f T = _mm_setzero_ps ();
-    for (int i = 0; i != 3; ++ i) {
-      T = T + _mm_set1_ps (triangle.abc [n] [i]) * load4f (triangle.xyz [i]);
+  if (reflect) {
+    // Replace the triangle with a mirror image and adjust the coefficients.
+    v4f sign_bit = _mm_castsi128_ps (__m128i { 0, 0x80000000 });
+    v4f z = load4f (xyz [2]);
+    store4f (xyz [2], load4f (xyz [1]));
+    store4f (xyz [1], _mm_xor_ps (z, sign_bit));
+    for (unsigned k = 0; k != 8; ++ k) {
+      v4f a = load4f (abc [k]);
+      store4f (abc [k], SHUFPS (a, a, (0, 2, 1, 3)));
     }
-    store4f (triangle.abc [n], rsqrt (dot (T, T)) * load4f (triangle.abc [n]));
+    unsigned t = p [1];
+    p [1] = p [2];
+    p [2] = t;
   }
 
-  return triangle;
-}
-
-// Turn a PQR triangle into a PRQ triangle.
-void reflect (triangle_t & triangle)
-{
-  v4f x = load4f (triangle.xyz [0]);
-  v4f y = load4f (triangle.xyz [1]);
-  v4f z = load4f (triangle.xyz [2]);
-
-  v4f n = cross (x, y);                  // Perpendicular to x and y.
-  v4f d = (dot (n, z) / dot (n, n)) * n; // Component of z parallel to n.
-
-  store4f (triangle.xyz [1], z - (d + d));
-  store4f (triangle.xyz [2], y);
-
-  for (unsigned k = 0; k != 8; ++ k) {
-    v4f a = load4f (triangle.abc [k]);
-    store4f (triangle.abc [k], SHUFPS (a, a, (0, 2, 1, 3)));
+  // Normalize the coefficients.
+  for (int n = 3; n != 8; ++ n) {
+    v4f T = _mm_setzero_ps ();
+    for (int i = 0; i != 3; ++ i) {
+      T = T + _mm_set1_ps (abc [n] [i]) * load4f (xyz [i]);
+    }
+    store4f (abc [n], rsqrt (dot (T, T)) * load4f (abc [n]));
   }
 }
 
@@ -155,15 +156,7 @@ void initialize_systems (float (& abc) [system_count] [8] [4],
   for (unsigned n = 0; n != 6; ++ n) {
     unsigned p [3];
     std::memcpy (p, symbols [n / 2], sizeof p);
-    ALIGNED16 triangle_t triangle = get_triangle (p);
-    if (n & 1) {
-      auto temp = p [1];
-      p [1] = p [2];
-      p [2] = temp;
-      reflect (triangle);
-    }
-    std::memcpy (xyz [n], triangle.xyz, sizeof triangle.xyz);
-    std::memcpy (abc [n], triangle.abc, sizeof triangle.abc);
+    get_triangle (p, n & 1, xyz [n], abc [n]);
     cramer::inverse (xyz [n], xyzinv [n]);
     unsigned N = make_system (p, xyz [n], nodes, indices);
     vao_ids [n] = make_vao (N, nodes, indices);
