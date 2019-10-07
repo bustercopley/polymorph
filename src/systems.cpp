@@ -90,7 +90,7 @@ void get_triangle (unsigned (& p) [3], bool reflect, float (& xyz) [3] [4],
   // abc [5] = sina  sinb     0  (intersection of bisector of Z with edge XY)
   // abc [6] = sinA  sinB  sinC  (incentre)
   // abc [7] = it's complicated  (snub generator)
-  for (int i = 0; i != 3; ++ i) {
+  for (unsigned i = 0; i != 3; ++ i) {
     abc [i] [i] = 1.0f;
     store4f (abc [3 + i], vsina);
     abc [3 + i] [i] = 0.0f;
@@ -122,10 +122,10 @@ void get_triangle (unsigned (& p) [3], bool reflect, float (& xyz) [3] [4],
 
   if (reflect) {
     // Replace the triangle with a mirror image and adjust the coefficients.
-    v4f sign_bit = _mm_castsi128_ps (__m128i { 0, 0x80000000 });
     v4f z = load4f (xyz [2]);
     store4f (xyz [2], load4f (xyz [1]));
-    store4f (xyz [1], _mm_xor_ps (z, sign_bit));
+    store4f (xyz [1], z);
+    xyz [1] [2] = -xyz [1] [2];
     for (unsigned k = 0; k != 8; ++ k) {
       v4f a = load4f (abc [k]);
       store4f (abc [k], SHUFPS (a, a, (0, 2, 1, 3)));
@@ -136,9 +136,9 @@ void get_triangle (unsigned (& p) [3], bool reflect, float (& xyz) [3] [4],
   }
 
   // Normalize the coefficients.
-  for (int n = 3; n != 8; ++ n) {
+  for (unsigned n = 3; n != 8; ++ n) {
     v4f T = _mm_setzero_ps ();
-    for (int i = 0; i != 3; ++ i) {
+    for (unsigned i = 0; i != 3; ++ i) {
       T = T + _mm_set1_ps (abc [n] [i]) * load4f (xyz [i]);
     }
     store4f (abc [n], rsqrt (dot (T, T)) * load4f (abc [n]));
