@@ -24,6 +24,7 @@
 #include "rodrigues.h"
 #include <cstdint>
 #include <cstring>
+#include <utility>
 
 const unsigned symbols [] [3] = {
   { 2, 3, 3 }, // tetrahedral
@@ -108,9 +109,7 @@ void get_triangle (unsigned (& p) [3], bool reflect, float (& xyz) [3] [4],
     pi [0] = 2;
   }
   if (p [pi [1]] > p [pi [2]]) {
-    unsigned t = pi [1];
-    pi [1] = pi [2];
-    pi [2] = t;
+    std::swap (pi [1], pi [2]);
   }
 
   // Coefficients abc [7] for the snubified polyhedron. beta0 is the positive
@@ -130,9 +129,7 @@ void get_triangle (unsigned (& p) [3], bool reflect, float (& xyz) [3] [4],
       v4f a = load4f (abc [k]);
       store4f (abc [k], SHUFPS (a, a, (0, 2, 1, 3)));
     }
-    unsigned t = p [1];
-    p [1] = p [2];
-    p [2] = t;
+    std::swap (p [1], p [2]);
   }
 
   // Normalize the coefficients.
