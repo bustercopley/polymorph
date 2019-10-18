@@ -51,22 +51,36 @@ namespace usr {
   const float fog_near = 0.0f;  // Fog blend factor at near plane.
   const float fog_far = 0.8f;   // Fog blend factor at far plane.
 
-  const float line_width = 1.0f;
-  const float line_margin = 0.65f;
+  // Edge shading.
 
-  // Parameters for material-colour animation timings.
+  //                         x: distance of sample from the edge.
+  //  y ^                    y: fade factor between edge and face colours.
+  //    |                    For x1 <= x <= x2, we have:
+  //  1 +      +----
+  //    |     /                y = (x - x1) / (x2 - x1).
+  //    |    /
+  //  0 +===+--+---->        Write this as y = m * x + c,
+  //    0   x1 x2   x        where m = 1 / (x2 - x1), c = -x1 * m.
+
+  // Here line_inner is x1 and line_margin is x2 - x1.
+  const float line_inner = 0.35f;
+  const float line_margin = 0.65f;
+  const float line_m = 1 / line_margin;
+  const float line_c = -line_inner * line_m;
+
+  // Saturation and value curves for material colour (diffuse reflection).
 
   //  r ^                        r = bump (t)
   //    |
-  // v1 +--------------XXXXXX----------------
+  // r1 +--------------XXXXXX----------------
   //    |           X  |    |  X
   //    |         X    |    |    X
   //    |        X     |    |     X
   //    |      X       |    |       X
-  // v0 +XXXX----------+----+----------XXXX-->
+  // r0 +XXXX----------+----+----------XXXX-->
   //        t0        t1    t2        t3      t
 
-  //                                 t0     t1     t2     t3     v0     v1
+  //                                 t0     t1     t2     t3     r0     r1
   const bump_specifier_t sbump = { 1.50f, 1.75f, 3.75f, 4.25f, 0.00f, 0.275f };
   const bump_specifier_t vbump = { 1.50f, 1.75f, 3.75f, 4.25f, 0.09f, 0.333f };
 
@@ -149,13 +163,13 @@ bool model_t::start (int width, int height, const settings_t & settings)
   ALIGNED16 float view [4];
 
   float scale = 0.5f / usr::scale;
-  float line1 = 1.0f / usr::line_margin;
-  float line0 = 1.0f - usr::line_width / usr::line_margin;
+  float line0 = usr::line_m;
+  float line1 = usr::line_c;
   float fwidth = width;
   float fheight = height;
   // Adjust scale and line width for small windows (for parented mode).
   if (width < 512) scale *= 512.0f / fwidth;
-  if (width < 256) line1 *= 256.0f / fwidth;
+  if (width < 256) line0 *= 256.0f / fwidth;
 
   // x1, y1, z1: Coordinates of bottom-right-front corner of view frustum.
   float x1 = view [0] = scale * fwidth;
