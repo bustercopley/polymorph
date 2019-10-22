@@ -55,7 +55,9 @@ FONT 9, "Segoe UI", 0, 0, 0x1
 BEGIN
   ICON IDI_APPICON, IDC_STATIC, 30, 22, 0, 0
 
-  LTEXT "And the ratios of their numbers, motions, and other properties, everywhere God, as far as necessity allowed or gave consent, has exactly perfected, and harmonised in due proportion.",
+  LTEXT "And the ratios of their numbers, motions, and other properties, "
+        "everywhere God, as far as necessity allowed or gave consent, "
+        "has exactly perfected, and harmonised in due proportion.",
     IDC_MESSAGE, 80, 14, 150, 36
 
   CTEXT "TIMAEUS, Plato.", IDC_STATIC, 80, 50, 150, 10
