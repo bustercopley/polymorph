@@ -197,11 +197,11 @@ inline void model_t::kdtree_search ()
     }
   }
 
-  // For every pair of integers i, n such that 0 <= i' < n' < count,
-  // where i' = kdtree[i] and n' = kdtree[n], if |x[i] - x[n]| < 2R
-  // then call bounce(i, n). Loop over n', not n, to avoid anisotropy.
-  for (unsigned n1 = 0; n1 != count; ++ n1) {
-    unsigned n = kdtree_aux [n1];
+  // For every pair of integers n, i such that 0 <= i < n < count
+  // and |x[n] - x[i]| < 2R, call bounce(n, i).
+  for (unsigned m = 0; m != count; ++ m) {
+    unsigned n = kdtree_aux [m];
+    unsigned n1 = RANDOMIZE_COLLISION_ORDER_ENABLED ? kdtree_index [n] : m;
     if (n < 7) {
       // Skip the tree traversal and just try all the candidates.
       for (unsigned i = 0; i != n; ++ i) {
