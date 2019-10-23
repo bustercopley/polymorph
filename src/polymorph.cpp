@@ -23,8 +23,6 @@
 
 #define WC_MAIN TEXT ("M")
 
-#if MONITOR_SELECT_ENABLED
-
 struct monitor_enum_param_t
 {
   RECT * r;
@@ -39,8 +37,6 @@ BOOL CALLBACK monitor_enum_proc (HMONITOR, HDC, LPRECT rect, LPARAM lparam)
   return TRUE;
 }
 
-#endif
-
 // Initial top, left, width and height (not right and bottom).
 void get_rect (RECT & rect, const arguments_t & arguments)
 {
@@ -48,20 +44,19 @@ void get_rect (RECT & rect, const arguments_t & arguments)
     ::GetClientRect ((HWND) arguments.numeric_arg, & rect);
     return;
   }
-#if MONITOR_SELECT_ENABLED
-  int n = (int) arguments.numeric_arg;
-  if (n >= 1) {
-    monitor_enum_param_t param = { & rect, n - 1 };
-    ::EnumDisplayMonitors (
-      nullptr, nullptr, & monitor_enum_proc, (LPARAM) &param);
-
-    if (param.n < 0) {
-      rect.right -= rect.left;
-      rect.bottom -= rect.top;
-      return;
+  if constexpr (MONITOR_SELECT_ENABLED) {
+    int n = (int) arguments.numeric_arg;
+    if (n >= 1) {
+      monitor_enum_param_t param = { & rect, n - 1 };
+      ::EnumDisplayMonitors (nullptr, nullptr,
+        & monitor_enum_proc, (LPARAM) & param);
+      if (param.n < 0) {
+        rect.right -= rect.left;
+        rect.bottom -= rect.top;
+        return;
+      }
     }
   }
-#endif
   rect.left   = ::GetSystemMetrics (SM_XVIRTUALSCREEN);
   rect.top    = ::GetSystemMetrics (SM_YVIRTUALSCREEN);
   rect.right  = ::GetSystemMetrics (SM_CXVIRTUALSCREEN);
