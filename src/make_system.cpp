@@ -98,7 +98,7 @@ unsigned make_system (const unsigned (& p) [3],
     }
 
     std::swap (mu [1], mu [2]);
-    even = !even;
+    even = ! even;
 
     a [2] = sigma_inverse (a [0] [alpha], 2 * p [mu [2]]);
     if (a [0] [sigma] [sigma] [alpha] != undef) {

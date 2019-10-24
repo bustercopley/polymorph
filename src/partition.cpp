@@ -41,7 +41,7 @@ void insertion_sort (unsigned * const index, const float (* const x) [4],
 //   val (i) <= val (middle) for i in [begin, middle) and
 //   val (j) >= val (middle) for j in (middle, end),
 // where val (i) = x [index [i]] [dim].
-void partition (unsigned * const index, const float (*const x) [4],
+void partition (unsigned * const index, const float (* const x) [4],
   const unsigned dim, const unsigned begin, const unsigned middle,
   const unsigned end)
 {

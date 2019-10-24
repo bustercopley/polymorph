@@ -29,7 +29,7 @@ int WINAPI _tWinMain (HINSTANCE hInstance, HINSTANCE, LPTSTR, int)
 
   INITCOMMONCONTROLSEX icc = { sizeof (INITCOMMONCONTROLSEX),
     ICC_BAR_CLASSES | ICC_LINK_CLASS | ICC_STANDARD_CLASSES };
-  ::InitCommonControlsEx (&icc);
+  ::InitCommonControlsEx (& icc);
 
   ALIGNED16 window_struct_t ws {};
 

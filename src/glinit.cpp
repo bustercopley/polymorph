@@ -97,7 +97,7 @@ bool glinit (HINSTANCE hInstance)
   // context. The window does not survive creation. See InitWndProc.
   WNDCLASSEX init_wndclass = { sizeof (WNDCLASSEX), 0, &InitWndProc, 0, 0,
     hInstance, nullptr, nullptr, nullptr, nullptr, WC_GLINIT, nullptr };
-  ::RegisterClassEx (&init_wndclass);
+  ::RegisterClassEx (& init_wndclass);
   ::CreateWindowEx (0, WC_GLINIT, TEXT (""), 0,
                     CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
                     nullptr, nullptr, hInstance, nullptr);

@@ -302,7 +302,7 @@ bool model_t::start (int width, int height, const settings_t & settings)
   s = settings.trackbar_pos [1];
   v4f speedup = _mm_set1_ps (
     ui2f (s) * (s <= 50 ? (0.125f / 50) : (0.125f / (50 * 50)) * ui2f (s)));
-  for (unsigned n = 0; n != count; ++n) {
+  for (unsigned n = 0; n != count; ++ n) {
     store4f (v [n], speedup * load4f (v [n]));
     store4f (w [n], speedup * load4f (w [n]));
   }

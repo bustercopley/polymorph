@@ -61,7 +61,7 @@ void get_triangle (unsigned (& p) [3], bool reflect, float (& xyz) [3] [4],
   v4f vcosC = SHUFPS (vcosA, vcosA, (2, 0, 1, 3));       // cosC cosA cosB 0
 
   // Use the spherical cosine rule and the trigonometrical identity.
-  v4f vcosa = (vcosA + vcosB * vcosC) / (vsinB * vsinC);   // cosa cosb cosc 0
+  v4f vcosa = (vcosA + vcosB * vcosC) / (vsinB * vsinC); // cosa cosb cosc 0
   v4f vsina = sqrt (_mm_set1_ps (1.0) - vcosa * vcosa);  // sina sinb sinc 0
 
   ALIGNED16 float cosA [4], sinA [4], cosa [4], sina [4];

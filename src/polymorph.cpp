@@ -199,7 +199,7 @@ LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
   if (close_window) {
     ::PostMessage (hwnd, WM_CLOSE, 0, 0);
   }
-  if (!no_defwndproc) {
+  if (! no_defwndproc) {
     result = ::DefWindowProc (hwnd, msg, wParam, lParam);
   }
   return result;
@@ -215,7 +215,7 @@ HWND create_screensaver_window (window_struct_t & ws)
   // Register the window class.
   WNDCLASSEX wndclass = { sizeof (WNDCLASSEX), 0, & MainWndProc, 0, 0,
     ws.hInstance, ws.icon, nullptr, nullptr, nullptr, WC_MAIN, ws.icon_small };
-  ATOM wc_main_atom = ::RegisterClassEx (&wndclass);
+  ATOM wc_main_atom = ::RegisterClassEx (& wndclass);
 
   // Create the screen saver window.
   HWND hwnd;
