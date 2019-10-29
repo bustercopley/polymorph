@@ -262,20 +262,20 @@ void program_t::set_view (const float (& view) [4],
 
   struct fragment_data_t
   {
-    GLfloat a [4];      // vec3, ambient reflection (rgb)
-    GLfloat b [4];      // vec3, background (rgb)
     GLfloat c [4];      // vec4, line colour (rgba)
     GLfloat r [4];      // vec4, xyz: specular reflection (rgb); w: exponent
     GLfloat f [4];      // vec4, coefficients for line width and fog
+    GLfloat a [4];      // vec3, ambient reflection (rgb)
+    GLfloat b [4];      // vec3, background (rgb)
     GLfloat l [4] [4];  // vec3 [4], light positions
   };
 
   ALIGNED16 fragment_data_t fdata = {
-    { 0.02f, 0.02f, 0.02f, 0.00f },
-    { 0.00f, 0.00f, 0.00f, 0.00f },
     { 0.00f, 0.00f, 0.00f, 1.00f },
     { 0.25f, 0.25f, 0.25f, 32.0f },
     { line0, line1, fog0, fog1 },
+    { 0.02f, 0.02f, 0.02f, 0.00f },
+    { 0.00f, 0.00f, 0.00f, 0.00f },
     {
       { -0.6f * x1, -0.2f * y1, z1 + y1, 0.0f },
       { -0.2f * x1, +0.6f * y1, z1 + x1, 0.0f },
@@ -287,7 +287,7 @@ void program_t::set_view (const float (& view) [4],
   struct geometry_data_t
   {
     GLfloat p [4] [4];  // mat4, projection matrix
-    GLfloat q [4];      // vec3, pixel size in normalized device coordinates
+    GLfloat q [2];      // vec2, scale factors from NDC to viewport coordinates
   };
 
   ALIGNED16 geometry_data_t gdata = {
@@ -301,7 +301,7 @@ void program_t::set_view (const float (& view) [4],
       {    0,       0,       0,      -1 },
       {    0,       0,       0,       0 },
     },
-    { float (width >> 1), float (height >> 1), 0, 0 },
+    { float (width >> 1), float (height >> 1) },
   };
 
   // The shaders declare uniform blocks "F", "G" and "H", each with its own

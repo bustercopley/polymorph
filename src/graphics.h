@@ -28,10 +28,10 @@ unsigned make_vao (
 
 struct object_data_t
 {
-  GLfloat d [4];      // vec4,  diffuse reflection
-  GLfloat g [4];      // vec4,  uniform coefficients
-  GLfloat m [4] [4];  // mat4,  modelview matrix
-  GLuint s;           // bool,  snub?
+  GLfloat d [4];      // vec4, diffuse reflection
+  GLfloat g [4];      // vec4, generator coefficients
+  GLfloat m [4] [4];  // mat4, modelview matrix
+  GLuint s;           // bool, snub?
 };
 
 struct uniform_buffer_t

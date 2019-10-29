@@ -19,16 +19,16 @@ layout (triangle_strip, max_vertices = 18) out;
 
 layout (std140, binding = 2) uniform G
 {
-  mat4 p;
-  vec3 q;
+  mat4 p;  // perspective matrix
+  vec2 q;  // scale factors from NDC to viewport coordinates
 };
 
 layout (std140, binding = 0) uniform H
 {
-  vec4 d;
-  vec4 g;
-  mat4 m;
-  bool s;
+  vec4 d;  // diffuse reflection
+  vec4 g;  // generator coefficients
+  mat4 m;  // modelview matrix
+  bool s;  // snub?
 };
 
 in vec3 Q [6];
@@ -37,6 +37,21 @@ out vec3 X;
 out flat vec3 N;
 // Distance of the vertex from each of 5 edges.
 out noperspective float R, S, T, V, W;
+
+// Snub triangles are drawn as a single primitive and require just three edge
+// distances per vertex, namely the distance of each vertex from each edge of
+// the triangle.
+
+// The other faces of a snub polyhedron are equilateral in world coordinates,
+// but not in screen coordinates. Only three edge distances are required per
+// vertex: the distance from the outer edge of this triangle, and from the outer
+// edge of each of its two neighbours.
+
+// For the non-snub polyhedra, the faces are already non-equilateral in world
+// coordinates during transitions; combined with foreshortening, it turns out
+// this necessitates at least five edge distances per vertex, the distance of
+// the vertex from the outer edges of five triangles: this triangle, its
+// neighbours, and their neighbours.
 
 vec3 O = m [3].xyz;
 
@@ -52,6 +67,9 @@ void vertex (vec3 x, vec4 p, float e [5])
   EmitVertex ();
 }
 
+// A, B, C: vertex positions, in world coordinates
+// x, y, z: vertex positions, in clip coordinates
+// e, f, g: distance in pixels of each vertex from each of five edges
 void triangle (vec3 A, vec3 B, vec3 C, vec4 x, vec4 y, vec4 z,
   float e [5], float f [5], float g [5])
 {

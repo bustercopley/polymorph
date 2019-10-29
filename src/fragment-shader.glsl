@@ -17,11 +17,11 @@
 // Scene uniforms.
 layout (std140, binding = 1) uniform F
 {
-  vec3 a;      // ambient reflection (rgb)
-  vec3 b;      // background (rgb)
   vec4 c;      // line colour (rgba)
   vec4 r;      // xyz: specular reflection (rgb), w: exponent
   vec4 f;      // coefficients for line width and fog
+  vec3 a;      // ambient reflection (rgb)
+  vec3 b;      // background (rgb)
   vec3 l [4];  // light positions
 };
 
