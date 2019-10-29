@@ -94,12 +94,11 @@ void snub_segment (vec3 Q, vec3 U, vec3 V, vec4 y, vec4 z)
   vec3 j = V - C;
   vec4 x = project (C);
   float d = dot (i, j);
-  vec2 t = raster (C - j + (2 * d / dot (i, i)) * i);
   vec2 w = raster (C - i + (2 * d / dot (j, j)) * j);
   vec2 c = pdivide (x);
   vec2 u = pdivide (y);
   vec2 v = pdivide (z);
-  vec2 k = perp (t, u);
+  vec2 k = perp (raster (C - j + (2 * d / dot (i, i)) * i), u);
   vec2 l = perp (v, w);
   triangle (C, U, V, x, y, z,
     float [5] (abs (dot (k, c - u)), dist (c, u, v), abs (dot (l, c - w)),
@@ -112,8 +111,7 @@ bool nondegenerate (vec2 a, vec2 b, vec2 c)
 {
   vec2 d = b - a;
   vec2 e = c - a;
-  float A = d.x * e.y - d.y * e.x;
-  return abs (A) > 0.01;
+  return abs (d.x * e.y - d.y * e.x) > 0.01;
 }
 
 void aspect (vec3 Q, vec3 V, vec3 W, vec3 X, vec4 h, vec4 i, vec4 j,
@@ -123,9 +121,8 @@ void aspect (vec3 Q, vec3 V, vec3 W, vec3 X, vec4 h, vec4 i, vec4 j,
   vec3 A = O + dot (W - O, Q) * Q;
   vec3 k = X - A;
   vec3 l = V - A;
-  vec3 d = W - 2 * A;
-  vec3 e = d + V;
-  vec3 f = d + X;
+  vec3 e = W - A + l;
+  vec3 f = W - A + k;
   vec3 E = e * (2 / dot (e, e));
   vec3 F = f * (2 / dot (f, f));
   vec3 U = dot (e, k) * E - k;
@@ -172,15 +169,12 @@ void aspect (vec3 Q, vec3 V, vec3 W, vec3 X, vec4 h, vec4 i, vec4 j,
 void main ()
 {
   vec3 x = g.x * Q [0];
-  vec3 Y = g.y * Q [1];
-  vec3 z = g.z * Q [2];
-  vec3 X = g.x * Q [3];
   vec3 y = g.y * Q [4];
-  vec3 Z = g.z * Q [5];
+  vec3 z = g.z * Q [2];
 
-  vec3 U = O + X + y + z;
-  vec3 V = O + x + Y + z;
-  vec3 W = O + x + y + Z;
+  vec3 U = O + g.x * Q [3] + y + z;
+  vec3 V = O + x + g.y * Q [1] + z;
+  vec3 W = O + x + y + g.z * Q [5];
 
   vec4 h = project (U);
   vec4 i = project (V);
