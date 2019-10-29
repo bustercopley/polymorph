@@ -270,12 +270,6 @@ void program_t::set_view (const float (& view) [4],
     GLfloat l [4] [4];  // vec3 [4], light positions
   };
 
-  struct geometry_data_t
- {
-    GLfloat p [4] [4];  // mat4, projection matrix
-    GLfloat q [4];      // vec3, pixel size in normalized device coordinates
-  };
-
   ALIGNED16 fragment_data_t fdata = {
     { 0.02f, 0.02f, 0.02f, 0.00f },
     { 0.00f, 0.00f, 0.00f, 0.00f },
@@ -288,6 +282,12 @@ void program_t::set_view (const float (& view) [4],
       { +0.2f * x1, -0.6f * y1, z1 + y1, 0.0f },
       { +0.6f * x1, +0.2f * y1, z1 + x1, 0.0f },
     },
+  };
+
+  struct geometry_data_t
+  {
+    GLfloat p [4] [4];  // mat4, projection matrix
+    GLfloat q [4];      // vec3, pixel size in normalized device coordinates
   };
 
   ALIGNED16 geometry_data_t gdata = {
@@ -309,7 +309,7 @@ void program_t::set_view (const float (& view) [4],
   // "F" is declared in "fragment-shader.glsl", "G" in "geometry-shader.glsl",
   // and "H" in both "fragment-shader.glsl" and "geometry-shader.glsl". The
   // layouts of blocks "F", "G" and "H" match the structs fragment_data_t,
-  // geometry_data_t and object_data_t.
+  // geometry_data_t (above) and object_data_t (see graphics.h).
 
   // Create one uniform buffer large enough to hold the data for "F" and "G".
   GLuint stride = std::max (sizeof fdata, sizeof gdata);

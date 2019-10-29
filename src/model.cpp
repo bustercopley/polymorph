@@ -216,13 +216,14 @@ bool model_t::start (int width, int height, const settings_t & settings)
   count = pos < 2 ? pos + 1 : 3 + (max_count - 3) * (pos - 2) / 98;
   set_capacity (count);
 
+  v4f c = { 0.0f, 0.0f, 0.5f * (z1 + z2), 0.0f };
+  v4f m = { x2 - radius, y2 - radius, 0.5f * (z1 - z2) - radius, 0.0f };
+
   // Add objects.
   for (unsigned n = 0; n != count; ++ n) {
     kdtree_index [n] = n;
     object_order [n] = n;
 
-    v4f c = { 0.0f, 0.0f, 0.5f * (z1 + z2), 0.0f };
-    v4f m = { x2 - radius, y2 - radius, 0.5f * (z1 - z2) - radius, 0.0f };
   loop:
     // Get a random point in the bounding cuboid of the viewing frustum.
     v4f t = m * get_vector_in_box (rng) + c;
