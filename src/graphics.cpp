@@ -292,14 +292,13 @@ void program_t::set_view (const float (& view) [4],
 
   ALIGNED16 geometry_data_t gdata = {
     {
-      // Save a few instructions by using a simplified projection matrix which
-      // doesn't calculate the z component of the clip coordinates. We don't
-      // have any use for that component since we disable near and far plane
-      // clipping and we don't have a depth buffer.
-      { -z1/x1,     0,       0,       0 },
-      {    0,    -z1/y1,     0,       0 },
-      {    0,       0,       0,      -1 },
-      {    0,       0,       0,       0 },
+      // Projection matrix modified to give z = 0 in clip coordinates, in order
+      // to avoid clipping in the z dimension. The z coordinate is of no further
+      // use as long as depth testing is not enabled.
+      { -z1 / x1,     0,     0,   0 },
+      {     0,    -z1 / y1,  0,   0 },
+      {     0,        0,     0,  -1 },
+      {     0,        0,     0,   0 },
     },
     { float (width >> 1), float (height >> 1) },
   };
