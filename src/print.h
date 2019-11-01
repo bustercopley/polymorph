@@ -18,11 +18,18 @@
 #define print_h
 
 //#define ENABLE_PRINT
+//#define ENABLE_TIMING
 
 #if defined (ENABLE_PRINT) && ! defined (TINY)
 #define PRINT_ENABLED 1
 #else
 #define PRINT_ENABLED 0
+#endif
+
+#if PRINT_ENABLED && defined (ENABLE_TIMING)
+#define TIMING_ENABLED 1
+#else
+#define TIMING_ENABLED 0
 #endif
 
 #if PRINT_ENABLED

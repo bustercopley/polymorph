@@ -22,6 +22,7 @@
 #include "arguments.h"
 #include "model.h"
 #include "settings.h"
+#include "print.h"
 
 #define ENABLE_MONITOR_SELECT
 
@@ -42,6 +43,11 @@ struct window_struct_t
   HGLRC hglrc;
   HWND hdlg;
   HWND hwnd; // Only used by the dialogue procedure.
+#if TIMING_ENABLED
+  LARGE_INTEGER last_pc;
+  float pf;
+  unsigned frame_counter;
+#endif
   model_t model;
 };
 

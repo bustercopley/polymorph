@@ -14,6 +14,7 @@
 
 #include "glinit.h"
 #include "compiler.h"
+#include "print.h"
 
 // Define OpenGL function pointer variables.
 #define DO_GLPROC(type,name) type name = nullptr
@@ -119,7 +120,7 @@ HGLRC install_rendering_context (HDC hdc)
   if (HGLRC hglrc = wglCreateContextAttribsARB (hdc, nullptr, rcattribs)) {
     if (::wglMakeCurrent (hdc, hglrc)) {
       if (get_glprocs ()) {
-        wglSwapIntervalEXT (1);
+        wglSwapIntervalEXT (! TIMING_ENABLED);
         return hglrc;
       }
       ::wglMakeCurrent (nullptr, nullptr);

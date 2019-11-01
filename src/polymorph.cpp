@@ -16,7 +16,6 @@
 #include "aligned-arrays.h"
 #include "compiler.h"
 #include "glinit.h"
-#include "print.h"
 #include "qpc.h"
 #include "resources.h"
 #include <windowsx.h>
@@ -111,6 +110,15 @@ LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
       // Remember initial cursor position to detect mouse movement.
       ::GetCursorPos (& ws->initial_cursor_position);
       ::InvalidateRect (hwnd, nullptr, FALSE);
+
+#if TIMING_ENABLED
+      ws->frame_counter = 0;
+      LARGE_INTEGER freq;
+      ::QueryPerformanceFrequency (& freq);
+      ::QueryPerformanceCounter (& ws->last_pc);
+      ws->pf = 1.0f / (1024 * freq.QuadPart);
+#endif
+
       break;
     }
 
@@ -129,6 +137,17 @@ LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
       ::SwapBuffers (ps.hdc);
       ::EndPaint (hwnd, & ps);
       ::InvalidateRect (hwnd, nullptr, FALSE);
+#if TIMING_ENABLED
+      ++ ws->frame_counter;
+      if (! (ws->frame_counter & 1023)) {
+        LARGE_INTEGER pc;
+        ::QueryPerformanceCounter (& pc);
+        float frame_time = ws->pf * (pc.QuadPart - ws->last_pc.QuadPart);
+        ws->last_pc = pc;
+        std::cout << std::fixed << std::setprecision (8)
+                  << frame_time << " seconds per frame\n";
+      }
+#endif
       break;
     }
 
