@@ -358,7 +358,7 @@ void model_t::recalculate_locus (unsigned index)
   object_t & object = objects [index];
   float (& locus_end) [4] = e [index];
 
-  system_select_t sselect = object.target.system;
+  system_select_t system = object.target.system;
 
   // g0: Coefficients for T0 in terms of xyz.
   // g1: Coefficients for T1 in terms of xyz.
@@ -368,15 +368,15 @@ void model_t::recalculate_locus (unsigned index)
   // T2: Component of T1 perpendicular to T0, normalized to a unit vector.
   // g2: Coefficents for T2 in terms of xyz.
 
-  v4f g0 = load4f (abc [sselect] [object.starting_point]);
-  v4f g1 = load4f (abc [sselect] [object.target.point]);
-  v4f T0 = mapply (xyz [sselect], g0);
-  v4f T1 = mapply (xyz [sselect], g1);
+  v4f g0 = load4f (abc [system] [object.starting_point]);
+  v4f g1 = load4f (abc [system] [object.target.point]);
+  v4f T0 = mapply (xyz [system], g0);
+  v4f T1 = mapply (xyz [system], g1);
   // Find a unit vector T2 perpendicular to T0 and and an angle s such that
   // T1 = (cos s) T0 + (sin s) T2.
   v4f d = dot (T0, T1);
   v4f T2 = normalize (T1 - d * T0);
-  v4f g2 = mapply (xyzinv [sselect], T2);
+  v4f g2 = mapply (xyzinv [system], T2);
   // Any point T = (cos t) T0 + (sin t) T2 (where 0 <= t <= s) on the
   // hemisemicircular arc T0-T1 has coefficients (cos t) g0 + (sin t) g2.
   store4f (locus_end, g2);
@@ -470,12 +470,12 @@ void model_t::draw (unsigned begin, unsigned count)
     _mm_stream_ps (block.d, hsv_to_rgb (obj.hue, sat, val, alpha));
 
     // Set the vertex coefficients g.
-    system_select_t sselect = obj.target.system;
+    system_select_t system = obj.target.system;
     v4f t = step (obj.animation_time) * _mm_set1_ps (obj.locus_length);
     v4f sc = sincos (t);
     v4f s = _mm_moveldup_ps (sc);
     v4f c = _mm_movehdup_ps (sc);
-    v4f g0 = load4f (abc [sselect] [obj.starting_point]);
+    v4f g0 = load4f (abc [system] [obj.starting_point]);
     v4f g = c * g0 + s * load4f (e [m]);
     _mm_stream_ps (block.g, _mm_set1_ps (obj.r) * g);
   }
@@ -485,10 +485,10 @@ void model_t::draw (unsigned begin, unsigned count)
   for (unsigned n = 0; n != count; ++ n) {
     unsigned m = object_order [begin + n];
     const object_t & obj = objects [m];
-    system_select_t sselect = obj.target.system;
+    system_select_t system = obj.target.system;
 
-    paint (primitive_count [sselect],
-           vao_ids [sselect],
+    paint (primitive_count [system],
+           vao_ids [system],
            uniform_buffer.id (),
            (std::uint32_t) (n * uniform_buffer.stride ()));
   }
