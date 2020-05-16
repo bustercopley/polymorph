@@ -46,7 +46,7 @@ inline void model_t::bounce (unsigned ix, unsigned iy)
       v4f rw = _mm_set1_ps (A.r) * load4f (w [ix])
              + _mm_set1_ps (B.r) * load4f (w [iy]);
       v4f unn = dx * dxdv / dxsq;
-      v4f rub = cross (rw, dxn) + unn - dv;
+      v4f rub = cross (rw, dxn) + (unn - dv);
       v4f kf = _mm_set1_ps (usr::balls_friction);
       v4f u = kf * rub - unn;
       // Now take the nonzero multiplier lambda such that the

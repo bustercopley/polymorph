@@ -60,9 +60,7 @@ inline v4f hue_vector (float hue)
 // first three components are zero.
 inline v4f hsv_to_rgb (float hue, v4f saturation, v4f value, v4f alpha)
 {
-  v4f chroma = saturation * value;
-  v4f base = value - chroma;
-  v4f rgbx = base + chroma * hue_vector (hue);
+  v4f rgbx = value - (value * saturation) * hue_vector (hue);
 #if __SSE4_1__
   return _mm_blend_ps (rgbx, alpha, 8); // rgba
 #else
