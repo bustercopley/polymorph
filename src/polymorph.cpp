@@ -79,8 +79,8 @@ LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
       // Retrieve the window-struct pointer from the window createstruct.
       CREATESTRUCT * cs = (CREATESTRUCT *) lParam;
       ws = (window_struct_t *) cs->lpCreateParams;
-      if (HDC hdc = ::GetDC (hwnd)) {
-        ws->hglrc = install_rendering_context (hdc);
+      if (ws->hdc = ::GetDC (hwnd); ws->hdc) {
+        ws->hglrc = install_rendering_context (ws->hdc);
         if (ws->hglrc) {
           // Successfully installed the rendering context.
           // Store the window-struct pointer in userdata.
@@ -89,7 +89,6 @@ LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
           // Abort window creation if shader program compilation fails.
           result = ws->model.initialize (qpc ()) - 1;
         }
-        ::ReleaseDC (hwnd, hdc);
       }
     }
     else {
@@ -132,10 +131,7 @@ LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
     case WM_PAINT: {
       ws->model.draw_next ();
-      PAINTSTRUCT ps;
-      ::BeginPaint (hwnd, & ps);
-      ::SwapBuffers (ps.hdc);
-      ::EndPaint (hwnd, & ps);
+      ::SwapBuffers (ws->hdc);
       ::InvalidateRect (hwnd, nullptr, FALSE);
 #if TIMING_ENABLED
       ++ ws->frame_counter;

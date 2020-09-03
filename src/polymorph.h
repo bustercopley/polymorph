@@ -40,6 +40,7 @@ struct window_struct_t
   HICON icon;
   HICON icon_small;
   POINT initial_cursor_position;
+  HDC hdc;
   HGLRC hglrc;
   HWND hdlg;
   HWND hwnd; // Only used by the dialogue procedure.
