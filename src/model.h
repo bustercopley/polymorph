@@ -29,7 +29,7 @@ struct model_t
 {
   ~model_t ();
 
-  bool initialize (std::uint64_t seed);
+  int initialize (std::uint64_t seed);
   bool start (int width, int height, const settings_t & settings);
   void draw_next ();
 private:

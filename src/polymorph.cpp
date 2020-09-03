@@ -87,7 +87,7 @@ LRESULT CALLBACK MainWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
           ::SetWindowLongPtr (hwnd, GWLP_USERDATA, LONG_PTR (ws));
           // Once-only model/graphics allocation and initialization.
           // Abort window creation if shader program compilation fails.
-          result = ws->model.initialize (qpc ()) - 1;
+          result = ws->model.initialize (qpc ());
         }
       }
     }

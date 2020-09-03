@@ -315,13 +315,13 @@ bool model_t::start (int width, int height, const settings_t & settings)
   return true;
 }
 
-bool model_t::initialize (std::uint64_t seed)
+int model_t::initialize (std::uint64_t seed)
 {
-  if (! initialize_graphics (program)) return false;
+  if (! initialize_graphics (program)) return -1; // Abort window creation.
   rng.initialize (seed);
   step.initialize (usr::morph_start, usr::morph_finish);
   initialize_systems (abc, xyz, xyzinv, primitive_count, vao_ids);
-  return true;
+  return 0; // Continue window creation.
 }
 
 model_t::~model_t ()
